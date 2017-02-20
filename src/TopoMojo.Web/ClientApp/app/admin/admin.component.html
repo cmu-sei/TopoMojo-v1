@@ -1,0 +1,15 @@
+<ul class="list-inline">
+    <li><h3>Admin Center</h3>
+    <li>
+        <button class="btn btn-default" [routerLink]="['templates']">
+            <i class="fa fa-desktop"></i> <span>Manage Templates</span>
+        </button>
+    </li>
+    <li>
+        <button class="btn btn-default" [routerLink]="['users']">
+            <i class="fa fa-user"></i> <span>Manage Users</span>
+        </button>
+    </li>
+</ul>
+<hr/>
+<router-outlet></router-outlet>

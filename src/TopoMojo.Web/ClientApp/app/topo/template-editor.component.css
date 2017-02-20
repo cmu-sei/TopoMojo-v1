@@ -1,0 +1,10 @@
+div.row {
+    background-color: whitesmoke;
+    border-radius: 4px;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+.avatar {
+    font-size: 4em;
+}

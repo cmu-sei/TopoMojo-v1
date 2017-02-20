@@ -1,0 +1,34 @@
+<div class="row">
+    <div class="col-md-4">
+        <h4>Users</h4>
+        <search-bar (fire)="search($event)"></search-bar>
+        <entity-list
+            [entities]="roster"
+            [icon]="icon"
+            (onSelected)="load($event)"></entity-list>
+    </div>
+    <div class="col-md-4">
+        <div *ngIf="person" spellcheck="false">
+            <h4>Person: {{ person.name }}</h4>
+            <p>{{ person.globalId }}</p>
+            <ul class="list-inline">
+                <li>Admin <span>{{ person.isAdmin}}</span></li>
+                <li><button class="btn btn-link" (click)="grant()">Grant</button></li>
+                <li><button class="btn btn-link" (click)="deny()">Deny</button></li>
+            </ul>
+            <ul class="list-inline">
+                <li>Topo <input class="form-control" [(ngModel)]="activeTopoId"/></li>
+                <li><button class="btn btn-link" (click)="promote()">Promote</button></li>
+                <li><button class="btn btn-link" (click)="demote()">Demote</button></li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <h4>
+            <i class="fa fa-plus-circle"></i>
+            <span>Add Users</span>
+        </h4>
+        <textarea rows="20" class="form-control" placeholder="Add or paste email list" [(ngModel)]="plist"></textarea>
+        <button (click)="upload()" class="btn btn-primary pull-right">Save</button>
+    </div>
+</div>

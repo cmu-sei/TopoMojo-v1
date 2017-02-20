@@ -1,0 +1,6 @@
+<div class="form-group">
+    <input placeholder="Name" [(ngModel)]="name" class="form-control"/>
+    <textarea placeholder="Description" [(ngModel)]="description" class="form-control"></textarea>
+    <button (click)="save()" class="btn btn-primary pull-right">Create</button>
+    <p *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</p>
+</div>

@@ -1,0 +1,10 @@
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected {
+    font-size: 2em;
+    color: goldenrod;
+}

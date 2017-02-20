@@ -1,0 +1,9 @@
+<ul *ngIf="entities" class="list-unstyled">
+    <li *ngFor="let t of entities" class="truncate">
+        <button (click)="itemClicked(t)" class="btn btn-link" [class.selected]="t === entity">
+            <i class="{{ icon }}"></i>
+        </button>
+        <span>{{ t.name }} &mdash;</span>
+        <span>{{ t.description }}</span>
+    </li>
+</ul>

@@ -1,0 +1,13 @@
+<div *ngIf="permissions">
+    <ul class="list-inline">
+        <li *ngFor="let p of permissions">
+            <span>{{p.person.name}}</span>
+            <button (click)="removeUser(p.person.id)" class="btn btn-link">
+                <i class="fa fa-remove"></i>
+            </button>
+        </li>
+        <li>
+            <inline-editor type="text"  [size]="30" (onSave)="addUser()" [(ngModel)]="addUserEmail"></inline-editor>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,30 @@
+<div class="row">
+    <div class="col-md-4">
+        <h4>Templates</h4>
+        <search-bar (fire)="search($event)"></search-bar>
+        <entity-list
+            [entities]="templates"
+            [icon]="icon"
+            (onSelected)="load($event)"></entity-list>
+    </div>
+    <div class="col-md-4">
+        <div *ngIf="template" spellcheck="false">
+            <h4>Template: {{ template.name }}</h4>
+            <p>{{ template.globalId }}</p>
+            <input type="checkbox" [(ngModel)]="template.isPublished" class="form-control"/><span>Published</span>
+            <input #focusTag [(ngModel)]="template.name" class="form-control" placeholder="Name"/>
+            <textarea [(ngModel)]="template.description" class="form-control" placeholder="Description"></textarea>
+            <textarea [(ngModel)]="template.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
+            <button class="btn btn-primary pull-right" (click)="save()">Save</button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <button (click)="create()" class="btn btn-link">
+            <h4>
+                <i class="fa fa-plus-circle"></i>
+                <span>Create Template</span>
+            </h4>
+        </button>
+
+    </div>
+</div>

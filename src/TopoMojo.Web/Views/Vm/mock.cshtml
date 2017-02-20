@@ -1,0 +1,75 @@
+@model DisplayInfo
+@{
+    ViewData["Title"] = "console:" + @Model.Name;
+}
+
+<div id="console-canvas-div" style="position:absolute;width:100%;height:100%">
+    <div id="console-admin-div">
+        <button id="console-tools-btn" class="btn btn-default hidden"><i class="glyphicon glyphicon-cog"></i></button>
+        <div id="console-tools-div" class="hidden">
+            <ul class="list-unstyled">
+                <li><button name="cad" class="btn btn-link tool">
+                    <i class="glyphicon glyphicon-console"></i> Ctrl-Alt-Del</button></li>
+                <li><button name="fullscreen" class="btn btn-link tool"><i class="glyphicon glyphicon-fullscreen"></i> Fullscreen</button></li>
+                <li><button name="scale" class="btn btn-link tool"><i class="glyphicon glyphicon-resize-full"></i> Stretch</button></li>
+                <li>
+                    <button name="upload" class="btn btn-link tool"><i class="glyphicon glyphicon-cd"></i> Upload ISO</button>
+                    <div class="row hidden indent">
+                        <div class="col-md-11 input-group">
+                            <input id="iso-upload-input" type="file" name="file" class="form-control"/>
+                            <span class="input-group-btn">
+                                <button id="iso-progress-label" class="btn btn-default has-spinner hidden">
+                                    <span class="spinner"><i class="glyphicon glyphicon-refresh"></i></span></button>
+                                <button id="iso-upload-btn" class="btn btn-default">
+                                    <i class="glyphicon glyphicon-cloud-upload"></i></button>
+                            </span>
+                        </div>
+                        <!--<div class="col-md-9"></div>-->
+                    </div>
+                </li>
+                <li>
+                    <button name="iso" class="btn btn-link tool"><i class="glyphicon glyphicon-cd"></i> Change ISO</button>
+                    <ul class="list-unstyled hidden">
+                        <li><button class="btn btn-link">loading...</button></li>
+                    </ul>
+                </li>
+                <li>
+                    <button name="net" class="btn btn-link tool"><i class="glyphicon glyphicon-random"></i> Change network</button>
+                    <ul class="list-unstyled hidden">
+                        <li><button class="btn btn-link">loading...</button></li>
+                    </ul>
+                </li>
+            </ul>
+
+
+        </div>
+    </div>
+    <div id="feedback-div">
+        <button name="start" class="btn btn-default" style="display:none"><i class="glyphicon glyphicon-off"></i></button>
+        <p>Loading...</p>
+    </div>
+</div>
+<div id="proto-elements-div" style="display:none">
+    <div id="proto-error-div" class="alert alert-danger alert-dismissable error-div" style="display:inline-block">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    <div id="proto-question-div" class="alert alert-warning overlay">
+        <span style="display:inline-block"></span>
+        <button class="btn btn-warning" style="display:none"></button>
+    </div>
+
+</div>
+@section Scripts {
+<script>
+    var id = '@Model.Id';
+    var topoId = '@Model.TopoId';
+    var url = '@Model.Url';
+    var conditions = '@Model.Conditions';
+    var mock = true;
+
+    $(function() {
+        new WebConsole(id, topoId, url, conditions);
+    });
+
+</script>
+}

@@ -1,0 +1,38 @@
+<ul *ngIf="working" class="list-inline">
+    <li><i class="fa fa-spinner fa-spin"></i></li>
+    <li>
+        <span *ngIf="vm && vm.task && vm.task.name">{{ vm.task.name }}...</span>
+        <span *ngIf="vm && vm.task && vm.task.progress > 0">{{vm.task.progress}}%</span>
+    </li>
+</ul>
+<ul *ngIf="!working" [ngSwitch]="vm.status" class="list-inline">
+    <li><span class="label label-info">{{vm.status}}</span></li>
+    <li><button class="btn btn-default" (click)="startRefresh()" tooltip="refresh"><i class="fa fa-refresh"></i></button></li>
+    <template [ngSwitchCase]="'created'">
+        <li><button class="btn btn-default" (click)="initialize()" tooltip="initialize"><i class="fa fa-cog"></i></button></li>
+    </template>
+    <template [ngSwitchCase]="'initialized'">
+        <li><button class="btn btn-default" (click)="deploy()" tooltip="deploy"><i class="fa fa-bolt"></i></button></li>
+    </template>
+    <template [ngSwitchCase]="'deployed'">
+        <li *ngIf="vm.state != 1"><button class="btn btn-default" (click)="start()" tooltip="Start"><i class="fa fa-play"></i></button></li>
+        <li *ngIf="vm.state == 1"><button class="btn btn-default" (click)="stop()" tooltip="Stop"><i class="fa fa-stop"></i></button></li>
+        <li><a class="btn btn-default" (click)="display()" tooltip="console"><i class="fa fa-desktop"></i></a></li>
+        <li><button class="btn btn-default" (click)="revert()" tooltip="revert"><i class="fa fa-fast-backward"></i></button></li>
+        <li><button class="btn btn-default" (click)="save()" tooltip="save"><i class="fa fa-save"></i></button></li>
+        <li><button class="btn btn-default" (click)="delete()" tooltip="delete"><i class="fa fa-trash"></i></button></li>
+    </template>
+</ul>
+<div *ngIf="error" class="alert alert-danger alert-dismissible" role="alert">
+    <button (click)="clearError()" type="button" class="close" data-dismiss="alert">
+        <span>&times;</span>
+    </button>
+    <span>{{error}}</span>
+</div>
+<div *ngIf="!working && vm.question" class="alert alert-warning">
+    <p>{{ vm.question.prompt }}</p>
+    <button *ngFor="let c of vm.question.choices"
+        (click)="answer(c)"
+        [class.selected]="c.key === vm.question.defaultChoice"
+        class="btn btn-warning">{{c.label}}</button>
+</div>

@@ -1,0 +1,39 @@
+<h4>Browse Topologies</h4>
+<div class="row">
+    <div class="col-md-6">
+        <div class="row">
+            <search-bar class="col-md-10" (fire)="search($event)"></search-bar>
+            <div class="col-md-2">
+                <button (click)="showEditor()" class="btn btn-link">
+                    <i class="fa fa-plus-circle"></i> New
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-9">
+                <topo-creator *ngIf="editorVisible"></topo-creator>
+            </div>
+        </div>
+        <div *ngIf="topos">
+            <div *ngFor="let t of topos" class="tile">
+                    <div>
+                        <i class="fa fa-map avatar"></i>
+                    </div>
+                    <div>
+                        <h4>{{ t.name }}</h4>
+                        <p>{{ t.description }}</p>
+                        <p>&mdash; {{t.people}}</p>
+                        <p>{{t.templates || 'No templates'}}</p>
+                    </div>
+                    <div class="pull-right">
+                        <button *ngIf="t.canManage" class="btn btn-link pull-right" [routerLink]="['/topo', t.id]">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+    </div>
+</div>

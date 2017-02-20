@@ -1,0 +1,47 @@
+<div class="row">
+    <div class="col-md-1">
+        <div class="avatar">
+            <i class="fa fa-desktop"></i>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <dl class="dl-horizontal">
+            <dt>Name</dt>
+            <dd>
+                <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.name"></inline-editor>
+            </dd>
+            <dt>Description</dt>
+            <dd>
+                <inline-editor type="textarea" (onSave)="save()" [(ngModel)]="tref.description"></inline-editor>
+            </dd>
+            <dt>Networks</dt>
+            <dd>
+                <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.networks"></inline-editor>
+                <inline-help>
+                    <span>Enter a space-delimited list of network names. Nics are assigned respectively.</span>
+                </inline-help>
+            </dd>
+            <dt>Type</dt>
+            <dd>
+                <span *ngIf="tref.owned" class="label label-default">local</span>
+                <span *ngIf="!tref.owned" class="label label-warning">external</span>
+                <inline-help>
+                    <span>This template is external to this topology; you cannot save disk changes. If you plan to alter the disk,
+                    ensure the template is not deployed and then clone it &mdash;
+                    <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">
+                        <i class="fa fa-copy"></i>
+                    </button></span>
+                </inline-help>
+            </dd>
+            <dt>Status</dt>
+            <dd>
+                <vm-toolbar (onLoaded)="vmLoaded($event)" [tref]="tref"></vm-toolbar>
+            </dd>
+        </dl>
+    </div>
+    <div clas="col-md-2">
+        <button (click)="remove()" class="btn btn-default pull-right" [class.disabled]="((!vm) || (vm.id))" style="color:crimson">
+            <i class="fa fa-trash"></i>
+        </button>
+    </div>
+</div>

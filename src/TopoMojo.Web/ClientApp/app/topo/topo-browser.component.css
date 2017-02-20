@@ -1,0 +1,24 @@
+.tile {
+    background-color: whitesmoke;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 4px;
+}
+
+.tile > span {
+    font-size: 1.5em;
+}
+
+ .tile > div > button > i {
+    font-size: 1.5em;
+ }
+
+ .avatar {
+     font-size: 3em;
+ }
+
+ .tile > div {
+     display: inline-block;
+     vertical-align: middle;
+     padding: 10px;
+ }

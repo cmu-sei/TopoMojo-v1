@@ -1,0 +1,29 @@
+<h2 class="text-center login-title">SKETCH</h2>
+<div class="row">
+    <div class="col-md-4 col-md-offset-4 col-sm-4 col-sm-offset-4" id="login-well">
+        <section class="well">
+            <h5>Use a local account to log in.</h5>
+            <div class="text-danger"></div>
+                <div class="form-group">
+                <label class="sr-only" for="username">Username</label>
+                <div class="input-group">
+                    <div class="input-group-addon"><i class="glyphicon glyphicon glyphicon-user"></i></div>
+                    <input asp-for="Email" class="form-control" [(ngModel)]="username" placeholder="Username">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password" class="sr-only">Password</label>
+                <div class="input-group">
+                    <div class="input-group-addon"><i class="glyphicon glyphicon glyphicon-lock"></i></div>
+                    <input type="password" class="form-control" [(ngModel)]="password" placeholder="Password">
+                </div>
+            </div>
+            <div class="form-group">
+                <p *ngIf="error" class="text text-danger">Invalid username or password</p>
+                <button (click)="login()" class="btn btn-primary pull-center">Login</button>
+                <button (click)="reset()" class="btn btn-link pull-right">Reset</button>
+                <p *ngIf="resetMessage" class="text text-info">{{ resetMessage }}</p>
+            </div>
+        </section>
+    </div>
+</div>
