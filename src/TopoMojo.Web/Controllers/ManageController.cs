@@ -204,30 +204,30 @@ namespace TopoMojo.Controllers
 
         //
         // POST: /Manage/ChangePassword
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            ViewData["Site"] = _options.Site.Name;
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            var user = await GetCurrentUserAsync();
-            if (user != null)
-            {
-                var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    Log("reset-password", null);
-                    return RedirectToAction(nameof(Index), new { Message = ManageMessageId.ChangePasswordSuccess });
-                }
-                AddErrors(result);
-                return View(model);
-            }
-            return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
-        }
+        // [HttpPost]
+        // [ValidateAntiForgeryToken]
+        // public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        // {
+        //     ViewData["Site"] = _options.Site.Name;
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return View(model);
+        //     }
+        //     var user = await GetCurrentUserAsync();
+        //     if (user != null)
+        //     {
+        //         var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+        //         if (result.Succeeded)
+        //         {
+        //             await _signInManager.SignInAsync(user, isPersistent: false);
+        //             Log("reset-password", null);
+        //             return RedirectToAction(nameof(Index), new { Message = ManageMessageId.ChangePasswordSuccess });
+        //         }
+        //         AddErrors(result);
+        //         return View(model);
+        //     }
+        //     return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
+        // }
 
         //
         // GET: /Manage/SetPassword

@@ -248,13 +248,13 @@ function WebConsole(id, topoid, url, conditions) {
         var data = new FormData();
         var key = newUUID();
         $.each(files, function(i, file) {
-            data.append('file', file, 'temp-'+file.name + '#' + key);
+            data.append('file', file, 'fd=temp&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
         });
         $this.prop('disabled', true);
-        setTimeout(uploadProgress, 2000, $this, key);
+        setTimeout(uploadProgress, 5000, $this, key);
 
         $.ajax({
-            url: '/file/uploadiso/' + topoId,
+            url: '/file/upload',
             type: 'POST',
             data: data,
             cache: false,
@@ -279,6 +279,7 @@ function WebConsole(id, topoid, url, conditions) {
     var progressIdleCount = 0 ;
     function uploadProgress($proto, key) {
         var $progress = $proto.prev();
+        $progress.removeClass('hidden');
 
         $.get('/api/file/progress/' + key)
         .fail(function(jqXhr, status, error) {
@@ -289,11 +290,12 @@ function WebConsole(id, topoid, url, conditions) {
             if (result < 100) {
                 $progress.text((result < 0) ? '...' : result + '%');
                 if (progressIdleCount < 10) {
-                    setTimeout(uploadProgress, 2000, $proto, key);
+                    setTimeout(uploadProgress, 5000, $proto, key);
                 }
             } else {
                 $progress.text('').addClass('hidden');
                 $proto.prop('disabled', false);
+                $('#iso-upload-div').addClass('hidden');
             }
         })
         .always(function() {
@@ -408,7 +410,7 @@ function WebConsole(id, topoid, url, conditions) {
                     if (vm.state == VmStateRunning) {
                         $('#feedback-div button').hide();
                         $('#feedback-div p:first').text('Connected');
-                        if (!mock)
+                        if (mock != 'mock')
                             launch();
                     }
                     else {

@@ -5,12 +5,16 @@ import { HomeComponent } from './home.component';
 import { NotFoundComponent } from './notfound.component';
 import { NotAllowedComponent } from './notallowed.component';
 import { LoginComponent } from './login.component';
+import { ResetComponent } from './reset.component';
 import { AboutPanelComponent } from './about-panel.component';
 import { HelpPanelComponent } from './help-panel.component';
+import { ProfileEditorComponent } from './profile.component';
 
 const routes: Routes = [
     { path: 'home', component: HomeComponent },
     { path: 'login', component: LoginComponent },
+    { path: 'reset', component: ResetComponent },
+    { path: 'profile', component: ProfileEditorComponent },
     { path: 'about', component: AboutPanelComponent },
     { path: 'help' , component: HelpPanelComponent },
     { path: 'notfound', component: NotFoundComponent },
@@ -29,7 +33,9 @@ export class CoreRoutingModule {
         NotFoundComponent,
         NotAllowedComponent,
         LoginComponent,
+        ResetComponent,
         AboutPanelComponent,
-        HelpPanelComponent
+        HelpPanelComponent,
+        ProfileEditorComponent
     ]
 }

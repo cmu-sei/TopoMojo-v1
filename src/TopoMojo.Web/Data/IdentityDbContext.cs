@@ -30,6 +30,8 @@ namespace TopoMojo.Data
     {
         public int PersonId { get; set; }
         public bool IsAdmin { get; set; }
+        public int ResetCode { get; set; }
+        public string ResetToken { get; set; }
 
     }
 

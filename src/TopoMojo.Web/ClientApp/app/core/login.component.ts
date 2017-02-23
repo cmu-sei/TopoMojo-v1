@@ -39,9 +39,10 @@ export class LoginComponent implements OnInit {
             return;
         }
 
-        this.service.reset(this.username)
+        this.service.forgot(this.username)
         .then(data => {
             this.resetMessage = "An email has been sent.";
+            this.router.navigate(['/reset', { email: this.username }]);
         });
     }
 }

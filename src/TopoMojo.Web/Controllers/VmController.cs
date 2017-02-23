@@ -37,7 +37,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Refresh(int id)
         {
-            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id);
+            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id, null);
 
             Vm vm = await _pod.Refresh(template);
             // if (!AuthorizedForVm(vm))
@@ -132,7 +132,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Deploy(int id)
         {
-            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id);
+            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id, null);
 
             return Json(await _pod.Deploy(template));
         }
@@ -141,7 +141,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Initialize(int id)
         {
-            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id);
+            TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id, null);
             return Json(await _pod.CreateDisks(template));
         }
 
@@ -155,7 +155,7 @@ namespace TopoMojo.Controllers
 
             DisplayInfo info = await _pod.Display(id);
             info.TopoId = vm.Name.Tag();
-            return View(info.Method.ToString(), info);
+            return View("wmks", info);
         }
 
         [HttpPost("{id}/{question}/{answer}")]

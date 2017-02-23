@@ -72,7 +72,6 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     vmLoaded(vm) {
-        console.log(vm);
         this.vm = vm;
     }
 }

@@ -31,7 +31,6 @@ namespace TopoMojo.Services
         public async Task<Person> GetCurrentUserAsync()
         {
 
-            _logger.LogDebug(_context.HttpContext.User.ToString());
             ApplicationUser user = await _userManager.GetUserAsync(_context.HttpContext.User);
             Person person = await _db.People.FindAsync(user.PersonId);
             return person;

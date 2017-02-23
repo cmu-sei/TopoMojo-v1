@@ -38,7 +38,7 @@ namespace TopoMojo.Models
         public string TokenIssuer { get; set; } = "app-issuer";
         public string TokenAudience { get; set; } = "app-audience";
         public int TokenExpirationMinutes { get; set; } = 60;
-        public int CookieExpirationMinutes { get; set; } = 20;
+        public int CookieExpirationMinutes { get; set; } = 60;
 
     }
 }

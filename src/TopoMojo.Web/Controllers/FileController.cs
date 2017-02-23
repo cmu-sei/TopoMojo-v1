@@ -1,20 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using TopoMojo.Abstractions;
-using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Web;
-using TopoMojo.Core;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
+using System.Collections.Specialized;
 
 namespace TopoMojo.Controllers
 {
@@ -22,117 +21,151 @@ namespace TopoMojo.Controllers
    public class FileController : _Controller
     {
         public FileController(
-            IFileUploadManager uploader,
+            IFileUploadMonitor monitor,
             IOptions<ApplicationOptions> config,
             IHostingEnvironment host,
             IServiceProvider sp) : base(sp)
         {
             _host = host;
-            _uploader = uploader;
+            _monitor = monitor;
             _config = config.Value.FileUpload;
         }
         private readonly IHostingEnvironment _host;
-        private readonly IFileUploadManager _uploader;
-        private readonly FileUploadConfiguration _config;
+        private readonly IFileUploadMonitor _monitor;
+        private readonly FileUploadOptions _config;
 
         [HttpGet("api/[controller]/[action]/{id}")]
-        public async Task<IActionResult> Progress([FromRoute]string id)
+        public IActionResult Progress([FromRoute]string id)
         {
-            return Json(_uploader.CheckProgress(id));
+            return Json(_monitor.Progress(id).Progress);
         }
 
         [HttpPost]
-        [JsonExceptionFilter]
-        [FileUploadMaxSize((long)10E6)]
-        public async Task<IActionResult> UploadImage(string id, IFormFile file)
+        [DisableFormValueModelBinding]
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> Upload()
         {
-            if (!AuthorizedForRoom(id))
-                return BadRequest();
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+            {
+                return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
+            }
 
-            if (!file.ContentType.StartsWith("image"))
-                throw new Exception($"Invalid file type [{file.ContentType}].");
+            FormOptions _formOptions = new FormOptions {
+                MultipartBodyLengthLimit = (long)1E9
+            };
 
-            string root = _host.WebRootPath;
-            string path = Path.Combine(root, _config.MiscRoot, id);
+            string boundary = MultipartRequestHelper.GetBoundary(
+                MediaTypeHeaderValue.Parse(Request.ContentType),
+                _formOptions.MultipartBoundaryLengthLimit);
+            MultipartReader reader = new MultipartReader(boundary, HttpContext.Request.Body);
+
+            MultipartSection section = await reader.ReadNextSectionAsync();
+            while (section != null)
+            {
+                ContentDispositionHeaderValue contentDisposition;
+                bool hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
+
+                if (hasContentDispositionHeader)
+                {
+                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                    {
+                        NameValueCollection fileMetadata = MultipartRequestHelper.FileProperties(contentDisposition.FileName);
+
+                        string filename = fileMetadata["fn"];
+                        string pkey = fileMetadata["pk"];
+                        string key = fileMetadata["fk"];
+                        string scope = fileMetadata["fd"];
+                        long size = Int64.Parse(fileMetadata["fs"] ?? "0");
+                        if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
+                            throw new Exception($"File ${filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
+
+                        string dest = DestinationPath(filename, key, scope);
+                        using (var targetStream = System.IO.File.Create(dest))
+                        {
+                            await Save(section.Body, targetStream, size, pkey);
+                        }
+                    }
+                }
+
+                // Drains any remaining section body that has not been consumed and
+                // reads the headers for the next section.
+                section = await reader.ReadNextSectionAsync();
+            }
+
+            return Json(true);
+        }
+
+        private string DestinationPath(string filename, string key, string scope)
+        {
+            string fn = "", keypath="", root = "", path = "";
+
+            //sanitize fn
+            char[] bad = Path.GetInvalidFileNameChars();
+            foreach (char c in filename.ToCharArray())
+                if (!bad.Contains(c))
+                    fn += c;
+
+            bad = Path.GetInvalidPathChars();
+            foreach (char c in key.ToCharArray())
+                if (!bad.Contains(c))
+                    keypath += c;
+
+            switch (scope)
+            {
+                case "public":
+                path = _config.IsoRoot; //Path.Combine(_config.IsoRoot, "public");
+                break;
+
+                case "private":
+                path = Path.Combine(_config.TopoRoot,keypath);
+                break;
+
+                case "temp":
+                path = Path.Combine(_config.TopoRoot, keypath, "temp");
+                root = _config.TopoRoot;
+                break;
+
+                case "img":
+                path = Path.Combine(_config.MiscRoot, keypath);
+                break;
+
+                default:
+                throw new Exception("Invalid file scope.");
+
+            }
+
             if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-            path = Path.Combine(path, file.FileName);
+                Directory.CreateDirectory(path);
 
-            using (var dest = new FileStream(path, FileMode.Create))
-            {
-                await file.CopyToAsync(dest);
-            }
-            return Json(new { filename = path.Replace(root, "") });
+            path = Path.Combine(path, fn);
+            return path;
         }
 
-        [HttpPost]
-        [JsonExceptionFilter]
-        [FileUploadMaxSize((long)10E9)]
-        public async Task<IActionResult> UploadIso(string id, IFormFile file)
+        private async Task Save(Stream source, Stream dest, long size, string key)
         {
-            string scope = "", fn = "", key = "";
-            string path = "";
-            string root = _config.IsoRoot;
+            _monitor.Start(key);
 
-            if (!AuthorizedForRoom(id))
-                return BadRequest();
+            if (size == 0) size = (long)5E9;
+            byte[] buffer = new byte[4096];
+            int bytes = 0, progress = 0;
+            long totalBytes = 0, totalBlocks = 0;
 
-            if (file != null)
+            do
             {
-                if (_config.MaxFileBytes > 0 && file.Length > _config.MaxFileBytes)
-                    throw new Exception($"File size exceeds the {_config.MaxFileBytes} maximum.");
-
-                key = file.FileName.Tag();
-                fn = file.FileName.Untagged().ToLower();
-
-                int x = fn.IndexOf('-');
-                if (x > 0)
+                bytes = await source.ReadAsync(buffer, 0, buffer.Length);
+                await dest.WriteAsync(buffer, 0, bytes);
+                totalBlocks += 1;
+                totalBytes += bytes;
+                if (totalBlocks % 1024 == 0)
                 {
-                    scope = fn.Substring(0, x);
-                    fn = fn.Substring(x+1);
+                    progress = (int)(((float)totalBytes / (float)size) * 100);
+                    _monitor.Update(key, progress);
                 }
-
-                switch (scope)
-                {
-                    case "public":
-                    path = "public";
-                    root = _config.IsoRoot;
-                    break;
-
-                    case "private":
-                    path = id;
-                    root = _config.TopoRoot;
-                    break;
-
-                    case "temp":
-                    path = Path.Combine(id, "temp");
-                    root = _config.TopoRoot;
-                    break;
-
-                    default:
-                    throw new Exception("Invalid file scope.");
-                    break;
-
-                }
-
-                if (!fn.EndsWith(".iso") || file.ContentType != "application/octet-stream")
-                {
-                    throw new Exception("Invalid file format.");
-                }
-
-                path = Path.Combine(root, path);
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-
-                path = Path.Combine(path, fn);
-                using (var dest = new FileStream(path, FileMode.Create))
-                using (var source = file.OpenReadStream())
-                {
-                    _logger.LogInformation($"UploadIso {key} {file.FileName} {file.Length}");
-                    await _uploader.Save(source, dest, file.Length, key);
-                }
-            }
-            return Json(new { filename = path.Replace(root,"") });
+            } while (bytes > 0);
+            _monitor.Update(key, 100);
+            FileProgress fp = _monitor.Progress(key);
+            int duration = (int)fp.Stop.Subtract(fp.Start).TotalSeconds;
+            _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
         }
 
         public IActionResult Error()

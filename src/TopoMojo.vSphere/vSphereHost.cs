@@ -12,6 +12,7 @@ using TopoMojo.Extensions;
 using TopoMojo.Extensions.Vim;
 using TopoMojo.vSphere.Filters;
 using TopoMojo.Models;
+using System.Collections;
 
 namespace TopoMojo.vSphere
 {
@@ -19,6 +20,7 @@ namespace TopoMojo.vSphere
     {
         public vSphereHost(PodConfiguration options,
             ConcurrentDictionary<string, Vm> vmCache,
+            BitArray master,
             ILogger<vSphereHost> logger)
         {
             _logger = logger;
@@ -26,7 +28,9 @@ namespace TopoMojo.vSphere
             _vmCache = vmCache;
             _logger.LogDebug($"Instantiated vSphereHost { _config.Host }");
             _pgCache = new Dictionary<string,int>();
+            _pgAllocation = new Dictionary<string, PortGroupAllocation>();
             _gcPortGroups = new List<string>();
+            //_vlanMap = new BitArray(4096).Or(master);
 
             ResolveConfigMacros();
             MonitorSession();
@@ -35,6 +39,8 @@ namespace TopoMojo.vSphere
         private ConcurrentDictionary<string, Vm> _vmCache;
         List<string> _gcPortGroups;
         Dictionary<string,int> _pgCache;
+        Dictionary<string,PortGroupAllocation> _pgAllocation;
+        //private BitArray _vlanMap;
 
         PodConfiguration _config = null;
         VimPortTypeClient _vim = null;
@@ -59,8 +65,10 @@ namespace TopoMojo.vSphere
 
         public Vlan[] PgCache
         {
-            get { return _pgCache.Keys.Select(x=> new Vlan { Name = x, Id = _pgCache[x] }).ToArray(); }
+            get { return _pgAllocation.Keys.Select(x=> new Vlan { Name = x, Id = _pgAllocation[x].VlanId }).ToArray(); }
         }
+
+        //public BitArray VlanMap { get { return _vlanMap; }}
 
         public async Task<Vm[]> Find(string term)
         {
@@ -118,6 +126,12 @@ namespace TopoMojo.vSphere
         {
             await Connect();
             Vm vm = _vmCache[id];
+
+            //protect stock disks; only save a disk if it is local to the topology
+            //i.e. the disk folder matches the topologyId
+            if (vm.Name.Tag().HasValue() && !vm.DiskPath.Contains(vm.Name.Tag()))
+                throw new InvalidOperationException("Cannot save external template");
+
             _logger.LogDebug($"Save: get current snap for vm {vm.Name}");
 
             //Get the current snapshot mor
@@ -177,11 +191,14 @@ namespace TopoMojo.vSphere
             await Stop(id);
             vm.State = VmPowerState.off;
             _logger.LogDebug($"Delete: unregistering vm {vm.Name}");
+            string[] vmnets = await LoadVmPortGroups(vm.AsVim());
             await _vim.UnregisterVMAsync(vm.AsVim());
             string folder = vm.Path.Substring(0, vm.Path.LastIndexOf('/'));
             _logger.LogDebug($"Delete: deleting vm folder {folder}");
             await _vim.DeleteDatastoreFile_TaskAsync(_sic.fileManager, folder, _datacenter);
             _vmCache.TryRemove(vm.Id, out vm);
+            //remove vm nets
+            await RemoveVmPortGroups(vmnets);
             vm.Status = "initialized";
             return vm;
         }
@@ -287,7 +304,9 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
+                        VirtualEthernetCardNetworkBackingInfo backing  = (VirtualEthernetCardNetworkBackingInfo)card.backing;
+                        //cacheNet(backing.deviceName);
+                        backing.deviceName = newvalue;
                         card.connectable = new VirtualDeviceConnectInfo() {
                             connected = true,
                             startConnected = true,
@@ -504,11 +523,11 @@ namespace TopoMojo.vSphere
 
         private async Task ProvisionPortGroups(Template template)
         {
-            lock(_pgCache)
+            lock(_pgAllocation)
             {
                 foreach (Eth eth in template.Eth)
                 {
-                    if (!_pgCache.ContainsKey(eth.Net))
+                    if (!_pgAllocation.ContainsKey(eth.Net))
                     {
                         try
                         {
@@ -524,10 +543,15 @@ namespace TopoMojo.vSphere
                             spec.policy.security.allowPromiscuousSpecified = true;
 
                             _vim.AddPortGroupAsync(_net, spec).Wait();
-                            _pgCache.Add(spec.name, spec.vlanId);
+                            _pgAllocation.Add(spec.name, new PortGroupAllocation { Net = spec.name, Counter = 1, VlanId = spec.vlanId });
+                            //_vlanMap[spec.vlanId] = true;
                         } catch {
 
                         }
+                    }
+                    else
+                    {
+                        _pgAllocation[eth.Net].Counter += 1;
                     }
                 }
             }
@@ -541,51 +565,84 @@ namespace TopoMojo.vSphere
             return (HostPortGroup[])oc[0].propSet[0].val;
         }
 
+        // private async Task ReloadPgCache()
+        // {
+        //     string[] vmPgs = await LoadVmPortGroups(null);
+        //     HostPortGroup[] pgs = await LoadPortGroups();
+
+        //     lock (_pgCache)
+        //     {
+        //         foreach(HostPortGroup pg in pgs)
+        //         {
+        //             string name = pg.spec.name;
+        //             if (name.Contains("#"))
+        //             {
+        //                 if (!_pgCache.ContainsKey(name))
+        //                     _pgCache.Add(name, pg.spec.vlanId);
+
+        //                 if (!vmPgs.Contains(name))
+        //                 {
+        //                     if (_gcPortGroups.Contains(name))
+        //                     {
+        //                         _logger.LogDebug("Removing empty portgroup " + name);
+        //                         _vim.RemovePortGroupAsync(_net, name);
+        //                         _gcPortGroups.Remove(name);
+        //                         if (_pgCache.ContainsKey(name))
+        //                             _pgCache.Remove(name);
+        //                     }
+        //                     else
+        //                     {
+        //                         _gcPortGroups.Add(name);
+        //                     }
+        //                 }
+        //                 else
+        //                 {
+        //                     _gcPortGroups.Remove(name);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
         private async Task ReloadPgCache()
         {
-            string[] vmPgs = await LoadVmPortGroups();
+            string[] vmPgs = await LoadVmPortGroups(null);
             HostPortGroup[] pgs = await LoadPortGroups();
 
-            lock (_pgCache)
+            lock (_pgAllocation)
             {
                 foreach(HostPortGroup pg in pgs)
                 {
                     string name = pg.spec.name;
                     if (name.Contains("#"))
                     {
-                        if (!_pgCache.ContainsKey(name))
-                            _pgCache.Add(name, pg.spec.vlanId);
-
-                        if (!vmPgs.Contains(name))
+                        if (!_pgAllocation.ContainsKey(name))
                         {
-                            if (_gcPortGroups.Contains(name))
-                            {
-                                _logger.LogDebug("Removing empty portgroup " + name);
-                                _vim.RemovePortGroupAsync(_net, name);
-                                _gcPortGroups.Remove(name);
-                                if (_pgCache.ContainsKey(name))
-                                    _pgCache.Remove(name);
-                            }
-                            else
-                            {
-                                _gcPortGroups.Add(name);
-                            }
-                        }
-                        else
-                        {
-                            _gcPortGroups.Remove(name);
+                            _pgAllocation.Add(name, new PortGroupAllocation { Net = name, VlanId = pg.spec.vlanId });
+                            //_vlanMap[pg.spec.vlanId] = true;
                         }
                     }
                 }
+
+                foreach (string net in vmPgs)
+                {
+                    if (_pgAllocation.ContainsKey(net))
+                        _pgAllocation[net].Counter += 1;
+                }
+
+                //cleanup any empties
+                string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
+                RemoveVmPortGroups(empties).Wait();
             }
         }
 
-        private async Task<string[]> LoadVmPortGroups()
+        private async Task<string[]> LoadVmPortGroups(ManagedObjectReference mor)
         {
+            if (mor == null) mor = _vms;
             List<string> result = new List<string>();
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
                 _props,
-                FilterFactory.VmFilter(_vms, "config"));
+                FilterFactory.VmFilter(mor, "config"));
             ObjectContent[] oc = response.returnval;
             foreach (ObjectContent obj in oc)
             {
@@ -595,9 +652,29 @@ namespace TopoMojo.vSphere
                     result.Add(((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName);
                 }
             }
-            return result.Distinct().ToArray();
+            return result.ToArray();
         }
 
+        private async Task RemoveVmPortGroups(string[] nets)
+        {
+            lock(_pgAllocation)
+            {
+                foreach (string net in nets.Distinct().ToArray())
+                {
+                    if (_pgAllocation.ContainsKey(net))
+                    {
+                        _pgAllocation[net].Counter -= 1;
+                        if (_pgAllocation[net].Counter < 1)
+                        {
+                            //_vlanMap[_pgAllocation[net].VlanId] = false;
+                            _pgAllocation.Remove(net);
+                            _vim.RemovePortGroupAsync(_net, net);
+                        }
+                    }
+                }
+            }
+
+        }
         private async Task<TaskInfo> WaitForVimTask(ManagedObjectReference task)
         {
             int i = 0;
@@ -845,7 +922,7 @@ namespace TopoMojo.vSphere
                     if (layout != null && layout.disk != null && layout.disk.Length > 0 && layout.disk[0].diskFile.Length > 0)
                     {
                         //_logger.LogDebug(layout.disk[0].diskFile[0]);
-                        //vm.Disk = layout.disk[0].diskFile[0];
+                        vm.DiskPath = layout.disk[0].diskFile[0];
                     }
                 }
 
@@ -943,6 +1020,7 @@ namespace TopoMojo.vSphere
             _config.DisplayUrl = _config.DisplayUrl.Replace(pattern, val);
         }
 
+        private bool _portgroupsInitialized = false;
         private async Task MonitorSession()
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");
@@ -952,7 +1030,13 @@ namespace TopoMojo.vSphere
                 {
                     await Connect();
                     await ReloadVmCache();
-                    await ReloadPgCache();
+
+                    //only run this after the first connection
+                    if (!_portgroupsInitialized)
+                    {
+                        _portgroupsInitialized = true;
+                        await ReloadPgCache();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -966,5 +1050,11 @@ namespace TopoMojo.vSphere
         }
     }
 
+    internal class PortGroupAllocation
+    {
+        public string Net { get; set; }
+        public int Counter { get; set; }
+        public int VlanId { get; set; }
+    }
 
 }

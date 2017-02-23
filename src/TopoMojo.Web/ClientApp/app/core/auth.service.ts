@@ -68,9 +68,32 @@ export class AuthService {
         }, (err) => { console.error(err); });
     }
 
-    reset(account) {
+    forgot(account) {
         return this.http.post('/api/account/forgotpassword', { email: account})
         .toPromise();
+    }
+
+    reset(model) {
+        return this.http.post('/api/account/resetpassword', model)
+        .toPromise().then(bearer => {
+            localStorage.setItem(this.bearerKey, bearer.access_token);
+            this.loadProfile();
+            return bearer;
+        });
+    }
+
+    changePassword(model) {
+        return this.http.post('/api/account/changePassword', model)
+        .toPromise();
+    }
+
+    updateProfile(model) {
+        return this.http.post('/api/account/updateProfile', model)
+        .toPromise().then(bearer => {
+            localStorage.setItem(this.bearerKey, bearer.access_token);
+            this.loadProfile();
+            return bearer;
+        })
     }
 
     isAdmin() : boolean {

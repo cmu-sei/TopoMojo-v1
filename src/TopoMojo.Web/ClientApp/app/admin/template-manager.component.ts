@@ -11,6 +11,8 @@ export class TemplateManagerComponent implements OnInit {
     template: any;
     templates: any[];
     icon: string = 'fa fa-clipboard';
+    private term: string = '';
+    errorMessage: string;
 
     constructor(
         private service : TopoService,
@@ -24,6 +26,7 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     search(term) {
+        this.term = term;
         this.service.listTemplates({
             term: term,
             take: 50,
@@ -62,5 +65,20 @@ export class TemplateManagerComponent implements OnInit {
         .subscribe(data => {
             this.template = data as any;
         }, (err) => { this.service.onError(err) });
+    }
+
+    delete() {
+        this.service.deleteTemplate(this.template.id)
+        .subscribe(data => {
+            this.template = null;
+            this.search(this.term);
+        }, (err) => {
+            this.errorMessage = JSON.parse(err.text()).message;
+            this.service.onError(err);
+        })
+    }
+
+    clearError() {
+        this.errorMessage = null;
     }
 }

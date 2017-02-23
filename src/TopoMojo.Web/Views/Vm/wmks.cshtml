@@ -11,15 +11,15 @@
                 <li><button name="cad" class="btn btn-link tool">
                     <i class="glyphicon glyphicon-console"></i> Ctrl-Alt-Del</button></li>
                 <li><button name="fullscreen" class="btn btn-link tool"><i class="glyphicon glyphicon-fullscreen"></i> Fullscreen</button></li>
-                <li><button name="scale" class="btn btn-link tool"><i class="glyphicon glyphicon-resize-full"></i> Stretch</button></li>
+                <li><button name="scale" class="btn btn-link tool"><i class="glyphicon glyphicon-resize-full"></i> Fit</button></li>
                 <li>
                     <button name="upload" class="btn btn-link tool"><i class="glyphicon glyphicon-cd"></i> Upload ISO</button>
-                    <div class="row hidden indent">
+                    <div id="iso-upload-div" class="row hidden indent">
                         <div class="col-md-11 input-group">
                             <input id="iso-upload-input" type="file" name="file" class="form-control"/>
                             <span class="input-group-btn">
-                                <button id="iso-progress-label" class="btn btn-default has-spinner hidden">
-                                    <span class="spinner"><i class="glyphicon glyphicon-refresh"></i></span></button>
+                                <button id="iso-progress-label" class="btn btn-warning hidden">
+                                    <span class="badge"><i class="glyphicon glyphicon-refresh"></i></span></button>
                                 <button id="iso-upload-btn" class="btn btn-default">
                                     <i class="glyphicon glyphicon-cloud-upload"></i></button>
                             </span>
@@ -65,7 +65,7 @@
     var topoId = '@Model.TopoId';
     var url = '@Model.Url';
     var conditions = '@Model.Conditions';
-    var mock;
+    var mock = '@Model.Method';
 
     $(function() {
         new WebConsole(id, topoId, url, conditions);

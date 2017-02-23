@@ -60,6 +60,10 @@ export class TopoService {
         return this.http.post('/api/template/save', template);
     }
 
+    public deleteTemplate(id) {
+        return this.http.delete('/api/template/delete/' + id);
+    }
+
     public addTemplate(tref) {
         return this.http.post('/api/topology/addtemplate', tref);
     }
@@ -69,7 +73,7 @@ export class TopoService {
     }
 
     public removeTemplate(tref) {
-        return this.http.delete('/api/topology/removetemplate/'+tref.id);
+        return this.http.delete('/api/template/remove/'+tref.id);
     }
 
     public cloneTemplate(tref) {

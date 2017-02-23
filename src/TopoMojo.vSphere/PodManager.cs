@@ -77,7 +77,9 @@ namespace TopoMojo.vSphere
 
             _logger.LogDebug("deploy: find host ");
             vSphereHost host = FindHostByAffinity(template.IsolationTag);
+            _logger.LogDebug("deploy: host " + host.Name);
             NormalizeTemplate(template, host.Options);
+            _logger.LogDebug("deploy: normalized "+ template.Name);
 
             if (!template.Disks.IsEmpty())
             {
@@ -199,7 +201,13 @@ namespace TopoMojo.vSphere
             if (progress == 100)
             {
                 vSphereHost host = FindHostByRandom();
-                host.DeleteDisk(template.Disks[0].Path);
+                foreach (Disk disk in template.Disks)
+                {
+                    //protect stock disks; only delete a disk if it is local to the topology
+                    //i.e. the disk folder matches the topologyId
+                    if (template.IsolationTag.HasValue() && disk.Path.Contains(template.IsolationTag))
+                        host.DeleteDisk(disk.Path);
+                }
                 return -1;
             }
             throw new Exception("Cannot delete disk that isn't fully created.");
@@ -291,7 +299,7 @@ namespace TopoMojo.vSphere
         {
             vSphereHost host = FindHostByRandom();
             List<string> isos = new List<string>();
-            isos.AddRange(await host.GetFiles(host.Options.IsoStore + "public/*.iso", false));
+            isos.AddRange(await host.GetFiles(host.Options.IsoStore + "/*.iso", false));
             isos.AddRange(await host.GetFiles(host.Options.DiskStore + id + "/*.iso", true));
             return new VmOptions {
                 Iso = isos.ToArray()
@@ -398,7 +406,7 @@ namespace TopoMojo.vSphere
                 .OrderBy(o=>o.Count).Select(o=>o.Host)
                 .FirstOrDefault();
 
-            if (_hostCache.ContainsKey(hostname))
+            if (hostname.HasValue() && _hostCache.ContainsKey(hostname))
                 return _hostCache[hostname];
             else
                 return FindHostByRandom();
@@ -433,6 +441,7 @@ namespace TopoMojo.vSphere
                 vSphereHost vHost = new vSphereHost(
                     hostOptions,
                     _vmCache,
+                    _vlanMap,
                     _mill.CreateLogger<vSphereHost>()
                 );
                 _hostCache.Add(hostname, vHost);

@@ -22,6 +22,7 @@ using TopoMojo.Core;
 using TopoMojo.Data;
 using TopoMojo.Models;
 using TopoMojo.Services;
+using TopoMojo.Web;
 
 namespace TopoMojo
 {
@@ -104,7 +105,7 @@ namespace TopoMojo
 
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddSingleton<IFileUploadManager, TopoMojo.FileUploadManager>();
+            services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
 
             services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
             //services.AddScoped<SimulationManager, SimulationManager>();
@@ -247,4 +248,5 @@ namespace TopoMojo
             }
         }
     }
+
 }

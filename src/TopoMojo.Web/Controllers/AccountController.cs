@@ -15,6 +15,7 @@ using TopoMojo.Services;
 using TopoMojo.Data;
 using TopoMojo.Core;
 using Microsoft.EntityFrameworkCore;
+using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
@@ -250,6 +251,34 @@ namespace TopoMojo.Controllers
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
         }
 
+        [HttpPost("/api/[controller]/[action]")]
+        //[ValidateAntiForgeryToken]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> UpdateProfile([FromBody]ProfileUpdateModel model)
+        {
+            Person person = _db.People.Find(_user.PersonId);
+            person.Name = model.Name;
+            await _db.SaveChangesAsync();
+            return Json(await GetAuthToken(_user, person));
+        }
+
+        [HttpPost("/api/[controller]/[action]")]
+        //[ValidateAntiForgeryToken]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> ChangePassword([FromBody]ChangePasswordViewModel model)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user != null)
+            {
+                var result = await _userManager.ChangePasswordAsync(user, model.Current, model.Password);
+                if (!result.Succeeded)
+                {
+                    throw new InvalidOperationException(String.Join("\n", result.Errors.Select(e => e.Description).ToArray()));
+                }
+            }
+            return Json(true);
+        }
+
         //
         // GET: /Account/ForgotPassword
         [HttpGet]
@@ -264,6 +293,7 @@ namespace TopoMojo.Controllers
         [HttpPost("/api/[controller]/[action]")]
         [AllowAnonymous]
         //[ValidateAntiForgeryToken]
+        [JsonExceptionFilter]
         public async Task<IActionResult> ForgotPassword([FromBody]ForgotPasswordViewModel model)
         {
 
@@ -272,19 +302,21 @@ namespace TopoMojo.Controllers
                 var user = await _userManager.FindByNameAsync(model.Email);
                 if (user != null && (await _userManager.IsEmailConfirmedAsync(user)))
                 {
+
                 //     // Don't reveal that the user does not exist or is not confirmed
                 //     return View("ForgotPasswordConfirmation");
                 // }
 
+                    user.ResetCode = new Random().Next(10000, 100000);
+                    user.ResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    await _userManager.UpdateAsync(user);
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                     // Send an email with this link
-                    var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-                    callbackUrl = callbackUrl.Replace("http://localhost:5000", _options.Site.ExternalUrl);
-                    await _emailSender.SendEmailAsync(model.Email, "Reset Password",
-                    $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
-                    _logger.LogInformation($"{user.UserName} [{user.Id}] requested-reset null null []");
-                    return View("ForgotPasswordConfirmation");
+                    //var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    //var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+                    //callbackUrl = callbackUrl.Replace("http://localhost:5000", _options.Site.ExternalUrl);
+                    await _emailSender.SendEmailAsync(model.Email, "TopoMojo password reset", $"TopoMojo password reset code: {user.ResetCode}");
+                    _logger.LogInformation($"{user.UserName} [{user.Id}] requested-reset null null [{user.ResetCode}]");
                 }
             }
             return Json(true);
@@ -312,29 +344,28 @@ namespace TopoMojo.Controllers
 
         //
         // POST: /Account/ResetPassword
-        [HttpPost]
+        [HttpPost("/api/[controller]/[action]")]
         [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        //[ValidateAntiForgeryToken]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> ResetPassword([FromBody]ResetPasswordViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
             var user = await _userManager.FindByNameAsync(model.Email);
-            if (user == null)
+            if (user != null)
             {
-                // Don't reveal that the user does not exist
-                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
+                if (user.ResetCode>0 && user.ResetCode.ToString() == model.Code)
+                {
+                    var result = await _userManager.ResetPasswordAsync(user, user.ResetToken, model.Password);
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation($"{user.UserName} [{user.Id}] reset-password null null []");
+                        user.ResetCode = 0;
+                        user.ResetToken = "";
+                        await _userManager.UpdateAsync(user);
+                    }
+                }
             }
-            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
-            if (result.Succeeded)
-            {
-                _logger.LogInformation($"{user.UserName} [{user.Id}] reset-password null null []");
-                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
-            }
-            AddErrors(result);
-            return View();
+            return await Login(new { u = model.Email, p = model.Password });
         }
 
         //
@@ -447,9 +478,26 @@ namespace TopoMojo.Controllers
             }
         }
 
+        private async Task<object> GetAuthToken(ApplicationUser user, Person person)
+        {
+            if (person == null)
+            {
+                person = await _db.People.FindAsync(user.PersonId);
+            }
+
+            return JwtTokenGenerator.Generate(new
+            {
+                sub = user.Id,
+                tmnm = person.Name ?? user.UserName,
+                tmid = user.PersonId,
+                tmad = user.IsAdmin
+            }, new IdentityOptions());
+
+        }
         [HttpPost]
         [AllowAnonymous]
         [RouteAttribute("/api/[controller]/[action]")]
+        [JsonExceptionFilter]
         public async Task<IActionResult> Login([FromBody] dynamic creds)
         {
             string username = creds.u;
@@ -458,34 +506,37 @@ namespace TopoMojo.Controllers
             if (result.Succeeded)
             {
                 ApplicationUser user = await _userManager.FindByEmailAsync(username);
-                var token = JwtTokenGenerator.Generate(new
-                    {
-                        sub = user.Id,
-                        tmnm = user.Email,
-                        tmid = user.PersonId,
-                        tmad = user.IsAdmin
-                    }, new IdentityOptions());
-                return Json(token);
+                // var token = JwtTokenGenerator.Generate(new
+                //     {
+                //         sub = user.Id,
+                //         tmnm = user.Email,
+                //         tmid = user.PersonId,
+                //         tmad = user.IsAdmin
+                //     }, new IdentityOptions());
+                return Json(await GetAuthToken(user, null));
             }
             return BadRequest();
         }
+
         [HttpGet]
         [RouteAttribute("/api/[controller]/[action]")]
+        [JsonExceptionFilter]
         public async Task<IActionResult> Renew()
         {
-            ApplicationUser user = _user;
-            var token = JwtTokenGenerator.Generate(new
-                {
-                    sub = user.Id,
-                    tmnm = user.Email,
-                    tmid = user.PersonId,
-                    tmad = user.IsAdmin
-                }, new IdentityOptions());
-            return Json(token);
+            // ApplicationUser user = _user;
+            // var token = JwtTokenGenerator.Generate(new
+            //     {
+            //         sub = user.Id,
+            //         tmnm = user.Email,
+            //         tmid = user.PersonId,
+            //         tmad = user.IsAdmin
+            //     }, new IdentityOptions());
+            return Json(await GetAuthToken(_user, null));
         }
 
         [HttpPost]
         [RouteAttribute("/api/[controller]/[action]")]
+        [JsonExceptionFilter]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
@@ -495,6 +546,7 @@ namespace TopoMojo.Controllers
         }
 
         [RouteAttribute("/api/[controller]/[action]")]
+        [JsonExceptionFilter]
         [HttpPost]
         public async Task<IActionResult> Roster([FromBody]Search<Person> search)
         {
@@ -513,6 +565,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<Person> Grant([FromBody] Person person)
         {
             if (!_user.IsAdmin)
@@ -522,6 +575,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<Person> Deny([FromBody] Person person)
         {
             if (!_user.IsAdmin)
@@ -553,6 +607,7 @@ namespace TopoMojo.Controllers
             if (user != null)
             {
                 user.IsAdmin = approved;
+                user.EmailConfirmed = true;
                 await _userManager.UpdateAsync(user);
             }
             else
@@ -562,8 +617,9 @@ namespace TopoMojo.Controllers
                     UserName = person.Name,
                     Email = person.Name,
                     IsAdmin = approved,
-                    PersonId = person.Id
-                }, "321ChangeMe!");
+                    PersonId = person.Id,
+                    EmailConfirmed = true
+                }, "Compl3XP@ss" + Guid.NewGuid().ToString());
             }
 
             return person;
@@ -572,6 +628,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<Person> AddUser([FromBody]Person person)
         {
             if (!_user.IsAdmin)
@@ -582,6 +639,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<IActionResult> Upload([FromBody]dynamic upload)
         {
             if (!_user.IsAdmin)
@@ -595,14 +653,6 @@ namespace TopoMojo.Controllers
                 ApplicationUser user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    // Person p = new Person
-                    // {
-                    //     Id = 0,
-                    //     Name = email,
-                    //     GlobalId = Guid.NewGuid().ToString(),
-                    //     WhenCreated = DateTime.UtcNow
-                    // };
-                    // _db.People.Add(p);
                     results.Add(Adjudicate(new Person { Name = email }, false).Result);
                 }
             }
@@ -612,6 +662,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<bool> AddTopoUser([FromBody] dynamic model)
         {
             int topoId = model.topoId;
@@ -642,6 +693,7 @@ namespace TopoMojo.Controllers
 
         [RouteAttribute("/api/[controller]/[action]")]
         [HttpPost]
+        [JsonExceptionFilter]
         public async Task<bool> RemoveTopoUser([FromBody] dynamic model)
         {
             int tid = model.topoId;

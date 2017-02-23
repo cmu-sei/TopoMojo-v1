@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Options;
+using TopoMojo.Models;
 
 namespace TopoMojo.Web
 {
@@ -11,17 +13,19 @@ namespace TopoMojo.Web
         private class JsonExceptionFilter : IExceptionFilter
         {
             private readonly IHostingEnvironment _hostingEnvironment;
-
+            private readonly ApplicationOptions _options;
             public JsonExceptionFilter(
-                IHostingEnvironment hostingEnvironment)
+                IHostingEnvironment hostingEnvironment,
+                IOptions<ApplicationOptions> optionsAccessor)
             {
                 _hostingEnvironment = hostingEnvironment;
+                _options = optionsAccessor.Value;
             }
 
             public void OnException(ExceptionContext context)
             {
                 JsonResult result = null;
-                if (_hostingEnvironment.IsDevelopment())
+                if (_hostingEnvironment.IsDevelopment() || _options.Site.ShowExceptionDetail)
                 {
                     result = new JsonResult(context.Exception);
                 }

@@ -9,6 +9,7 @@ namespace TopoMojo.Models
         public string Host { get; set; }
         public string Path { get; set; }
         public string Reference { get; set; }
+        public string DiskPath { get; set; }
         public string Stats { get; set; }
         public string Status { get; set; }
         public VmPowerState State { get; set; }

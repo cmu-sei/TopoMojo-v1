@@ -1,13 +1,10 @@
-using System;
-using TopoMojo.Abstractions;
-
 namespace TopoMojo.Models
 {
 
     public class ApplicationOptions
     {
         public SiteConfiguration Site { get; set; }
-        public FileUploadConfiguration FileUpload { get; set; }
+        public FileUploadOptions FileUpload { get; set; }
         public PodConfiguration Pod { get; set; }
     }
 
@@ -20,6 +17,7 @@ namespace TopoMojo.Models
         public string DataRepositoryType { get; set; }
         public bool AllowRegistration { get; set; }
         public string AllowedDomains { get; set; }
+        public bool ShowExceptionDetail { get; set; }
 
     }
 

@@ -42,14 +42,14 @@ export class UserManagerComponent implements OnInit {
     grant() {
         this.service.grant(this.person)
         .subscribe(result => {
-            this.person = result.json() as any;
+            this.person = result as any;
         }, (err) => { this.service.onError(err) });
 
     }
     deny() {
-        this.service.grant(this.person)
+        this.service.deny(this.person)
         .subscribe(result => {
-            this.person = result.json() as any;
+            this.person = result as any;
         }, (err) => { this.service.onError(err) });
     }
     promote() {

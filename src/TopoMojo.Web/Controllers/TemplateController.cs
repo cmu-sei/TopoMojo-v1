@@ -18,12 +18,15 @@ namespace TopoMojo.Controllers
     {
         public TemplateController(
             TemplateManager templateManager,
+            IPodManager podManager,
             IServiceProvider sp) : base(sp)
         {
             _mgr = templateManager;
+            _pod = podManager;
         }
 
         private readonly TemplateManager _mgr;
+        private readonly IPodManager _pod;
 
         [HttpGet("{id}")]
         [JsonExceptionFilterAttribute]
@@ -53,7 +56,22 @@ namespace TopoMojo.Controllers
             return Json(await _mgr.Save(template));
         }
 
+        [HttpDelete("{id}")]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Delete([FromRoute]int id)
+        {
+            return Json(await _mgr.DeleteTemplate(id));
+        }
 
+        [HttpDelete("{id}")]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Remove([FromRoute]int id)
+        {
+            Models.Template template = await _mgr.GetDeployableTemplate(id, null);
+            await _mgr.RemoveTemplate(id);
+            await _pod.DeleteDisks(template); //only remove disks if removetemplate doesn't throw
+            return Json(true);
+        }
     }
 
 }
