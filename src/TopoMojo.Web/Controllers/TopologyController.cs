@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
+using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -18,11 +19,14 @@ namespace TopoMojo.Controllers
     {
         public TopologyController(
             TopologyManager topologyManager,
+            IPodManager podManager,
             IServiceProvider sp) : base(sp)
         {
+            _pod = podManager;
             _mgr = topologyManager;
         }
 
+        private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
 
         [HttpPost]
@@ -44,6 +48,16 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Load([FromRoute]int id)
         {
             return Json(await _mgr.LoadAsync(id));
+        }
+
+        [HttpDelete("{id}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<IActionResult> Delete([FromRoute]int id)
+        {
+            Topology topo = await _mgr.LoadAsync(id);
+            foreach (Vm vm in await _pod.Find(topo.GlobalId))
+                await _pod.Delete(vm.Id);
+            return Json(await _mgr.DeleteAsync(topo));
         }
 
         [HttpPost]

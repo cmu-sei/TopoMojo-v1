@@ -1,25 +1,60 @@
-<h2>Overview</h2>
+<h2>Getting Started</h2>
 
-<h4>Accounts</h4>
-<p>
-    Login to build simulation topologies.  An administrator can register you.  Initiate a password-reset
-    to set your password.
-</p>
-
-<h4>Topologies</h4>
-<p>
-    To create a new topology, use the 'new' link on the 'Browser' page.
-    Edit the topology to add/remove team members, add/remove templates, and manage virtual machines
-    deployed from your templates.
-</p>
-
-<h4>Templates</h4>
-<p>
-    You can use any published templates.  If you add an external template to your topology,
-    you can deploy it, but will not be able to save it (because you do not own it).  You can,
-    however, clone that template if you want to own it, and thus save state to the virtual disk.
-    It is a good practice to use external templates where it makes sense to do so.
-</p>
-<p>
-    You cannot delete or clone templates if it has a vm deployed.
-</p>
+<div>
+    <span class="avatar">1</span>
+    <ul class="list-unstyled">
+    <li>Login to build simulation topologies.</li>
+    <li>An administrator can register you.</li>
+    <li>Initiate a password-reset to set your password.</li>
+    </ul>
+</div>
+<div>
+    <span class="avatar">2</span>
+    <ul class="list-unstyled">
+        <li>Click 'Browse' to find your topology.</li>
+        <li>If making a new topology, click 'New' on the Browse page.</li>
+        <li>Click the 'Edit' icon on the topology.</li>
+        <li>If you do not see an 'Edit' button, ask the creator to add you to the topology.</li>
+    </ul>
+</div>
+<div>
+    <span class="avatar">3</span>
+    <ul class="list-unstyled">
+        <li>In edit-mode, click on the Name or Description to change it.</li>
+        <li>In edit-mode, click on 'add-user-emails' to add your teammates to a new topology.</li>
+        <li>To link to a template, click 'Find Templates' and select the desired template(s).</li>
+    </ul>
+</div>
+<div>
+    <span class="avatar">4</span>
+    <ul class="list-unstyled">
+        <li>Click on the template Name or Description to change it.</li>
+        <li>Click on the 'networks' value to add or change the network names for the template.</li>
+        <li>Templates are initially linked as 'external' templates.</li>
+        <li>You can deploy it with your lab, but cannot make changes to it.</li>
+        <li>To convert the 'external' template to a 'local' template, click the '?' next to 'external'.</li>
+        <li>(The template must have status 'initialize' to be able to clone it)</li>
+        <li>Click the red 'Trash' icon to delete the template. (It must not be 'deployed')</li>
+    </ul>
+</div>
+<div>
+    <span class="avatar">5</span>
+    <ul class="list-unstyled">
+        <li>After cloning a template, you must 'initialize' the template before deploying it.</li>
+        <li>Click on 'Deploy' to create the virtual machine</li>
+        <li>Once deployed, use the Start, Stop, Revert, Save, Delete buttons to manage the vm.</li>
+        <li>(You cannot 'Save' an 'external' template.)</li>
+        <li>It is a good practice to shutdown the guest OS before Saving</li>
+        <li>Click the 'Console' button to connect to the virtual machine console.</li>
+    </ul>
+</div>
+<div>
+    <span class="avatar">6</span>
+    <ul class="list-unstyled">
+        <li>Click the 'Settings' gear in the upper left corner of the Console to view console tools.</li>
+        <li>You can upload an iso file if necessary.</li>
+        <li>Ask an administrator to upload an iso that should be public or that is over 1GB.</li>
+        <li>You can change the network of the machine's first adapter to 'bridge-net' to reach the internet.</li>
+        <li>Do not leave the network set to 'bridge-net'.  After downloading your resources, change it back to the desired network.</li>
+    </ul>
+</div>

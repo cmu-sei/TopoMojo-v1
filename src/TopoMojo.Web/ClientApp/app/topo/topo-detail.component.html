@@ -11,13 +11,26 @@
                     <template-editor [tref]="t" (onRemoved)="remove($event)"></template-editor>
                 </li>
             </ul>
+            <div>
+                <button *ngIf="!deleteMsgVisible" (click)="confirmDelete()" class="btn btn-danger btn-large">
+                    <i class="fa fa-trash"></i> Delete Topology
+                </button>
+                <p *ngIf="deleteMsgVisible" class="alert alert-danger">
+                    Please confirm you intend to delete this Topology
+                    along with its templates.
+                    <button (click)="delete()" class="btn btn-danger">
+                        <i class="fa fa-trash"></i> Delete</button>
+                    <button (click)="cancelDelete()" class="btn btn-danger">
+                        <i class="fa fa-remove"></i> Cancel</button>
+                </p>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
         <button (click)="toggleSelector()" class="btn btn-link">
             <i class="fa fa-search"></i> Find Templates</button>
         <div *ngIf="selectorVisible">
-            <search-bar (fire)="search($event)"></search-bar>
+            <search-bar (onSearch)="search($event)"></search-bar>
             <entity-list
                 [entities]="publishedTemplates"
                 [icon]="addIcon"

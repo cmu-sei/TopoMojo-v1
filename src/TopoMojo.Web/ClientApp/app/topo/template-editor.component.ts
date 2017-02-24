@@ -10,6 +10,7 @@ import { TopoService } from './topo.service';
 export class TemplateEditorComponent implements OnInit {
     @Input() tref: any;
     @Output() onRemoved: EventEmitter<any> = new EventEmitter<any>();
+    @ViewChild('cloneHelp') cloneHelp: any;
     editing: boolean;
     cloneVisible: boolean;
     vm: any;
@@ -59,7 +60,8 @@ export class TemplateEditorComponent implements OnInit {
         if ((!this.vm) || (this.vm.id))
             return; //don't clone unless empty vm loaded
 
-        this.cloneVisible = false;
+        this.cloneHelp.toggle();
+        //this.cloneVisible = false;
         this.service.cloneTemplate(this.tref)
         .subscribe(result => {
             this.tref = result as any;

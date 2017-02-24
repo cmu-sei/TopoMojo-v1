@@ -8,8 +8,15 @@ import { TopoService } from './topo.service';
     styleUrls: ['./topo-browser.component.css']
 })
 export class TopoBrowserComponent {
-    topos: any[];
+    topos: any[] = [];
     term: string;
+    model: any = {
+        term: '',
+        skip: 0,
+        take: 20,
+        filters: []
+    };
+    hasMore: number;
     editorVisible: boolean;
 
     constructor(private service: TopoService, private router: Router) {
@@ -17,16 +24,27 @@ export class TopoBrowserComponent {
     }
 
     ngOnInit(): void {
-        this.search('');
+        this.search();
     };
 
-    search(term) {
-        this.service.listtopo({
-            term: term,
-            take: 20,
-            filters: []
-        }).subscribe(data => {
-            this.topos = data.results as any[];
+    more() {
+        this.model.skip += this.model.take;
+        this.search();
+    }
+
+    termChanged(term) {
+        this.hasMore = 0;
+        this.model.term = term;
+        this.model.skip = 0;
+        this.topos = [];
+        this.search();
+    }
+
+    search() {
+        this.service.listtopo(this.model)
+        .subscribe(data => {
+            this.topos = this.topos.concat(data.results);
+            this.hasMore = data.total - (data.skip+data.take);
         }, (err) => { this.service.onError(err); });
     }
 

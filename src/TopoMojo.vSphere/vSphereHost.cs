@@ -130,7 +130,7 @@ namespace TopoMojo.vSphere
             //protect stock disks; only save a disk if it is local to the topology
             //i.e. the disk folder matches the topologyId
             if (vm.Name.Tag().HasValue() && !vm.DiskPath.Contains(vm.Name.Tag()))
-                throw new InvalidOperationException("Cannot save external template");
+                throw new InvalidOperationException("External templates must be cloned into local templates in order to be saved.");
 
             _logger.LogDebug($"Save: get current snap for vm {vm.Name}");
 

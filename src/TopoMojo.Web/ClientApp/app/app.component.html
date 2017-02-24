@@ -16,16 +16,6 @@
                         <span class='fa fa-home'></span> Home
                     </a>
                 </li>-->
-                <li *ngIf="profile.isLoggedIn" [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/topo']">
-                        <span class='fa fa-map'></span> Browse
-                    </a>
-                </li>
-                <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/admin']">
-                        <span class='fa fa-shield'></span> Admin
-                    </a>
-                </li>
                 <li *ngIf="!profile.isLoggedIn" [routerLinkActive]="['link-active']">
                     <a [routerLink]="['/login']">
                         <span class='fa fa-unlock'></span> Login
@@ -33,12 +23,27 @@
                 </li>
                 <li *ngIf="profile.isLoggedIn">
                     <ul class="nav navbar-nav navbar-right">
-                        <li *ngIf="profile.isLoggedIn">
+                        <li [routerLinkActive]="['link-active']">
+                            <a [routerLink]="['/topo']">
+                                <span class='fa fa-map'></span> Browse
+                            </a>
+                        </li>
+                        <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
+                            <a [routerLink]="['/admin']">
+                                <span class='fa fa-shield'></span> Admin
+                            </a>
+                        </li>
+                        <li>
+                            <a [routerLink]="['/help']">
+                                <i class="fa fa-question"></i> Help
+                            </a>
+                        </li>
+                        <li>
                             <a [routerLink]="['/profile']">
                                 <span class='fa fa-user'></span> {{ profile.userName }}
                             </a>
                         </li>
-                        <li *ngIf="profile.isLoggedIn" [routerLinkActive]="['link-active']">
+                        <li [routerLinkActive]="['link-active']">
                             <a (click)="logout()">
                                 <span class='fa fa-lock'></span> Logout
                             </a>

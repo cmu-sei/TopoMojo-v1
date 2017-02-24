@@ -10,8 +10,14 @@
         <span class="form-control-clear fa fa-remove form-control-feedback hidden"></span>
     </div>
     <span class="input-group-btn">
-        <button (click)="onSearch()" class="btn btn-default">
+        <button (click)="fire()" class="btn btn-default">
             <i class="fa fa-search"></i>
         </button>
     </span>
 </div>
+
+<ng-content></ng-content>
+
+<button *ngIf="hasMore" (click)="more()" class="btn btn-primary">
+    <i class="fa fa-search"></i> More
+</button>

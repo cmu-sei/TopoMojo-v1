@@ -25,7 +25,7 @@
             <dd>
                 <span *ngIf="tref.owned" class="label label-default">local</span>
                 <span *ngIf="!tref.owned" class="label label-warning">external</span>
-                <inline-help>
+                <inline-help #cloneHelp>
                     <span>This template is external to this topology; you cannot save disk changes. If you plan to alter the disk,
                     ensure the template is not deployed and then clone it &mdash;
                     <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">

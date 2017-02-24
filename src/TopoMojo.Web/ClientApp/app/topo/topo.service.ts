@@ -28,6 +28,10 @@ export class TopoService {
         return this.http.post('/api/topology/update', topo);
     }
 
+    public deleteTopo(topo) {
+        return this.http.delete('/api/topology/delete/' + topo.id);
+    }
+
     public listMembers(id: number) {
         return this.http.get('/api/topology/members/' + id);
     }

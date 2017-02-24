@@ -74,6 +74,27 @@ namespace TopoMojo.Core
             return await base.SaveAsync(topo);
         }
 
+        public async Task<bool> DeleteAsync(Topology topo)
+        {
+            if (! await CanEdit(topo.Id))
+                throw new InvalidOperationException();
+
+            _db.Topologies.Remove(topo);
+
+            TemplateReference[] list = await _db.TTLinkage
+                .Include(t => t.Template)
+                .Where(t => t.TopologyId == topo.Id)
+                .ToArrayAsync();
+            _db.TTLinkage.RemoveRange(list);
+
+            foreach (TemplateReference tref in list)
+                if (tref.Template.OwnerId == topo.Id)
+                    _db.Templates.Remove(tref.Template);
+
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
         protected override void Normalize(Topology topo)
         {
             base.Normalize(topo);
@@ -90,6 +111,11 @@ namespace TopoMojo.Core
                     && p.Value.HasFlag(PermissionFlag.Editor))
                     .SingleOrDefaultAsync();
             return (permission != null);
+        }
+
+        public async Task<bool> CanEdit(int id)
+        {
+            return (await Permission(id)).CanEdit();
         }
 
         private async Task<PermissionFlag> Permission(int topoId)

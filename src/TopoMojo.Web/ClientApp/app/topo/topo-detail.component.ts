@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
+import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopoService } from './topo.service';
 import 'rxjs/add/operator/switchMap';
 
@@ -12,12 +12,15 @@ export class TopoDetailComponent {
     trefs: any[];
     publishedTemplates: any[];
     selectorVisible: boolean;
+    deleteMsgVisible: boolean;
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-arrow-circle-left';
 
-    constructor(private service: TopoService, private route: ActivatedRoute) {
-        this.service = service;
-    }
+    constructor(
+        private service: TopoService,
+        private route: ActivatedRoute,
+        private router: Router
+    ) { }
 
     ngOnInit(): void {
         this.route.params
@@ -72,6 +75,21 @@ export class TopoDetailComponent {
                 break;
             }
         }
+    }
+
+    confirmDelete() {
+        this.deleteMsgVisible = true;
+    }
+
+    cancelDelete() {
+        this.deleteMsgVisible = false;
+    }
+
+    delete() {
+        this.service.deleteTopo(this.topo)
+        .subscribe(data => {
+            this.router.navigate(['/topo']);
+        }, (err) => { this.service.onError(err)});
     }
 
     update() {

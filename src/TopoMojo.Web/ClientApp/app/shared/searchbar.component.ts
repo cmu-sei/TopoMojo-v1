@@ -8,9 +8,9 @@ export class SearchBarComponent {
     timer: any;
     term: string = '';
     last: string = '';
-
-    @Output()
-    fire: EventEmitter<string> = new EventEmitter<string>();
+    @Input() hasMore: boolean;
+    @Output() onSearch: EventEmitter<string> = new EventEmitter<string>();
+    @Output() onMore: EventEmitter<string> = new EventEmitter<string>();
 
     refresh(term) {
         this.term = term.trim();
@@ -18,14 +18,18 @@ export class SearchBarComponent {
         this.timer = setTimeout(() => this.timerFired(), 500);
     }
 
-    onSearch() {
-        this.fire.emit(this.term);
+    fire() {
+        this.onSearch.emit(this.term);
     }
 
     timerFired() {
         if (this.term !== this.last) {
             this.last = this.term;
-            this.fire.emit(this.term);
+            this.onSearch.emit(this.term);
         }
+    }
+
+    more() {
+        this.onMore.emit('');
     }
 }
