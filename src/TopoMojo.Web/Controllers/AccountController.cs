@@ -531,6 +531,7 @@ namespace TopoMojo.Controllers
             //         tmid = user.PersonId,
             //         tmad = user.IsAdmin
             //     }, new IdentityOptions());
+            await _signInManager.SignInAsync(_user, false);
             return Json(await GetAuthToken(_user, null));
         }
 
