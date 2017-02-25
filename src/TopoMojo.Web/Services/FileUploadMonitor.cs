@@ -94,10 +94,10 @@ namespace TopoMojo.Web
 
         public FileProgress Progress(string key)
         {
-            if (!_monitor.ContainsKey(key))
-                throw new InvalidOperationException();
+            if (_monitor.ContainsKey(key))
+                return _monitor[key];
 
-            return _monitor[key];
+            return new FileProgress { Key = key, Progress = -1 };
         }
 
         private async Task CleanupLoop()

@@ -111,6 +111,9 @@ function WebConsole(id, topoid, url, conditions) {
         VmStateRunning = 1,
         VmStateSuspended = 2;
 
+    var $progressBtn = null,
+        $uploadBtn = null;
+
     $(window).resize(function() {
         if (wmks) {
             var rect = wmks.getRemoteScreenSize();
@@ -151,7 +154,8 @@ function WebConsole(id, topoid, url, conditions) {
 
         $('#feedback-div button[name="start"]').click(vmStart);
 
-        $('#iso-upload-btn').click(uploadIso);
+        $uploadBtn = $('#iso-upload-btn').click(uploadIso);
+        $progressBtn = $('#iso-progress-btn').click(uploadProgress);
 
         $('#console-tools-btn').click(function() {
             $(this).nextAll().toggleClass('hidden');
@@ -241,17 +245,19 @@ function WebConsole(id, topoid, url, conditions) {
 
     function uploadIso() {
         var $this = $(this);
-        var $progress = $this.prev();
+        //var $progress = $this.prev();
         var files = $('#iso-upload-input')[0].files;
         if (!files.length) return;
         //var scope = $this.parent().find('input:radio[name="scope"]:checked').val();
-        var data = new FormData();
         var key = newUUID();
+        $progressBtn.data('key', key);
+        var dest = $('input[name="uploadDest"]:checked').val();
+        var data = new FormData();
         $.each(files, function(i, file) {
-            data.append('file', file, 'fd=temp&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
+            data.append('file', file, 'fd='+dest+'&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
         });
         $this.prop('disabled', true);
-        setTimeout(uploadProgress, 5000, $this, key);
+        setTimeout(checkProgress, 5000);
 
         $.ajax({
             url: '/file/upload',
@@ -267,19 +273,24 @@ function WebConsole(id, topoid, url, conditions) {
             console.log(jqXhr.responseJSON);
         })
         .done(function(result) {
-            console.log(result.filename);
+            //console.log(result.filename);
             //loadIsos();
         })
         .always(function() {
             //$this.next().text('');
-            $this.prop('disabled', false);
+            //$this.prop('disabled', false);
         });
     }
 
+    function checkProgress() {
+        $progressBtn.trigger('click');
+    }
+
     var progressIdleCount = 0 ;
-    function uploadProgress($proto, key) {
-        var $progress = $proto.prev();
-        $progress.removeClass('hidden');
+    function uploadProgress() {
+        //var $progress = $proto.prev();
+        $progressBtn.removeClass('hidden');
+        var key = $progressBtn.data('key');
 
         $.get('/api/file/progress/' + key)
         .fail(function(jqXhr, status, error) {
@@ -288,13 +299,13 @@ function WebConsole(id, topoid, url, conditions) {
         .done(function(result) {
             if (result < 0) progressIdleCount += 1;
             if (result < 100) {
-                $progress.text((result < 0) ? '...' : result + '%');
+                $progressBtn.text((result < 0) ? '...' : result + '%');
                 if (progressIdleCount < 10) {
-                    setTimeout(uploadProgress, 5000, $proto, key);
+                    setTimeout(checkProgress, 5000);
                 }
             } else {
-                $progress.text('').addClass('hidden');
-                $proto.prop('disabled', false);
+                $progressBtn.text('').addClass('hidden');
+                $uploadBtn.prop('disabled', false);
                 $('#iso-upload-div').addClass('hidden');
             }
         })
