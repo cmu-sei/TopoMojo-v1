@@ -1,3 +1,7 @@
 .json {
     font-family: Courier New, Courier, monospace;
 }
+
+.subdued {
+    color: lightgray;
+}

@@ -119,7 +119,11 @@ namespace TopoMojo.Core
                 q = q.Where(t => t.IsPublished);
 
             search.Total = await q.CountAsync();
-            search.Results = await q.ToArrayAsync();
+            search.Results = await q
+                .OrderBy(t => t.Name)
+                .Skip(search.Skip)
+                .Take(search.Take)
+                .ToArrayAsync();
             return search;
         }
 

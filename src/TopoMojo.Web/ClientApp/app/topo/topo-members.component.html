@@ -1,4 +1,5 @@
 <div *ngIf="permissions">
+    <span class="label label-default">People</span>
     <ul class="list-inline">
         <li *ngFor="let p of permissions">
             <span>{{p.person.name}}</span>

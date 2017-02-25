@@ -8,3 +8,6 @@ div.row {
 .avatar {
     font-size: 4em;
 }
+a {
+    line-height: 1;
+}

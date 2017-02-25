@@ -9,10 +9,17 @@ import { TopoService } from '../topo/topo.service';
 })
 export class TemplateManagerComponent implements OnInit {
     template: any;
-    templates: any[];
+    templates: any[] = [];
     icon: string = 'fa fa-clipboard';
-    private term: string = '';
+    //private term: string = '';
     errorMessage: string;
+    hasMore: number;
+    model: any = {
+        term: '',
+        skip: 0,
+        take: 20,
+        filters: []
+    }
 
     constructor(
         private service : TopoService,
@@ -22,20 +29,44 @@ export class TemplateManagerComponent implements OnInit {
     @ViewChild('focusTag') focusTagEl;
 
     ngOnInit() {
-        this.search('');
+        this.fireSearch();
     }
 
-    search(term) {
-        this.term = term;
-        this.service.listTemplates({
-            term: term,
-            take: 50,
-            searchFilters: []
-        })
+    more() {
+        this.model.skip += this.model.take;
+        this.fireSearch();
+    }
+
+    termChanged(term) {
+        this.model.term = term;
+        this.search();
+    }
+
+    search() {
+        this.model.skip = 0;
+        this.hasMore = 0;
+        this.templates = [];
+        this.fireSearch();
+    }
+
+    fireSearch() {
+        this.service.listTemplates(this.model)
         .subscribe(data => {
-            this.templates = data.results as any[];
+            this.templates = this.templates.concat(data.results as any[]);
+            this.hasMore = data.total - (data.skip+data.take);
             this.template = null;
         }, (err) => { this.service.onError(err) })
+    }
+
+    select(template) {
+        if (this.template === template) {
+            this.template = null;
+        } else {
+            this.template = template;
+            this._ngZone.runOutsideAngular(() => {
+                setTimeout(() => this.focusEditor(), 5);
+            });
+        }
     }
 
     load(template) {
@@ -55,15 +86,28 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     create() {
-        this.template = {
-            name: ""
-        };
+        this.service.saveTemplate({ name: 'new-template'})
+        .subscribe(data => {
+            this.templates.push(data);
+            this.template = data;
+            this._ngZone.runOutsideAngular(() => {
+                setTimeout(() => this.focusEditor(), 5);
+            });
+        }, (err) => { this.service.onError(err) });
+
     }
 
     save() {
         this.service.saveTemplate(this.template)
         .subscribe(data => {
-            this.template = data as any;
+            // for (let i=0; i<this.templates.length; i++) {
+            //     if (this.templates[i].id == data.id) {
+            //         this.templates[i] = data;
+            //         return;
+            //     }
+            // }
+            // this.templates.push(data);
+            this.template = null;
         }, (err) => { this.service.onError(err) });
     }
 
@@ -71,7 +115,7 @@ export class TemplateManagerComponent implements OnInit {
         this.service.deleteTemplate(this.template.id)
         .subscribe(data => {
             this.template = null;
-            this.search(this.term);
+            this.termChanged(this.model.term);
         }, (err) => {
             this.errorMessage = JSON.parse(err.text()).message;
             this.service.onError(err);

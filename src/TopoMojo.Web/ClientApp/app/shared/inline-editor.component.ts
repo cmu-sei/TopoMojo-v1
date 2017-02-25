@@ -112,7 +112,7 @@ a {
  color: #000;
  border-bottom: dashed 1px #428bca;
  cursor: pointer;
- line-height: 2;
+ line-height: 1.5;
  margin-right: 5px;
  margin-left: 5px;
 }

@@ -1,42 +1,53 @@
 <div class="row">
-    <div class="col-md-4">
+    <div class="">
         <h4>Templates</h4>
         <div class="row">
-            <search-bar class="col-md-10" (fire)="search($event)"></search-bar>
-            <div class="col-md-2">
+            <search-bar class="col-xs-9" (onSearch)="termChanged($event)"></search-bar>
+            <div class="col-xs-3">
                 <button (click)="create()" class="btn btn-link">
                     <i class="fa fa-plus-circle"></i> New
                 </button>
             </div>
         </div>
-        <entity-list
-            [entities]="templates"
-            [icon]="icon"
-            (onSelected)="load($event)"></entity-list>
-    </div>
-    <div class="col-md-4">
-        <div *ngIf="template" spellcheck="false">
-            <h4>Template: {{ template.name }}</h4>
-            <p>{{ template.globalId }}</p>
-            <input type="checkbox" [(ngModel)]="template.isPublished" class="form-control"/><span>Published</span>
-            <input #focusTag [(ngModel)]="template.name" class="form-control" placeholder="Name"/>
-            <textarea [(ngModel)]="template.description" class="form-control" placeholder="Description"></textarea>
-            <textarea [(ngModel)]="template.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
-            <div>
-                <button class="btn btn-primary" (click)="save()">
-                    <i class="fa fa-save"></i> Save</button>
-                <button class="btn btn-default pull-right" (click)="delete()">
-                    <i class="fa fa-trash text text-danger"></i> Delete</button>
-            </div>
-            <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible" role="alert">
-                <button (click)="clearError()" type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-                <span>{{errorMessage}}</span>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
+        <ul *ngIf="templates" class="list-unstyled">
+            <li *ngFor="let t of templates" class="">
+                <div class="">
+                    <button class="btn btn-link" (click)="select(t)"
+                        [class.btn-primary]="t === template">
+                        <i class="fa fa-clipboard"></i>
+                        <span>{{ t.name }}</span>
+                    </button>
+                    <span class="subdued">{{ t.globalId }}</span>
+                </div>
+                <div *ngIf="t === template" spellcheck="false">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="t.isPublished"> Published
+                        </label>
+                    </div>
+                    <input #focusTag [(ngModel)]="t.name" class="form-control" placeholder="Name"/>
+                    <textarea [(ngModel)]="t.description" class="form-control" placeholder="Description"></textarea>
+                    <textarea [(ngModel)]="t.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
+                    <div>
+                        <button class="btn btn-primary" (click)="save()">
+                            <i class="fa fa-save"></i> Save</button>
+                        <button class="btn btn-default pull-right" (click)="delete()">
+                            <i class="fa fa-trash text text-danger"></i> Delete</button>
+                    </div>
+                    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible" role="alert">
+                        <button (click)="clearError()" type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        <span>{{errorMessage}}</span>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary btn-sm">
+            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+        </button>
+        <div class="">
 
+        </div>
     </div>
 </div>

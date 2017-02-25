@@ -1,24 +1,14 @@
-.tile {
+.tile.row {
     background-color: whitesmoke;
     border-radius: 4px;
     padding: 16px;
-    margin: 4px;
+    margin: 4px 4px;
 }
 
-.tile > span {
+i {
     font-size: 1.5em;
 }
 
- .tile > div > button > i {
-    font-size: 1.5em;
- }
-
- .avatar {
+ i.avatar {
      font-size: 3em;
- }
-
- .tile > div {
-     display: inline-block;
-     vertical-align: middle;
-     padding: 10px;
  }

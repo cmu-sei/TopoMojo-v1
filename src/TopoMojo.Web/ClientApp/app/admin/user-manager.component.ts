@@ -5,14 +5,27 @@ import { AdminService} from './admin.service';
 @Component({
     //moduleId: module.id,
     selector: 'user-manager',
-    templateUrl: 'user-manager.component.html'
+    templateUrl: 'user-manager.component.html',
+    styles: [`
+        .subdued {
+            color: lightgray;
+        }
+    `]
 })
 export class UserManagerComponent implements OnInit {
     plist: string;
     activeTopoId: number;
-    person: any;
-    roster: any[];
+    userUploadVisible: boolean;
+    //person: any;
+    roster: any[] = [];
     icon: string = 'fa fa-user';
+    hasMore: number;
+    model: any = {
+        term: '',
+        skip: 0,
+        take: 50,
+        filters: []
+    }
 
     constructor(
         private service : AdminService,
@@ -20,53 +33,58 @@ export class UserManagerComponent implements OnInit {
         ) { }
 
     ngOnInit() {
-        this.search('');
+        this.search();
     }
 
-    search(term) {
-        this.service.roster({
-            term: term,
-            take: 50,
-            searchFilters: []
-        })
+    more() {
+        this.model.skip += this.model.take;
+        this.search();
+    }
+
+    termChanged(term) {
+        this.hasMore = 0;
+        this.model.term = term;
+        this.model.skip = 0;
+        this.roster = [];
+        this.search();
+    }
+    search() {
+        this.service.roster(this.model)
         .subscribe(data => {
-            this.roster = data.results;
-            this.person = null;
+            this.roster = this.roster.concat(data.results);
+            this.hasMore = data.total - (data.skip+data.take);
+            //this.person = null;
         }, (err) => { this.service.onError(err) });
     }
 
     load(person) {
-        this.person = person;
+        //this.person = person;
     }
 
-    grant() {
-        this.service.grant(this.person)
+    grant(person) {
+        this.service.grant(person)
         .subscribe(result => {
-            this.person = result as any;
+            person.isAdmin = true;
+            //this.person = result as any;
         }, (err) => { this.service.onError(err) });
 
     }
-    deny() {
-        this.service.deny(this.person)
+    deny(person) {
+        this.service.deny(person)
         .subscribe(result => {
-            this.person = result as any;
-        }, (err) => { this.service.onError(err) });
-    }
-    promote() {
-        this.service.promote({ tid: this.activeTopoId, pid: this.person.id})
-        .subscribe(result => {
-        }, (err) => { this.service.onError(err) });
-    }
-    demote() {
-        this.service.demote({ tid: this.activeTopoId, pid: this.person.id})
-        .subscribe(result => {
+            person.isAdmin = false;
+            //this.person = result as any;
         }, (err) => { this.service.onError(err) });
     }
 
+    toggleUpload() {
+        this.userUploadVisible = !this.userUploadVisible;
+
+    }
     upload() {
         this.service.upload(this.plist)
         .subscribe(result => {
-            this.search('');
+            this.search();
         }, (err) => { this.service.onError(err) });
     }
 }

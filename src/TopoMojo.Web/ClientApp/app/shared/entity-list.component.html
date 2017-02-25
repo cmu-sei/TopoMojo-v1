@@ -1,9 +1,15 @@
 <ul *ngIf="entities" class="list-unstyled">
     <li *ngFor="let t of entities" class="">
-        <button (click)="itemClicked(t)" class="btn btn-link" [class.selected]="t === entity">
-            <i class="{{ icon }}"></i>
-        </button>
-        <span>{{ t.name }} &mdash;</span>
-        <span>{{ t.description }}</span>
+        <div class="alert alert-success">
+            <button (click)="itemClicked(t)" class="btn"
+            [class.btn-success]="t !== entity"
+            [class.btn-primary]="t === entity">
+                <i class="{{ icon }}"></i> <span>{{ t.name }}</span>
+            </button>
+            <p>{{ t.description }}</p>
+        </div>
+        <div *ngIf="t === entity">
+            <ng-content></ng-content>
+        </div>
     </li>
 </ul>

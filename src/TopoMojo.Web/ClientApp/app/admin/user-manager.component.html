@@ -1,34 +1,33 @@
 <div class="row">
-    <div class="col-md-4">
+    <div class="">
         <h4>Users</h4>
-        <search-bar (fire)="search($event)"></search-bar>
-        <entity-list
-            [entities]="roster"
-            [icon]="icon"
-            (onSelected)="load($event)"></entity-list>
-    </div>
-    <div class="col-md-4">
-        <div *ngIf="person" spellcheck="false">
-            <h4>Person: {{ person.name }}</h4>
-            <p>{{ person.globalId }}</p>
-            <ul class="list-inline">
-                <li>Admin <span>{{ person.isAdmin}}</span></li>
-                <li><button class="btn btn-link" (click)="grant()">Grant</button></li>
-                <li><button class="btn btn-link" (click)="deny()">Deny</button></li>
-            </ul>
-            <ul class="list-inline">
-                <li>Topo <input class="form-control" [(ngModel)]="activeTopoId"/></li>
-                <li><button class="btn btn-link" (click)="promote()">Promote</button></li>
-                <li><button class="btn btn-link" (click)="demote()">Demote</button></li>
-            </ul>
+        <search-bar (onSearch)="termChanged($event)"></search-bar>
+        <ul *ngIf="roster" class="list-unstyled">
+            <li *ngFor="let person of roster" class="">
+                <div class="">
+                    <i class="fa fa-user"></i>
+                    <span>{{ person.name }}</span>
+                    <span class="subdued">{{ person.globalId }}</span>
+                    <button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
+                    <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>
+                </div>
+            </li>
+        </ul>
+        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
+            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+        </button>
+        <hr>
+        <div class="">
+            <button (click)="toggleUpload()" class="btn btn-link">
+                <h4>
+                    <i class="fa fa-plus-circle"></i>
+                    <span>Add Users</span>
+                </h4>
+            </button>
+            <div *ngIf="userUploadVisible">
+                <textarea rows="10" class="form-control" placeholder="Add or paste email list" [(ngModel)]="plist"></textarea>
+                <button (click)="upload()" class="btn btn-primary pull-right">Save</button>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <h4>
-            <i class="fa fa-plus-circle"></i>
-            <span>Add Users</span>
-        </h4>
-        <textarea rows="20" class="form-control" placeholder="Add or paste email list" [(ngModel)]="plist"></textarea>
-        <button (click)="upload()" class="btn btn-primary pull-right">Save</button>
     </div>
 </div>

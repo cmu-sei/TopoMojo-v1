@@ -14,7 +14,7 @@ export class TopoDetailComponent {
     selectorVisible: boolean;
     deleteMsgVisible: boolean;
     ttIcon: string = 'fa fa-clipboard';
-    addIcon: string = 'fa fa-arrow-circle-left';
+    addIcon: string = 'fa fa-plus-circle';
 
     constructor(
         private service: TopoService,

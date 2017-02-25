@@ -8,3 +8,7 @@
     font-size: 2em;
     color: goldenrod;
 }
+
+p {
+    padding-left: 16px;
+}

@@ -293,14 +293,15 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             Template template = new Template {
-                Name = tref.Template.Name,
-                Description = tref.Template.Description,
+                Name = tref.Name ?? tref.Template.Name,
+                Description = tref.Description ?? tref.Template.Description,
                 GlobalId = Guid.NewGuid().ToString(),
                 WhenCreated = DateTime.UtcNow,
                 Detail = tref.Template.Detail,
                 OwnerId = tref.TopologyId
             };
             TemplateUtility tu = new TemplateUtility(template.Detail);
+            tu.Name = template.Name;
             tu.LocalizeDiskPaths(tref.Topology.GlobalId, template.GlobalId);
             template.Detail = tu.ToString();
             //_db.Templates.Add(template);

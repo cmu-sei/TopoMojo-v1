@@ -11,11 +11,6 @@
         </div>
         <div class='navbar-collapse collapse'>
             <ul class='nav navbar-nav navbar-right'>
-                <!--<li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/home']">
-                        <span class='fa fa-home'></span> Home
-                    </a>
-                </li>-->
                 <li *ngIf="!profile.isLoggedIn" [routerLinkActive]="['link-active']">
                     <a [routerLink]="['/login']">
                         <span class='fa fa-unlock'></span> Login
@@ -56,9 +51,9 @@
 </nav>
 
 <div class='container main-container'>
-    <div class='row'>
+    <!--<div class='row'>-->
         <router-outlet></router-outlet>
-    </div>
+    <!--</div>-->
 </div>
 
 <nav class="navbar navbar-default navbar-fixed-bottom">

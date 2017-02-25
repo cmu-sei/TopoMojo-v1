@@ -4,7 +4,12 @@ import { TopoService } from './topo.service';
 @Component({
     //moduleId: module.id,
     selector: 'topo-members',
-    templateUrl: 'topo-members.component.html'
+    templateUrl: 'topo-members.component.html',
+    styles: [`
+        ul {
+            display: inline-block;
+        }
+    `]
 })
 export class TopoMembersComponent implements OnInit {
     permissions : any[];
