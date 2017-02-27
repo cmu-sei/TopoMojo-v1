@@ -138,6 +138,26 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Change(string id, KeyValuePair change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
+            Vm vm = (await Find(id)).FirstOrDefault();
+            if (vm == null)
+                throw new InvalidOperationException();
+
+            VmOptions vmo = null;
+            //sanitze inputs
+            if (change.Key == "iso")
+            {
+                 vmo = await GetVmIsoOptions(vm.Name.Tag());
+                if (!vmo.Iso.Contains(change.Value))
+                    throw new InvalidOperationException();
+            }
+
+            if (change.Key == "net")
+            {
+                vmo = await GetVmNetOptions(vm.Name.Tag());
+                if (!vmo.Net.Contains(change.Value))
+                    throw new InvalidOperationException();
+            }
+
             vSphereHost host = FindHostByVm(id);
             return await host.Change(id, change);
         }
@@ -301,6 +321,7 @@ namespace TopoMojo.vSphere
             List<string> isos = new List<string>();
             isos.AddRange(await host.GetFiles(host.Options.IsoStore + "/*.iso", false));
             isos.AddRange(await host.GetFiles(host.Options.DiskStore + id + "/*.iso", true));
+            isos.Sort();
             return new VmOptions {
                 Iso = isos.ToArray()
             };
@@ -312,6 +333,7 @@ namespace TopoMojo.vSphere
             List<string> nets = new List<string>();
             nets.AddRange(_vlans.Keys.Where(x => !x.Contains("#")));
             nets.AddRange(_vlans.Keys.Where(x => x.Contains(id)));
+            nets.Sort();
             return new VmOptions {
                 Net = nets.ToArray()
             };

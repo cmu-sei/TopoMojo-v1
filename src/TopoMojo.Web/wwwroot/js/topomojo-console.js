@@ -257,7 +257,7 @@ function WebConsole(id, topoid, url, conditions) {
             data.append('file', file, 'fd='+dest+'&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
         });
         $this.prop('disabled', true);
-        setTimeout(checkProgress, 5000);
+        setTimeout(checkProgress, 2500);
 
         $.ajax({
             url: '/file/upload',
@@ -301,7 +301,7 @@ function WebConsole(id, topoid, url, conditions) {
             if (result < 100) {
                 $progressBtn.text((result < 0) ? '...' : result + '%');
                 if (progressIdleCount < 10) {
-                    setTimeout(checkProgress, 5000);
+                    setTimeout(checkProgress, 2500);
                 }
             } else {
                 $progressBtn.text('').addClass('hidden');

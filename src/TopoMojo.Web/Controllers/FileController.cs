@@ -79,6 +79,7 @@ namespace TopoMojo.Controllers
                         if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                             throw new Exception($"File ${filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
+                        _logger.LogInformation(_user.Email + " uploading file " + filename);
                         string dest = DestinationPath(filename, key, scope);
                         using (var targetStream = System.IO.File.Create(dest))
                         {

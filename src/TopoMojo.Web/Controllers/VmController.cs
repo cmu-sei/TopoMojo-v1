@@ -48,7 +48,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Load(string id)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "load");
             Vm vm = await _pod.Load(id); //.Refresh(template);
             // // if (!AuthorizedForVm(vm))
             // //     return BadRequest();
@@ -61,7 +61,7 @@ namespace TopoMojo.Controllers
         {
             // if (!AuthorizedForVm(id))
             //     return BadRequest();
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "start");
 
             Vm vm = await _pod.Start(id);
             return Json(vm);
@@ -74,7 +74,7 @@ namespace TopoMojo.Controllers
             // if (!AuthorizedForVm(id))
             //     return BadRequest();
 
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "stop");
             Vm vm = await _pod.Stop(id);
             return Json(vm);
         }
@@ -86,7 +86,7 @@ namespace TopoMojo.Controllers
             // if (!AuthorizedForVm(id))
             //     return BadRequest();
 
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "save");
             Vm vm = await _pod.Save(id);
             return Json(vm);
         }
@@ -98,7 +98,7 @@ namespace TopoMojo.Controllers
             // if (!AuthorizedForVm(id))
             //     return BadRequest();
 
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "revert");
             Vm vm = await _pod.Revert(id);
             return Json(vm);
         }
@@ -110,7 +110,7 @@ namespace TopoMojo.Controllers
             // if (!AuthorizedForVm(id))
             //     return BadRequest();
 
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "delete");
             Vm vm = await _pod.Delete(id);
             return Json(vm);
         }
@@ -119,7 +119,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Change(string id, [FromBody] KeyValuePair change)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "change");
 
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
             // if (!AuthorizedForVm(vm))
@@ -148,7 +148,7 @@ namespace TopoMojo.Controllers
         [HttpGet("/[controller]/[action]/{id}")]
         public async Task<IActionResult> Display([FromRoute]string id)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "display");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
             // if (!AuthorizedForVm(vm))
             //     return BadRequest();
@@ -162,7 +162,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Answer(string id, string question, string answer)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "answer");
             return Json(await _pod.Answer(id, question, answer));
         }
 
@@ -170,7 +170,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> IsoOptions(string id)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "isooptions");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
             // if (!AuthorizedForVm(vm))
             //     return BadRequest();
@@ -184,7 +184,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> NetOptions(string id)
         {
-            await AuthorizeAction(id);
+            await AuthorizeAction(id, "netoptions");
 
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
             if (vm == null)
@@ -195,7 +195,7 @@ namespace TopoMojo.Controllers
             return Json(await _pod.GetVmNetOptions(tag));
         }
 
-        private async Task<bool> AuthorizeAction(string id)
+        private async Task<bool> AuthorizeAction(string id, string method)
         {
             if (_user.IsAdmin)
                 return true;
@@ -210,6 +210,7 @@ namespace TopoMojo.Controllers
             if (!result)
                 throw new InvalidOperationException();
 
+            _logger.LogInformation("vm-action {_user.Email} {method} {id}");
             return result;
         }
 

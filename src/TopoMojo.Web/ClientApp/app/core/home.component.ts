@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
     templateUrl: './home.component.html',
     styles: [`
         h1 {
-            font-size: 8em;
+            font-size: 15vmin;
             position: absolute;
             left: 50%;
             top: 50%;

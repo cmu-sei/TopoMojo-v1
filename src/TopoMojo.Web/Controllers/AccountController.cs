@@ -506,6 +506,7 @@ namespace TopoMojo.Controllers
             if (result.Succeeded)
             {
                 ApplicationUser user = await _userManager.FindByEmailAsync(username);
+                _logger.LogInformation(user.Email + " logged in.");
                 // var token = JwtTokenGenerator.Generate(new
                 //     {
                 //         sub = user.Id,
@@ -531,6 +532,8 @@ namespace TopoMojo.Controllers
             //         tmid = user.PersonId,
             //         tmad = user.IsAdmin
             //     }, new IdentityOptions());
+            _logger.LogInformation(_user.Email + " renewed token.");
+
             await _signInManager.SignInAsync(_user, false);
             return Json(await GetAuthToken(_user, null));
         }
