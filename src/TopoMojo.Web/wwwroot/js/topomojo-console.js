@@ -10,7 +10,10 @@
 var _debug = true;
 
 function debug(o) {
-    if (_debug) { console.log(o); }
+    if (_debug) {
+        console.log(o);
+        //$('#feedback-log').append($('<p>').text(o.toString()));
+    }
 }
 
 function newUUID() {
@@ -117,7 +120,7 @@ function WebConsole(id, topoid, url, conditions) {
     $(window).resize(function() {
         if (wmks) {
             var rect = wmks.getRemoteScreenSize();
-            //console.log(rect + window.innerWidth + 'x' + window.innerHeight);
+            //debug(rect + window.innerWidth + 'x' + window.innerHeight);
             var scale = window.innerWidth < rect.width || window.innerHeight < rect.height;
             wmks.setOption('rescale', scale);
             wmks.updateScreen();
@@ -151,6 +154,9 @@ function WebConsole(id, topoid, url, conditions) {
         $('#console-tools-div button[name="upload"]').click(uploader);
         $('#console-tools-div button[name="iso"]').click(loadIsos);
         $('#console-tools-div button[name="net"]').click(loadNets);
+        $('#console-tools-div button[name="keyboard"]').click(showKeyboard);
+        $('#console-tools-div button[name="extkeypad"]').click(showExtKeypad);
+        $('#console-tools-div button[name="trackpad"]').click(showTrackpad);
 
         $('#feedback-div button[name="start"]').click(vmStart);
 
@@ -165,8 +171,24 @@ function WebConsole(id, topoid, url, conditions) {
 
     }
 
+    function showKeyboard() {
+        if (wmks)
+            wmks.showKeyboard();
+    }
+    function showExtKeypad() {
+        if (wmks)
+            wmks.toggleExtendedKeypad();
+    }
+    function showTrackpad() {
+        if (wmks) {
+            wmks.toggleTrackpad();
+        }
+    }
+
     function uiConnected() {
-        $('#console-tools-btn').removeClass('hidden');
+        $("#console-tools-connected-div").removeClass('hidden');
+        //$('#console-tools-connected-div button[name="fullscreen"]').toggleClass('hidden', wmks && wmks.canFullScreen());
+
     }
 
     function uiDisconnected() {
@@ -176,6 +198,8 @@ function WebConsole(id, topoid, url, conditions) {
         $('#feedback-div').show();
         $('#console-tools-btn').addClass('hidden');
         $('#console-tools-div').addClass('hidden');
+        $("#console-tools-connected-div").addClass('hidden');
+
     }
 
     function uiPoweredOff() {
@@ -239,7 +263,7 @@ function WebConsole(id, topoid, url, conditions) {
 
     function vmChange() {
         $('#item-selection-div').hide();
-        console.log($(this).val());
+        debug($(this).val());
         $.jsonPost('/api/vm/change/' + id, { key: $(this).data('key'), value: $(this).val()});
     }
 
@@ -270,10 +294,10 @@ function WebConsole(id, topoid, url, conditions) {
         }).fail(function(jqXhr, textStatus, err)
         {
             //$this.next().next().text(jqXhr.responseJSON.message).addClass('label-danger');
-            console.log(jqXhr.responseJSON);
+            debug(jqXhr.responseJSON);
         })
         .done(function(result) {
-            //console.log(result.filename);
+            //debug(result.filename);
             //loadIsos();
         })
         .always(function() {
@@ -294,7 +318,7 @@ function WebConsole(id, topoid, url, conditions) {
 
         $.get('/api/file/progress/' + key)
         .fail(function(jqXhr, status, error) {
-            console.log(error);
+            debug(status);
         })
         .done(function(result) {
             if (result < 0) progressIdleCount += 1;
@@ -315,7 +339,7 @@ function WebConsole(id, topoid, url, conditions) {
     }
 
     function launch() {
-        $('#feedback-div').hide();
+        //$('#feedback-div').hide();
         wmks = WMKS.createWMKS('console-canvas-div',{
             rescale: false,
             position: 0,
@@ -324,40 +348,53 @@ function WebConsole(id, topoid, url, conditions) {
         })
         .register(WMKS.CONST.Events.CONNECTION_STATE_CHANGE, function(event,data){
             if(data.state == WMKS.CONST.ConnectionState.CONNECTED){
-                console.log('connection state change : connected');
-                //uiConnected();
+                debug('connection state change : connected');
+                $("#console-tools-connected-div").removeClass('hidden');
+                //$('#console-tools-connected-div button[name="fullscreen"]').toggleClass('hidden', wmks.canFullScreen());
+
+                uiConnected();
+                // wmks.enableInputDevice(0);
+                // wmks.enableInputDevice(1);
+                // wmks.enableInputDevice(2);
+
             }
             if(data.state == WMKS.CONST.ConnectionState.CONNECTING){
-                console.log('connection state change : connecting ' + data.vvc + ' ' + data.vvcSession);
+                debug('connection state change : connecting ' + data.vvc + ' ' + data.vvcSession);
             }
             if(data.state == WMKS.CONST.ConnectionState.DISCONNECTED){
-                console.log('connection state change : disconnected ' + data.reason + ' ' + data.code);
+                debug('connection state change : disconnected ' + data.reason + ' ' + data.code);
+                // wmks.disableInputDevice(0);
+                // wmks.disableInputDevice(1);
+                // wmks.disableInputDevice(2);
                 wmks.disconnect();
                 wmks.destroy();
+
                 //wmks = null;
                 uiDisconnected();
             }
 
         })
         .register(WMKS.CONST.Events.REMOTE_SCREEN_SIZE_CHANGE, function (e, data) {
-            console.log('wmks remote_screen_size_change: ' + data.width + 'x' + data.height);
+            debug('wmks remote_screen_size_change: ' + data.width + 'x' + data.height);
             $('#console-canvas-div')[0].width=data.width;
             $('#console-canvas-div')[0].height=data.height;
         })
         .register(WMKS.CONST.Events.HEARTBEAT, function (e, data) {
-            console.log('wmks heartbeat: ' + data);
+            debug('wmks heartbeat: ' + data);
         })
         .register(WMKS.CONST.Events.COPY, function (e, data) {
-            console.log('wmks copy: ' + data);
+            debug('wmks copy: ' + data);
         })
         .register(WMKS.CONST.Events.ERROR, function (e, data) {
-            console.log('wmks error: ' + data.errorType);
+            debug('wmks error: ' + data.errorType);
+
         })
         .register(WMKS.CONST.Events.FULL_SCREEN_CHANGE, function (e, data) {
-            console.log('wmks full_screen_change: ' + data.isFullScreen);
+            debug('wmks full_screen_change: ' + data.isFullScreen);
         });
 
         // wmks.connect("wss://ESXi.host.IP.Address:443/ticket/webmksTicket");
+
         wmks.connect(url);
 
     }
@@ -367,7 +404,7 @@ function WebConsole(id, topoid, url, conditions) {
         var q = $proto.data('question');
         $.post('/api/vm/answer/' + q.vid + '/' + q.qid + '/' + q.answer, {})
         .fail(function(jqXhr, status, error) {
-            console.log('postVmAnswer: ' + error);
+            debug('postVmAnswer: ' + error);
         })
         .done(function(result) {
 
@@ -409,13 +446,13 @@ function WebConsole(id, topoid, url, conditions) {
 
         $.get('/api/vm/load/' + id)
         .fail(function(jqXhr, status, error){
-            console.log(error);
+            debug(error);
             $('#feedback-div p:first').text('Failed to load console');
             uiDisconnected();
         })
         .done(function(vm) {
             if (!_disconnected) {
-                uiConnected();
+                $('#console-tools-btn').removeClass('hidden');
                 handleQuestion(vm);
                 if (!wmks) {
                     if (vm.state == VmStateRunning) {
@@ -423,6 +460,8 @@ function WebConsole(id, topoid, url, conditions) {
                         $('#feedback-div p:first').text('Connected');
                         if (mock != 'mock')
                             launch();
+                        else
+                            uiConnected();
                     }
                     else {
                         $('#feedback-div p:first').text('');

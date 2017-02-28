@@ -210,7 +210,7 @@ namespace TopoMojo.Controllers
             if (!result)
                 throw new InvalidOperationException();
 
-            _logger.LogInformation("vm-action {_user.Email} {method} {id}");
+            _logger.LogInformation($"vm-action {_user.Email} {method} {id}");
             return result;
         }
 
