@@ -150,10 +150,11 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "display");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
-            // if (!AuthorizedForVm(vm))
-            //     return BadRequest();
 
             DisplayInfo info = await _pod.Display(id);
+            if (info == null)
+                return View("Error");
+
             info.TopoId = vm.Name.Tag();
             return View("wmks", info);
         }
@@ -210,7 +211,10 @@ namespace TopoMojo.Controllers
             if (!result)
                 throw new InvalidOperationException();
 
-            _logger.LogInformation($"vm-action {_user.Email} {method} {id}");
+            if (method != "load")
+            {
+                _logger.LogInformation($"vm-action {_user.Email} {method} {id}");
+            }
             return result;
         }
 

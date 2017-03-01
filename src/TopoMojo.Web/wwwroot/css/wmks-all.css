@@ -19,7 +19,7 @@ body {
     color: black;
     text-align: left;
     border-radius: 6px;
-    max-width: 325px;
+    /*max-width: 325px;*/
     /*border: 1px;
     border-color: white;*/
 }
@@ -33,6 +33,9 @@ body {
     /*background-color: black;*/
 }
 
+#iso-upload-div {
+    max-width: 325px;
+}
 #feedback-div {
     font-size: 3em;
     position: relative;

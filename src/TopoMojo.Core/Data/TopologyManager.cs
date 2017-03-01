@@ -222,7 +222,7 @@ namespace TopoMojo.Core
             _db.TTLinkage.Add(tref);
             await _db.SaveChangesAsync();
             await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
-            tref.Name = tref.Template.Name;
+            tref.Name = tref.Template.Name.Replace(" ", "-");
             await _db.SaveChangesAsync();
             return tref;
         }
@@ -245,7 +245,7 @@ namespace TopoMojo.Core
                 tu.Iso = tref.Iso;
                 tref.Template.Detail = tu.ToString();
 
-                tref.Name = null;
+                //tref.Name = null;
                 tref.Networks = null;
                 tref.Iso = null;
                 tref.Description = null;

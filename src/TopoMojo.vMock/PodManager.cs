@@ -345,7 +345,7 @@ namespace TopoMojo.vMock
         {
             VmOptions opt = new VmOptions()
             {
-                Iso = new string[] { "test1.iso", "test2.iso" },
+                Iso = new string[] { "test1.iso", "really-long-iso-name-that-needs-to-wrap-1.0.0.test2.iso" },
             };
             return opt;
         }

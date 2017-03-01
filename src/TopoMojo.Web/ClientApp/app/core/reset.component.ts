@@ -55,6 +55,6 @@ export class ResetComponent implements OnInit {
         })
         .then(data => {
             this.router.navigate(['/']);
-        }, (err) => { this.errorMessage = 'Invalid login credentials'});
+        }, (err) => { console.log(err); this.errorMessage = JSON.parse(err.text()).message;});
     }
 }

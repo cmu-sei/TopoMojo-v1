@@ -51,9 +51,9 @@ export class ProfileEditorComponent implements OnInit {
             password : this.pass1,
         })
         .then(data => {
-            this.current = null;
-            this.pass1 = null;
-            this.pass2 = null;
+            this.current = '';
+            this.pass1 = '';
+            this.pass2 = '';
         }, (err) => { console.log(err); this.errorMessage = JSON.parse(err.text()).message; });
     }
 }

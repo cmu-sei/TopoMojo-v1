@@ -9,7 +9,8 @@
         <dl class="dl-horizontal">
             <dt>Name</dt>
             <dd>
-                <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.name"></inline-editor>
+                <span *ngIf="((!vm) || (vm.id))">{{ tref.name }}</span>
+                <inline-editor *ngIf="((vm) && (!vm.id))" type="text" size="30" (onSave)="save()" [(ngModel)]="tref.name"></inline-editor>
             </dd>
             <dt>Description</dt>
             <dd>
@@ -19,14 +20,14 @@
             <dd>
                 <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.networks"></inline-editor>
                 <inline-help>
-                    <span>Enter a space-delimited list of network names. Nics are assigned respectively.</span>
+                    <span>Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)</span>
                 </inline-help>
             </dd>
             <dt>Type</dt>
             <dd>
                 <span *ngIf="tref.owned" class="label label-default">local</span>
                 <span *ngIf="!tref.owned" class="label label-warning">external</span>
-                <inline-help #cloneHelp>
+                <inline-help *ngIf="!tref.owned" #cloneHelp>
                     <span>This template is external to this topology; you cannot save disk changes. If you plan to alter the disk,
                     ensure the template is not deployed and then clone it &mdash;
                     <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">

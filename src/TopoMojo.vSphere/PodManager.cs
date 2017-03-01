@@ -132,7 +132,9 @@ namespace TopoMojo.vSphere
         {
             _logger.LogDebug("deleting " + id);
             vSphereHost host = FindHostByVm(id);
-            return await host.Delete(id);
+            Vm vm =  await host.Delete(id);
+            RefreshAffinity(); //TODO: fix race condition here
+            return vm;
         }
 
         public async Task<Vm> Change(string id, KeyValuePair change)
@@ -400,6 +402,24 @@ namespace TopoMojo.vSphere
             return _hostCache[_vmCache[id].Host];
         }
 
+        private void RefreshAffinity()
+        {
+            lock(_affinityMap)
+            {
+                List<string> tags = new List<string>();
+                foreach (Vm vm in _vmCache.Values)
+                {
+                    string tag = vm.Name.Tag();
+                    tags.Add(tag);
+                    if (!_affinityMap.ContainsKey(tag))
+                        _affinityMap.Add(tag, _hostCache[vm.Host]);
+                }
+                string[] stale = _affinityMap.Keys.ToArray().Except(tags.Distinct().ToArray()).ToArray();
+                foreach (string key in stale)
+                    _affinityMap.Remove(key);
+            }
+        }
+
         private vSphereHost FindHostByAffinity(string tag)
         {
             vSphereHost host = null;
@@ -422,11 +442,29 @@ namespace TopoMojo.vSphere
 
         private vSphereHost FindHostByFewestVms()
         {
-            string hostname = _vmCache.Values
-                .GroupBy(o=>o.Host)
-                .Select(g=> new { Host = g.Key, Count = g.Count()})
-                .OrderBy(o=>o.Count).Select(o=>o.Host)
+            Dictionary<string, HostVmCount> hostCounts = new Dictionary<string, HostVmCount>();
+            foreach (vSphereHost host in _hostCache.Values)
+            {
+                if (!hostCounts.ContainsKey(host.Name))
+                    hostCounts.Add(host.Name, new HostVmCount { Name = host.Name });
+            }
+            foreach (Vm vm in _vmCache.Values)
+            {
+                if (!hostCounts.ContainsKey(vm.Host))
+                    hostCounts.Add(vm.Host, new HostVmCount { Name = vm.Host });
+                hostCounts[vm.Host].Count += 1;
+            }
+
+            string hostname = hostCounts.Values
+                .OrderBy(h => h.Count)
+                .Select(h => h.Name)
                 .FirstOrDefault();
+
+            // string hostname = _vmCache.Values
+            //     .GroupBy(o=>o.Host)
+            //     .Select(g=> new { Host = g.Key, Count = g.Count()})
+            //     .OrderBy(o=>o.Count).Select(o=>o.Host)
+            //     .FirstOrDefault();
 
             if (hostname.HasValue() && _hostCache.ContainsKey(hostname))
                 return _hostCache[hostname];
@@ -541,6 +579,7 @@ namespace TopoMojo.vSphere
                                 _vlans.Add(vlan.Name, vlan.Id);
 
                             active.Add(vlan.Name);
+                            _vlanMap[vlan.Id] = true;
                         }
                     }
 
@@ -564,7 +603,11 @@ namespace TopoMojo.vSphere
             }
         }
 
-
+        protected class HostVmCount
+        {
+            public string Name { get; set; }
+            public int Count { get; set; }
+        }
     }
 
 }
