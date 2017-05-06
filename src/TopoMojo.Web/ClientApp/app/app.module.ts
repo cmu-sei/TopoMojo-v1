@@ -1,11 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@angular/router';
-//import { FormsModule } from '@angular/forms';
-import { UniversalModule } from 'angular2-universal';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { APP_BASE_HREF } from '@angular/common';
+import { ORIGIN_URL } from './shared/constants/baseurl.constants';
 import { CoreModule } from './core/core.module';
 import { TopoModule } from './topo/topo.module';
 import { AdminModule } from './admin/admin.module';
 import { AppComponent } from './app.component'
+
+export function getOriginUrl() {
+  return window.location.origin;
+}
 
 @NgModule({
     bootstrap: [ AppComponent ],
@@ -13,7 +19,7 @@ import { AppComponent } from './app.component'
         AppComponent
     ],
     imports: [
-        UniversalModule, // Must be first import. This automatically imports BrowserModule, HttpModule, and JsonpModule too.
+        BrowserModule,
         CoreModule,
         TopoModule,
         AdminModule,
@@ -21,6 +27,12 @@ import { AppComponent } from './app.component'
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'notfound' }
         ])
+    ],
+    providers: [
+        {
+            provide: ORIGIN_URL,
+            useFactory: (getOriginUrl)
+        }
     ]
 })
 export class AppModule {

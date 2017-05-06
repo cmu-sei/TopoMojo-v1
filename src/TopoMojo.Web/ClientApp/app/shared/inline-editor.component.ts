@@ -43,16 +43,16 @@ const inputConfig: InputConfig = {
 const INLINE_EDITOR_TEMPLATE = `
 <div id="inlineEditWrapper">
     <div [ngSwitch]="type">
-       <template [ngSwitchCase]="'password'">
+       <ng-template [ngSwitchCase]="'password'">
           <a [ngClass]="{'editable-empty': isEmpty }" (click)="edit(value)" [hidden]="editing"> ****** </a>
-        </template>
-        <template [ngSwitchCase]="'select'">
+        </ng-template>
+        <ng-template [ngSwitchCase]="'select'">
           <a [ngClass]="{'editable-empty': isEmpty }"
             (click)="edit(value)" [hidden]="editing"> {{optionSelected()}} </a>
-        </template>
-        <template ngSwitchDefault>
+        </ng-template>
+        <ng-template ngSwitchDefault>
             <a [ngClass]="{'editable-empty': isEmpty }"  (click)="edit(value)" [hidden]="editing">{{ showText() }}</a>
-        </template>
+        </ng-template>
     </div>
 
     <!-- inline edit form -->
@@ -61,21 +61,21 @@ const INLINE_EDITOR_TEMPLATE = `
 
             <!-- inline edit control  -->
             <p [ngSwitch]="type">
-                <template [ngSwitchCase]="'text'">
+                <ng-template [ngSwitchCase]="'text'">
                     <input #inlineEditControl class="form-control" [(ngModel)]="value" [required]="required"
                       [disabled]="disabled" [name]="name" [placeholder]="placeholder" [size]="size"/>
-                </template>
-                <template [ngSwitchCase]="'textarea'">
+                </ng-template>
+                <ng-template [ngSwitchCase]="'textarea'">
                     <textarea [rows]="rows" [cols]="cols" #inlineEditControl class="form-control" [(ngModel)]="value"
                       [required]="required" [placeholder]="placeholder" [disabled]="disabled" ></textarea>
-                </template>
-                <template [ngSwitchCase]="'range'">
+                </ng-template>
+                <ng-template [ngSwitchCase]="'range'">
                     <input #inlineEditControl class="form-control" [(ngModel)]="value" [required]="required"
                       type="range" [disabled]="disabled" [max]="max" [min]="min" [name]="name"/>
-                </template>
-                <template [ngSwitchCase]="'select'">
+                </ng-template>
+                <ng-template [ngSwitchCase]="'select'">
                     <select #inlineEditControl class="form-control" [(ngModel)]="value">
-                    <template ngFor let-item [ngForOf]="options.data">
+                    <ng-template ngFor let-item [ngForOf]="options.data">
 
                         <optgroup *ngIf="item.children" label="{{item[options.text]}}">
                             <option *ngFor="let child of item.children" value="{{child[options.value]}}">
@@ -83,14 +83,14 @@ const INLINE_EDITOR_TEMPLATE = `
                             </option>
                         </optgroup>
                      <option *ngIf="!item.children" value="{{item[options.value]}}">{{item[options.text]}}</option>
-                    </template>
+                    </ng-template>
                     </select>
-                </template>
-                <template ngSwitchDefault>
+                </ng-template>
+                <ng-template ngSwitchDefault>
                     <input [type]="type"  #inlineEditControl class="form-control" [(ngModel)]="value"
                       [required]="required" [placeholder]="placeholder" [disabled]="disabled"  [name]="name"
                       [size]="size"/>
-                </template>
+                </ng-template>
 
                 <span class="inline-editor-button-group">
                     <button id="inline-editor-button-save" class="btn btn-xs btn-primary"

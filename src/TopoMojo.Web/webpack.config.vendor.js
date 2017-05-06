@@ -11,7 +11,7 @@ module.exports = (env) => {
         resolve: { extensions: [ '.js' ] },
         module: {
             rules: [
-                { test: /\.(png|woff|woff2|eot|ttf|svg)(\?|$)/, use: 'url-loader?limit=100000' }
+                { test: /\.(png|eot|[ot]tf|woff|woff2|svg)(\?|$)/, use: 'file-loader' }
             ]
         },
         entry: {
@@ -24,17 +24,14 @@ module.exports = (env) => {
                 '@angular/platform-browser-dynamic',
                 '@angular/router',
                 '@angular/platform-server',
-                'angular2-universal',
-                'angular2-universal-polyfills',
-                'angular-router-loader',
                 'bootstrap',
                 'bootstrap/dist/css/bootstrap.css',
                 'font-awesome-webpack2',
                 'font-awesome/css/font-awesome.css',
                 'es6-shim',
-                'es6-promise',
                 'event-source-polyfill',
                 'jquery',
+                'showdown',
                 'zone.js',
             ]
         },
@@ -45,8 +42,11 @@ module.exports = (env) => {
         },
         plugins: [
             new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
-            new webpack.ContextReplacementPlugin(/\@angular\b.*\b(bundles|linker)/, path.join(__dirname, './ClientApp')), // Workaround for https://github.com/angular/angular/issues/11580
-            new webpack.IgnorePlugin(/^vertx$/) // Workaround for https://github.com/stefanpenner/es6-promise/issues/100
+            new webpack.ContextReplacementPlugin(
+                /angular(\\|\/)core(\\|\/)@angular/,
+                path.resolve('./src'),
+                {}
+            ),
         ]
     };
 
@@ -87,5 +87,6 @@ module.exports = (env) => {
         ]
     });
 
+    // return [clientBundleConfig];
     return [clientBundleConfig, serverBundleConfig];
 }
