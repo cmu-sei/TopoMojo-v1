@@ -1,0 +1,15 @@
+<p><label>Markdown</label></p>
+<div class="row">
+    <div class="col-md-5">
+        <textarea
+            name="markdown"
+            rows="25"
+            [(ngModel)]="markdown"
+            class="form-control"
+            (keyup)="render()">
+        </textarea>
+    </div>
+    <div class="col-md-7" [innerHtml]="rendered">
+    </div>
+</div>
+<button class="btn btn-primary" (click)="save()">Save</button>

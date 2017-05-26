@@ -97,11 +97,14 @@ namespace TopoMojo
                 // };
             });
             // Add framework services.
-            services.AddMvc()
-                .AddJsonOptions(options =>
-                {
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                });
+            services.AddMvc(options =>
+            {
+                options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
+            })
+            .AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            });
 
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
@@ -111,6 +114,7 @@ namespace TopoMojo
             //services.AddScoped<SimulationManager, SimulationManager>();
             services.AddScoped<TopologyManager, TopologyManager>();
             services.AddScoped<TemplateManager, TemplateManager>();
+            services.AddScoped<InstanceManager, InstanceManager>();
 
             string podManager = Configuration.GetSection("ApplicationOptions:Site:PodManagerType").Value ?? "";
             if (podManager.ToLowerInvariant().Contains("vmock"))
@@ -178,7 +182,7 @@ namespace TopoMojo
 
             if (env.IsDevelopment())
             {
-                bool recreate = Convert.ToBoolean(Configuration["Database:RecreateOnStartInDevMode"]);
+                bool recreate = Convert.ToBoolean(Configuration["Database:DevModeRecreate"]);
                 app.InitializeDatabase(Convert.ToBoolean(Configuration["Database:AutoMigrate"]), recreate);
             }
             else

@@ -552,7 +552,7 @@ namespace TopoMojo.Controllers
         [RouteAttribute("/api/[controller]/[action]")]
         [JsonExceptionFilter]
         [HttpPost]
-        public async Task<IActionResult> Roster([FromBody]Search<Person> search)
+        public async Task<SearchResult<Person>> Roster([FromBody]Search search)
         {
             if (!_user.IsAdmin)
                 throw new InvalidOperationException();
@@ -560,11 +560,13 @@ namespace TopoMojo.Controllers
             IQueryable<Person> q = _db.People;
             if (search.Term.HasValue())
                 q = q.Where(p => p.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >=0);
-            search.Total = await q.CountAsync();
+            SearchResult<Person> result = new SearchResult<Person>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
             if (search.Take == 0) search.Take = 50;
             q = q.OrderBy(p => p.Name).Skip(search.Skip).Take(search.Take);
-            search.Results = await q.ToArrayAsync();
-            return Json(search);
+            result.Results = await q.ToArrayAsync();
+            return result;
         }
 
         [RouteAttribute("/api/[controller]/[action]")]

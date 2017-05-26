@@ -30,47 +30,47 @@ namespace TopoMojo.Controllers
 
         [HttpGet("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<IActionResult> Load([FromRoute]int id)
+        public async Task<Template> Load([FromRoute]int id)
         {
-            return Json(await _mgr.LoadAsync(id));
+            return await _mgr.LoadAsync(id);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromBody]Search<Template> search)
+        public async Task<SearchResult<Template>> List([FromBody]Search search)
         {
-            return Json(await _mgr.ListAsync(search));
+            return await _mgr.ListAsync(search);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Create([FromBody]TemplateModel model)
+        public async Task<TemplateModel> Create([FromBody]TemplateModel model)
         {
-            return Json(await _mgr.Create(model));
+            return await _mgr.Create(model);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Save([FromBody]Template template)
+        public async Task<Template> Save([FromBody]Template template)
         {
-            return Json(await _mgr.Save(template));
+            return await _mgr.Save(template);
         }
 
         [HttpDelete("{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<bool> Delete([FromRoute]int id)
         {
-            return Json(await _mgr.DeleteTemplate(id));
+            return await _mgr.DeleteTemplate(id);
         }
 
         [HttpDelete("{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Remove([FromRoute]int id)
+        public async Task<bool> Remove([FromRoute]int id)
         {
             Models.Template template = await _mgr.GetDeployableTemplate(id, null);
             await _mgr.RemoveTemplate(id);
             await _pod.DeleteDisks(template); //only remove disks if removetemplate doesn't throw
-            return Json(true);
+            return true;
         }
     }
 

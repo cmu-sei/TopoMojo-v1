@@ -37,14 +37,16 @@ namespace TopoMojo.Core
         protected readonly CoreOptions _options;
         protected readonly IOptions<CoreOptions> _optAccessor;
 
-        public virtual async Task<Search<T>> ListAsync(Search<T> search)
+        public virtual async Task<SearchResult<T>> ListAsync(Search search)
         {
             IQueryable<T> q = ListQuery(search);
-            search.Total = q.Count();
-            search.Results = await (
+            SearchResult<T> result = new SearchResult<T>();
+            result.Search = search;
+            result.Total = q.Count();
+            result.Results = await (
                 q.OrderBy(o=>o.Name)
                 .ApplyPaging(search).ToArrayAsync());
-            return search;
+            return result;
         }
 
         protected virtual IQueryable<T> ListQuery(Search search)

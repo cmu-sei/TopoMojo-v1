@@ -12,6 +12,8 @@ export class TopoDetailComponent {
     trefs: any[];
     publishedTemplates: any[];
     selectorVisible: boolean;
+    documentVisible: boolean;
+    documentText: string = "# Title";
     deleteMsgVisible: boolean;
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
@@ -43,6 +45,9 @@ export class TopoDetailComponent {
         }
     }
 
+    toggleDocument() {
+        this.documentVisible = !this.documentVisible;
+    }
     search(term) {
         this.service.listTemplates({
             term: term,

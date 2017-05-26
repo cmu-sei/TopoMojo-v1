@@ -84,6 +84,30 @@ export class TopoService {
         return this.http.post('/api/topology/clonetemplate/'+tref.id, {});
     }
 
+    public launchInstance(id) {
+        return this.http.get('/api/instance/launch/' + id);
+    }
+
+    public destroyInstance(id) {
+        return this.http.delete("/api/instance/destroy/" + id);
+    }
+
+    public activeInstances() {
+        return this.http.get("/api/instance/active");
+    }
+
+    public saveDoc(id, text) {
+        return this.http.post('/api/topology/savedocument/' + id, text);
+    }
+
+    public loadDoc(id) {
+        return this.http.gettext('/docs/' + id + '.md');
+    }
+
+    public loadUrl(url) {
+        return this.http.gettext(url);
+    }
+
     public onError(err) {
         this.http.onError(err);
     }

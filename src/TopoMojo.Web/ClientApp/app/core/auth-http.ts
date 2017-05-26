@@ -15,6 +15,15 @@ export class AuthHttp {
         return response.json();
     }
 
+    mapText(response : Response) {
+        return response.text();
+    }
+
+    gettext(url, opts = {}) {
+        this.addAuth(opts);
+        return this.http.get(url, opts).map(this.mapText);
+    }
+
     get(url, opts = {}) {
         this.addAuth(opts);
         return this.http.get(url, opts).map(this.mapData);

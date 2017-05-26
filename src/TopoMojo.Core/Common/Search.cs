@@ -8,12 +8,14 @@ namespace TopoMojo.Core
         public string Term { get; set; }
         public int Skip { get; set; }
         public int Take { get; set; }
-        public int Total { get; set; }
+        public int Sort { get; set; }
         public SearchFilter[] Filters { get; set; } = new SearchFilter[] {};
     }
 
-    public class Search<T> : Search where T : class
+    public class SearchResult<T> where T : class
     {
+        public Search Search { get; set; }
+        public int Total { get; set; }
         public T[] Results { get; set; }
     }
 

@@ -29,6 +29,15 @@
             </div>
             <hr>
             <div>
+                <button (click)="toggleDocument()" class="btn btn-primary">
+                <i class="fa fa-edit"></i> Edit Document</button>
+                <div [class.hidden]="!documentVisible">
+                    <document-editor [id]="topo.globalId"></document-editor>
+                    <image-manager [id]="topo.globalId"></image-manager>
+                </div>
+            </div>
+            <hr>
+            <div>
                 <button *ngIf="!deleteMsgVisible" (click)="confirmDelete()" class="btn btn-danger btn-large">
                     <i class="fa fa-trash"></i> Delete Topology
                 </button>

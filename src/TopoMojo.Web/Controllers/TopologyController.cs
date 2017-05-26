@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,110 +21,114 @@ namespace TopoMojo.Controllers
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
+            IHostingEnvironment env,
             IServiceProvider sp) : base(sp)
         {
             _pod = podManager;
             _mgr = topologyManager;
+            _env = env;
         }
 
         private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
+        private readonly IHostingEnvironment _env;
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Create([FromBody]Topology topo)
+        public async Task<Topology> Create([FromBody]Topology topo)
         {
-            return Json(await _mgr.Create(topo));
+            return await _mgr.Create(topo);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Update([FromBody]Topology topo)
+        public async Task<Topology> Update([FromBody]Topology topo)
         {
-            return Json(await _mgr.Update(topo));
+            return await _mgr.Update(topo);
         }
 
         [HttpGet("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<IActionResult> Load([FromRoute]int id)
+        public async Task<Topology> Load([FromRoute]int id)
         {
-            return Json(await _mgr.LoadAsync(id));
+            return await _mgr.LoadAsync(id);
         }
 
         [HttpDelete("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<bool> Delete([FromRoute]int id)
         {
             Topology topo = await _mgr.LoadAsync(id);
             foreach (Vm vm in await _pod.Find(topo.GlobalId))
                 await _pod.Delete(vm.Id);
-            return Json(await _mgr.DeleteAsync(topo));
+            return await _mgr.DeleteAsync(topo);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromBody]Search<TopoSummary> search)
+        public async Task<SearchResult<TopoSummary>> List([FromBody]Search search)
         {
-            return Json(await _mgr.ListAsync(search));
+            return await _mgr.ListAsync(search);
         }
 
         [HttpGet("{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Templates([FromRoute]int id)
+        public async Task<TemplateReference[]> Templates([FromRoute]int id)
         {
-            return Json(await _mgr.ListTemplates(id));
+            return await _mgr.ListTemplates(id);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> AddTemplate([FromBody]TemplateReference tref)
+        public async Task<TemplateReference> AddTemplate([FromBody]TemplateReference tref)
         {
-            return Json(await _mgr.AddTemplate(tref));
+            return await _mgr.AddTemplate(tref);
         }
+
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<IActionResult> UpdateTemplate([FromBody]TemplateReference tref)
+        public async Task<TemplateReference> UpdateTemplate([FromBody]TemplateReference tref)
         {
-            return Json(await _mgr.UpdateTemplate(tref));
+            return await _mgr.UpdateTemplate(tref);
         }
 
         [HttpDelete("{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> RemoveTemplate([FromRoute]int id)
+        public async Task<bool> RemoveTemplate([FromRoute]int id)
         {
-            return Json(await _mgr.RemoveTemplate(id));
+            return await _mgr.RemoveTemplate(id);
         }
 
         [HttpPost("{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> CloneTemplate([FromRoute]int id)
+        public async Task<TemplateReference> CloneTemplate([FromRoute]int id)
         {
-            return Json(await _mgr.CloneTemplate(id));
+            return await _mgr.CloneTemplate(id);
         }
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<IActionResult> Members([FromRoute] int id)
+        public async Task<Core.Permission[]> Members([FromRoute] int id)
         {
-            return Json(await _mgr.Members(id));
+            return await _mgr.Members(id);
         }
 
+        [HttpPostAttribute("{guid}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> SaveDocument([FromRoute] string guid, [FromBody] string text)
+        {
+            if (await _mgr.CanEdit(guid))
+            {
+                string path = System.IO.Path.Combine(_env.WebRootPath, "docs");
+                if (!System.IO.Directory.Exists(path))
+                    System.IO.Directory.CreateDirectory(path);
 
-        // [HttpPost]
-        // [JsonExceptionFilter]
-        // public async Task<IActionResult> Create([FromBody]TopologyModel model)
-        // {
-        //     return Json(await _mgr.Create(model));
-        // }
-
-        // [HttpPost]
-        // [JsonExceptionFilter]
-        // public async Task<IActionResult> Save([FromBody]Topology Topology)
-        // {
-        //     return Json(await _mgr.Save(Topology));
-        // }
-
-
+                path = System.IO.Path.Combine(path, guid+".md");
+                System.IO.File.WriteAllText(path, text);
+                return true;
+            }
+            return false;
+        }
     }
 
 }

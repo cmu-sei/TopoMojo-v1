@@ -1,0 +1,32 @@
+<div>
+    <h4>Image Manager</h4>
+    <div *ngIf="images" class="row">
+        <div *ngFor="let img of images" class="col-md-3 thumbnail">
+            <img [src]="imagePath(img)" (click)="imageClicked(img)"/>
+            <div class="caption">
+                <span>{{img.filename}}</span>
+                <button class="btn btn-default btn-sm" (click)="genMd(img)">
+                    <i class="fa fa-clipboard"></i> MD
+                </button>
+                <button class="btn btn-danger btn-sm pull-right" (click)="delete(img)">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="upload-ui">
+    <label class="btn btn-default">
+        <input id="fileSelector" multiple type="file" style="display:none;" (change)="fileSelectorChanged($event)">
+        Browse to upload
+    </label>
+    <!--<textarea (change)="updateClipboard($event)" rows="1"" cols="1" class="offscreen"></textarea>-->
+    <textarea id="clipboardText" class="offscreen"></textarea>
+    <div *ngIf="filesQueued()">
+        <p *ngFor="let f of queuedFiles">
+            <i class="fa fa-image"></i> {{ f.name }}
+        </p>
+        <button (click)="upload()" class="btn btn-primary">Upload</button>
+    </div>
+</div>

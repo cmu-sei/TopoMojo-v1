@@ -19,12 +19,14 @@ namespace TopoMojo.Core
         {
         }
 
-        public async Task<Search<TopoSummary>> ListAsync(Search<TopoSummary> search)
+        public async Task<SearchResult<TopoSummary>> ListAsync(Search search)
         {
             //get topo, contributors, templates
             IQueryable<Topology> q = base.ListQuery(search);
-            search.Total = await q.CountAsync();
-            search.Results =  q
+            SearchResult<TopoSummary> result = new SearchResult<TopoSummary>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+            result.Results =  q
                 .Include(t => t.Permissions)
                 .Include(t => t.Templates)
                 .OrderBy(t => t.Name)
@@ -41,7 +43,7 @@ namespace TopoMojo.Core
                     CanManage = _user.IsAdmin || t.Permissions.Where(p => p.PersonId == _user.Id && p.Value != PermissionFlag.None).Any()
                 })
                 .ToArray();
-            return search;
+            return result;
         }
 
         public async Task<Topology> Create(Topology topology)
@@ -55,13 +57,6 @@ namespace TopoMojo.Core
                 Value = PermissionFlag.Manager
             });
             await base.SaveAsync(topology);
-            // _db.Permissions.Add(new Permission {
-            //     EntityType = EntityType.Topology,
-            //     EntityId = topology.Id,
-            //     PersonId = _user.Id,
-            //     Value = PermissionFlag.Manager
-            // });
-            //_db.SaveChanges();
             return topology;
         }
 

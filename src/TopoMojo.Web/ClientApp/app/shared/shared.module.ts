@@ -8,6 +8,7 @@ import { Tooltip } from './tooltip.directive';
 import { TooltipContent } from './tooltip.component';
 import { Collapser } from './collapser.component';
 import { InlineHelpComponent } from './inline-help.component';
+import { UntaggedStringPipe } from './pipes';
 
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
@@ -25,9 +26,12 @@ export * from "./tooltip.component";
         InlineHelpComponent,
         Tooltip,
         TooltipContent,
-        Collapser
+        Collapser,
+        UntaggedStringPipe
     ],
     exports: [
+        CommonModule,
+        FormsModule,
         SearchBarComponent,
         EntityListComponent,
         InlineEditorComponent,
@@ -35,8 +39,7 @@ export * from "./tooltip.component";
         Tooltip,
         TooltipContent,
         Collapser,
-        CommonModule,
-        FormsModule
+        UntaggedStringPipe
     ],
     entryComponents: [
         TooltipContent

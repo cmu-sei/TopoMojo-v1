@@ -1,5 +1,30 @@
 <!--<div class="row">
     <div class="col-md-6 col-sm-8 col-xs-12">-->
+    <div *ngIf="instances && instances.length > 0">
+        <h4>Active Topologies</h4>
+        <div *ngFor="let m of instances" class="row tile text text-info">
+            <div class="col-xs-2">
+                <i class="fa fa-map avatar"></i>
+            </div>
+            <div class="col-xs-8">
+                <h4>{{ m.instance.topology.name }}</h4>
+                <p class="label label-default">{{m.instance.whenCreated}}</p>
+                <hr/>
+            </div>
+            <div class="col-xs-2 pull-right">
+                <button *ngIf="m.isAdmin" class="btn btn-link pull-right" (click)="destroyInstance(m.instance.id)">
+                    <i class="fa fa-trash text text-danger"></i>
+                </button>
+                <button *ngIf="m.isAdmin && m.instance.globalId == m.instance.topology.globalId" class="btn btn-link pull-right" [routerLink]="['/topo', t.id]">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button class="btn btn-link pull-right" [routerLink]="['/mojo', m.instance.topology.id]">
+                    <i class="fa fa-flash text text-warning"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
         <h4>Browse Topologies</h4>
         <div class="row">
             <div class="col-xs-9">
@@ -28,10 +53,14 @@
                             <p>{{ t.description }}</p>
                             <p><span class="label label-default">People</span> {{t.people}}</p>
                             <p><span class="label label-default">Templates</span> {{t.templates || 'None'}}</p>
+                            <hr/>
                         </div>
                         <div class="col-xs-2 pull-right">
                             <button *ngIf="t.canManage" class="btn btn-link pull-right" [routerLink]="['/topo', t.id]">
-                                <i class="fa fa-edit"></i>
+                                <i class="fa fa-edit text text-success"></i>
+                            </button>
+                            <button class="btn btn-link pull-right" [routerLink]="['/mojo', t.id]">
+                                <i class="fa fa-flash text text-warning"></i>
                             </button>
                         </div>
                     <!--</div>-->

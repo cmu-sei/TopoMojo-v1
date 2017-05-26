@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -64,25 +65,6 @@ namespace TopoMojo.Core
 
         }
 
-        // public async Task<TemplateModel> Update(TemplateModel model)
-        // {
-        //     Template t = await _db.Templates.FindAsync(model.Id);
-        //     if (t == null)
-        //         throw new InvalidOperationException();
-
-        //     if (! (await CanEdit(t.Id)))
-        //         throw new InvalidOperationException();
-
-        //     TemplateUtility tu = new TemplateUtility(t.Detail);
-        //     tu.Name = model.Name;
-        //     tu.Networks = model.Networks;
-        //     tu.Iso = model.Iso;
-        //     t.Detail = tu.ToString();
-        //     await _db.SaveChangesAsync();
-        //     return model;
-        // }
-
-
         private async Task<bool> CanEdit(int id)
         {
             if (_user.IsAdmin)
@@ -111,20 +93,22 @@ namespace TopoMojo.Core
                 .AnyAsync();
 
         }
-        public override async Task<Search<Template>> ListAsync(Search<Template> search)
+        public override async Task<SearchResult<Template>> ListAsync(Search search)
         {
             IQueryable<Template> q = ListQuery(search);
 
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
 
-            search.Total = await q.CountAsync();
-            search.Results = await q
+            SearchResult<Template> result = new SearchResult<Template>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+            result.Results = await q
                 .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)
                 .ToArrayAsync();
-            return search;
+            return result;
         }
 
         public async Task<bool> RemoveTemplate(int id)
@@ -178,5 +162,6 @@ namespace TopoMojo.Core
             tu.Id = tref.Id.ToString();
             return tu.AsTemplate();
         }
+
     }
 }

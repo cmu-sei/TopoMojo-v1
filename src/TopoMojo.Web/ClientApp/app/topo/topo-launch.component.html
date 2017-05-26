@@ -1,0 +1,19 @@
+<div>
+    <p>{{status}}</p>
+    <p *ngIf="errorMessage" class="text text-danger">{{ errorMessage }}</p>
+
+    <ul *ngIf="summary" class="list-inline">
+        <li *ngFor="let vm of summary.vms">
+            <button *ngIf="!vm.visible" class="btn btn-default" (click)="launchConsole(vm.id)">
+                <i class="fa fa-monitor fa-2x"></i> {{ vm.name | untagged }}
+            </button>
+        </li>
+        <li class="pull-right">
+            <button class="btn btn-danger" (click)="destroy()">
+                <i class="fa fa-trash fa-2x"></i>
+            </button>
+        </li>
+    </ul>
+</div>
+
+<div [innerHtml]="renderedDocument"></div>

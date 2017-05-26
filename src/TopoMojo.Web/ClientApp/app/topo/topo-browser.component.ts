@@ -18,12 +18,17 @@ export class TopoBrowserComponent {
     };
     hasMore: number;
     editorVisible: boolean;
+    instances: any[];
 
-    constructor(private service: TopoService, private router: Router) {
+    constructor(
+        private service: TopoService,
+        private router: Router
+    ) {
         this.service = service;
     }
 
     ngOnInit(): void {
+        this.loadActive();
         this.search();
     };
 
@@ -50,6 +55,18 @@ export class TopoBrowserComponent {
 
     showEditor() {
         this.editorVisible = !this.editorVisible;
+    }
+
+    loadActive() {
+        this.service.activeInstances().subscribe(result => {
+            this.instances = result;
+        });
+    }
+
+    destroyInstance(id: number) {
+        this.service.destroyInstance(id).subscribe(result => {
+            this.loadActive();
+        })
     }
 }
 

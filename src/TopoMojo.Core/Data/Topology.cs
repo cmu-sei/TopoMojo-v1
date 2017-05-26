@@ -5,8 +5,7 @@ namespace TopoMojo.Core
     public class Topology : BaseModel
     {
         public string Description { get; set; }
-        //public int SimulationId { get; set; }
-        //public virtual Simulation Simulation { get; set; }
+        public string DocumentUrl { get; set; }
         public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
         public virtual ICollection<TemplateReference> Templates { get; set; } = new List<TemplateReference>();
 

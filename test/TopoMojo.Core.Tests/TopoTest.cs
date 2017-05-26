@@ -17,7 +17,7 @@ namespace Tests
                     Name = "JamOn"
                 }).Wait();
 
-                Search<Topology> search = mgr.ListAsync(new Search<Topology>()).Result;
+                SearchResult<TopoSummary> search = mgr.ListAsync(new Search()).Result;
                 Assert.True(search.Total > 0);
             }
         }
