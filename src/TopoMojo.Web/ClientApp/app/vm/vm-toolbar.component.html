@@ -1,3 +1,4 @@
+<div class="toolbar">
 <ul *ngIf="working" class="list-inline">
     <li><i class="fa fa-spinner fa-spin"></i></li>
     <li>
@@ -19,8 +20,8 @@
             <button class="btn btn-default" (click)="deploy()" tooltip="deploy"><i class="fa fa-bolt"></i></button>
         </ng-template>
         <ng-template [ngSwitchCase]="'deployed'">
-            <button class="btn btn-default" (click)="start()" tooltip="Start" *ngIf="vm.state != 1"><i class="fa fa-play"></i></button>
-            <button class="btn btn-default" (click)="stop()" tooltip="Stop" *ngIf="vm.state == 1"><i class="fa fa-stop"></i></button>
+            <button class="btn btn-default" (click)="start()" tooltip="start" *ngIf="!isRunning()"><i class="fa fa-play"></i></button>
+            <button class="btn btn-default" (click)="stop()" tooltip="stop" *ngIf="isRunning()"><i class="fa fa-stop"></i></button>
             <button class="btn btn-default" (click)="display()" tooltip="console"><i class="fa fa-desktop"></i></button>
             <button class="btn btn-default" (click)="revert()" tooltip="revert"><i class="fa fa-fast-backward"></i></button>
             <button class="btn btn-default" (click)="save()" tooltip="save"><i class="fa fa-save"></i></button>
@@ -40,4 +41,5 @@
         (click)="answer(c)"
         [class.selected]="c.key === vm.question.defaultChoice"
         class="btn btn-warning">{{c.label}}</button>
+</div>
 </div>

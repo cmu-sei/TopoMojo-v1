@@ -1,4 +1,4 @@
-import { AuthHttp } from '../core/auth-http';
+import { AuthHttp } from '../auth/auth-http';
 import { Injectable } from '@angular/core';
 
 @Injectable()
@@ -86,6 +86,10 @@ export class TopoService {
 
     public launchInstance(id) {
         return this.http.get('/api/instance/launch/' + id);
+    }
+
+    public checkInstance(id) {
+        return this.http.get('/api/instance/check/' + id);
     }
 
     public destroyInstance(id) {

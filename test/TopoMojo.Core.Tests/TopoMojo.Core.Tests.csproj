@@ -21,12 +21,12 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0-beta5-build1225" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.2.0-beta5-build3474" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.*" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
-<!--<div class="row">
-    <div class="col-md-6 col-sm-8 col-xs-12">-->
+<h3><i class="fa fa-map"></i> TopoMojo</h3>
+<div class="row">
+    <!--<div class="col-md-6 col-sm-8 col-xs-12">-->
     <div *ngIf="instances && instances.length > 0">
         <h4>Active Topologies</h4>
         <div *ngFor="let m of instances" class="row tile text text-info">
@@ -24,7 +25,7 @@
             </div>
         </div>
     </div>
-
+    <div>
         <h4>Browse Topologies</h4>
         <div class="row">
             <div class="col-xs-9">
@@ -70,5 +71,6 @@
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>
-    <!--</div>
-</div>-->
+    </div>
+    <!--</div>-->
+</div>

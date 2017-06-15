@@ -113,22 +113,6 @@ namespace TopoMojo.Controllers
             return await _mgr.Members(id);
         }
 
-        [HttpPostAttribute("{guid}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> SaveDocument([FromRoute] string guid, [FromBody] string text)
-        {
-            if (await _mgr.CanEdit(guid))
-            {
-                string path = System.IO.Path.Combine(_env.WebRootPath, "docs");
-                if (!System.IO.Directory.Exists(path))
-                    System.IO.Directory.CreateDirectory(path);
-
-                path = System.IO.Path.Combine(path, guid+".md");
-                System.IO.File.WriteAllText(path, text);
-                return true;
-            }
-            return false;
-        }
     }
 
 }

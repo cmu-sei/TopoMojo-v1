@@ -9,6 +9,7 @@ import { TooltipContent } from './tooltip.component';
 import { Collapser } from './collapser.component';
 import { InlineHelpComponent } from './inline-help.component';
 import { UntaggedStringPipe } from './pipes';
+import { ConfirmDeleteComponent } from './confirm-delete.component';
 
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
@@ -27,7 +28,8 @@ export * from "./tooltip.component";
         Tooltip,
         TooltipContent,
         Collapser,
-        UntaggedStringPipe
+        UntaggedStringPipe,
+        ConfirmDeleteComponent
     ],
     exports: [
         CommonModule,
@@ -39,7 +41,8 @@ export * from "./tooltip.component";
         Tooltip,
         TooltipContent,
         Collapser,
-        UntaggedStringPipe
+        UntaggedStringPipe,
+        ConfirmDeleteComponent
     ],
     entryComponents: [
         TooltipContent

@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from '../core/auth-guard.service';
+import { AuthGuardService } from '../auth/auth-guard.service';
 import { TopoComponent } from './topo.component';
 import { TopoBrowserComponent } from './topo-browser.component';
 import { TopoLaunchComponent } from './topo-launch.component';
@@ -13,11 +13,11 @@ const routes: Routes = [
     {
         path: 'topo',
         component: TopoComponent,
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuardService],
         children: [
             {
                 path: '',
-                canActivateChild: [ AuthGuard ],
+                canActivateChild: [ AuthGuardService ],
                 children: [
                     { path: ':id', component: TopoDetailComponent },
                     { path: '', component: TopoBrowserComponent }
@@ -28,11 +28,11 @@ const routes: Routes = [
     {
         path: 'mojo',
         component: TopoComponent,
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuardService],
         children: [
             {
                 path: '',
-                canActivateChild: [ AuthGuard ],
+                canActivateChild: [ AuthGuardService ],
                 children: [
                     { path: ':id', component: TopoLaunchComponent },
                     { path: '', component: TopoComponent }

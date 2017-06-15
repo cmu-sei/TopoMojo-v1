@@ -39,7 +39,7 @@ namespace TopoMojo.Controllers
         {
             if (await _mgr.CanEdit(guid))
             {
-                string path = GetPath("docs", guid);
+                string path = GetPath("docs");
                 path = System.IO.Path.Combine(path, guid+".md");
                 System.IO.File.WriteAllText(path, text);
                 return true;

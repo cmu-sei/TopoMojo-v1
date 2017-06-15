@@ -17,7 +17,11 @@ export class TopoLaunchComponent implements OnInit {
     errorMessage: string;
     renderedDocument: string;
     status: string = "Verifying topology...";
+    launching: boolean;
+    destroyMsgVisible: boolean;
+    destroyPrompt : string = "Confirm deletion of this instance.";
     private converter : Converter;
+    private id: number;
 
     constructor(
         private router: Router,
@@ -31,20 +35,23 @@ export class TopoLaunchComponent implements OnInit {
     ngOnInit() {
         //fire launch/id api method
         this.route.params
-        .switchMap((params: Params) => this.service.launchInstance(params['id']))
+        .switchMap((params: Params) => this.service.checkInstance(params['id']))
             .subscribe(result => {
-                console.log(result);
                 this.summary = result;
-                this.status = 'Loading document...';
+                if (result.id && result.vmCount > result.vms.length)
+                    this.launch();
+                this.status = '';
                 this.service.loadUrl(this.summary.document).subscribe(text => {
                     //todo: update console urls
                     let newHtml = this.converter.makeHtml(text);
                     //newHtml = newHtml.replace(/href="console"/g, 'href="console" target="console"');
-
-                    console.log(newHtml);
                     this.renderedDocument = newHtml;
                     this.status = '';
-                })
+                }), (err) => {
+                    console.log(err);
+                    this.status = '';
+                    this.errorMessage = "No document specified";
+                }, () => { console.log("done."); this.status = ''; }
             }, (err) => {
                 this.errorMessage = err.json().message;
                 //this.service.onError(err);
@@ -52,12 +59,33 @@ export class TopoLaunchComponent implements OnInit {
 
     }
 
+    confirmDestroy() {
+        this.destroyMsgVisible = true;
+    }
+    cancelDestroy() {
+        this.destroyMsgVisible = false;
+    }
     destroy() {
         this.service.destroyInstance(this.summary.id)
         .subscribe(result => {
             this.summary = null;
             this.router.navigate(['/']);
         });
+    }
+
+    launch() {
+        this.launching = true;
+        this.status = "Launching topology instance...";
+        this.route.params
+        .switchMap((params: Params) => this.service.launchInstance(params['id']))
+            .subscribe(result => {
+                this.summary = result;
+                this.status = '';
+                this.launching = false;
+            }, (err) => {
+                this.errorMessage = err.json().message;
+                //this.service.onError(err);
+            });
     }
 
     launchConsole(id) {

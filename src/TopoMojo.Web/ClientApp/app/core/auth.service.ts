@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Http, Response } from '@angular/http';
-import { AuthHttp } from './auth-http';
+import { CoreAuthHttp } from './auth-http';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { JwtHelper } from './auth-jwt';
@@ -18,7 +18,7 @@ export class UserProfile {
 }
 
 @Injectable()
-export class AuthService {
+export class CoreAuthService {
     bearerKey: string = 'Bearer';
     redirectUrl: string = '/';
     private profileSource: Subject<UserProfile> = new Subject<UserProfile>();
@@ -27,7 +27,7 @@ export class AuthService {
     private tokenUpdater : Observable<any> = this.tokenUpdateSource.asObservable();
 
     constructor(
-        private http: AuthHttp,
+        private http: CoreAuthHttp,
         private router: Router
         ) {
             this.tokenUpdater.subscribe(token => {

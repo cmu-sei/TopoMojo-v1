@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Router , ActivatedRoute, Params} from '@angular/router';
-import { AuthService } from './auth.service';
+import { Router , ActivatedRoute, ActivatedRouteSnapshot, Params} from '@angular/router';
+import { CoreAuthService } from './auth.service';
 import 'rxjs/add/operator/switchMap';
 
 @Component({
@@ -17,28 +17,22 @@ export class ResetComponent implements OnInit {
     errorMessage : string;
 
     constructor(
-        private service : AuthService,
+        private service : CoreAuthService,
         private router: Router,
         private route: ActivatedRoute
         ) { }
 
     ngOnInit() {
-        // this.route.params
-        //     .switchMap((params: Params) => this.setUser(params['email']))
-        //     .subscribe(data => {
-        //     });
+        this.username = this.route.snapshot.params["account"];
     }
 
-    setUser(user) {
-        this.username = user;
-    }
     reset() {
         if (!this.username) {
             this.errorMessage = "Please specify your email address.";
             return;
         }
 
-        if (this.pass1 == null || this.pass2==null || this.pass1 != this.pass2) {
+        if (this.pass1 == null || this.pass2 == null || this.pass1 != this.pass2) {
             this.errorMessage = "Passwords need to match.";
             return;
         }
@@ -54,6 +48,7 @@ export class ResetComponent implements OnInit {
             code: this.code
         })
         .then(data => {
+            //todo: store jwt
             this.router.navigate(['/']);
         }, (err) => { console.log(err); this.errorMessage = JSON.parse(err.text()).message;});
     }

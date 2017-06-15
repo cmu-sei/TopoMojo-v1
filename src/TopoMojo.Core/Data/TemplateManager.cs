@@ -12,11 +12,8 @@ namespace TopoMojo.Core
     public class TemplateManager : EntityManager<Template>
     {
         public TemplateManager(
-            TopoMojoDbContext db,
-            IUserResolver userResolver,
-            IOptions<CoreOptions> options,
-            ILoggerFactory mill
-        ) : base (db, userResolver, options, mill)
+            IServiceProvider sp
+        ) : base (sp)
         {
         }
 

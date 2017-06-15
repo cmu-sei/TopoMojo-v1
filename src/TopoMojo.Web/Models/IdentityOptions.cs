@@ -33,7 +33,7 @@ namespace TopoMojo.Models
         public bool RequireCertificate { get; set; } = false;
         public bool CheckCertificateRevocation { get; set; } = false;
         public int LockThreshold { get; set; } = 5;
-        public string Scheme { get; set; } = "app-identity";
+        public string Scheme { get; set; } = "JamBearer";
         public string TokenKey { get; set; } = "app-token-secret-key";
         public string TokenIssuer { get; set; } = "app-issuer";
         public string TokenAudience { get; set; } = "app-audience";

@@ -1,4 +1,5 @@
-<nav class='navbar navbar-default navbar-fixed-top'>
+<span>{{(profile) ? profile.name : "anonymous"}}</span>
+<!--<nav class='navbar navbar-default navbar-fixed-top'>
     <div class="container">
         <div class='navbar-header'>
             <button type='button' class='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>
@@ -11,19 +12,19 @@
         </div>
         <div class='navbar-collapse collapse'>
             <ul class='nav navbar-nav navbar-right'>
-                <li *ngIf="!profile.isLoggedIn" [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/login']">
+                <li *ngIf="!profile" [routerLinkActive]="['link-active']">
+                    <a (click)="login()">
                         <span class='fa fa-unlock'></span> Login
                     </a>
                 </li>
-                <li *ngIf="profile.isLoggedIn">
+                <li *ngIf="profile">
                     <ul class="nav navbar-nav navbar-right">
                         <li [routerLinkActive]="['link-active']">
                             <a [routerLink]="['/topo']">
                                 <span class='fa fa-map'></span> Browse
                             </a>
                         </li>
-                        <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
+                        <li *ngIf="profile" [routerLinkActive]="['link-active']">
                             <a [routerLink]="['/admin']">
                                 <span class='fa fa-shield'></span> Admin
                             </a>
@@ -48,7 +49,7 @@
             </ul>
         </div>
     </div>
-</nav>
+</nav>-->
 
 <div class='container main-container'>
     <!--<div class='row'>-->
@@ -56,11 +57,10 @@
     <!--</div>-->
 </div>
 
-<nav class="navbar navbar-default navbar-fixed-bottom">
+<!--<nav class="navbar navbar-default navbar-fixed-bottom">
     <div class="container">
         <ul class="nav navbar-nav navbar-right">
-            <!--<li><a [routerLink]="['/about']">About</a></li>-->
             <li><a [routerLink]="['/help']">Help</a></li>
         </ul>
     </div>
-</nav>
+</nav>-->

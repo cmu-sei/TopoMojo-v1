@@ -40,8 +40,6 @@ namespace TopoMojo.Controllers
             TopoMojo.Models.Template template  = await _mgr.GetDeployableTemplate(id, null);
 
             Vm vm = await _pod.Refresh(template);
-            // if (!AuthorizedForVm(vm))
-            //     return BadRequest();
             return Json(vm);
         }
         [HttpGet("{id}")]
@@ -49,9 +47,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Load(string id)
         {
             await AuthorizeAction(id, "load");
-            Vm vm = await _pod.Load(id); //.Refresh(template);
-            // // if (!AuthorizedForVm(vm))
-            // //     return BadRequest();
+            Vm vm = await _pod.Load(id);
             return Json(vm);
         }
 
@@ -59,8 +55,6 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Start(string id)
         {
-            // if (!AuthorizedForVm(id))
-            //     return BadRequest();
             await AuthorizeAction(id, "start");
 
             Vm vm = await _pod.Start(id);
@@ -71,9 +65,6 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Stop(string id)
         {
-            // if (!AuthorizedForVm(id))
-            //     return BadRequest();
-
             await AuthorizeAction(id, "stop");
             Vm vm = await _pod.Stop(id);
             return Json(vm);
@@ -83,9 +74,6 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Save(string id)
         {
-            // if (!AuthorizedForVm(id))
-            //     return BadRequest();
-
             await AuthorizeAction(id, "save");
             Vm vm = await _pod.Save(id);
             return Json(vm);
@@ -95,9 +83,6 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Revert(string id)
         {
-            // if (!AuthorizedForVm(id))
-            //     return BadRequest();
-
             await AuthorizeAction(id, "revert");
             Vm vm = await _pod.Revert(id);
             return Json(vm);
@@ -107,9 +92,6 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Delete([FromRoute]string id)
         {
-            // if (!AuthorizedForVm(id))
-            //     return BadRequest();
-
             await AuthorizeAction(id, "delete");
             Vm vm = await _pod.Delete(id);
             return Json(vm);
@@ -122,9 +104,6 @@ namespace TopoMojo.Controllers
             await AuthorizeAction(id, "change");
 
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
-            // if (!AuthorizedForVm(vm))
-            //     return BadRequest();
-
             return Json(await _pod.Change(id, change));
         }
 
@@ -159,6 +138,20 @@ namespace TopoMojo.Controllers
             return View("wmks", info);
         }
 
+        [HttpGet("/[controller]/[action]/{id}")]
+        public async Task<IActionResult> Console([FromRoute]string id)
+        {
+            await AuthorizeAction(id, "console");
+            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+
+            DisplayInfo info = await _pod.Display(id);
+            if (info == null)
+                return View("Error");
+
+            info.TopoId = vm.Name.Tag();
+            return View("wmks", info);
+        }
+
         [HttpPost("{id}/{question}/{answer}")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Answer(string id, string question, string answer)
@@ -173,8 +166,6 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "isooptions");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
-            // if (!AuthorizedForVm(vm))
-            //     return BadRequest();
 
             //TODO: lookup TopoId from IsolationTag (for now they are the same)
             string tag = vm.Name.Tag();
@@ -198,22 +189,25 @@ namespace TopoMojo.Controllers
 
         private async Task<bool> AuthorizeAction(string id, string method)
         {
-            if (_user.IsAdmin)
-                return true;
+            // if (_user.IsAdmin)
+            //     return true;
 
             Vm vm = _pod.Find(id).Result.FirstOrDefault();
-            string topoId = vm.Name.Tag();
-            if (String.IsNullOrEmpty(topoId))
+            string instanceId = vm.Name.Tag();
+            if (String.IsNullOrEmpty(instanceId))
                 throw new InvalidOperationException();
 
-            bool result = await _topoManager.CanEdit(topoId);
+            bool result = await _topoManager.CanEdit(instanceId);
+
+            if (!result && "display console load".Contains(method))
+                result = await _topoManager.AllowedInstanceAccess(instanceId);
 
             if (!result)
                 throw new InvalidOperationException();
 
             if (method != "load")
             {
-                _logger.LogInformation($"vm-action {_user.Email} {method} {id}");
+                _logger.LogInformation($"vm-action {method} {id}");
             }
             return result;
         }

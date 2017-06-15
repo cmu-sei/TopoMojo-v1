@@ -36,6 +36,13 @@ namespace TopoMojo.Controllers
             return await _mgr.Launch(id);
         }
 
+        [HttpGetAttribute("{id}")]
+        [JsonExceptionFilter]
+        public async Task<InstanceSummary> Check([FromRoute]int id)
+        {
+            return await _mgr.Check(id);
+        }
+
         [HttpDeleteAttribute("{id}")]
         [JsonExceptionFilter]
         public async Task<bool> Destroy([FromRoute] int id)

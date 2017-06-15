@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AuthHttp } from '../core/auth-http';
+import { AuthHttp } from '../auth/auth-http';
 
 @Injectable()
 export class VmService {
@@ -50,7 +50,7 @@ export class VmService {
     public launchPage(url) {
         if ( typeof this.pageRefs[url] == 'undefined' || this.pageRefs[url].closed )
         {
-            this.pageRefs[url] = window.open(url);
+            this.pageRefs[url] = window.open(url + this.http.appendAuth());
         } else {
             this.pageRefs[url].focus()
         }

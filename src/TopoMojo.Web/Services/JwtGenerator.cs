@@ -7,7 +7,7 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Services
 {
-    public static class JwtTokenGenerator
+    public static class JwtTokenGeneratorObsolete
     {
         public static object Generate(dynamic id, IdentityOptions options)
         {

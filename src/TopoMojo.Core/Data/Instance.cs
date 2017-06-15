@@ -26,5 +26,6 @@ namespace TopoMojo.Core
         public string WhenCreated { get; set; }
         public string Document { get; set; }
         public Models.Vm[] Vms { get; set; }
+        public int VmCount { get; set; }
     }
 }

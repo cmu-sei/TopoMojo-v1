@@ -11,15 +11,12 @@ namespace TopoMojo.Core
     public class TopologyManager : EntityManager<Topology>
     {
         public TopologyManager(
-            TopoMojoDbContext db,
-            IUserResolver userResolver,
-            IOptions<CoreOptions> options,
-            ILoggerFactory mill
-        ) : base (db, userResolver, options, mill)
+            IServiceProvider sp
+        ) : base (sp)
         {
         }
 
-        public async Task<SearchResult<TopoSummary>> ListAsync(Search search)
+        public new async Task<SearchResult<TopoSummary>> ListAsync(Search search)
         {
             //get topo, contributors, templates
             IQueryable<Topology> q = base.ListQuery(search);
@@ -93,6 +90,15 @@ namespace TopoMojo.Core
         protected override void Normalize(Topology topo)
         {
             base.Normalize(topo);
+        }
+
+        public async Task<bool> AllowedInstanceAccess(string guid)
+        {
+            InstanceMember member = await _db.InstanceMembers
+                .Where(m => m.PersonId == _user.Id
+                    && m.Instance.GlobalId == guid)
+                .SingleOrDefaultAsync();
+            return (member != null);
         }
 
         public async Task<bool> CanEdit(string guid)
@@ -216,8 +222,9 @@ namespace TopoMojo.Core
 
             _db.TTLinkage.Add(tref);
             await _db.SaveChangesAsync();
+            await _db.Entry(tref).Reference(t => t.Topology).LoadAsync();
             await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
-            tref.Name = tref.Template.Name.Replace(" ", "-");
+            tref.Name = (tref.Topology.Name + " " + tref.Template.Name).ToLower().Replace(" ", "-");
             await _db.SaveChangesAsync();
             return tref;
         }

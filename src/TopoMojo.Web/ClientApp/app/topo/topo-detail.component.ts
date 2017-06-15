@@ -17,6 +17,7 @@ export class TopoDetailComponent {
     deleteMsgVisible: boolean;
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
+    showing: string = "templates";
 
     constructor(
         private service: TopoService,
@@ -102,6 +103,10 @@ export class TopoDetailComponent {
         .subscribe(data => {
 
         }, (err) => { this.service.onError(err)});
+    }
+
+    show(section: string) : void {
+        this.showing = section;
     }
 }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -12,28 +13,25 @@ namespace TopoMojo.Core
     public class EntityManager<T>
         where T : BaseModel, new()
     {
-        public EntityManager(TopoMojoDbContext db,
-            IUserResolver userResolver,
-            IOptions<CoreOptions> options,
-            ILoggerFactory mill)
+        public EntityManager(
+            IServiceProvider sp
+        )
         {
-            _db = db;
-            _mill = mill;
-            _userResolver = userResolver;
-
-            _user = userResolver.GetCurrentUserAsync().Result;
-            _logger = mill?.CreateLogger(this.GetType());
-            _optAccessor = options;
-            _options = options.Value;
+            _db = sp.GetRequiredService<TopoMojoDbContext>(); //db;
+            _mill = sp.GetRequiredService<ILoggerFactory>(); //mill;
+            _logger = _mill?.CreateLogger(this.GetType());
+            _options = sp.GetRequiredService<CoreOptions>(); //options.Value;
+            _profileResolver = sp.GetRequiredService<IProfileResolver>(); //profileResolver;
+            LoadProfileAsync().Wait();
             // if (_user != null && _user.Id > 0)
             //     _db.Attach(_user);
         }
 
         protected readonly TopoMojoDbContext _db;
-        protected readonly Person _user;
+        protected Person _user;
         protected readonly ILogger _logger;
         protected readonly ILoggerFactory _mill;
-        protected readonly IUserResolver _userResolver;
+        protected readonly IProfileResolver _profileResolver;
         protected readonly CoreOptions _options;
         protected readonly IOptions<CoreOptions> _optAccessor;
 
@@ -133,5 +131,27 @@ namespace TopoMojo.Core
 
         }
 
+        protected async Task LoadProfileAsync()
+        {
+            _user = _profileResolver.Profile;
+            if (_user.Id == 0)
+            {
+                Person person = await _db.People
+                    .Where(p => p.GlobalId == _user.GlobalId)
+                    .SingleOrDefaultAsync();
+
+                if (person == null)
+                {
+                    _db.People.Add(new Person
+                    {
+                        GlobalId = _user.GlobalId,
+                        Name = _user.Name ?? "Anonymous",
+                        WhenCreated = System.DateTime.UtcNow
+                    });
+                    await _db.SaveChangesAsync();
+                }
+                _user = person;
+            }
+        }
     }
 }

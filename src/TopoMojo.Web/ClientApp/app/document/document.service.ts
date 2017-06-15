@@ -1,4 +1,4 @@
-import { AuthHttp } from '../core/auth-http';
+import { AuthHttp } from '../auth/auth-http';
 import { Injectable } from '@angular/core';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class DocumentService {
         ) {}
 
     public saveDoc(id, text) {
-        return this.http.post('/api/topology/savedocument/' + id, text);
+        return this.http.post('/api/document/save/' + id, text);
     }
 
     public loadDoc(id) {

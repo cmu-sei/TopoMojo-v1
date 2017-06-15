@@ -4,8 +4,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { APP_BASE_HREF } from '@angular/common';
 import { ORIGIN_URL } from './shared/constants/baseurl.constants';
+import { AuthModule } from './auth/auth.module';
 import { CoreModule } from './core/core.module';
 import { TopoModule } from './topo/topo.module';
+import { ConsoleModule } from './console/console.module';
 import { AdminModule } from './admin/admin.module';
 import { AppComponent } from './app.component'
 
@@ -20,11 +22,13 @@ export function getOriginUrl() {
     ],
     imports: [
         BrowserModule,
+        AuthModule,
         CoreModule,
+        ConsoleModule,
         TopoModule,
         AdminModule,
         RouterModule.forRoot([
-            { path: '', redirectTo: 'home', pathMatch: 'full' },
+            { path: '', redirectTo: 'topo', pathMatch: 'full' },
             { path: '**', redirectTo: 'notfound' }
         ])
     ],

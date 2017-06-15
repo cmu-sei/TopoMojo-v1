@@ -5,11 +5,7 @@ import { VmService } from './vm.service';
     //moduleId: module.id,
     selector: 'vm-toolbar',
     templateUrl: 'vm-toolbar.component.html',
-    styles: [ `
-        .selected {
-            text-decoration: underline;
-        }
-    `]
+    styleUrls: [ 'vm-toolbar.component.css']
 
 })
 export class VmToolbarComponent implements OnChanges {
@@ -131,6 +127,10 @@ export class VmToolbarComponent implements OnChanges {
         .subscribe(data => {
             this.vm = data;
         });
+    }
+
+    isRunning() {
+        return this.vm.state == 1;
     }
 
     display() {

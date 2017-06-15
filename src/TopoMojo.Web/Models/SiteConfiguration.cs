@@ -1,3 +1,5 @@
+using TopoMojo.Core;
+
 namespace TopoMojo.Models
 {
 
@@ -6,6 +8,7 @@ namespace TopoMojo.Models
         public SiteConfiguration Site { get; set; }
         public FileUploadOptions FileUpload { get; set; }
         public PodConfiguration Pod { get; set; }
+        public CoreOptions Core { get; set; }
     }
 
     public class SiteConfiguration

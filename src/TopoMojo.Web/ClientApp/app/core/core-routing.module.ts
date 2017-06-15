@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes, ActivatedRouteSnapshot } from '@angular/router';
-import { AuthGuard } from './auth-guard.service';
+import { CoreAuthGuard } from './auth-guard.service';
 import { HomeComponent } from './home.component';
 import { NotFoundComponent } from './notfound.component';
 import { NotAllowedComponent } from './notallowed.component';

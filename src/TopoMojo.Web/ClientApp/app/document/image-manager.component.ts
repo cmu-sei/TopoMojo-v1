@@ -17,6 +17,12 @@ export interface DocImage {
             resize: none;
             border: 0px;
         }
+        h4 {
+            display: inline-block;
+        }
+        .upload-ui {
+            display: inline-block;
+        }
     `]
 })
 export class ImageManagerComponent implements OnInit {

@@ -33,6 +33,8 @@
     "html-loader": "^0.4.5",
     "isomorphic-fetch": "^2.2.1",
     "jquery": "^3.2.0",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-bundle": "^1.12.1",
     "json-loader": "^0.5.4",
     "ng-showdown": "^1.1.0",
     "ng2-dragula": "^1.3.1",
@@ -47,12 +49,14 @@
     "ts-loader": "^0.8.2",
     "typescript": "^2.2.1",
     "url-loader": "^0.5.8",
+    "vmware-wmks": "^1.0.0",
     "webpack": "^2.5.0",
     "zone.js": "^0.8.4"
   },
   "devDependencies": {
     "less": "^2.7.2",
     "less-loader": "^2.2.3",
+    "optimize-css-assets-webpack-plugin": "^1.3.2",
     "webpack": "^2.2.1",
     "webpack-hot-middleware": "^2.17.1",
     "webpack-merge": "^0.14.1"

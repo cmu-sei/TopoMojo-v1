@@ -1,6 +1,6 @@
 import { OnInit, Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { UserProfile, AuthService } from './core/auth.service';
+import { AuthService } from './auth/auth.service';
 import { Subscription } from 'rxjs/Subscription';
 
 @Component({
@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs/Subscription';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    profile : UserProfile = new UserProfile();
+    profile : any;
     profileSubscription: Subscription;
 
     constructor (
@@ -18,19 +18,22 @@ export class AppComponent {
     ){ }
 
     ngOnInit() {
-        this.profileSubscription = this.service.profile$
+        this.profileSubscription = this.service.user$
             .subscribe(p =>  {
-                //console.log(p);
-                this.profile = p;
+                this.profile = (p) ? p.profile : p;
+                if (!p) {
+                    this.router.navigate(["login"]);
+                }
             });
         this.service.init();
     }
 
+    login() {
+        this.service.initiateLogin(null);
+    }
+
     logout() {
-        this.service.logout()
-        .then(result => {
-            this.router.navigate(['/']);
-        }, (err) => { this.router.navigate(['/']) });
+        this.service.initiateLogout();
     }
 
     ngOnDestroy() {

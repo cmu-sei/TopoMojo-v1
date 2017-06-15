@@ -49,7 +49,7 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     save() {
-        this.editing = false;
+        //this.editing = false;
         //this.tref.template = null;
         this.service.updateTemplate(this.tref)
         .subscribe(result => {

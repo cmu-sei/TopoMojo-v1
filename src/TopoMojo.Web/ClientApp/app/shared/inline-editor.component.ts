@@ -32,7 +32,7 @@ const inputConfig: InputConfig = {
     disabled: false,
     name: '',
     size: 8,
-    min: 1,
+    min: 0,
     pattern: '',
     max: Infinity,
     fnErrorLength: function (x) { alert('Error: Length!'); },
@@ -242,6 +242,10 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
     }
 
     writeValue(value: any) {
+
+        if (value === "")
+            value = null;
+
         if (value || value == 0) {
             this.value = value;
             this.isEmpty = false;
@@ -278,13 +282,16 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
         const length = (NUMERIC_TYPES.indexOf(this.type) !== -1) ? Number(value) : value.length;
 
+        if (length == 0) {
+            value = null;
+        }
         if (length < this.min || length > this.max) {
             return this.fnErrorLength();
         }
 
         this.onSave.emit(value);
         this.editing = false;
-        this.isEmpty = false;
+        this.isEmpty = (length == 0); //false;
     }
 
     // Method to reset the editable value

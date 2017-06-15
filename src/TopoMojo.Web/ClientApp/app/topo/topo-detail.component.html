@@ -1,44 +1,66 @@
+<h3><i class="fa fa-map"></i> TopoMojo</h3>
 <div class="row">
     <div class="col-xs-12">
         <div *ngIf="topo">
             <div>
                 <h3><inline-editor type="text" size="30" (onSave)="update()" [(ngModel)]="topo.name"></inline-editor></h3>
                 <p><inline-editor type="textarea" rows="3" (onSave)="update()" [(ngModel)]="topo.description"></inline-editor></p>
-                <topo-members [topoId]="topo.id"></topo-members>
+                <!--<topo-members [topoId]="topo.id"></topo-members>-->
                 <p *ngIf="!trefs">Loading...</p>
-                <p *ngIf="trefs && trefs.length == 0">No templates referenced</p>
             </div>
-            <div>
-                <ul *ngIf="trefs" class="list-unstyled">
-                    <li *ngFor="let t of trefs" class="truncate">
-                        <template-editor [tref]="t" (onRemoved)="remove($event)"></template-editor>
-                    </li>
-                </ul>
-            </div>
-            <hr>
-            <div>
-                <button (click)="toggleSelector()" class="btn btn-primary">
-                <i class="fa fa-plus-circle"></i> Add Templates</button>
-                <div *ngIf="selectorVisible">
-                    <search-bar (onSearch)="search($event)"></search-bar>
-                    <entity-list
-                        [entities]="publishedTemplates"
-                        [icon]="addIcon"
-                        (onSelected)="onAdded($event)"></entity-list>
+            <ul class="list-inline">
+                <li><button class="btn btn-default btn-lg" [class.btn-primary]="showing=='templates'" (click)="show('templates')">Machines</button></li>
+                <li><button class="btn btn-default btn-lg" [class.btn-primary]="showing=='document'" (click)="show('document')">Document</button></li>
+                <li><button class="btn btn-default btn-lg" [class.btn-primary]="showing=='people'" (click)="show('people')">People</button></li>
+            </ul>
+            <hr />
+            <div [class.hidden]="showing!='templates'">
+                <p *ngIf="trefs && trefs.length == 0">No machines referenced yet.</p>
+                <div>
+                    <ul *ngIf="trefs" class="list-unstyled">
+                        <li *ngFor="let t of trefs" class="truncate">
+                            <template-editor [tref]="t" (onRemoved)="remove($event)"></template-editor>
+                        </li>
+                    </ul>
                 </div>
+                <hr>
+                <div>
+                    <button (click)="toggleSelector()" class="btn btn-primary">
+                    <i class="fa fa-plus-circle"></i> Add Machines</button>
+                    <div *ngIf="selectorVisible">
+                        <search-bar (onSearch)="search($event)"></search-bar>
+                        <entity-list
+                            [entities]="publishedTemplates"
+                            [icon]="addIcon"
+                            (onSelected)="onAdded($event)"></entity-list>
+                    </div>
+                </div>
+                <!--<hr>-->
             </div>
-            <hr>
-            <div>
-                <button (click)="toggleDocument()" class="btn btn-primary">
-                <i class="fa fa-edit"></i> Edit Document</button>
-                <div [class.hidden]="!documentVisible">
+            <div [class.hidden]="showing!='document'">
+                <!--<button (click)="toggleDocument()" class="btn btn-primary">
+                <i class="fa fa-edit"></i> Edit Document</button>-->
+                <label>External Markdown Document Url:</label>
+                <inline-editor type="text" size="30" (onSave)="update()" [(ngModel)]="topo.documentUrl" placeholder="External Document Url"></inline-editor>
+                <div *ngIf="!topo.documentUrl">
+                    <label>Internal Markdown Document:</label>
                     <document-editor [id]="topo.globalId"></document-editor>
+                    <hr />
                     <image-manager [id]="topo.globalId"></image-manager>
                 </div>
             </div>
+            <div [class.hidden]="showing!='people'">
+                <topo-members [topoId]="topo.id"></topo-members>
+            </div>
             <hr>
             <div>
-                <button *ngIf="!deleteMsgVisible" (click)="confirmDelete()" class="btn btn-danger btn-large">
+                <confirm-delete
+                    (onDelete)="delete()"
+                    label="Delete Topology"
+                    prompt="Please confirm you intend to delete this Topology
+                    along with its templates.">
+                </confirm-delete>
+                <!--<button *ngIf="!deleteMsgVisible" (click)="confirmDelete()" class="btn btn-danger btn-large">
                     <i class="fa fa-trash"></i> Delete Topology
                 </button>
                 <p *ngIf="deleteMsgVisible" class="alert alert-danger">
@@ -48,7 +70,7 @@
                         <i class="fa fa-trash"></i> Delete</button>
                     <button (click)="cancelDelete()" class="btn btn-danger">
                         <i class="fa fa-remove"></i> Cancel</button>
-                </p>
+                </p>-->
             </div>
         </div>
     </div>

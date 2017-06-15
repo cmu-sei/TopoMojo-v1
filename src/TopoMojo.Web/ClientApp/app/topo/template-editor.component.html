@@ -3,47 +3,82 @@
             <i class="fa fa-desktop"></i>
         </div>
     </div>-->
-<h4><i class="fa fa-desktop"></i> <span>{{tref.name}}</span></h4>
 <div class="row">
-    <div class="col-xs-10">
-        <dl class="dl-horizontal">
-            <dt>Name</dt>
-            <dd>
-                <span *ngIf="((!vm) || (vm.id))">{{ tref.name }}</span>
-                <inline-editor *ngIf="((vm) && (!vm.id))" type="text" size="30" (onSave)="save()" [(ngModel)]="tref.name"></inline-editor>
-            </dd>
-            <dt>Description</dt>
-            <dd>
-                <inline-editor type="textarea" (onSave)="save()" [(ngModel)]="tref.description"></inline-editor>
-            </dd>
-            <dt>Networks</dt>
-            <dd>
-                <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.networks"></inline-editor>
-                <inline-help>
-                    <span>Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)</span>
-                </inline-help>
-            </dd>
-            <dt>Type</dt>
-            <dd>
-                <span *ngIf="tref.owned" class="label label-default">local</span>
-                <span *ngIf="!tref.owned" class="label label-warning">external</span>
+    <div class="col-xs-4">
+        <h4><i class="fa fa-desktop"></i> <span>{{tref.name}}</span>
+        <button (click)="edit()" class="btn btn-link"><i class="fa fa-edit"></i></button></h4>
+    </div>
+    <div class="col-xs-8">
+        <vm-toolbar (onLoaded)="vmLoaded($event)" [tref]="tref"></vm-toolbar>
+        <div *ngIf="editing">
+            <p>
+                <!--<span *ngIf="tref.owned" class="label label-default">local</span>-->
+                <span *ngIf="!tref.owned" class="label label-warning">linked</span>
                 <inline-help *ngIf="!tref.owned" #cloneHelp>
-                    <span>This template is external to this topology; you cannot save disk changes. If you plan to alter the disk,
-                    ensure the template is not deployed and then clone it &mdash;
+                    <span>This machine is linked from a different topology; you cannot save disk changes. If you plan to alter the disk,
+                    ensure the machine is not deployed and then clone it &mdash;
                     <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">
                         <i class="fa fa-copy"></i>
                     </button></span>
                 </inline-help>
-            </dd>
-            <dt>Status</dt>
-            <dd>
-                <vm-toolbar (onLoaded)="vmLoaded($event)" [tref]="tref"></vm-toolbar>
-            </dd>
-        </dl>
-    </div>
-    <div class="col-xs-2">
-        <button (click)="remove()" class="btn btn-default pull-right" [class.disabled]="((!vm) || (vm.id))" style="color:crimson">
-            <i class="fa fa-trash"></i>
-        </button>
+            </p>
+            <p *ngIf="((!vm) || (vm.id))">{{ tref.name }} &mdash; cannot alter while deployed</p>
+            <p>
+                <inline-editor *ngIf="((vm) && (!vm.id))"
+                    type="text" size="30" min="5" max="50"
+                    (onSave)="save()" [(ngModel)]="tref.name">
+                </inline-editor>
+            </p>
+            <p>
+                <inline-editor type="textarea" (onSave)="save()" [(ngModel)]="tref.description"
+                    max="255" placeholder="Description" empty="description">
+                </inline-editor>
+            </p>
+            <p>
+                <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.networks"
+                    max="128"></inline-editor>
+                <inline-help>
+                    <span>Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)</span>
+                </inline-help>
+            </p>
+            <!--<dl class="dl-horizontal">
+                <dt>Name</dt>
+                <dd>
+                    <span *ngIf="((!vm) || (vm.id))">{{ tref.name }} (cannot alter while deployed)</span>
+                    <inline-editor *ngIf="((vm) && (!vm.id))" type="text" size="30" (onSave)="save()" [(ngModel)]="tref.name"></inline-editor>
+                </dd>
+                <dt>Description</dt>
+                <dd>
+                    <inline-editor type="textarea" (onSave)="save()" [(ngModel)]="tref.description"></inline-editor>
+                </dd>
+                <dt>Networks</dt>
+                <dd>
+                    <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.networks"></inline-editor>
+                    <inline-help>
+                        <span>Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)</span>
+                    </inline-help>
+                </dd>
+                <dt>Type</dt>
+                <dd>
+                    <span *ngIf="tref.owned" class="label label-default">local</span>
+                    <span *ngIf="!tref.owned" class="label label-warning">linked</span>
+                    <inline-help *ngIf="!tref.owned" #cloneHelp>
+                        <span>This machine is linked from a different topology; you cannot save disk changes. If you plan to alter the disk,
+                        ensure the machine is not deployed and then clone it &mdash;
+                        <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">
+                            <i class="fa fa-copy"></i>
+                        </button></span>
+                    </inline-help>
+                </dd>
+            </dl>-->
+            <confirm-delete *ngIf="vm && !vm.id"
+                (onDelete)="remove()"
+                label="Delete Template"
+                prompt="Confirm delete of this machine.">
+            </confirm-delete>
+            <!--<button (click)="remove()" class="btn btn-default pull-right" [class.disabled]="((!vm) || (vm.id))" style="color:crimson">
+                <i class="fa fa-trash"></i>
+            </button>-->
+        </div>
     </div>
 </div>

@@ -14,11 +14,8 @@ namespace TopoMojo.Core
     {
         public InstanceManager(
             IPodManager podManager,
-            TopoMojoDbContext db,
-            IUserResolver userResolver,
-            IOptions<CoreOptions> options,
-            ILoggerFactory mill
-        ) : base (db, userResolver, options, mill)
+            IServiceProvider sp
+        ) : base (sp)
         {
             _pod = podManager;
         }
@@ -59,6 +56,7 @@ namespace TopoMojo.Core
             }
 
             await _db.Entry(instance).Reference(i => i.Topology).LoadAsync();
+            await _db.Entry(instance.Topology).Collection(t => t.Templates).LoadAsync();
 
             InstanceSummary summary = new InstanceSummary
             {
@@ -67,7 +65,54 @@ namespace TopoMojo.Core
                 Document = (instance.Topology.DocumentUrl.HasValue())
                     ? instance.Topology.DocumentUrl
                     : "/docs/" + instance.Topology.GlobalId + ".md",
+                VmCount = instance.Topology.Templates.Count(),
                 Vms = await Deploy(id, instance.GlobalId)
+            };
+
+            return summary;
+        }
+
+        public async Task<InstanceSummary> Check(int id)
+        {
+            //check for active instance, return it
+            Instance instance = await _db.InstanceMembers
+                .Include(m => m.Instance)
+                .Where(m => m.PersonId == _user.Id && m.Instance.TopologyId == id)
+                .Select(m => m.Instance)
+                .SingleOrDefaultAsync();
+
+            //if none, and at threshold, throw error
+            if (instance == null)
+            {
+                Topology topo = await _db.Topologies
+                    .Include(t => t.Templates)
+                    .Where(t => t.Id == id)
+                    .SingleOrDefaultAsync();
+
+                if (topo == null)
+                    throw new InvalidOperationException();
+
+                return new InstanceSummary
+                {
+                    VmCount = topo.Templates.Count(),
+                    Document = (topo.DocumentUrl.HasValue())
+                    ? topo.DocumentUrl
+                    : "/docs/" + topo.GlobalId + ".md"
+                };
+            }
+
+            await _db.Entry(instance).Reference(i => i.Topology).LoadAsync();
+            await _db.Entry(instance.Topology).Collection(t => t.Templates).LoadAsync();
+
+            InstanceSummary summary = new InstanceSummary
+            {
+                Id = instance.Id,
+                WhenCreated = instance.WhenCreated.ToString(),
+                Document = (instance.Topology.DocumentUrl.HasValue())
+                    ? instance.Topology.DocumentUrl
+                    : "/docs/" + instance.Topology.GlobalId + ".md",
+                Vms = await _pod.Find(instance.GlobalId),
+                VmCount = instance.Topology.Templates.Count()
             };
 
             return summary;

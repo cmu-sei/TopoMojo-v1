@@ -18,17 +18,17 @@ using System.Collections.Specialized;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-   public class FileController : _Controller
+    public class FileController : _Controller
     {
         public FileController(
             IFileUploadMonitor monitor,
-            IOptions<ApplicationOptions> config,
+            ApplicationOptions config,
             IHostingEnvironment host,
             IServiceProvider sp) : base(sp)
         {
             _host = host;
             _monitor = monitor;
-            _config = config.Value.FileUpload;
+            _config = config.FileUpload;
         }
         private readonly IHostingEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
@@ -79,7 +79,7 @@ namespace TopoMojo.Controllers
                         if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                             throw new Exception($"File ${filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                        _logger.LogInformation(_user.Email + " uploading file " + filename);
+                        Log("uploaded", null, filename);
                         string dest = DestinationPath(filename, key, scope);
                         using (var targetStream = System.IO.File.Create(dest))
                         {

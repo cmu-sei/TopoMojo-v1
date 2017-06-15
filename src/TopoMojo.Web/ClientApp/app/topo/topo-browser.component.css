@@ -5,9 +5,11 @@
 }
 
 i {
-    font-size: 1.5em;
+    font-size: 1.8em;
 }
-
+h3 i {
+    font-size: 1em;
+}
  i.avatar {
-     font-size: 3em;
+     font-size: 2.5em;
  }
