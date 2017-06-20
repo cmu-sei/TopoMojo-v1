@@ -15,7 +15,7 @@ import { VmService } from '../vm/vm.service';
 export class TopoLaunchComponent implements OnInit {
     summary: any;
     errorMessage: string;
-    renderedDocument: string;
+    renderedDocument: string = "<p>(No lab document)</p>";
     status: string = "Verifying topology...";
     launching: boolean;
     destroyMsgVisible: boolean;

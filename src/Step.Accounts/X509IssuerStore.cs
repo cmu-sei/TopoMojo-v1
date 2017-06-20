@@ -19,7 +19,7 @@ namespace Step.Accounts
             _options = accountOptions;
             _storeOptions = storeOptions;
             _logger = mill.CreateLogger<X509IssuerStore>();
-            _path = Path.Combine(_storeOptions.RootPath, _options.Registration.IssuerCertificatesPath);
+            _path = Path.Combine(_storeOptions.RootPath??"", _options.Registration.IssuerCertificatesPath);
             Load();
         }
 

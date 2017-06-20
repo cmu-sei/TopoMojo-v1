@@ -17,7 +17,6 @@ namespace TopoMojo.Web.Migrations.Accounts
                     AuthenticationFailures = table.Column<int>(nullable: false),
                     GlobalId = table.Column<string>(nullable: true),
                     LockedMinutes = table.Column<int>(nullable: false),
-                    Role = table.Column<long>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     WhenAuthenticated = table.Column<DateTime>(nullable: false),
                     WhenCreated = table.Column<DateTime>(nullable: false),

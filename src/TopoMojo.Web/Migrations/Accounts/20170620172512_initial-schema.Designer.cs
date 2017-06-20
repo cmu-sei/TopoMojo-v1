@@ -8,7 +8,7 @@ using Step.Accounts;
 namespace TopoMojo.Web.Migrations.Accounts
 {
     [DbContext(typeof(AccountDbContext))]
-    [Migration("20170603153042_initial-schema")]
+    [Migration("20170620172512_initial-schema")]
     partial class initialschema
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,8 +26,6 @@ namespace TopoMojo.Web.Migrations.Accounts
                     b.Property<string>("GlobalId");
 
                     b.Property<int>("LockedMinutes");
-
-                    b.Property<long>("Role");
 
                     b.Property<int>("Status");
 

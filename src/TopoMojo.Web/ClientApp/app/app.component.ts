@@ -21,9 +21,9 @@ export class AppComponent {
         this.profileSubscription = this.service.user$
             .subscribe(p =>  {
                 this.profile = (p) ? p.profile : p;
-                if (!p) {
-                    this.router.navigate(["login"]);
-                }
+                // if (!p) {
+                //     this.router.navigate(["login"]);
+                // }
             });
         this.service.init();
     }
@@ -33,7 +33,7 @@ export class AppComponent {
     }
 
     logout() {
-        this.service.initiateLogout();
+        this.service.logout();
     }
 
     ngOnDestroy() {

@@ -9,6 +9,7 @@ import { CoreModule } from './core/core.module';
 import { TopoModule } from './topo/topo.module';
 import { ConsoleModule } from './console/console.module';
 import { AdminModule } from './admin/admin.module';
+import { ProfileModule } from './profile/profile.module';
 import { AppComponent } from './app.component'
 
 export function getOriginUrl() {
@@ -23,6 +24,7 @@ export function getOriginUrl() {
     imports: [
         BrowserModule,
         AuthModule,
+        ProfileModule,
         CoreModule,
         ConsoleModule,
         TopoModule,

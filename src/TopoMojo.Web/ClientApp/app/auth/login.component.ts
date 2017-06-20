@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router , ActivatedRoute} from '@angular/router';
-import { CoreAuthService } from './auth.service';
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from './auth.service';
 
 @Component({
     //moduleId: module.id,
@@ -24,7 +23,6 @@ export class LoginComponent implements OnInit {
     codeSent: boolean;
 
     constructor(
-        private service : CoreAuthService,
         private auth : AuthService,
         private router: Router,
         private route: ActivatedRoute

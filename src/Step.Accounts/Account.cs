@@ -36,8 +36,6 @@ namespace Step.Accounts
 
     public enum AccountTokenType
     {
-        Email,
-        Phone,
         Credential,
         Certificate,
         Password

@@ -98,7 +98,7 @@ export class AuthService {
 
     removeUser() {
         this.mgr.removeUser().then(() => {
-            //localStorage.removeItem(this.storageKey);
+            localStorage.removeItem(this.storageKey);
             console.log("user removed");
         }).catch(function (err) {
             console.log(err);
@@ -116,6 +116,14 @@ export class AuthService {
             // });
             localStorage.setItem(this.storageKey, JSON.stringify(user));
             return response;
+        });
+    }
+
+    logout() {
+        localStorage.removeItem(this.storageKey);
+        this.getUser().then(user => {
+            if (user)
+                this.initiateLogout();
         });
     }
 

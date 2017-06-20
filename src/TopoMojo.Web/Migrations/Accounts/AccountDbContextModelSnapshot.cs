@@ -26,8 +26,6 @@ namespace TopoMojo.Web.Migrations.Accounts
 
                     b.Property<int>("LockedMinutes");
 
-                    b.Property<long>("Role");
-
                     b.Property<int>("Status");
 
                     b.Property<DateTime>("WhenAuthenticated");

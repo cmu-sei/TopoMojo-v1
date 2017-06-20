@@ -257,7 +257,12 @@ namespace TopoMojo
                 string guid = Guid.NewGuid().ToString();
                 if (!accountsDb.Accounts.Any())
                 {
-                    IAccountManager<Account> mgr = app.ApplicationServices.GetRequiredService<IAccountManager<Account>>();
+                    IAccountManager<Account> mgr = new AccountManager(
+                        accountsDb,
+                        new AccountOptions(),
+                        app.ApplicationServices.GetRequiredService<ILoggerFactory>(),
+                        null, null, null);
+                        //app.ApplicationServices.GetRequiredService<IAccountManager<Account>>();
                     mgr.RegisterWithCredentialsAsync(
                         new Credentials {
                             Username = "admin@this.ws",

@@ -1,4 +1,40 @@
 <span>{{(profile) ? profile.name : "anonymous"}}</span>
+<div class="text-center">
+            <h2>TopoMojo</h2>
+    <ul class='list-inline'>
+        <!--<li>
+        </li>-->
+        <!--<li *ngIf="!profile" [routerLinkActive]="['link-active']">
+            <a [routerLink]="['/login']">
+                <span class='fa fa-unlock'></span> Login
+            </a>
+        </li>-->
+        <li *ngIf="profile">
+            <ul class="nav navbar-nav">
+                <li [routerLinkActive]="['link-active']">
+                    <a [routerLink]="['/topo']">
+                        <span class='fa fa-list'></span> Browse
+                    </a>
+                </li>
+                <li *ngIf="profile.isAdmin || true" [routerLinkActive]="['link-active']">
+                    <a [routerLink]="['/admin']">
+                        <span class='fa fa-cog'></span> Admin
+                    </a>
+                </li>
+                <li>
+                    <a [routerLink]="['/profile']">
+                        <span class='fa fa-user'></span> {{ profile.name }}
+                    </a>
+                </li>
+                <li [routerLinkActive]="['link-active']">
+                    <a (click)="logout()">
+                        <span class='fa fa-lock'></span> Logout
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
 <!--<nav class='navbar navbar-default navbar-fixed-top'>
     <div class="container">
         <div class='navbar-header'>

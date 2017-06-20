@@ -44,9 +44,9 @@ namespace Step.Accounts
             _db = db;
             _options = options;
             _logger = mill.CreateLogger(this.GetType());
-            _certStore = issuerStore;
-            _tokenService = tokenService;
-            _profileService = profileService;
+            _certStore = issuerStore ?? new X509IssuerStore(options, new X509IssuerStoreOptions(), mill);
+            _profileService = profileService ?? new DefaultProfileService();
+            _tokenService = tokenService ?? new DefaultTokenService(options.Token, _profileService);
             _rand = new Random();
         }
 
@@ -653,15 +653,15 @@ namespace Step.Accounts
             return await _db.AccountTokens.FindAsync(token.ToHash()) == null;
         }
 
-        private AccountTokenType GuessTokenType(string token)
-        {
-            //todo: email
-            if (Regex.IsMatch(token, @".+@.+\..+"))
-                return AccountTokenType.Email;
+        // private AccountTokenType GuessTokenType(string token)
+        // {
+        //     //todo: email
+        //     if (Regex.IsMatch(token, @".+@.+\..+"))
+        //         return AccountTokenType.Email;
 
-            //todo: phone
-            return AccountTokenType.Email;
-        }
+        //     //todo: phone
+        //     return AccountTokenType.Email;
+        // }
 
         #endregion
     }
