@@ -1,6 +1,5 @@
 # TODO
-external authentication
-lab document
+db seed admin
 build enhancements;
     set/upload iso
     force template name
@@ -10,5 +9,7 @@ profile dashboard (topos, mojos, instances)
 audit logging
 
 # DONE
+lab document
+external authentication
 update project dependencies
 browser/launch

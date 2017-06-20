@@ -12,12 +12,14 @@ export class AuthService {
     public user$: Observable<User> = this.userSource.asObservable();
     apiUrl : string;
     allowExternalLogin: boolean;
+    redirectUrl: string;
+    storageKey: string = "local-auth-user";
 
     constructor(
         private http: Http
     ) {
-        //Log.level = Log.DEBUG;
-        //Log.logger = console;
+        Log.level = Log.DEBUG;
+        Log.logger = console;
         this.apiUrl = window['clientAuthenticationSettings']['apiUrl'];
         this.allowExternalLogin = window['clientAuthenticationSettings']['authority'] != '';
 
@@ -56,19 +58,19 @@ export class AuthService {
     }
 
     isAuthenticated() : Promise<boolean> {
-        if (this.currentUser)
+        if (this.currentUser) {
             return Promise.resolve(true);
+        }
 
-        return Promise.resolve(this.mgr.getUser())
+        return Promise.resolve(this.getUser())
             .then(user => {
-                this.loadUser(user);
-                return (user != null);
+                return (this.currentUser != null);
             });
     }
 
     loadUser(user) {
-        //console.log(user);
         this.loggedIn = (user !== null);
+        console.log("loadUser() = " + this.loggedIn);
         this.currentUser = user;
         this.userSource.next(user);
     }
@@ -81,10 +83,14 @@ export class AuthService {
         });
     }
 
-    getUser() {
-        this.mgr.getUser().then((user) => {
-            //console.log("got user", user);
+    getUser() : Promise<User> {
+        return this.mgr.getUser().then((user) => {
+            // if no external user, check for local user
+            if (!user)
+                user = JSON.parse(localStorage.getItem(this.storageKey));
+
             this.loadUser(user);
+            return user;
         }).catch(function (err) {
             console.log(err);
         });
@@ -92,21 +98,29 @@ export class AuthService {
 
     removeUser() {
         this.mgr.removeUser().then(() => {
+            //localStorage.removeItem(this.storageKey);
             console.log("user removed");
         }).catch(function (err) {
             console.log(err);
         });
     }
 
-    localLogin(u, p) {
-        return this.http.post('/api/account/login', { username: u, password: p})
+    localLogin(type, creds) {
+        return this.http.post('/api/account/' + type, creds)
         .toPromise().then(response => {
             let user = response.json();
-            console.log(user);
-            //todo: store token
-            this.loadUser(user);
+            // this.mgr.signinLocal(user).then(user => {
+            //     console.log(user);
+            //     this.loadUser(user);
+            //     return user;
+            // });
+            localStorage.setItem(this.storageKey, JSON.stringify(user));
             return response;
         });
+    }
+
+    confirm(u : string) {
+        return this.http.post('/api/account/confirm', { username: u });
     }
 
     initiateLogin(url) {

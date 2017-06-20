@@ -64,6 +64,29 @@ namespace TopoMojo.Controllers
 
             return Json(_accountManager.GenerateJwtToken(account));
         }
+        [HttpPost]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Otp([FromBody] Credentials model)
+        {
+            _logger.LogDebug($"Attempting login for {model.Username}");
+            Account account = await _accountManager.AuthenticateWithCodeAsync(model);
+            if (account == null)
+                throw new InvalidOperationException();
+
+            return Json(_accountManager.GenerateJwtToken(account));
+        }
+
+        [HttpPost]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Tfa([FromBody] Credentials model)
+        {
+            _logger.LogDebug($"Attempting login for {model.Username}");
+            Account account = await _accountManager.AuthenticateWithCredentialAsync(model, "");
+            if (account == null)
+                throw new InvalidOperationException();
+
+            return Json(_accountManager.GenerateJwtToken(account));
+        }
 
         [HttpPost]
         [JsonExceptionFilter]

@@ -11,10 +11,17 @@ import { AuthService } from '../auth/auth.service';
 export class LoginComponent implements OnInit {
     username: string;
     password: string;
-    error: boolean = false;
+    pass1: string;
+    pass2: string;
+    code: string;
     url: string;
-    resetMessage : string;
+    errorMessage : string;
+    infoMessage : string;
     allowExternalLogin: boolean;
+    mode: number = 0;
+    title: string = "Login";
+    action: string = "login";
+    codeSent: boolean;
 
     constructor(
         private service : CoreAuthService,
@@ -24,7 +31,7 @@ export class LoginComponent implements OnInit {
         ) { }
 
     ngOnInit() {
-        this.url = this.route.snapshot.params['url'] || this.service.redirectUrl;
+        this.url = this.auth.redirectUrl || this.route.snapshot.params['url'] || "/";
         this.allowExternalLogin = this.auth.allowExternalLogin;
     }
 
@@ -32,29 +39,71 @@ export class LoginComponent implements OnInit {
         this.auth.initiateLogin(null);
     }
 
-    login() {
-        console.log('form submitted');
-        this.auth.localLogin(this.username, this.password)
+    onSubmit() {
+        this.infoMessage = "";
+        this.errorMessage = "";
+
+        if (this.mode > 2) {
+            if (this.pass1 == null || this.pass2 == null || this.pass1 != this.pass2) {
+                this.errorMessage = "Passwords need to match.";
+                return;
+            }
+        }
+
+        this.auth.localLogin(this.action, this.getCreds())
         .then(result => {
-            this.error = false;
-            //this.service.redirectUrl = '/';
-            console.log(this.url);
             this.router.navigate([this.url]);
-        }, (err) => { console.error(err); this.error = true; });
+        }, (err) => {
+            console.error(err);
+            this.errorMessage = "Invalid credentials";
+        });
     }
 
-    reset() {
+    requestCode() {
         if (!this.username) {
-            this.resetMessage = "Please specify your email address";
+            this.infoMessage = "Please specify the username to confirm.";
             return;
         }
 
-        this.router.navigate(['/reset', { account: this.username }]);
+        this.auth.confirm(this.username).subscribe(result => {
+            this.infoMessage = "Code sent to " + this.username;
+            this.codeSent = true;
+        })
+    }
 
-        // this.service.forgot(this.username)
-        // .then(data => {
-        //     this.resetMessage = "An email has been sent.";
-        //     this.router.navigate(['/reset', { email: this.username }]);
-        // });
+    getCreds() {
+        return {
+            username : this.username,
+            password : this.pass1,
+            code : this.code
+        }
+    }
+
+    setMode(i : number) : void {
+        this.infoMessage = "";
+        this.errorMessage = "";
+        this.mode = i;
+        switch (i) {
+            case 0:
+                this.title = "Login";
+                this.action = "login";
+                break;
+            case 1:
+                this.title = "Login with One-Time-Passcode";
+                this.action = "otp";
+                break;
+            case 2:
+                this.title = "Login with Two-Factor-Auth";
+                this.action = "login";
+                break;
+            case 3:
+                this.title = "Reset Password";
+                this.action = "reset";
+                break;
+            case 4:
+                this.title = "Register New Account";
+                this.action = "register";
+                break;
+        }
     }
 }

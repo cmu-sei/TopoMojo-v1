@@ -237,7 +237,7 @@ namespace Step.Accounts
                 throw new PasswordComplexityException();
 
             TAccount user = await AuthenticateWithCodeAsync(creds);
-
+            await _db.Entry(user).Collection(u => u.Tokens).LoadAsync();
             await UpdatePasswordAsync(user, creds.Password);
             return user;
         }
@@ -331,7 +331,7 @@ namespace Step.Accounts
                     user.Tokens.Remove(existingPasswords[i]);
                 }
             }
-
+            await _db.SaveChangesAsync();
             Unlock(user);
 
             user.Tokens.Add(new AccountToken
