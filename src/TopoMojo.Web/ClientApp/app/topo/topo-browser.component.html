@@ -1,32 +1,12 @@
+<!--<gamespace></gamespace>-->
 <div class="row">
-    <!--<div class="col-md-6 col-sm-8 col-xs-12">-->
-    <div *ngIf="instances && instances.length > 0">
-        <h4>Active Topologies</h4>
-        <div *ngFor="let m of instances" class="row tile text text-info">
-            <div class="col-xs-2">
-                <i class="fa fa-map avatar"></i>
-            </div>
-            <div class="col-xs-8">
-                <h4>{{ m.instance.topology.name }}</h4>
-                <p class="label label-default">{{m.instance.whenCreated}}</p>
-                <hr/>
-            </div>
-            <div class="col-xs-2 pull-right">
-                <button *ngIf="m.isAdmin" class="btn btn-link pull-right" (click)="destroyInstance(m.instance.id)">
-                    <i class="fa fa-trash text text-danger"></i>
-                </button>
-                <button *ngIf="m.isAdmin && m.instance.globalId == m.instance.topology.globalId" class="btn btn-link pull-right" [routerLink]="['/topo', t.id]">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <button class="btn btn-link pull-right" [routerLink]="['/mojo', m.instance.topology.id]">
-                    <i class="fa fa-flash text text-warning"></i>
-                </button>
-            </div>
-        </div>
+    <div *ngIf="loading" class="text-center">
+        <span class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></span>
     </div>
-    <div>
-        <h4>Browse Topologies</h4>
-        <div class="row">
+    <div class="col-xs-12">
+        <!--<h4>Browse Topologies</h4>-->
+        <search-bar (onSearch)="termChanged($event)"></search-bar>
+        <!--<div class="row">
             <div class="col-xs-9">
                 <search-bar (onSearch)="termChanged($event)"></search-bar>
             </div>
@@ -40,33 +20,37 @@
             <div class="col-xs-8 col-xs-offset-4">
                 <topo-creator *ngIf="editorVisible"></topo-creator>
             </div>
-        </div>
-        <div *ngIf="topos" class="row">
-            <div class="">
-                <div *ngFor="let t of topos" class="row tile">
+        </div>-->
+        <!--<div *ngIf="topos" class="row">-->
+            <!--<div class="">-->
+                <div *ngFor="let t of topos" class="row">
                     <!--<div class="row">-->
-                        <div class="col-xs-2">
-                            <i class="fa fa-map avatar"></i>
-                        </div>
-                        <div class="col-xs-8">
+                        <!--<div class="col-xs-1">
+                            <i class="fa fa-map"></i>
+                        </div>-->
+                        <div class="col-xs-12">
                             <h4>{{ t.name }}</h4>
-                            <p>{{ t.description }}</p>
-                            <p><span class="label label-default">People</span> {{t.people}}</p>
-                            <p><span class="label label-default">Templates</span> {{t.templates || 'None'}}</p>
-                            <hr/>
+                            <!--<h4><i class="fa fa-map"></i> {{ t.name }}</h4>-->
+                            <!--<p><span class="label label-default">Templates</span> {{t.templates || 'None'}}</p>-->
+                            <!--<hr/>-->
+                            <div class="pull-right">
+                                <button *ngIf="t.canManage" class="btn btn-link" tooltip="edit" [routerLink]="['/topo', t.id]">
+                                    <i class="fa fa-edit text text-success"></i>
+                                </button>
+                                <button class="btn btn-link" tooltip="launch" [routerLink]="['/mojo', t.id]">
+                                    <i class="fa fa-flash text text-warning"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-xs-2 pull-right">
-                            <button *ngIf="t.canManage" class="btn btn-link pull-right" [routerLink]="['/topo', t.id]">
-                                <i class="fa fa-edit text text-success"></i>
-                            </button>
-                            <button class="btn btn-link pull-right" [routerLink]="['/mojo', t.id]">
-                                <i class="fa fa-flash text text-warning"></i>
-                            </button>
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <p><span class="label label-default">By</span> {{t.people}}</p>
+                            <p><span class="label label-default">Description</span> {{ t.description }}</p>
                         </div>
+                        <!--<hr class="col-xs-10 col-xs-offset-1" />-->
                     <!--</div>-->
                 </div>
-            </div>
-        </div>
+            <!--</div>-->
+        <!--</div>-->
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>

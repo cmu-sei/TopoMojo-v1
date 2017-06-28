@@ -10,6 +10,7 @@ import { TopoModule } from './topo/topo.module';
 import { ConsoleModule } from './console/console.module';
 import { AdminModule } from './admin/admin.module';
 import { ProfileModule } from './profile/profile.module';
+import { SharedModule } from './shared/shared.module';
 import { AppComponent } from './app.component'
 
 export function getOriginUrl() {
@@ -23,6 +24,7 @@ export function getOriginUrl() {
     ],
     imports: [
         BrowserModule,
+        SharedModule,
         AuthModule,
         ProfileModule,
         CoreModule,
@@ -30,7 +32,7 @@ export function getOriginUrl() {
         TopoModule,
         AdminModule,
         RouterModule.forRoot([
-            { path: '', redirectTo: 'topo', pathMatch: 'full' },
+            { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'notfound' }
         ])
     ],

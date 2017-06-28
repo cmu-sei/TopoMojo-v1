@@ -18,7 +18,7 @@ export class TopoBrowserComponent {
     };
     hasMore: number;
     editorVisible: boolean;
-    instances: any[];
+    loading: boolean;
 
     constructor(
         private service: TopoService,
@@ -28,7 +28,6 @@ export class TopoBrowserComponent {
     }
 
     ngOnInit(): void {
-        this.loadActive();
         this.search();
     };
 
@@ -46,27 +45,22 @@ export class TopoBrowserComponent {
     }
 
     search() {
+        this.loading = true;
         this.service.listtopo(this.model)
-        .subscribe(data => {
-            this.topos = this.topos.concat(data.results);
-            this.hasMore = data.total - (data.skip+data.take);
-        }, (err) => { this.service.onError(err); });
+        .subscribe(
+            (data) => {
+                this.topos = this.topos.concat(data.results);
+                this.hasMore = data.total - (data.skip+data.take);
+            },
+            (err) => { this.service.onError(err); },
+            () => {
+                this.loading = false;
+            }
+        );
     }
 
     showEditor() {
         this.editorVisible = !this.editorVisible;
-    }
-
-    loadActive() {
-        this.service.activeInstances().subscribe(result => {
-            this.instances = result;
-        });
-    }
-
-    destroyInstance(id: number) {
-        this.service.destroyInstance(id).subscribe(result => {
-            this.loadActive();
-        })
     }
 }
 

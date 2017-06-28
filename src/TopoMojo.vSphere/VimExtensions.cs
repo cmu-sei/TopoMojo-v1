@@ -1,10 +1,9 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using TopoMojo.Abstractions;
 using TopoMojo.Models;
 
-namespace TopoMojo.Extensions.Vim
+namespace TopoMojo.vSphere
 {
     public static class VimExtensions
     {

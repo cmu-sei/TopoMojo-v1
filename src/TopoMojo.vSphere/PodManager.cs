@@ -16,33 +16,35 @@ namespace TopoMojo.vSphere
     public class PodManager : IPodManager
     {
         public PodManager(
-            IOptions<PodConfiguration> options,
-            IOptions<TemplateOptions> templateOptions,
-            ILoggerFactory mill)
+            PodConfiguration options,
+            TemplateOptions templateOptions,
+            ILoggerFactory mill
+        )
         {
+            _options = options;
+            _optTemplate = templateOptions;
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
-            _options = options.Value;
-            _optTemplate = templateOptions.Value;
-            _hostCache = new Dictionary<string, vSphereHost>();
-            _affinityMap = new Dictionary<string, vSphereHost>();
+            _hostCache = new Dictionary<string, VimHost>();
+            _affinityMap = new Dictionary<string, VimHost>();
             _vmCache = new ConcurrentDictionary<string, Vm>();
             InitVlans();
             InitHost(_options.Url);
         }
+
         private readonly PodConfiguration _options;
         private readonly TemplateOptions _optTemplate;
         private readonly ILogger<PodManager> _logger;
         private readonly ILoggerFactory _mill;
 
         private int _syncInterval = 20000;
-        private Dictionary<string, vSphereHost> _hostCache;
+        private Dictionary<string, VimHost> _hostCache;
         private Dictionary<string, int> _vlans;
         private BitArray _vlanMap;
         private TemplateOptions _cachedTemplateOptions;
         private DateTime _lastCacheUpdate = DateTime.MinValue;
         private int _cacheExpirationThreshold = 3;
-        private Dictionary<string, vSphereHost> _affinityMap;
+        private Dictionary<string, VimHost> _affinityMap;
         private ConcurrentDictionary<string, Vm> _vmCache;
 
         public async Task<Vm> Refresh(Template template)
@@ -76,7 +78,7 @@ namespace TopoMojo.vSphere
                 return vms.First();
 
             _logger.LogDebug("deploy: find host ");
-            vSphereHost host = FindHostByAffinity(template.IsolationTag);
+            VimHost host = FindHostByAffinity(template.IsolationTag);
             _logger.LogDebug("deploy: host " + host.Name);
             NormalizeTemplate(template, host.Options);
             _logger.LogDebug("deploy: normalized "+ template.Name);
@@ -97,41 +99,42 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Load(string id)
         {
+            await Task.Delay(0);
             return _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
         }
 
         public async Task<Vm> Start(string id)
         {
             _logger.LogDebug("starting " + id);
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.Start(id);
         }
 
         public async Task<Vm> Stop(string id)
         {
             _logger.LogDebug("stopping " + id);
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.Stop(id);
         }
 
         public async Task<Vm> Save(string id)
         {
             _logger.LogDebug("saving " + id);
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.Save(id);
         }
 
         public async Task<Vm> Revert(string id)
         {
             _logger.LogDebug("reverting " + id);
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.Revert(id);
         }
 
         public async Task<Vm> Delete(string id)
         {
             _logger.LogDebug("deleting " + id);
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             Vm vm =  await host.Delete(id);
             RefreshAffinity(); //TODO: fix race condition here
             return vm;
@@ -160,12 +163,13 @@ namespace TopoMojo.vSphere
                     throw new InvalidOperationException();
             }
 
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.Change(id, change);
         }
 
         public async Task<Vm[]> Find(string term)
         {
+            await Task.Delay(0);
             if (term.HasValue())
             {
                 return _vmCache.Values.Where(o=>o.Id.Contains(term) || o.Name.Contains(term)).ToArray();
@@ -178,7 +182,7 @@ namespace TopoMojo.vSphere
 
         public async Task<int> VerifyDisks(Template template)
         {
-            foreach (vSphereHost vhost in _hostCache.Values)
+            foreach (VimHost vhost in _hostCache.Values)
             {
                 int progress = await vhost.TaskProgress(template.Id);
                 if (progress >= 0)
@@ -192,7 +196,7 @@ namespace TopoMojo.vSphere
                 return 100; //show blank disk as created
             }
 
-            vSphereHost host = FindHostByRandom();
+            VimHost host = FindHostByRandom();
             NormalizeTemplate(template, host.Options);
             if (template.Disks.Length > 0)
             {
@@ -210,7 +214,7 @@ namespace TopoMojo.vSphere
             int progress = await VerifyDisks(template);
             if (progress < 0)
             {
-                vSphereHost host = FindHostByRandom();
+                VimHost host = FindHostByRandom();
                 host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
                 progress = 0;
             }
@@ -222,7 +226,7 @@ namespace TopoMojo.vSphere
             int progress = await VerifyDisks(template);
             if (progress == 100)
             {
-                vSphereHost host = FindHostByRandom();
+                VimHost host = FindHostByRandom();
                 foreach (Disk disk in template.Disks)
                 {
                     //protect stock disks; only delete a disk if it is local to the topology
@@ -241,13 +245,13 @@ namespace TopoMojo.vSphere
             Vm vm = Find(id).Result.FirstOrDefault();
             if (vm !=  null)
             {
-                vSphereHost host = _hostCache[vm.Host];
+                VimHost host = _hostCache[vm.Host];
                 string ticket = "", conditions = "";
                 try
                 {
                     ticket = await host.GetTicket(id);
                 }
-                catch (System.Exception ex)
+                catch //(System.Exception ex)
                 {
                     conditions = "needs-vm-connected";
                 }
@@ -267,7 +271,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Answer(string id, string question, string answer)
         {
-            vSphereHost host = FindHostByVm(id);
+            VimHost host = FindHostByVm(id);
             return await host.AnswerVmQuestion(id, question, answer);
         }
 
@@ -296,7 +300,7 @@ namespace TopoMojo.vSphere
                 Guest = (_optTemplate.Guest != null) ? _optTemplate.Guest : new string[] {}
             };
 
-            vSphereHost host = FindHostByRandom();
+            VimHost host = FindHostByRandom();
             if (host != null)
             {
                     List<Task<string[]>> taskList = new List<Task<string[]>>();
@@ -319,7 +323,7 @@ namespace TopoMojo.vSphere
 
         public async Task<VmOptions> GetVmIsoOptions(string id)
         {
-            vSphereHost host = FindHostByRandom();
+            VimHost host = FindHostByRandom();
             List<string> isos = new List<string>();
             isos.AddRange(await host.GetFiles(host.Options.IsoStore + "/*.iso", false));
             isos.AddRange(await host.GetFiles(host.Options.DiskStore + id + "/*.iso", true));
@@ -331,7 +335,8 @@ namespace TopoMojo.vSphere
 
         public async Task<VmOptions> GetVmNetOptions(string id)
         {
-            vSphereHost host = FindHostByRandom();
+            await Task.Delay(0);
+            VimHost host = FindHostByRandom();
             List<string> nets = new List<string>();
             nets.AddRange(_vlans.Keys.Where(x => !x.Contains("#")));
             nets.AddRange(_vlans.Keys.Where(x => x.Contains(id)));
@@ -397,7 +402,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private vSphereHost FindHostByVm(string id)
+        private VimHost FindHostByVm(string id)
         {
             return _hostCache[_vmCache[id].Host];
         }
@@ -420,9 +425,9 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private vSphereHost FindHostByAffinity(string tag)
+        private VimHost FindHostByAffinity(string tag)
         {
-            vSphereHost host = null;
+            VimHost host = null;
             lock(_affinityMap)
             {
                 if (_affinityMap.ContainsKey(tag))
@@ -440,10 +445,10 @@ namespace TopoMojo.vSphere
             return host;
         }
 
-        private vSphereHost FindHostByFewestVms()
+        private VimHost FindHostByFewestVms()
         {
             Dictionary<string, HostVmCount> hostCounts = new Dictionary<string, HostVmCount>();
-            foreach (vSphereHost host in _hostCache.Values)
+            foreach (VimHost host in _hostCache.Values)
             {
                 if (!hostCounts.ContainsKey(host.Name))
                     hostCounts.Add(host.Name, new HostVmCount { Name = host.Name });
@@ -472,7 +477,7 @@ namespace TopoMojo.vSphere
                 return FindHostByRandom();
         }
 
-        private vSphereHost FindHostByRandom()
+        private VimHost FindHostByRandom()
         {
             int i = new Random().Next(0, _hostCache.Values.Count() - 1);
             return _hostCache.Values.ElementAt(i);
@@ -498,11 +503,11 @@ namespace TopoMojo.vSphere
                 PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
                 hostOptions.Url = url;
                 hostOptions.Host = hostname;
-                vSphereHost vHost = new vSphereHost(
+                VimHost vHost = new VimHost(
                     hostOptions,
                     _vmCache,
                     _vlanMap,
-                    _mill.CreateLogger<vSphereHost>()
+                    _mill.CreateLogger<VimHost>()
                 );
                 _hostCache.Add(hostname, vHost);
             }
@@ -570,7 +575,7 @@ namespace TopoMojo.vSphere
                 lock (_vlans)
                 {
                     List<string> active = new List<string>();
-                    foreach (vSphereHost host in _hostCache.Values)
+                    foreach (VimHost host in _hostCache.Values)
                     {
                         foreach (Vlan vlan in host.PgCache)
                         {

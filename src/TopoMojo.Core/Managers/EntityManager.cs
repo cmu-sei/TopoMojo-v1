@@ -7,30 +7,35 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
+using TopoMojo.Core.Data;
+using TopoMojo.Core.Entities;
 
 namespace TopoMojo.Core
 {
     public class EntityManager<T>
-        where T : BaseModel, new()
+        where T : Entity, new()
     {
         public EntityManager(
-            IServiceProvider sp
+            TopoMojoDbContext db,
+            ILoggerFactory mill,
+            CoreOptions options,
+            IProfileResolver profileResolver
         )
         {
-            _db = sp.GetRequiredService<TopoMojoDbContext>(); //db;
-            _mill = sp.GetRequiredService<ILoggerFactory>(); //mill;
-            _logger = _mill?.CreateLogger(this.GetType());
-            _options = sp.GetRequiredService<CoreOptions>(); //options.Value;
-            _profileResolver = sp.GetRequiredService<IProfileResolver>(); //profileResolver;
+            _db = db;
+            //_mill = mill;
+            _logger = mill?.CreateLogger(this.GetType());
+            _options = options;
+            _profileResolver = profileResolver;
             LoadProfileAsync().Wait();
             // if (_user != null && _user.Id > 0)
             //     _db.Attach(_user);
         }
 
         protected readonly TopoMojoDbContext _db;
-        protected Person _user;
+        protected Profile _user;
         protected readonly ILogger _logger;
-        protected readonly ILoggerFactory _mill;
+        //protected readonly ILoggerFactory _mill;
         protected readonly IProfileResolver _profileResolver;
         protected readonly CoreOptions _options;
         protected readonly IOptions<CoreOptions> _optAccessor;
@@ -136,13 +141,13 @@ namespace TopoMojo.Core
             _user = _profileResolver.Profile;
             if (_user.Id == 0)
             {
-                Person person = await _db.People
+                Profile person = await _db.Profiles
                     .Where(p => p.GlobalId == _user.GlobalId)
                     .SingleOrDefaultAsync();
 
                 if (person == null)
                 {
-                    _db.People.Add(new Person
+                    _db.Profiles.Add(new Profile
                     {
                         GlobalId = _user.GlobalId,
                         Name = _user.Name ?? "Anonymous",

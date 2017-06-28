@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
-using TopoMojo.Extensions.Vim;
 using TopoMojo.Models;
 
 namespace TopoMojo.vSphere

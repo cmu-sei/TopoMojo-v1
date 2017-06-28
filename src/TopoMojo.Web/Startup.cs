@@ -106,7 +106,7 @@ namespace TopoMojo
 
             services.AddScoped<TopologyManager, TopologyManager>();
             services.AddScoped<TemplateManager, TemplateManager>();
-            services.AddScoped<InstanceManager, InstanceManager>();
+            services.AddScoped<GamespaceManager, GamespaceManager>();
             services.AddScoped<ProfileManager, ProfileManager>();
 
             string podManager = Configuration.GetSection("ApplicationOptions:Site:PodManagerType").Value ?? "";
@@ -270,9 +270,9 @@ namespace TopoMojo
                         }, guid).Wait();
                 }
 
-                if (!db.People.Any())
+                if (!db.Profiles.Any())
                 {
-                    db.People.Add(new Person {
+                    db.Profiles.Add(new Profile {
                         GlobalId = guid,
                         Name = "Administrator",
                         WhenCreated = DateTime.UtcNow,

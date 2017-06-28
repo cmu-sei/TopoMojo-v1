@@ -9,7 +9,7 @@ namespace TopoMojo.Web.Migrations.TopoMojo
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "People",
+                name: "Profiles",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -21,7 +21,7 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_People", x => x.Id);
+                    table.PrimaryKey("PK_Profiles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -52,7 +52,9 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                     Description = table.Column<string>(nullable: true),
                     DocumentUrl = table.Column<string>(nullable: true),
                     GlobalId = table.Column<string>(nullable: true),
+                    IsPublished = table.Column<bool>(nullable: false),
                     Name = table.Column<string>(nullable: true),
+                    ShareCode = table.Column<string>(nullable: true),
                     WhenCreated = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -61,21 +63,22 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                 });
 
             migrationBuilder.CreateTable(
-                name: "Instances",
+                name: "Gamespaces",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     GlobalId = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
+                    ShareCode = table.Column<string>(nullable: true),
                     TopologyId = table.Column<int>(nullable: false),
                     WhenCreated = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Instances", x => x.Id);
+                    table.PrimaryKey("PK_Gamespaces", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Instances_Topologies_TopologyId",
+                        name: "FK_Gamespaces_Topologies_TopologyId",
                         column: x => x.TopologyId,
                         principalTable: "Topologies",
                         principalColumn: "Id",
@@ -83,34 +86,7 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                 });
 
             migrationBuilder.CreateTable(
-                name: "Permissions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    PersonId = table.Column<int>(nullable: false),
-                    TopologyId = table.Column<int>(nullable: false),
-                    Value = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Permissions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Permissions_People_PersonId",
-                        column: x => x.PersonId,
-                        principalTable: "People",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Permissions_Topologies_TopologyId",
-                        column: x => x.TopologyId,
-                        principalTable: "Topologies",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TTLinkage",
+                name: "Linkers",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -124,15 +100,15 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TTLinkage", x => x.Id);
+                    table.PrimaryKey("PK_Linkers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TTLinkage_Templates_TemplateId",
+                        name: "FK_Linkers_Templates_TemplateId",
                         column: x => x.TemplateId,
                         principalTable: "Templates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TTLinkage_Topologies_TopologyId",
+                        name: "FK_Linkers_Topologies_TopologyId",
                         column: x => x.TopologyId,
                         principalTable: "Topologies",
                         principalColumn: "Id",
@@ -140,87 +116,114 @@ namespace TopoMojo.Web.Migrations.TopoMojo
                 });
 
             migrationBuilder.CreateTable(
-                name: "InstanceMembers",
+                name: "Workers",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    InstanceId = table.Column<int>(nullable: false),
+                    PersonId = table.Column<int>(nullable: false),
+                    TopologyId = table.Column<int>(nullable: false),
+                    Value = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Workers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Workers_Profiles_PersonId",
+                        column: x => x.PersonId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Workers_Topologies_TopologyId",
+                        column: x => x.TopologyId,
+                        principalTable: "Topologies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Players",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    GamespaceId = table.Column<int>(nullable: false),
                     PersonId = table.Column<int>(nullable: false),
                     isAdmin = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InstanceMembers", x => x.Id);
+                    table.PrimaryKey("PK_Players", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_InstanceMembers_Instances_InstanceId",
-                        column: x => x.InstanceId,
-                        principalTable: "Instances",
+                        name: "FK_Players_Gamespaces_GamespaceId",
+                        column: x => x.GamespaceId,
+                        principalTable: "Gamespaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_InstanceMembers_People_PersonId",
+                        name: "FK_Players_Profiles_PersonId",
                         column: x => x.PersonId,
-                        principalTable: "People",
+                        principalTable: "Profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Instances_TopologyId",
-                table: "Instances",
+                name: "IX_Gamespaces_TopologyId",
+                table: "Gamespaces",
                 column: "TopologyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_InstanceMembers_InstanceId",
-                table: "InstanceMembers",
-                column: "InstanceId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InstanceMembers_PersonId",
-                table: "InstanceMembers",
-                column: "PersonId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Permissions_PersonId",
-                table: "Permissions",
-                column: "PersonId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Permissions_TopologyId",
-                table: "Permissions",
-                column: "TopologyId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TTLinkage_TemplateId",
-                table: "TTLinkage",
+                name: "IX_Linkers_TemplateId",
+                table: "Linkers",
                 column: "TemplateId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TTLinkage_TopologyId",
-                table: "TTLinkage",
+                name: "IX_Linkers_TopologyId",
+                table: "Linkers",
+                column: "TopologyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Players_GamespaceId",
+                table: "Players",
+                column: "GamespaceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Players_PersonId",
+                table: "Players",
+                column: "PersonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Workers_PersonId",
+                table: "Workers",
+                column: "PersonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Workers_TopologyId",
+                table: "Workers",
                 column: "TopologyId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "InstanceMembers");
+                name: "Linkers");
 
             migrationBuilder.DropTable(
-                name: "Permissions");
+                name: "Players");
 
             migrationBuilder.DropTable(
-                name: "TTLinkage");
-
-            migrationBuilder.DropTable(
-                name: "Instances");
-
-            migrationBuilder.DropTable(
-                name: "People");
+                name: "Workers");
 
             migrationBuilder.DropTable(
                 name: "Templates");
+
+            migrationBuilder.DropTable(
+                name: "Gamespaces");
+
+            migrationBuilder.DropTable(
+                name: "Profiles");
 
             migrationBuilder.DropTable(
                 name: "Topologies");

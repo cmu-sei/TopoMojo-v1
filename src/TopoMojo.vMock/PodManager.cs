@@ -13,16 +13,19 @@ namespace TopoMojo.vMock
 {
     public class PodManager : IPodManager
     {
-        public PodManager(IOptions<PodConfiguration> podConfiguration,
-            ILoggerFactory mill)
+        public PodManager(
+            PodConfiguration podConfiguration,
+            ILoggerFactory mill
+        )
         {
+            _optPod = podConfiguration;
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
-            _optPod = podConfiguration.Value;
             _vms = new Dictionary<string, Vm>();
             _tasks = new Dictionary<string, VmTask>();
             _rand = new Random();
         }
+
         private readonly PodConfiguration _optPod;
         private readonly ILogger<PodManager> _logger;
         private readonly ILoggerFactory _mill;
@@ -181,6 +184,7 @@ namespace TopoMojo.vMock
 
         public async Task<Vm[]> Find(string term)
         {
+            await Task.Delay(0);
             return (term.HasValue())
             ?  _vms.Values.Where(o=> o.Id.Contains(term) || o.Name.Contains(term)).ToArray()
             : _vms.Values.ToArray();
@@ -279,6 +283,7 @@ namespace TopoMojo.vMock
 
         public async Task<DisplayInfo> Display(string id)
         {
+            await Task.Delay(0);
             return new DisplayInfo
             {
                 Id = id,
@@ -294,6 +299,7 @@ namespace TopoMojo.vMock
             // _optTemplate.Iso = new string[] {"Centos7-1503-01"};
             // _optTemplate.Source = new string[] {"centos7-10g", "blank-10g", "blank-20g"};
             // return _optTemplate;
+            await Task.Delay(0);
             return new TemplateOptions();
         }
         public string Version
@@ -343,6 +349,7 @@ namespace TopoMojo.vMock
 
         public async Task<VmOptions> GetVmIsoOptions(string id)
         {
+            await Task.Delay(0);
             VmOptions opt = new VmOptions()
             {
                 Iso = new string[] { "test1.iso", "really-long-iso-name-that-needs-to-wrap-1.0.0.test2.iso" },
@@ -351,6 +358,7 @@ namespace TopoMojo.vMock
         }
         public async Task<VmOptions> GetVmNetOptions(string id)
         {
+            await Task.Delay(0);
             VmOptions opt = new VmOptions()
             {
                 Net = new string[] { "bridge-net", "isp-att" }
@@ -360,6 +368,7 @@ namespace TopoMojo.vMock
 
         public async Task<Vm> Answer(string id, string question, string answer)
         {
+            await Task.Delay(0);
             Vm vm = _vms[id];
             vm.Question = null;
             return vm;

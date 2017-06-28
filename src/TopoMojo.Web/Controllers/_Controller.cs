@@ -19,7 +19,7 @@ namespace TopoMojo.Controllers
             _profileResolver = sp.GetRequiredService<IProfileResolver>();
         }
 
-        protected Person _profile;
+        protected Profile _profile;
         protected readonly IProfileResolver _profileResolver;
         protected readonly ILogger _logger;
         protected readonly ApplicationOptions _options;

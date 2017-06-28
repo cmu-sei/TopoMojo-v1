@@ -1,8 +1,7 @@
-using System;
 using Microsoft.EntityFrameworkCore;
-using TopoMojo.Models;
+using TopoMojo.Core.Entities;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Core.Data
 {
     public class TopoMojoDbContext : DbContext
     {
@@ -18,10 +17,10 @@ namespace TopoMojo.Core
 
         public DbSet<Topology> Topologies { get; set; }
         public DbSet<Template> Templates { get; set; }
-        public DbSet<Person> People { get; set; }
-        public DbSet<Permission> Permissions { get; set; }
-        public DbSet<TemplateReference> TTLinkage { get; set; }
-        public DbSet<Instance> Instances { get; set; }
-        public DbSet<InstanceMember> InstanceMembers { get; set; }
+        public DbSet<Linker> Linkers { get; set; }
+        public DbSet<Gamespace> Gamespaces { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Worker> Workers { get; set; }
+        public DbSet<Player> Players { get; set; }
     }
 }

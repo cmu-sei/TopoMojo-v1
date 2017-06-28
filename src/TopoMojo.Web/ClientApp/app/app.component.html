@@ -1,102 +1,46 @@
-<span>{{(profile) ? profile.name : "anonymous"}}</span>
+<!--<span>{{(profile) ? profile.name : "anonymous"}}</span>-->
 <div class="text-center">
             <h2>TopoMojo</h2>
-    <ul class='list-inline'>
-        <!--<li>
-        </li>-->
-        <!--<li *ngIf="!profile" [routerLinkActive]="['link-active']">
-            <a [routerLink]="['/login']">
-                <span class='fa fa-unlock'></span> Login
-            </a>
-        </li>-->
-        <li *ngIf="profile">
-            <ul class="nav navbar-nav">
+    <!--<ul class='list-inline'>
+        <li *ngIf="profile">-->
+            <ul *ngIf="profile" class="list-inline">
                 <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/topo']">
-                        <span class='fa fa-list'></span> Browse
+                    <a [routerLink]="['/browse']" [routerLinkActive]="['link-active']" tooltip="browse">
+                        <span class='fa fa-list fa-2x'></span>
+                        <!--Browse-->
+                    </a>
+                </li>
+                <li [routerLinkActive]="['link-active']">
+                    <a [routerLink]="['/topo']" [routerLinkActive]="['link-active']" tooltip="workspace">
+                        <span class='fa fa-wrench fa-2x'></span>
+                        <!--Workspace-->
+                    </a>
+                </li>
+                <li [routerLinkActive]="['link-active']">
+                    <a [routerLink]="['/mojo']" [routerLinkActive]="['link-active']" tooltip="gamespace">
+                        <span class='fa fa-flash fa-2x'></span>
+                        <!--Gamespace-->
                     </a>
                 </li>
                 <li *ngIf="profile.isAdmin || true" [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/admin']">
-                        <span class='fa fa-cog'></span> Admin
+                    <a [routerLink]="['/admin']" [routerLinkActive]="['link-active']" tooltip="admin">
+                        <span class='fa fa-cog fa-2x'></span>
+                        <!--Admin-->
                     </a>
                 </li>
                 <li>
-                    <a [routerLink]="['/profile']">
-                        <span class='fa fa-user'></span> {{ profile.name }}
-                    </a>
-                </li>
-                <li [routerLinkActive]="['link-active']">
-                    <a (click)="logout()">
-                        <span class='fa fa-lock'></span> Logout
+                    <a (click)="logout()" tooltip="logout">
+                        <span class='fa fa-lock fa-2x'></span>
+                        <!--Logout-->
                     </a>
                 </li>
             </ul>
-        </li>
-    </ul>
+        <!--</li>
+    </ul>-->
 </div>
-<!--<nav class='navbar navbar-default navbar-fixed-top'>
-    <div class="container">
-        <div class='navbar-header'>
-            <button type='button' class='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>
-                <span class='sr-only'>Toggle navigation</span>
-                <span class='icon-bar'></span>
-                <span class='icon-bar'></span>
-                <span class='icon-bar'></span>
-            </button>
-            <a class='navbar-brand' [routerLink]="['/home']"><span class='fa fa-map'></span> TopoMojo</a>
-        </div>
-        <div class='navbar-collapse collapse'>
-            <ul class='nav navbar-nav navbar-right'>
-                <li *ngIf="!profile" [routerLinkActive]="['link-active']">
-                    <a (click)="login()">
-                        <span class='fa fa-unlock'></span> Login
-                    </a>
-                </li>
-                <li *ngIf="profile">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li [routerLinkActive]="['link-active']">
-                            <a [routerLink]="['/topo']">
-                                <span class='fa fa-map'></span> Browse
-                            </a>
-                        </li>
-                        <li *ngIf="profile" [routerLinkActive]="['link-active']">
-                            <a [routerLink]="['/admin']">
-                                <span class='fa fa-shield'></span> Admin
-                            </a>
-                        </li>
-                        <li>
-                            <a [routerLink]="['/help']">
-                                <i class="fa fa-question"></i> Help
-                            </a>
-                        </li>
-                        <li>
-                            <a [routerLink]="['/profile']">
-                                <span class='fa fa-user'></span> {{ profile.userName }}
-                            </a>
-                        </li>
-                        <li [routerLinkActive]="['link-active']">
-                            <a (click)="logout()">
-                                <span class='fa fa-lock'></span> Logout
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>-->
 
 <div class='container main-container'>
     <!--<div class='row'>-->
         <router-outlet></router-outlet>
     <!--</div>-->
 </div>
-
-<!--<nav class="navbar navbar-default navbar-fixed-bottom">
-    <div class="container">
-        <ul class="nav navbar-nav navbar-right">
-            <li><a [routerLink]="['/help']">Help</a></li>
-        </ul>
-    </div>
-</nav>-->

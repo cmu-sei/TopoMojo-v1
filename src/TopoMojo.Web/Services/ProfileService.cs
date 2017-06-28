@@ -28,7 +28,7 @@ namespace TopoMojo.Services
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, globalId));
 
-            Person person = await _profileManager.LoadByGlobalId(globalId);
+            Profile person = await _profileManager.LoadByGlobalId(globalId);
             if (person != null)
             {
                 claims.Add(new Claim(JwtRegisteredClaimNames.NameId, person.Id.ToString()));
@@ -42,13 +42,13 @@ namespace TopoMojo.Services
 
         public async Task<object> GetProfileAsync(string globalId)
         {
-            Person person = await _profileManager.LoadByGlobalId(globalId);
+            Profile person = await _profileManager.LoadByGlobalId(globalId);
             return new { Name = person.Name };
         }
 
         public async Task AddProfileAsync(string globalId, string name)
         {
-            await _profileManager.SaveAsync(new Person() {
+            await _profileManager.SaveAsync(new Profile() {
                 GlobalId = globalId,
                 Name = name
             });

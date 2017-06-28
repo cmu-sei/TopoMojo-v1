@@ -164,7 +164,8 @@ export class AuthService {
 
     //todo: implement this!
     isAdmin() {
-        return true;
+        console.log(this.currentUser);
+        return true || (this.currentUser && this.currentUser.profile.isAdmin);
     }
 }
 

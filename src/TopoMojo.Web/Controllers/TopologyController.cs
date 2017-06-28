@@ -51,7 +51,10 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilterAttribute]
         public async Task<Topology> Load([FromRoute]int id)
         {
-            return await _mgr.LoadAsync(id);
+            // Topology t = await _mgr.LoadAsync(id);
+            // if (t.ShareCode.HasValue())
+            //     t.ShareCode = $"{Request.Scheme}://{Request.Host}/enlist/{t.ShareCode}";
+            return await _mgr.LoadAsync(id);;
         }
 
         [HttpDelete("{id}")]
@@ -68,26 +71,36 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<SearchResult<TopoSummary>> List([FromBody]Search search)
         {
+            List<SearchFilter> filters = search.Filters.ToList();
+            filters.Add(new SearchFilter { Name = "published"});
+            search.Filters = filters.ToArray();
             return await _mgr.ListAsync(search);
+        }
+
+        [HttpPost]
+        [JsonExceptionFilter]
+        public async Task<SearchResult<TopoSummary>> Mine([FromBody]Search search)
+        {
+            return await _mgr.ListMine(search);
         }
 
         [HttpGet("{id}")]
         [JsonExceptionFilter]
-        public async Task<TemplateReference[]> Templates([FromRoute]int id)
+        public async Task<Linker[]> Templates([FromRoute]int id)
         {
             return await _mgr.ListTemplates(id);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<TemplateReference> AddTemplate([FromBody]TemplateReference tref)
+        public async Task<Linker> AddTemplate([FromBody]Linker tref)
         {
             return await _mgr.AddTemplate(tref);
         }
 
         [HttpPost]
         [JsonExceptionFilter]
-        public async Task<TemplateReference> UpdateTemplate([FromBody]TemplateReference tref)
+        public async Task<Linker> UpdateTemplate([FromBody]Linker tref)
         {
             return await _mgr.UpdateTemplate(tref);
         }
@@ -101,18 +114,71 @@ namespace TopoMojo.Controllers
 
         [HttpPost("{id}")]
         [JsonExceptionFilter]
-        public async Task<TemplateReference> CloneTemplate([FromRoute]int id)
+        public async Task<Linker> CloneTemplate([FromRoute]int id)
         {
             return await _mgr.CloneTemplate(id);
         }
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<Core.Permission[]> Members([FromRoute] int id)
+        public async Task<Core.Worker[]> Members([FromRoute] int id)
         {
             return await _mgr.Members(id);
         }
 
+        [HttpGetAttribute("{id}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<object> Share([FromRoute] int id)
+        {
+            string code = await _mgr.Share(id, false);
+            return new { url = code };
+        }
+
+        [HttpGetAttribute("{id}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Unshare([FromRoute] int id)
+        {
+            await _mgr.Share(id, true);
+            return true;
+        }
+
+        [HttpGetAttribute("{code}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Enlist([FromRoute] string code)
+        {
+            return await _mgr.Enlist(code);
+        }
+
+        [HttpDeleteAttribute("{id}/{memberId}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Delist([FromRoute] int id, [FromRoute] int memberId)
+        {
+            return await _mgr.Delist(id, memberId);
+        }
+
+        [HttpPutAttribute("{id}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Publish([FromRoute] int id)
+        {
+            return await _mgr.Publish(id, false);
+        }
+
+        [HttpPutAttribute("{id}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Unpublish([FromRoute] int id)
+        {
+            return await _mgr.Publish(id, true);
+        }
+
+        [HttpGet]
+        [JsonExceptionFilter]
+        public object IpCheck()
+        {
+            return new {
+                Host = $"{Request.Scheme}://{Request.Host}",
+                IpAddress = Request.HttpContext.Connection.RemoteIpAddress
+            };
+        }
     }
 
 }

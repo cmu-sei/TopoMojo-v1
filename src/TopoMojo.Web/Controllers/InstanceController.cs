@@ -18,7 +18,7 @@ namespace TopoMojo.Controllers
     public class InstanceController : _Controller
     {
         public InstanceController(
-            InstanceManager instanceManager,
+            GamespaceManager instanceManager,
             IPodManager podManager,
             IServiceProvider sp) : base(sp)
         {
@@ -27,18 +27,18 @@ namespace TopoMojo.Controllers
         }
 
         private readonly IPodManager _pod;
-        private readonly InstanceManager _mgr;
+        private readonly GamespaceManager _mgr;
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilter]
-        public async Task<InstanceSummary> Launch([FromRoute]int id)
+        public async Task<GamespaceSummary> Launch([FromRoute]int id)
         {
             return await _mgr.Launch(id);
         }
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilter]
-        public async Task<InstanceSummary> Check([FromRoute]int id)
+        public async Task<GamespaceSummary> Check([FromRoute]int id)
         {
             return await _mgr.Check(id);
         }
@@ -52,16 +52,16 @@ namespace TopoMojo.Controllers
 
         [HttpPostAttribute]
         [JsonExceptionFilterAttribute]
-        public async Task<SearchResult<Instance>> List(Search search)
+        public async Task<SearchResult<Gamespace>> List(Search search)
         {
             return await _mgr.ListAsync(search);
         }
 
         [HttpGetAttribute]
         [JsonExceptionFilterAttribute]
-        public async Task<InstanceMember[]> Active()
+        public async Task<Player[]> Active()
         {
-            return await _mgr.ProfileInstances();
+            return await _mgr.Gamespaces();
         }
 
     }

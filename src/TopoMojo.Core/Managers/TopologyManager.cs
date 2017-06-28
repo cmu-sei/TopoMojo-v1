@@ -5,27 +5,56 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
+using TopoMojo.Core.Data;
+using TopoMojo.Core.Entities;
+using TopoMojo.Core.Entities.Extensions;
 
 namespace TopoMojo.Core
 {
     public class TopologyManager : EntityManager<Topology>
     {
         public TopologyManager(
-            IServiceProvider sp
-        ) : base (sp)
+            TopoMojoDbContext db,
+            ILoggerFactory mill,
+            CoreOptions options,
+            IProfileResolver profileResolver
+        ) : base (db, mill, options, profileResolver)
         {
         }
 
         public new async Task<SearchResult<TopoSummary>> ListAsync(Search search)
         {
-            //get topo, contributors, templates
+            //get topo, workers, templates
             IQueryable<Topology> q = base.ListQuery(search);
+
+            if (search.HasFilter("published"))
+                q = q.Where(t => t.IsPublished);
+
+            return await ProcessQuery(search, q);
+        }
+
+        public async Task<SearchResult<TopoSummary>> ListMine(Search search)
+        {
+            IQueryable<Topology> q = _db.Workers
+                .Where(p => p.PersonId == _user.Id)
+                .Select(p => p.Topology);
+
+            if (search.Term.HasValue())
+            {
+                q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
+            }
+
+            return await ProcessQuery(search, q);
+        }
+
+        public async Task<SearchResult<TopoSummary>> ProcessQuery(Search search, IQueryable<Topology> q)
+        {
             SearchResult<TopoSummary> result = new SearchResult<TopoSummary>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  q
-                .Include(t => t.Permissions)
-                .Include(t => t.Templates)
+                .Include(t => t.Workers)
+                //.Include(t => t.Linkers)
                 .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)
@@ -35,9 +64,10 @@ namespace TopoMojo.Core
                     GlobalId = t.GlobalId,
                     Name = t.Name,
                     Description = t.Description,
-                    People = String.Join(", ", t.Permissions.Select(p=>p.Person.Name).ToArray()),
-                    Templates = String.Join(" | ", t.Templates.Select(i=>i.Name).ToArray()),
-                    CanManage = _user.IsAdmin || t.Permissions.Where(p => p.PersonId == _user.Id && p.Value != PermissionFlag.None).Any()
+                    IsPublished = t.IsPublished,
+                    People = String.Join(", ", t.Workers.Select(p=>p.Person.Name).ToArray()),
+                    //Templates = String.Join(" | ", t.Linkers.Select(i=>i.Name).ToArray()),
+                    CanManage = _user.IsAdmin || t.Workers.Where(p => p.PersonId == _user.Id && p.Permission != Permission.None).Any()
                 })
                 .ToArray();
             return result;
@@ -49,9 +79,10 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             topology.Id = 0;
-            topology.Permissions.Add(new Permission {
+            topology.Workers.Add(new Worker
+            {
                 PersonId = _user.Id,
-                Value = PermissionFlag.Manager
+                Permission = Permission.Manager
             });
             await base.SaveAsync(topology);
             return topology;
@@ -59,10 +90,10 @@ namespace TopoMojo.Core
 
         public async Task<Topology> Update(Topology topo)
         {
-            if (!(await Permission(topo.Id)).CanEdit())
+            if (! await CanEdit(topo.Id))
                 throw new InvalidOperationException();
 
-            topo.Templates = null;
+            topo.Linkers = null;
             return await base.SaveAsync(topo);
         }
 
@@ -73,13 +104,13 @@ namespace TopoMojo.Core
 
             _db.Topologies.Remove(topo);
 
-            TemplateReference[] list = await _db.TTLinkage
+            Linker[] list = await _db.Linkers
                 .Include(t => t.Template)
                 .Where(t => t.TopologyId == topo.Id)
                 .ToArrayAsync();
-            _db.TTLinkage.RemoveRange(list);
+            _db.Linkers.RemoveRange(list);
 
-            foreach (TemplateReference tref in list)
+            foreach (Linker tref in list)
                 if (tref.Template.OwnerId == topo.Id)
                     _db.Templates.Remove(tref.Template);
 
@@ -94,9 +125,9 @@ namespace TopoMojo.Core
 
         public async Task<bool> AllowedInstanceAccess(string guid)
         {
-            InstanceMember member = await _db.InstanceMembers
+            Player member = await _db.Players
                 .Where(m => m.PersonId == _user.Id
-                    && m.Instance.GlobalId == guid)
+                    && m.Gamespace.GlobalId == guid)
                 .SingleOrDefaultAsync();
             return (member != null);
         }
@@ -106,32 +137,29 @@ namespace TopoMojo.Core
             if (_user.IsAdmin)
                 return true;
 
-            Permission permission = await _db.Permissions
+            Worker permission = await _db.Workers
                 .Where(p => p.PersonId == _user.Id
                     && p.Topology.GlobalId == guid
-                    && p.Value.HasFlag(PermissionFlag.Editor))
+                    && p.Permission.HasFlag(Permission.Editor))
                     .SingleOrDefaultAsync();
             return (permission != null);
         }
 
-        public async Task<bool> CanEdit(int id)
+        public async Task<bool> CanEdit(int topoId)
         {
-            return (await Permission(id)).CanEdit();
+            if (_user.IsAdmin)
+                return true;
+
+            Worker worker = await _db.Workers.FindAsync(_user.Id);
+            return worker != null && worker.CanEdit();
         }
 
-        private async Task<PermissionFlag> Permission(int topoId)
+        public async Task<Worker[]> Members(int id)
         {
-            return _user.IsAdmin
-                ? PermissionFlag.Manager
-                : await _db.Permissions.PermissionFor(_user.Id, topoId, EntityType.Topology);
-        }
-
-        public async Task<Permission[]> Members(int id)
-        {
-            if (! (await Permission(id)).CanManage())
+            if (! await CanEdit(id))
                 throw new InvalidOperationException();
 
-            return await _db.Permissions
+            return await _db.Workers
                 .Where(m => m.TopologyId == id)
                 .Include(m => m.Person)
                 .ToArrayAsync();
@@ -207,31 +235,31 @@ namespace TopoMojo.Core
         //     return template;
         // }
 
-        public async Task<TemplateReference[]> ListTemplates(int id)
+        public async Task<Linker[]> ListTemplates(int id)
         {
-            return await _db.TTLinkage
+            return await _db.Linkers
                 .Include(tt => tt.Template)
                 .Where(tt => tt.TopologyId == id)
                 .ToArrayAsync();
         }
 
-        public async Task<TemplateReference> AddTemplate(TemplateReference tref)
+        public async Task<Linker> AddTemplate(Linker tref)
         {
-            if (!(await Permission(tref.TopologyId)).CanEdit())
+            if (! await CanEdit(tref.TopologyId))
                 throw new InvalidOperationException();
 
-            _db.TTLinkage.Add(tref);
+            _db.Linkers.Add(tref);
             await _db.SaveChangesAsync();
             await _db.Entry(tref).Reference(t => t.Topology).LoadAsync();
             await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
-            tref.Name = (tref.Topology.Name + " " + tref.Template.Name).ToLower().Replace(" ", "-");
+            tref.Name = tref.Template.Name.ToLower().Replace(" ", "-");
             await _db.SaveChangesAsync();
             return tref;
         }
 
-        public async Task<TemplateReference> UpdateTemplate(TemplateReference tref)
+        public async Task<Linker> UpdateTemplate(Linker tref)
         {
-            if (!(await Permission(tref.TopologyId)).CanEdit())
+            if (! await CanEdit(tref.TopologyId))
                 throw new InvalidOperationException();
 
             _db.Attach(tref);
@@ -259,7 +287,7 @@ namespace TopoMojo.Core
 
         public async Task<bool> RemoveTemplate(int id)
         {
-            TemplateReference tref = await _db.TTLinkage
+            Linker tref = await _db.Linkers
                 .Include(t => t.Template)
                 .Include(t => t.Topology)
                 .Where(t => t.Id == id)
@@ -268,7 +296,7 @@ namespace TopoMojo.Core
             if (tref == null)
                 throw new InvalidOperationException();
 
-            if (!(await Permission(tref.TopologyId)).CanEdit())
+            if (! await CanEdit(tref.TopologyId))
                 throw new InvalidOperationException();
 
             if (tref.Template.OwnerId == tref.TopologyId)
@@ -280,9 +308,9 @@ namespace TopoMojo.Core
             return true;
         }
 
-        public async Task<TemplateReference> CloneTemplate(int id)
+        public async Task<Linker> CloneTemplate(int id)
         {
-            TemplateReference tref = await _db.TTLinkage
+            Linker tref = await _db.Linkers
                 .Include(t => t.Template)
                 .Include(t => t.Topology)
                 .Where(t => t.Id == id)
@@ -291,7 +319,7 @@ namespace TopoMojo.Core
             if (tref == null)
                 throw new InvalidOperationException();
 
-            if (!(await Permission(tref.TopologyId)).CanEdit())
+            if (! await CanEdit(tref.TopologyId))
                 throw new InvalidOperationException();
 
             Template template = new Template {
@@ -312,6 +340,82 @@ namespace TopoMojo.Core
             //tref.TemplateId = template.Id);
             //await _db.SaveChanges();
             return tref;
+        }
+
+        public async Task<string> Share(int id, bool revoke)
+        {
+            Worker worker = await _db.Workers
+                .Include(m => m.Topology)
+                .Where(m => m.TopologyId == id && m.PersonId == _user.Id)
+                .SingleOrDefaultAsync();
+
+            if (worker == null || worker.PersonId != _user.Id || !worker.CanManage())
+                throw new InvalidOperationException();
+
+            string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
+            worker.Topology.ShareCode = code;
+            await _db.SaveChangesAsync();
+            return code;
+        }
+
+        public async Task<bool> Publish(int id, bool revoke)
+        {
+            Worker worker = await _db.Workers
+                .Include(m => m.Topology)
+                .Where(m => m.TopologyId == id && m.PersonId == _user.Id)
+                .SingleOrDefaultAsync();
+
+            if (worker == null || worker.PersonId != _user.Id || !worker.CanManage())
+                throw new InvalidOperationException();
+
+            worker.Topology.IsPublished = !revoke;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> Enlist(string code)
+        {
+            Topology workspace = await _db.Topologies
+                .Include(i => i.Workers)
+                .Where(i => i.ShareCode == code)
+                .SingleOrDefaultAsync();
+
+            if (workspace == null)
+                throw new InvalidOperationException();
+
+            if (!workspace.Workers.Where(m => m.PersonId == _user.Id).Any())
+            {
+                workspace.Workers.Add(new Worker
+                {
+                    PersonId = _user.Id,
+                    Permission = Permission.Editor
+                });
+                await _db.SaveChangesAsync();
+            }
+            return true;
+        }
+
+        public async Task<bool> Delist(int topoId, int memberId)
+        {
+            Topology topo = await _db.Topologies
+                .Include(t => t.Workers)
+                .Where(t => t.Id == topoId)
+                .SingleOrDefaultAsync();
+
+            Worker actor = topo.Workers
+                .Where(p => p.PersonId == _user.Id)
+                .SingleOrDefault();
+
+            Worker target = topo.Workers
+                .Where(p => p.PersonId == memberId)
+                .SingleOrDefault();
+
+            if (actor == null || !actor.CanManage() || target == null)
+                throw new InvalidOperationException();
+
+            topo.Workers.Remove(target);
+            await _db.SaveChangesAsync();
+            return true;
         }
     }
 }

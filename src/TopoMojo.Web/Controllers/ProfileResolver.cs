@@ -22,9 +22,9 @@ namespace TopoMojo.Services
         }
 
         private readonly IHttpContextAccessor _context;
-        private Person _profile = null;
+        private Profile _profile = null;
 
-        public Person Profile {
+        public Profile Profile {
             get
             {
                 return (_profile != null)
@@ -33,13 +33,13 @@ namespace TopoMojo.Services
             }
         }
 
-        private Person BuildProfile()
+        private Profile BuildProfile()
         {
             lock(this)
             {
                 if (_profile == null)
                 {
-                    _profile = new Person();
+                    _profile = new Profile();
                     _profile.GlobalId = _context.HttpContext.User.FindFirst(JwtClaimTypes.Subject)?.Value;
                     _profile.Name = _context.HttpContext.User.FindFirst(JwtClaimTypes.Name)?.Value ?? "Anonymous";
                     _profile.IsAdmin = _context.HttpContext.User.IsInRole("admin");
@@ -57,11 +57,11 @@ namespace TopoMojo.Services
     {
         public void Init() {}
 
-        public DirectProfileResolver(Person profile)
+        public DirectProfileResolver(Profile profile)
         {
             Profile = profile;
         }
 
-        public Person Profile { get; private set; }
+        public Profile Profile { get; private set; }
     }
 }

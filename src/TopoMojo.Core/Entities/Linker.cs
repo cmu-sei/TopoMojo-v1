@@ -1,17 +1,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Core.Entities
 {
-    public class Template : BaseModel
-    {
-        public int OwnerId { get; set; }
-        public string Description { get; set; }
-        public bool IsPublished { get; set; }
-        public string Detail { get; set; }
-    }
-
-    public class TemplateReference
+    public class Linker
     {
         public int Id { get; set; }
         public int TopologyId { get; set; }

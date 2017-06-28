@@ -12,6 +12,10 @@ export class TopoService {
     //     return this.http.get('/api/topology/load/'+id);
     // }
 
+    public ipCheck() {
+        return this.http.get("/api/topology/ipcheck");
+    }
+
     public createTopo(Topo) {
         return this.http.post('/api/topology/create', Topo);
     }
@@ -22,6 +26,10 @@ export class TopoService {
 
     public listtopo(search) {
         return this.http.post('/api/topology/list', search);
+    }
+
+    public listmine(search) {
+        return this.http.post('/api/topology/mine', search);
     }
 
     public updateTopo(topo) {
@@ -38,6 +46,30 @@ export class TopoService {
 
     public addMembers(id: number, emails: string) {
         return this.http.post('/api/account/addtopouser', { topoId: id, emails: emails });
+    }
+
+    public enlist(code: string) {
+        return this.http.get('/api/topology/enlist/' + code);
+    }
+
+    public delist(id: number, mid: number) {
+        return this.http.delete('/api/topology/delist/' + id + "/" + mid);
+    }
+
+    public share(id: number) {
+        return this.http.get('/api/topology/share/' + id);
+    }
+
+    public unshare(id: number) {
+        return this.http.get('/api/topology/unshare/' + id);
+    }
+
+    public publish(id: number) {
+        return this.http.put('/api/topology/publish/' + id, null);
+    }
+
+    public unpublish(id: number) {
+        return this.http.put('/api/topology/unpublish/' + id, null);
     }
 
     public removeMember(id: number, personId: number) {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Core.Entities
 {
-    public class BaseModel
+    public class Entity
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }

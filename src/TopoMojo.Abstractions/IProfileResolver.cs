@@ -4,6 +4,6 @@ namespace TopoMojo.Abstractions
 {
     public interface IProfileResolver
     {
-        Person Profile { get; }
+        Profile Profile { get; }
     }
 }

@@ -1,6 +1,6 @@
 <div class="toolbar">
 <ul *ngIf="working" class="list-inline">
-    <li><i class="fa fa-spinner fa-spin"></i></li>
+    <li><i class="fa fa-circle-o-notch fa-spin"></i></li>
     <li>
         <span *ngIf="vm && vm.task && vm.task.name">{{ vm.task.name }}...</span>
         <span *ngIf="vm && vm.task && vm.task.progress > 0">{{vm.task.progress}}%</span>
@@ -24,7 +24,7 @@
             <button class="btn btn-default" (click)="stop()" tooltip="stop" *ngIf="isRunning()"><i class="fa fa-stop"></i></button>
             <button class="btn btn-default" (click)="display()" tooltip="console"><i class="fa fa-desktop"></i></button>
             <button class="btn btn-default" (click)="revert()" tooltip="revert"><i class="fa fa-fast-backward"></i></button>
-            <button class="btn btn-default" (click)="save()" tooltip="save"><i class="fa fa-save"></i></button>
+            <button class="btn btn-default" (click)="save()" tooltip="save" *ngIf="!isLinked()"><i class="fa fa-save"></i></button>
             <button class="btn btn-default" (click)="delete()" tooltip="delete"><i class="fa fa-trash"></i></button>
         </ng-template>
     </div>

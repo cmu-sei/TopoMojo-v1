@@ -6,14 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
+using TopoMojo.Core.Data;
+using TopoMojo.Core.Entities;
 
 namespace TopoMojo.Core
 {
     public class TemplateManager : EntityManager<Template>
     {
         public TemplateManager(
-            IServiceProvider sp
-        ) : base (sp)
+            TopoMojoDbContext db,
+            ILoggerFactory mill,
+            CoreOptions options,
+            IProfileResolver profileResolver
+        ) : base (db, mill, options, profileResolver)
         {
         }
 
@@ -53,7 +58,7 @@ namespace TopoMojo.Core
             if (!_user.IsAdmin)
                 throw new InvalidOperationException();
 
-            if (await _db.TTLinkage.Where(t => t.TemplateId == id).AnyAsync())
+            if (await _db.Linkers.Where(t => t.TemplateId == id).AnyAsync())
                 throw new InvalidOperationException("Template is linked by others.");
 
             _db.Templates.Remove(new Template { Id = id });
@@ -62,34 +67,19 @@ namespace TopoMojo.Core
 
         }
 
-        private async Task<bool> CanEdit(int id)
-        {
-            if (_user.IsAdmin)
-                return true;
-
-            //if current user is editor of a topo that owns this template
-            return await
-                (from p in _db.People
-                join tp in _db.Permissions on p.Id equals tp.PersonId
-                join tt in _db.TTLinkage on tp.TopologyId equals tt.TopologyId
-                where p.Id == _user.Id
-                    && tt.TemplateId == id
-                    && tp.Value.HasFlag(PermissionFlag.Editor)
-                select p).AnyAsync();
-        }
-
         private async Task<bool> CanEditTopo(int id)
         {
             if (_user.IsAdmin)
                 return true;
 
-            return await _db.Permissions
+            return await _db.Workers
                 .Where(p => p.TopologyId == id
                     && p.PersonId == _user.Id
-                    && p.Value.HasFlag(PermissionFlag.Editor))
+                    && p.Permission.HasFlag(Permission.Editor))
                 .AnyAsync();
 
         }
+
         public override async Task<SearchResult<Template>> ListAsync(Search search)
         {
             IQueryable<Template> q = ListQuery(search);
@@ -110,7 +100,7 @@ namespace TopoMojo.Core
 
         public async Task<bool> RemoveTemplate(int id)
         {
-            TemplateReference tref = await _db.TTLinkage
+            Linker tref = await _db.Linkers
                 .Include(t => t.Template)
                 .Include(t => t.Topology)
                 .Where(t => t.Id == id)
@@ -133,7 +123,7 @@ namespace TopoMojo.Core
 
         public async Task<Models.Template> GetDeployableTemplate(int id, string tag)
         {
-            TemplateReference tref = await _db.TTLinkage
+            Linker tref = await _db.Linkers
                 .Include(tt => tt.Template)
                 .Include(tt => tt.Topology)
                 .Where(tt => tt.Id == id)
@@ -141,9 +131,6 @@ namespace TopoMojo.Core
 
             if (tref == null)
                 throw new InvalidOperationException();
-
-            // if (! await CanEdit(tref.TopologyId))
-            //     throw new InvalidOperationException();
 
             TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
             if (tref.Name.HasValue())

@@ -99,7 +99,7 @@ namespace TopoMojo.Extensions
         // public static void ReplaceString(this object obj, string pattern, string val)
         // {
         //     Type t = obj.GetType();
-        //     foreach (PropertyInfo pi in t.GetProperties())
+        //     foreach (PropertyInfo pi in t.GetRuntimeProperties())
         //     {
         //         if (pi.SetMethod != null && pi.PropertyType == typeof(String))
         //             pi.SetValue(obj, pi.GetValue(obj).ToString().Replace(pattern, val));
@@ -110,7 +110,7 @@ namespace TopoMojo.Extensions
         // {
         //     Type t = obj.GetType();
         //     Object o = Activator.CreateInstance(t);
-        //     foreach (PropertyInfo pi in t.GetProperties())
+        //     foreach (PropertyInfo pi in t.GetRuntimeProperties())
         //     {
         //         if (pi.SetMethod != null && (pi.PropertyType.IsValueType || pi.PropertyType == typeof(String)))
         //             pi.SetValue(o, pi.GetValue(obj));

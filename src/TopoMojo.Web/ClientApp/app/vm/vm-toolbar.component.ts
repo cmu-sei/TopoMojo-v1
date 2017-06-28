@@ -133,6 +133,10 @@ export class VmToolbarComponent implements OnChanges {
         return this.vm.state == 1;
     }
 
+    isLinked() {
+        return !this.tref.owned;
+    }
+
     display() {
         this.service.display(this.vm.id);
     }

@@ -4,8 +4,11 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
     // moduleId: module.id,
     selector: 'confirm-delete',
     template: `
-        <button *ngIf="!deleteMsgVisible" class="btn btn-danger" (click)="confirm()">
+        <button *ngIf="!deleteMsgVisible && !asLink" class="btn btn-danger" tooltip="delete" (click)="confirm()">
             <i class="fa fa-trash"></i> {{ label }}
+        </button>
+        <button *ngIf="!deleteMsgVisible && asLink" class="btn btn-link" tooltip="delete" (click)="confirm()">
+            <i class="fa fa-trash text text-danger"></i><span class="text text-danger"> {{ label }}</span>
         </button>
         <p *ngIf="deleteMsgVisible" class="alert alert-danger">
             {{ prompt }}
@@ -21,6 +24,7 @@ export class ConfirmDeleteComponent implements OnInit {
     deleteMsgVisible: boolean;
     @Input() prompt: string = "Please confirm.";
     @Input() label: string = '';
+    @Input() asLink: boolean;
     @Output() onDelete : EventEmitter<boolean> = new EventEmitter<boolean>();
 
     constructor() { }

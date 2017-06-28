@@ -1,27 +1,25 @@
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
-using TopoMojo.Extensions.Vim;
-using TopoMojo.vSphere.Filters;
 using TopoMojo.Models;
-using System.Collections;
 
 namespace TopoMojo.vSphere
 {
-    public class vSphereHost
+    public class VimHost
     {
-        public vSphereHost(PodConfiguration options,
+        public VimHost(
+            PodConfiguration options,
             ConcurrentDictionary<string, Vm> vmCache,
             BitArray master,
-            ILogger<vSphereHost> logger)
+            ILogger<VimHost> logger
+        )
         {
             _logger = logger;
             _config = (PodConfiguration)Helper.Clone(options);
@@ -35,7 +33,8 @@ namespace TopoMojo.vSphere
             ResolveConfigMacros();
             MonitorSession();
         }
-        private readonly ILogger<vSphereHost> _logger;
+
+        private readonly ILogger<VimHost> _logger;
         private ConcurrentDictionary<string, Vm> _vmCache;
         List<string> _gcPortGroups;
         Dictionary<string,int> _pgCache;
@@ -338,7 +337,7 @@ namespace TopoMojo.vSphere
 
                 default:
                     throw new Exception("Invalid change request.");
-                break;
+                    //break;
             }
 
             ManagedObjectReference task = await _vim.ReconfigVM_TaskAsync(vm.AsVim(), vmcs);
@@ -364,7 +363,7 @@ namespace TopoMojo.vSphere
                                 _taskMap[id].error.localizedMessage;
                             _taskMap.Remove(id);
                             throw new Exception(msg);
-                            break;
+                            //break;
 
                         case TaskInfoState.success:
                             progress = 100;
@@ -496,6 +495,7 @@ namespace TopoMojo.vSphere
 
         public async Task<string[]> GetGuestIds(string term)
         {
+            await Task.Delay(0);
             return Transform.OsMap;
         }
 
@@ -523,6 +523,7 @@ namespace TopoMojo.vSphere
 
         private async Task ProvisionPortGroups(Template template)
         {
+            await Task.Delay(0);
             lock(_pgAllocation)
             {
                 foreach (Eth eth in template.Eth)
@@ -657,6 +658,7 @@ namespace TopoMojo.vSphere
 
         private async Task RemoveVmPortGroups(string[] nets)
         {
+            await Task.Delay(0);
             lock(_pgAllocation)
             {
                 foreach (string net in nets.Distinct().ToArray())
@@ -714,6 +716,7 @@ namespace TopoMojo.vSphere
 
         private async Task Connect()
         {
+            await Task.Delay(0);
             if (_vim != null && _vim.State == CommunicationState.Opened)
                 return;
 
@@ -772,6 +775,7 @@ namespace TopoMojo.vSphere
             _vim = null;
             _sic = null;
             _session = null;
+            await Task.Delay(0);
         }
 
         private async Task InitManagedObjectReferences(VimPortTypeClient client)
@@ -1024,6 +1028,7 @@ namespace TopoMojo.vSphere
         private async Task MonitorSession()
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");
+            await Task.Delay(0);
             while (true)
             {
                 try

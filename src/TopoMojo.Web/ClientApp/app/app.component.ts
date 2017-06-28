@@ -34,6 +34,7 @@ export class AppComponent {
 
     logout() {
         this.service.logout();
+        this.router.navigate(['/home']);
     }
 
     ngOnDestroy() {

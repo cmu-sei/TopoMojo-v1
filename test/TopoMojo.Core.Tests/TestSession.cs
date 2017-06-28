@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using TopoMojo.Abstractions;
 using TopoMojo.Core;
 
 namespace Tests
@@ -15,23 +16,23 @@ namespace Tests
         )
         {
             _ctx = ctx;
-            _coreOptions = Options.Create(options);
+            _coreOptions = new CoreOptions();
             _mill = mill;
         }
 
         private readonly TopoMojoDbContext _ctx = null;
-        private readonly IOptions<CoreOptions> _coreOptions;
+        private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
-        private UserResolver _ur;
+        private IProfileResolver _ur;
 
-        private Person _actor;
-        public Person Actor
+        private Profile _actor;
+        public Profile Actor
         {
             get { return _actor;}
             set
             {
                 _actor = value;
-                _ur = new UserResolver(_actor);
+                _ur = new ProfileResolver(_actor);
             }
         }
 
@@ -39,8 +40,8 @@ namespace Tests
 
         #region Managers
 
-        private Dictionary<string, Person> _actors = new Dictionary<string, Person>();
-        private Dictionary<Person, Dictionary<string, object>> _mgrStore = new Dictionary<Person, Dictionary<string, object>>();
+        private Dictionary<string, Profile> _actors = new Dictionary<string, Profile>();
+        private Dictionary<Profile, Dictionary<string, object>> _mgrStore = new Dictionary<Profile, Dictionary<string, object>>();
 
         public object GetManager(Type t)
         {
@@ -49,7 +50,7 @@ namespace Tests
 
             if (!_mgrStore[_actor].ContainsKey(t.Name))
             {
-                object mgr = Activator.CreateInstance(t, _ctx, _ur, _coreOptions, _mill);
+                object mgr = Activator.CreateInstance(t, _ctx, _mill, _coreOptions, _ur);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
 
@@ -63,27 +64,36 @@ namespace Tests
 
         #endregion
 
-        public Person AddActor(string name)
+        public Profile AddActor(string name)
         {
             return AddUser(name, true);
         }
-        public Person AddUser(string name)
+        public Profile AddUser(string name)
         {
             return AddUser(name, false);
         }
-        public Person AddUser(string name, bool makeActor)
+        public Profile AddUser(string name, bool makeActor)
         {
-            // Person person = _userManager.FindByAccountAsync(name).Result;
-            // if (person == null)
-            // {
-            //     person = _userManager.RegisterWithCredentialsAsync(name, "321ChangeMe!").Result;
-            // }
-            // _ctx.Entry(person).Reference(o => o.Profile).Load();
-
             if (!_actors.ContainsKey(name))
-                _actors.Add(name, new Person { Name = name });
+            {
+                Profile target = _ctx.Profiles
+                    .Where(p => p.Name == name)
+                    .FirstOrDefault();
 
-            Person person = _actors[name];
+                if (target == null)
+                {
+                    target = new Profile
+                    {
+                        Name = name,
+                        GlobalId = Guid.NewGuid().ToString()
+                    };
+                    _ctx.Profiles.Add(target);
+                    _ctx.SaveChanges();
+                }
+                _actors.Add(name, target);
+            }
+
+            Profile person = _actors[name];
             if (makeActor)
                 Actor = person;
 

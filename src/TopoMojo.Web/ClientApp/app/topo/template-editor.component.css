@@ -11,3 +11,22 @@ div.row {
 a {
     line-height: 1;
 }
+h5 {
+    display: inline-block;
+}
+.prop {
+    margin-bottom: 16px;
+}
+.prop-label {
+    padding: 6px 0px;
+    background-color: #777777;
+    color: white;
+    text-align: center;
+    font-size: .85em;
+    border-radius: 4px;
+}
+.prop-button {
+    padding: 0px 4px;
+    margin: 2px 4px;
+    color: white;
+}
