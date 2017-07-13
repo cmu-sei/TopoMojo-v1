@@ -1,23 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using TopoMojo.Models;
-using TopoMojo.Models.AccountViewModels;
-using TopoMojo.Services;
-using TopoMojo.Data;
-using TopoMojo.Core;
-using Microsoft.EntityFrameworkCore;
-using TopoMojo.Web;
 using Step.Accounts;
-using System.IdentityModel.Tokens.Jwt;
+using TopoMojo.Services;
+using TopoMojo.Web;
+using TopoMojo.Core.Data;
+using TopoMojo.Extensions;
+using System.Security.Claims;
+using IdentityModel;
 
 namespace TopoMojo.Controllers
 {
@@ -62,6 +53,7 @@ namespace TopoMojo.Controllers
             if (account == null)
                 throw new InvalidOperationException();
 
+            await SignIn(account, model.Username);
             return Json(_accountManager.GenerateJwtToken(account));
         }
         [HttpPost]
@@ -73,6 +65,7 @@ namespace TopoMojo.Controllers
             if (account == null)
                 throw new InvalidOperationException();
 
+            await SignIn(account, model.Username);
             return Json(_accountManager.GenerateJwtToken(account));
         }
 
@@ -85,6 +78,7 @@ namespace TopoMojo.Controllers
             if (account == null)
                 throw new InvalidOperationException();
 
+            await SignIn(account, model.Username);
             return Json(_accountManager.GenerateJwtToken(account));
         }
 
@@ -98,6 +92,7 @@ namespace TopoMojo.Controllers
             if (account == null)
                 throw new InvalidOperationException();
 
+            await SignIn(account, model.Username);
             return Json(_accountManager.GenerateJwtToken(account));
         }
 
@@ -114,6 +109,7 @@ namespace TopoMojo.Controllers
             if (account == null)
                 throw new InvalidOperationException();
 
+            await SignIn(account, model.Username);
             return Json(_accountManager.GenerateJwtToken(account));
         }
 
@@ -125,8 +121,20 @@ namespace TopoMojo.Controllers
             _logger.LogDebug("Confirmation code {0} {1}", model.Username, code);
 
             //TODO: send code via email or text
+            string msg = $"TopoMojo Code: {code}";
+            _emailSender.SendEmailAsync(model.Username, msg, msg);
 
             return true;
+        }
+
+        private async Task SignIn(Account account, string username)
+        {
+            ClaimsIdentity id = new ClaimsIdentity();
+            id.AddClaim(new Claim(JwtClaimTypes.Subject, account.GlobalId));
+            id.AddClaim(new Claim(JwtClaimTypes.Name, username));
+            ClaimsPrincipal user = new ClaimsPrincipal();
+            user.AddIdentity(id);
+            await HttpContext.Authentication.SignInAsync("Cookies", user);
         }
     }
 

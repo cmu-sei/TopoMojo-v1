@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Step.Accounts;
 using TopoMojo.Core;
+using TopoMojo.Core.Entities;
 
 namespace TopoMojo.Services
 {
@@ -28,12 +29,12 @@ namespace TopoMojo.Services
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, globalId));
 
-            Profile person = await _profileManager.LoadByGlobalId(globalId);
-            if (person != null)
+            Profile profile = await _profileManager.LoadByGlobalId(globalId);
+            if (profile != null)
             {
-                claims.Add(new Claim(JwtRegisteredClaimNames.NameId, person.Id.ToString()));
-                claims.Add(new Claim("name", person.Name));
-                if (person.IsAdmin)
+                claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
+                claims.Add(new Claim("name", profile.Name));
+                if (profile.IsAdmin)
                     claims.Add(new Claim("role", "admin"));
             }
 

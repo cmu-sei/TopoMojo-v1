@@ -1,15 +1,8 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using TopoMojo.Data;
-using TopoMojo.Abstractions;
-using TopoMojo.Core;
-using Microsoft.Extensions.Logging;
 using IdentityModel;
 using System;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using TopoMojo.Abstractions;
+using TopoMojo.Core.Entities;
 
 namespace TopoMojo.Services
 {

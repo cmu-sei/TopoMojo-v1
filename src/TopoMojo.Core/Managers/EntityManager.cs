@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Data;
 using TopoMojo.Core.Entities;
+using TopoMojo.Core.Entities.Extensions;
 
 namespace TopoMojo.Core
 {

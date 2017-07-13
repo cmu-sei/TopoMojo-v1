@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Models;
+using TopoMojo.Core.Entities;
 
 namespace TopoMojo.Controllers
 {

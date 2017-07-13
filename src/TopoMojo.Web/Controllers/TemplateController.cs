@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
+using TopoMojo.Core.Entities;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers

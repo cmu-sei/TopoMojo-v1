@@ -17,6 +17,7 @@ export class LoginComponent implements OnInit {
     errorMessage : string;
     infoMessage : string;
     allowExternalLogin: boolean;
+    showLocalLogin: boolean;
     mode: number = 0;
     title: string = "Login";
     action: string = "login";
@@ -31,6 +32,7 @@ export class LoginComponent implements OnInit {
     ngOnInit() {
         this.url = this.auth.redirectUrl || this.route.snapshot.params['url'] || "/";
         this.allowExternalLogin = this.auth.allowExternalLogin;
+        this.showLocalLogin = !this.allowExternalLogin;
     }
 
     oidcLogin() {

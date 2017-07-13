@@ -53,7 +53,8 @@ export class TopoLaunchComponent implements OnInit {
                     this.errorMessage = "No document specified";
                 }, () => { console.log("done."); this.status = ''; }
             }, (err) => {
-                this.errorMessage = err.json().message;
+                //this.errorMessage = err.text();
+                console.log(err);
                 //this.service.onError(err);
             });
 

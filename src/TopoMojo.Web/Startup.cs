@@ -1,17 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +18,8 @@ using Step.Accounts;
 using Step.Common;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Data;
+using TopoMojo.Core.Data;
+using TopoMojo.Core.Entities;
 using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
@@ -39,7 +34,7 @@ namespace TopoMojo
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile("appsettings-custom.json", optional: true)
+                .AddJsonFile("appsettings-custom.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
@@ -158,15 +153,39 @@ namespace TopoMojo
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AuthenticationScheme = "Cookies"
+            });
+
             // handle IdentityServer bearer tokens
             AuthorizationOptions authOptions = Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
             if (!String.IsNullOrWhiteSpace(authOptions.Authority))
             {
+                app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
+                {
+                    AuthenticationScheme = "oidc",
+                    SignInScheme = "Cookies",
+
+                    Authority = authOptions.Authority,
+                    RequireHttpsMetadata = authOptions.RequireHttpsMetadata,
+
+                    ClientId = authOptions.ClientId,
+                    ClientSecret = authOptions.ClientSecret,
+
+                    ResponseType = "code id_token",
+                    Scope = { authOptions.AuthorizationScope },
+
+                    GetClaimsFromUserInfoEndpoint = true,
+                    SaveTokens = true
+                });
+
                 app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
                 {
                     Authority = authOptions.Authority,
                     AllowedScopes = { authOptions.AuthorizationScope },
                     RequireHttpsMetadata = authOptions.RequireHttpsMetadata,
+
                 });
             }
 
@@ -184,6 +203,7 @@ namespace TopoMojo
                     ValidAudience = io.Authentication.TokenAudience
                 }
             });
+
 
             app.UseMvc(routes =>
             {

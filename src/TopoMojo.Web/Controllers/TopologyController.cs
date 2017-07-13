@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
+using TopoMojo.Core.Entities;
 using TopoMojo.Models;
 using TopoMojo.Web;
 
@@ -121,7 +122,7 @@ namespace TopoMojo.Controllers
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilterAttribute]
-        public async Task<Core.Worker[]> Members([FromRoute] int id)
+        public async Task<Worker[]> Members([FromRoute] int id)
         {
             return await _mgr.Members(id);
         }
