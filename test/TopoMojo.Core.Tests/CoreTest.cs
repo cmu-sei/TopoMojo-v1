@@ -4,7 +4,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core;
 using TopoMojo.Abstractions;
-using TopoMojo.Models;
+using TopoMojo.Core.Entities;
+using TopoMojo.Core.Data;
 
 namespace Tests
 {

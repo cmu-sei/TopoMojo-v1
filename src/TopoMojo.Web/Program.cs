@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
-using Step.Common;
+using Microsoft.Extensions.Configuration;
 
 namespace TopoMojo
 {
@@ -12,19 +10,28 @@ namespace TopoMojo
     {
         public static void Main(string[] args)
         {
-            string path = Directory.GetCurrentDirectory();
-            JsonAppSettings.Merge(path, "appsettings.json", "appsettings-custom.json");
-            if (args.Length > 0 && args[0].ToLower() == "merge")
-                return;
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("hosting.json", optional: true)
+                .AddCommandLine(args)
+                .Build();
 
-            var host = new WebHostBuilder()
+            string path = Directory.GetCurrentDirectory();
+            if (config["just"]?.ToLower() == "merge")
+            {
+                JsonAppSettings.Merge(path, "appsettings.json", "appsettings-custom.json");
+                return;
+            }
+
+            IWebHost host = new WebHostBuilder()
                 .UseKestrel()
-                .UseUrls("http://*:5001")
+                .UseUrls("http://localhost:5004")
+                .UseConfiguration(config)
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
 
+            Console.Title = typeof(Program).GetTypeInfo().Assembly.GetName().Name;
             host.Run();
         }
     }

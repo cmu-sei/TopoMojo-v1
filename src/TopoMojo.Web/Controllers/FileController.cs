@@ -1,19 +1,18 @@
 using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using TopoMojo.Models;
-using TopoMojo.Web;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using System.Collections.Specialized;
+using TopoMojo.Models;
+using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
 {
@@ -22,13 +21,14 @@ namespace TopoMojo.Controllers
     {
         public FileController(
             IFileUploadMonitor monitor,
-            ApplicationOptions config,
+            FileUploadOptions uploadOptions,
             IHostingEnvironment host,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _host = host;
             _monitor = monitor;
-            _config = config.FileUpload;
+            _config = uploadOptions;
         }
         private readonly IHostingEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
@@ -37,7 +37,7 @@ namespace TopoMojo.Controllers
         [HttpGet("api/[controller]/[action]/{id}")]
         public IActionResult Progress([FromRoute]string id)
         {
-            return Json(_monitor.Progress(id).Progress);
+            return Json(_monitor.Check(id).Progress);
         }
 
         [HttpPost]
@@ -50,7 +50,8 @@ namespace TopoMojo.Controllers
                 return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
             }
 
-            FormOptions _formOptions = new FormOptions {
+            FormOptions _formOptions = new FormOptions
+            {
                 MultipartBodyLengthLimit = (long)1E9
             };
 
@@ -98,7 +99,7 @@ namespace TopoMojo.Controllers
 
         private string DestinationPath(string filename, string key, string scope)
         {
-            string fn = "", keypath="", root = "", path = "";
+            string fn = "", keypath = "", root = "", path = "";
 
             //sanitize fn
             char[] bad = Path.GetInvalidFileNameChars();
@@ -114,24 +115,24 @@ namespace TopoMojo.Controllers
             switch (scope)
             {
                 case "public":
-                path = _config.IsoRoot; //Path.Combine(_config.IsoRoot, "public");
-                break;
+                    path = _config.IsoRoot; //Path.Combine(_config.IsoRoot, "public");
+                    break;
 
                 case "private":
-                path = Path.Combine(_config.TopoRoot,keypath);
-                break;
+                    path = Path.Combine(_config.TopoRoot, keypath);
+                    break;
 
                 case "temp":
-                path = Path.Combine(_config.TopoRoot, keypath, "temp");
-                root = _config.TopoRoot;
-                break;
+                    path = Path.Combine(_config.TopoRoot, keypath, "temp");
+                    root = _config.TopoRoot;
+                    break;
 
                 case "img":
-                path = Path.Combine(_config.MiscRoot, keypath);
-                break;
+                    path = Path.Combine(_config.MiscRoot, keypath);
+                    break;
 
                 default:
-                throw new Exception("Invalid file scope.");
+                    throw new Exception("Invalid file scope.");
 
             }
 
@@ -144,7 +145,7 @@ namespace TopoMojo.Controllers
 
         private async Task Save(Stream source, Stream dest, long size, string key)
         {
-            _monitor.Start(key);
+            _monitor.Update(key, 0);
 
             if (size == 0) size = (long)5E9;
             byte[] buffer = new byte[4096];
@@ -164,7 +165,7 @@ namespace TopoMojo.Controllers
                 }
             } while (bytes > 0);
             _monitor.Update(key, 100);
-            FileProgress fp = _monitor.Progress(key);
+            FileProgress fp = _monitor.Check(key);
             int duration = (int)fp.Stop.Subtract(fp.Start).TotalSeconds;
             _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
         }

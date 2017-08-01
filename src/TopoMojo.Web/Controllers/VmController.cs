@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
@@ -15,14 +16,16 @@ namespace TopoMojo.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]
-    public class VmController : _Controller
+    public class VmController : HubController<TopologyHub>
     {
         public VmController(
             TemplateManager templateManager,
             TopologyManager topoManager,
             IPodManager podManager,
-            IServiceProvider sp)
-        :base(sp)
+            IServiceProvider sp,
+            IConnectionManager sigr
+            )
+        :base(sigr, sp)
         {
             _mgr = templateManager;
             _topoManager = topoManager;
@@ -33,6 +36,22 @@ namespace TopoMojo.Controllers
         private readonly TemplateManager _mgr;
         private readonly TopologyManager _topoManager;
 
+        // [AllowAnonymous]
+        // [HttpGet("/[controller]/[action]/{id}")]
+        // public async Task<IActionResult> Console([FromRoute] string id)
+        // {
+        //     //await HttpContext.Authentication.SignInAsync("Cookies", HttpContext.User);
+        //     return View("wmks", new DisplayInfo { Id = id });
+        // }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Ticket([FromRoute] string id)
+        {
+            await AuthorizeAction(id, "ticket");
+            DisplayInfo info = await _pod.Display(id);
+            return Json(info);
+        }
+
         [HttpGet("{id}")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Refresh(int id)
@@ -42,6 +61,7 @@ namespace TopoMojo.Controllers
             Vm vm = await _pod.Refresh(template);
             return Json(vm);
         }
+
         [HttpGet("{id}")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Load(string id)
@@ -56,8 +76,8 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Start(string id)
         {
             await AuthorizeAction(id, "start");
-
             Vm vm = await _pod.Start(id);
+            SendBroadcast(vm);
             return Json(vm);
         }
 
@@ -67,6 +87,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "stop");
             Vm vm = await _pod.Stop(id);
+            SendBroadcast(vm);
             return Json(vm);
         }
 
@@ -85,6 +106,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "revert");
             Vm vm = await _pod.Revert(id);
+            SendBroadcast(vm);
             return Json(vm);
         }
 
@@ -124,34 +146,6 @@ namespace TopoMojo.Controllers
             return Json(await _pod.CreateDisks(template));
         }
 
-        [HttpGet("/[controller]/[action]/{id}")]
-        public async Task<IActionResult> Display([FromRoute]string id)
-        {
-            await AuthorizeAction(id, "display");
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
-
-            DisplayInfo info = await _pod.Display(id);
-            if (info == null)
-                return View("Error");
-
-            info.TopoId = vm.Name.Tag();
-            return View("wmks", info);
-        }
-
-        [HttpGet("/[controller]/[action]/{id}")]
-        public async Task<IActionResult> Console([FromRoute]string id)
-        {
-            await AuthorizeAction(id, "console");
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
-
-            DisplayInfo info = await _pod.Display(id);
-            if (info == null)
-                return View("Error");
-
-            info.TopoId = vm.Name.Tag();
-            return View("wmks", info);
-        }
-
         [HttpPost("{id}/{question}/{answer}")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Answer(string id, string question, string answer)
@@ -167,7 +161,6 @@ namespace TopoMojo.Controllers
             await AuthorizeAction(id, "isooptions");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
 
-            //TODO: lookup TopoId from IsolationTag (for now they are the same)
             string tag = vm.Name.Tag();
             return Json(await _pod.GetVmIsoOptions(tag));
         }
@@ -199,7 +192,7 @@ namespace TopoMojo.Controllers
 
             bool result = await _topoManager.CanEdit(instanceId);
 
-            if (!result && "display console load".Contains(method))
+            if (!result && "ticket load".Contains(method))
                 result = await _topoManager.AllowedInstanceAccess(instanceId);
 
             if (!result)
@@ -212,6 +205,15 @@ namespace TopoMojo.Controllers
             return result;
         }
 
+        private void SendBroadcast(Vm vm)
+        {
+            Clients.Group(vm.Name.Tag()).VmUpdated(new {
+                id = vm.Id,
+                name = vm.Name.Untagged(),
+                isRunning = vm.State == VmPowerState.running
+            });
+
+        }
         // private bool AuthorizedForVm(Vm vm)
         // {
         //     return vm != null && AuthorizedForRoom(vm.Name.Tag());

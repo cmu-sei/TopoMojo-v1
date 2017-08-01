@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
+using TopoMojo.Core.Data;
+using TopoMojo.Core.Entities;
 
 namespace Tests
 {

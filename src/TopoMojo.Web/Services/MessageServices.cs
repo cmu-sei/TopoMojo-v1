@@ -13,27 +13,35 @@ using MimeKit;
 
 namespace TopoMojo.Services
 {
-    // This class is used by the application to send Email and SMS
-    // when you turn on two-factor authentication in ASP.NET Identity.
-    // For more details see this link https://go.microsoft.com/fwlink/?LinkID=532713
+    public interface IEmailSender
+    {
+        Task SendEmailAsync(string email, string subject, string message);
+    }
+
+    public interface ISmsSender
+    {
+        Task SendSmsAsync(string number, string message);
+    }
+
     public class AuthMessageSender : IEmailSender, ISmsSender
     {
         public AuthMessageSender(
             ILogger<AuthMessageSender> logger,
-            IOptions<ApplicationOptions> options
+            ControlOptions branding,
+            MessagingOptions options
         ) {
             _logger = logger;
-            _options = options.Value;
+            _options = options;
+            _branding = branding;
         }
         private readonly ILogger<AuthMessageSender> _logger;
-        private readonly ApplicationOptions _options;
+        private readonly MessagingOptions _options;
+        private readonly ControlOptions _branding;
 
-        public async Task SendEmailAsync(string email, string subject, string body)
+        public Task SendEmailAsync(string email, string subject, string body)
         {
-            await Task.Delay(0);
-            // Plug in your email service here to send an email.
             var message = new MimeMessage ();
-            message.From.Add (new MailboxAddress (_options.Site.Name, _options.Site.Email.Sender));
+            message.From.Add (new MailboxAddress (_branding.ApplicationName, _options.Email.Sender));
             message.To.Add (new MailboxAddress (email, email));
             message.Subject = subject;
 
@@ -48,16 +56,12 @@ namespace TopoMojo.Services
                     // For demo-purposes, accept all SSL certificates (in case the server supports STARTTLS)
                     //client.ServerCertificateValidationCallback = (s,c,h,e) => true;
 
-                    client.Connect(_options.Site.Email.Host, _options.Site.Email.Port); //, SecureSocketOptions.Auto);
-
-                    // Note: since we don't have an OAuth2 token, disable
-                    // the XOAUTH2 authentication mechanism.
+                    client.Connect(_options.Email.Host, _options.Email.Port); //, SecureSocketOptions.Auto);
                     client.AuthenticationMechanisms.Remove ("XOAUTH2");
 
-                    // Note: only needed if the SMTP server requires authentication
-                    if (_options.Site.Email.User.HasValue() && _options.Site.Email.Password.HasValue())
+                    if (_options.Email.User.HasValue() && _options.Email.Password.HasValue())
                     {
-                        client.Authenticate(_options.Site.Email.User, _options.Site.Email.Password);
+                        client.Authenticate(_options.Email.User, _options.Email.Password);
                     }
 
                     client.Send (message);
@@ -66,10 +70,10 @@ namespace TopoMojo.Services
                 }
                 catch
                 {
-                    _logger.LogError("Failed to send email host:{0}, address:{1}", _options.Site.Email.Host, email);
+                    _logger.LogError("Failed to send email host:{0}, address:{1}", _options.Email.Host, email);
                 }
             }
-            //return Task.FromResult(0);
+            return Task.FromResult(0);
         }
 
         public Task SendSmsAsync(string number, string message)

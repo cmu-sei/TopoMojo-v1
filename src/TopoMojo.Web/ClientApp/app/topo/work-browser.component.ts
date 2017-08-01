@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { TopoService } from './topo.service';
 
 @Component({
-    selector: 'topo-browser',
+    selector: 'workspace-browser',
     templateUrl: './work-browser.component.html',
     styleUrls: ['./work-browser.component.css']
 })

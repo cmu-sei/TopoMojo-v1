@@ -32,6 +32,10 @@ body {
     text-align: center;
     /*background-color: black;*/
 }
+.mock-console {
+    background-color: black;
+    color: skyblue;
+}
 
 #iso-upload-div {
     max-width: 325px;

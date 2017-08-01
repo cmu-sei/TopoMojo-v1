@@ -4,7 +4,6 @@ import { VmService } from '../vm/vm.service';
 //import { WMKS } from 'vmware-wmks/wmks.min';
 
 @Component({
-    //moduleId: module.id,
     selector: 'console',
     templateUrl: 'console.component.html',
     styleUrls: [ 'console.component.css' ]

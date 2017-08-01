@@ -9,6 +9,7 @@ using TopoMojo.Abstractions;
 using TopoMojo.Core.Data;
 using TopoMojo.Core.Entities;
 using TopoMojo.Core.Entities.Extensions;
+using TopoMojo.Extensions;
 using TopoMojo.Models;
 
 namespace TopoMojo.Core
@@ -28,7 +29,7 @@ namespace TopoMojo.Core
 
         private readonly IPodManager _pod;
 
-        public async Task<GamespaceSummary> Launch(int topoId)
+        public async Task<GameState> Launch(int topoId)
         {
             //check for active instance, return it
             Player[] gamespaces = await _db.Players
@@ -45,6 +46,9 @@ namespace TopoMojo.Core
             if (game == null && gamespaces.Length >= _options.ConcurrentInstanceMaximum)
                 throw new MaximumInstancesDeployedException();
 
+            string gameId = Guid.NewGuid().ToString();
+            Task<Vm[]> deploy = Deploy(topoId, gameId);
+
             if (game == null)
             {
                 Player player = new Player {
@@ -52,8 +56,9 @@ namespace TopoMojo.Core
                     Permission = Permission.Manager,
                     Gamespace = new Gamespace {
                         TopologyId = topoId,
-                        GlobalId = Guid.NewGuid().ToString(),
-                        WhenCreated = DateTime.UtcNow
+                        GlobalId = gameId,
+                        WhenCreated = DateTime.UtcNow,
+                        ShareCode = Guid.NewGuid().ToString()
                     }
                 };
                 _db.Players.Add(player);
@@ -61,23 +66,38 @@ namespace TopoMojo.Core
                 game = player.Gamespace;
             }
 
-            await _db.Entry(game).Reference(i => i.Topology).LoadAsync();
-            await _db.Entry(game.Topology).Collection(t => t.Linkers).LoadAsync();
-
-            GamespaceSummary summary = new GamespaceSummary
+            GameState state = new GameState
             {
                 Id = game.Id,
-                WhenCreated = game.WhenCreated.ToString(),
+                GlobalId = game.GlobalId,
                 Document = game.Topology.Document,
-                VmCount = game.Topology.Linkers.Count(),
-                Vms = await Deploy(topoId, game.GlobalId)
+                WhenCreated = game.WhenCreated.ToString(),
+                ShareCode = game.ShareCode
             };
 
-            return summary;
+            state.AddVms(game.Topology.Linkers);
+            Task.WaitAll(deploy);
+            state.AddVms(deploy.Result);
+
+            return state;
         }
 
-        public async Task<GamespaceSummary> Check(int topoId)
+        public async Task<GameState> Check(int topoId)
         {
+            Topology topo = await _db.Topologies
+                .Include(t => t.Linkers)
+                .Where(t => t.Id == topoId)
+                .SingleOrDefaultAsync();
+
+            if (topo == null)
+                throw new InvalidOperationException();
+
+            GameState state = new GameState
+            {
+                Document = topo.Document,
+            };
+            state.AddVms(topo.Linkers);
+
             //check for active instance, return it
             Gamespace game = await _db.Players
                 .Include(m => m.Gamespace)
@@ -85,38 +105,19 @@ namespace TopoMojo.Core
                 .Select(m => m.Gamespace)
                 .SingleOrDefaultAsync();
 
-            //if none, and at threshold, throw error
-            if (game == null)
+            if (game != null)
             {
-                Topology topo = await _db.Topologies
-                    .Include(t => t.Linkers)
-                    .Where(t => t.Id == topoId)
-                    .SingleOrDefaultAsync();
-
-                if (topo == null)
-                    throw new InvalidOperationException();
-
-                return new GamespaceSummary
-                {
-                    VmCount = topo.Linkers.Count(),
-                    Document = topo.Document
-                };
+                state.Id = game.Id;
+                state.GlobalId = game.GlobalId;
+                state.WhenCreated = game.WhenCreated.ToString();
+                state.ShareCode = game.ShareCode;
+                Vm[] vms = await _pod.Find(game.GlobalId);
+                state.AddVms(vms);
             }
 
-            await _db.Entry(game).Reference(i => i.Topology).LoadAsync();
-            await _db.Entry(game.Topology).Collection(t => t.Linkers).LoadAsync();
-
-            GamespaceSummary summary = new GamespaceSummary
-            {
-                Id = game.Id,
-                WhenCreated = game.WhenCreated.ToString(),
-                Document = game.Topology.Document,
-                Vms = await _pod.Find(game.GlobalId),
-                VmCount = game.Topology.Linkers.Count()
-            };
-
-            return summary;
+            return state;
         }
+
 
         private async Task<Vm[]> Deploy(int topoId, string tag)
         {
@@ -164,7 +165,7 @@ namespace TopoMojo.Core
         {
             Player player = await _db.Players
                 .Include(m => m.Gamespace)
-                .Where(m => m.GamespaceId == id)
+                .Where(m => m.GamespaceId == id && m.PersonId == _user.Id)
                 .SingleOrDefaultAsync();
 
             if (player == null || player.PersonId != _user.Id || !player.Permission.CanManage())
@@ -187,6 +188,22 @@ namespace TopoMojo.Core
                 .Include(m => m.Gamespace).ThenInclude(i => i.Topology)
                 .Where(m => m.PersonId == _user.Id)
                 .ToArrayAsync();
+        }
+
+        public async Task<Player[]> Players(int id)
+        {
+            Player[] players = await _db.Players
+                .Where(p => p.GamespaceId == id)
+                .ToArrayAsync();
+
+            Player player = players
+                .Where(p => p.PersonId == _user.Id)
+                .SingleOrDefault();
+
+            if (player == null)
+                throw new InvalidOperationException();
+
+            return players;
         }
 
         public async Task<string> Share(int id, bool revoke)

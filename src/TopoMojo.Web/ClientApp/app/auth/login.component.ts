@@ -36,7 +36,7 @@ export class LoginComponent implements OnInit {
     }
 
     oidcLogin() {
-        this.auth.initiateLogin(null);
+        this.auth.externalLogin(this.url);
     }
 
     onSubmit() {
@@ -65,7 +65,7 @@ export class LoginComponent implements OnInit {
             return;
         }
 
-        this.auth.confirm(this.username).subscribe(result => {
+        this.auth.sendAuthCode(this.username).subscribe(result => {
             this.infoMessage = "Code sent to " + this.username;
             this.codeSent = true;
         })

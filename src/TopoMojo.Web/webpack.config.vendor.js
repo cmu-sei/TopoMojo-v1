@@ -8,18 +8,27 @@ module.exports = (env) => {
     const extractCSS = new ExtractTextPlugin('[name].css');
     const isDevBuild = !(env && env.prod);
     const sharedConfig = {
-        stats: { modules: false },
-        resolve: {
-            extensions: [ '.js' ],
-            alias: {
-                "vmware-wmks$": path.resolve(
-                    __dirname, 'node_modules/vmware-wmks/wmks.min.js'
-                )
-            }
-        },
+        stats: { modules: true },
+        // resolve: {
+        //     extensions: [ '.js' ],
+        //     alias: {
+        //         "vmware-wmks$": path.resolve(
+        //             __dirname, 'node_modules/vmware-wmks/wmks.min.js'
+        //         )
+        //     }
+        //     // alias: {
+        //     //     "oidc-client$": path.resolve(
+        //     //         __dirname, 'node_modules/oidc-client/index.js'
+        //     //     )
+        //     // }
+        // },
         module: {
             rules: [
                 { test: /\.(png|eot|[ot]tf|woff|woff2|svg)(\?|$)/, use: 'file-loader' }
+
+            ],
+            loaders: [ //** THIS DOESN'T WORK :( -- using import in boot-client.ts */
+                //{ test: require.resolve("jquery"), loader: "expose-loader?jQuery!expose-loader?$" }
             ]
         },
         entry: {
@@ -39,8 +48,12 @@ module.exports = (env) => {
                 'es6-shim',
                 'event-source-polyfill',
                 'jquery',
+                //'jquery-ui-bundle',
+                'ng2-signalr',
                 'oidc-client',
                 'showdown',
+                'signalr',
+                //'vmware-wmks',
                 'zone.js',
             ]
         },
@@ -50,7 +63,7 @@ module.exports = (env) => {
             library: '[name]_[hash]'
         },
         plugins: [
-            new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
+            new webpack.ProvidePlugin({ jQuery: 'jquery', $: 'jquery', "jquery.js": 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
             new webpack.ContextReplacementPlugin(
                 /angular(\\|\/)core(\\|\/)@angular/,
                 path.resolve('./src'),
@@ -76,11 +89,11 @@ module.exports = (env) => {
             new webpack.optimize.UglifyJsPlugin({
                 compress: { warnings: false },
                 include: /\.js$/
-            }),
-            new OptimizeCssAssetsPlugin({
-                assetNameRegExp: /\.css$/,
-                cssProcessorOptions: { discardComments: { removeAll: true } }
-            })
+            })//,
+            // new OptimizeCssAssetsPlugin({
+            //     assetNameRegExp: /\.css$/,
+            //     cssProcessorOptions: { discardComments: { removeAll: true } }
+            // })
         ])
     });
 

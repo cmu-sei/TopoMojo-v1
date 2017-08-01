@@ -21,26 +21,26 @@ export class AuthTestComponent implements OnInit {
       });
   }
   clearState() {
-    this.authService.clearState();
+    //this.authService.clearState();
   }
   getUser() {
-    this.authService.getUser();
+    this.authService.init();
   }
   removeUser() {
-    this.authService.removeUser();
+    //this.authService.removeUser();
   }
   startSigninMainWindow() {
-    this.authService.initiateLogin('');
+    this.authService.externalLogin('');
   }
   endSigninMainWindow() {
-    this.authService.validateLogin('');
+    this.authService.externalLoginCallback('');
   }
   startSignoutMainWindow() {
-    this.authService.initiateLogout();
+    this.authService.logout();
   }
-  endSignoutMainWindow() {
-    this.authService.finalizeLogout();
-  }
+  // endSignoutMainWindow() {
+  //   this.authService.finalizeLogout();
+  // }
 
   ngOnDestroy(){
     if(this.loadedUserSub !== null){

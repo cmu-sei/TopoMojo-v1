@@ -16,19 +16,19 @@ namespace TopoMojo.Controllers
         public _Controller(IServiceProvider sp)
         {
             _logger = sp.GetService<ILoggerFactory>().CreateLogger(this.GetType());
-            _options = sp.GetService<IOptions<ApplicationOptions>>().Value;
+            _options = sp.GetService<IOptions<ControlOptions>>().Value;
             _profileResolver = sp.GetRequiredService<IProfileResolver>();
         }
 
         protected Profile _profile;
         protected readonly IProfileResolver _profileResolver;
         protected readonly ILogger _logger;
-        protected readonly ApplicationOptions _options;
+        protected readonly ControlOptions _options;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             _profile = _profileResolver.Profile;
-            ViewBag.AppName = _options.Site.Name;
+            ViewBag.AppName = _options.ApplicationName;
         }
 
         internal void Log(string action, dynamic item, string msg = "")

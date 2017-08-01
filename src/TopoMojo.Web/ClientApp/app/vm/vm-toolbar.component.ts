@@ -138,7 +138,7 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     display() {
-        this.service.display(this.vm.id);
+        this.service.display(this.vm.id, this.vm.name);
     }
 
     clearError() {

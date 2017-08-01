@@ -8,7 +8,7 @@
 <script src="~/dist/vendor.js" asp-append-version="true"></script>
 @section scripts {
     <script>
-        window['clientAuthenticationSettings'] = JSON.parse('@Html.Raw(ViewBag.UserManagerSettings)');
+        window['clientSettings'] = JSON.parse('@Html.Raw(ViewBag.ClientSettings)');
     </script>
     <script src="~/dist/main-client.js" asp-append-version="true"></script>
 }

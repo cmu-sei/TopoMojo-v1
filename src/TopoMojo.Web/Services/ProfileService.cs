@@ -3,7 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Step.Accounts;
+using Jam.Accounts;
 using TopoMojo.Core;
 using TopoMojo.Core.Entities;
 
@@ -43,8 +43,11 @@ namespace TopoMojo.Services
 
         public async Task<object> GetProfileAsync(string globalId)
         {
-            Profile person = await _profileManager.LoadByGlobalId(globalId);
-            return new { Name = person.Name };
+            Profile profile = await _profileManager.LoadByGlobalId(globalId);
+            return new {
+                Name = profile.Name,
+                IsAdmin = profile.IsAdmin
+            };
         }
 
         public async Task AddProfileAsync(string globalId, string name)

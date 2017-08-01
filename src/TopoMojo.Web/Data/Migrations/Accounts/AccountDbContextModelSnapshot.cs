@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Step.Accounts;
+using Jam.Accounts;
 
 namespace TopoMojo.Web.Data.Migrations.Accounts
 {
@@ -15,7 +15,7 @@ namespace TopoMojo.Web.Data.Migrations.Accounts
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2");
 
-            modelBuilder.Entity("Step.Accounts.Account", b =>
+            modelBuilder.Entity("Jam.Accounts.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -25,6 +25,8 @@ namespace TopoMojo.Web.Data.Migrations.Accounts
                     b.Property<string>("GlobalId");
 
                     b.Property<int>("LockedMinutes");
+
+                    b.Property<int>("RoleFlags");
 
                     b.Property<int>("Status");
 
@@ -47,7 +49,7 @@ namespace TopoMojo.Web.Data.Migrations.Accounts
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("Step.Accounts.AccountCode", b =>
+            modelBuilder.Entity("Jam.Accounts.AccountCode", b =>
                 {
                     b.Property<string>("Hash")
                         .ValueGeneratedOnAdd()
@@ -62,7 +64,7 @@ namespace TopoMojo.Web.Data.Migrations.Accounts
                     b.ToTable("AccountCodes");
                 });
 
-            modelBuilder.Entity("Step.Accounts.AccountToken", b =>
+            modelBuilder.Entity("Jam.Accounts.AccountToken", b =>
                 {
                     b.Property<string>("Hash")
                         .ValueGeneratedOnAdd()
@@ -81,23 +83,9 @@ namespace TopoMojo.Web.Data.Migrations.Accounts
                     b.ToTable("AccountTokens");
                 });
 
-            modelBuilder.Entity("Step.Accounts.ClientAccount", b =>
+            modelBuilder.Entity("Jam.Accounts.AccountToken", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int>("ClientId");
-
-                    b.Property<string>("UserGlobalId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ClientAccounts");
-                });
-
-            modelBuilder.Entity("Step.Accounts.AccountToken", b =>
-                {
-                    b.HasOne("Step.Accounts.Account", "User")
+                    b.HasOne("Jam.Accounts.Account", "User")
                         .WithMany("Tokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);

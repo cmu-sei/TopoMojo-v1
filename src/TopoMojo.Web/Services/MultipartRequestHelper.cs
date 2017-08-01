@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using Microsoft.Net.Http.Headers;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Services
 {
     public static class MultipartRequestHelper
     {

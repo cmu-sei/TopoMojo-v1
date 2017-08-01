@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
@@ -17,13 +18,15 @@ namespace TopoMojo.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]
-    public class TopologyController : _Controller
+    public class TopologyController : HubController<TopologyHub>
     {
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
             IHostingEnvironment env,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp,
+            IConnectionManager sigr
+        ) : base(sigr, sp)
         {
             _pod = podManager;
             _mgr = topologyManager;
@@ -45,7 +48,9 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<Topology> Update([FromBody]Topology topo)
         {
-            return await _mgr.Update(topo);
+            Topology t = await _mgr.Update(topo);
+            Clients.Group(topo.GlobalId).TopoUpdated(topo);
+            return t;
         }
 
         [HttpGet("{id}")]

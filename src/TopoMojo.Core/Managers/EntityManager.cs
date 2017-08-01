@@ -24,19 +24,15 @@ namespace TopoMojo.Core
         )
         {
             _db = db;
-            //_mill = mill;
             _logger = mill?.CreateLogger(this.GetType());
             _options = options;
             _profileResolver = profileResolver;
             LoadProfileAsync().Wait();
-            // if (_user != null && _user.Id > 0)
-            //     _db.Attach(_user);
         }
 
         protected readonly TopoMojoDbContext _db;
         protected Profile _user;
         protected readonly ILogger _logger;
-        //protected readonly ILoggerFactory _mill;
         protected readonly IProfileResolver _profileResolver;
         protected readonly CoreOptions _options;
         protected readonly IOptions<CoreOptions> _optAccessor;

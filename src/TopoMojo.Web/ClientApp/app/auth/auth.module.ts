@@ -10,9 +10,12 @@ import { AuthPendingComponent } from './auth-pending.component';
 import { AuthFailedComponent } from './auth-failed.component';
 import { AuthTestComponent } from './auth-test.component';
 import { LoginComponent } from './login.component';
+import { SettingsService } from './settings.service';
+import { AuthComponent } from './auth.component';
 
 @NgModule({
     declarations: [
+        AuthComponent,
         AuthPendingComponent,
         AuthFailedComponent,
         AuthTestComponent,
@@ -21,7 +24,8 @@ import { LoginComponent } from './login.component';
     providers: [
         AuthService,
         AuthGuardService,
-        AuthHttp
+        AuthHttp,
+        SettingsService
     ],
     exports: [
         HttpModule
@@ -31,10 +35,17 @@ import { LoginComponent } from './login.component';
         CommonModule,
         FormsModule,
         RouterModule.forChild([
-            { path: 'auth', component: AuthPendingComponent },
-            { path: 'nope', component: AuthFailedComponent },
-            { path: 'authtest', component: AuthTestComponent },
-            { path: 'login', component: LoginComponent }
+            {
+                path: 'auth',
+                component: AuthComponent,
+                children: [
+                    { path: 'nope', component: AuthFailedComponent },
+                    { path: 'test', component: AuthTestComponent },
+                    { path: 'login', component: LoginComponent },
+                    { path: 'oidc', component: AuthPendingComponent },
+                    { path: '', redirectTo: 'login', pathMatch: 'full'}
+                ]
+            }
         ])
     ]
 })

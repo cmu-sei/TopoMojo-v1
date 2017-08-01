@@ -1,8 +1,9 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopoService } from './topo.service';
 import 'rxjs/add/operator/switchMap';
 import { DOCUMENT } from "@angular/platform-browser";
+import { SignalR, BroadcastEventListener, SignalRConnection } from 'ng2-signalr';
 
 @Component({
     selector: 'topo-detail',
@@ -21,20 +22,35 @@ export class TopoDetailComponent {
     addIcon: string = 'fa fa-plus-circle';
     showing: string = "topo";
     host: string;
+    private connection: SignalRConnection;
 
     constructor(
         private service: TopoService,
         private route: ActivatedRoute,
         private router: Router,
         @Inject(DOCUMENT) private dom : Document
-    ) { }
+    ) {
+        this.connection = this.route.snapshot.data['connection'];
+    }
 
     ngOnInit(): void {
+        let onMessageSent$  = this.connection.listenFor('topoUpdated');
+        onMessageSent$.subscribe(msg => {
+            console.log(msg);
+        });
+
         this.route.params
             .switchMap((params: Params) => this.service.loadTopo(params['id']))
-            .subscribe(result => {
-                this.topo = result as any;
-            }, (err) => { this.service.onError(err); });
+            .subscribe(
+                (result) => {
+                    this.topo = result as any;
+                    console.log(this.topo);
+                    this.connection.invoke('Listen', result.globalId, "jam-token")
+                        .catch(reason => {
+                        console.log(reason);
+                    });
+                },
+                (err) => { this.service.onError(err); });
 
         this.route.params
             .switchMap((params: Params) => this.service.listTopoTemplates(params['id']))
@@ -45,6 +61,16 @@ export class TopoDetailComponent {
         this.service.ipCheck().subscribe(data => {
             console.log(data);
             this.host = data.host;
+        });
+    }
+
+    ngOnDestroy() {
+        this.connection.invoke('Leave', this.topo.globalId)
+        .then(result => {
+            this.connection.stop();
+        })
+        .catch(reason => {
+            console.log(reason);
         });
     }
 

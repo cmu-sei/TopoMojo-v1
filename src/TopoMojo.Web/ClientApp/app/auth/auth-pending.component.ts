@@ -23,9 +23,10 @@ export class AuthPendingComponent implements OnInit {
     }
 
     validate(frag) {
-        this.service.validateLogin(frag)
+        this.service.externalLoginCallback(frag)
         .then(user => {
-                this.router.navigate([user.state]);
+                console.log(user);
+                this.router.navigate([user.state || "/home"]);
             },
             err => { this.errorMessage = err }
         );

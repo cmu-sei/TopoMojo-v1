@@ -31,7 +31,7 @@ namespace TopoMojo.vSphere
             //_vlanMap = new BitArray(4096).Or(master);
 
             ResolveConfigMacros();
-            MonitorSession();
+            Task monitorTask = MonitorSession();
         }
 
         private readonly ILogger<VimHost> _logger;
@@ -490,7 +490,7 @@ namespace TopoMojo.vSphere
         public async Task DeleteDisk(string path)
         {
             await Connect();
-            _vim.DeleteVirtualDisk_TaskAsync(_vdm, path, null);
+            Task task = _vim.DeleteVirtualDisk_TaskAsync(_vdm, path, null);
         }
 
         public async Task<string[]> GetGuestIds(string term)

@@ -14,8 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Step.Accounts;
-using Step.Common;
+using Jam.Accounts;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Data;
@@ -23,6 +22,9 @@ using TopoMojo.Core.Entities;
 using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
+using TopoMojo.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Threading.Tasks;
 
 namespace TopoMojo
 {
@@ -33,54 +35,45 @@ namespace TopoMojo
             _rootPath = env.ContentRootPath;
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("appsettings-custom.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
+            DbOptions = Configuration.GetSection("Database").Get<DatabaseOptions>();
+            DbOptions.MigrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
         }
 
         public IConfigurationRoot Configuration { get; }
         public string _rootPath { get; set; }
+        public DatabaseOptions DbOptions { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddOptions()
-                .Configure<ApplicationOptions>(Configuration.GetSection("ApplicationOptions"))
-                .AddScoped(sp => sp.GetService<IOptionsSnapshot<ApplicationOptions>>().Value)
+                .Configure<ControlOptions>(Configuration.GetSection("Control"))
+                .AddScoped(sp => sp.GetService<IOptionsSnapshot<ControlOptions>>().Value)
 
-                .Configure<CoreOptions>(Configuration.GetSection("ApplicationOptions:Core"))
+                .Configure<CoreOptions>(Configuration.GetSection("Core"))
                 .AddScoped(sp => sp.GetService<IOptionsSnapshot<CoreOptions>>().Value)
 
-                .Configure<PodConfiguration>(Configuration.GetSection("ApplicationOptions:Pod"))
+                .Configure<PodConfiguration>(Configuration.GetSection("Pod"))
                 .AddScoped(sp => sp.GetService<IOptionsSnapshot<PodConfiguration>>().Value)
 
-                .Configure<ClientAuthenticationSettings>(Configuration.GetSection("ClientAuthenticationSettings"))
-                .AddScoped(sp => sp.GetService<IOptionsSnapshot<ClientAuthenticationSettings>>().Value)
+                .Configure<ClientSettings>(Configuration.GetSection("ClientSettings"))
+                .AddScoped(sp => sp.GetService<IOptionsSnapshot<ClientSettings>>().Value)
 
-                .Configure<BrandingOptions>(Configuration.GetSection("Branding"))
-                .AddScoped(sp => sp.GetService<IOptionsSnapshot<BrandingOptions>>().Value);
+                .Configure<MessagingOptions>(Configuration.GetSection("Messaging"))
+                .AddScoped(sp => sp.GetService<IOptionsSnapshot<MessagingOptions>>().Value)
+
+                .Configure<FileUploadOptions>(Configuration.GetSection("FileUpload"))
+                .AddScoped(sp => sp.GetService<IOptionsSnapshot<FileUploadOptions>>().Value);
 
             // add Account services
-            services.Configure<AccountOptions>(Configuration.GetSection("Account"))
-                .AddDbContext<AccountDbContext>(builder => builder.UseConfiguredDatabase(Configuration))
-                .AddScoped(sp => sp.GetService<IOptionsSnapshot<AccountOptions>>().Value)
-                .AddScoped<IAccountManager<Account>, AccountManager<Account>>();
+            services.AddJamAccounts()
+            .WithConfiguration(() => Configuration.GetSection("Account"), opt => opt.RootPath = _rootPath)
+            .WithDefaultRepository(builder => builder.UseConfiguredDatabase(DbOptions))
+            .WithProfileService(builder => builder.AddScoped<IProfileService, ProfileService>());
 
-            // add X509IssuerStore
-            services.Configure<X509IssuerStoreOptions>(options => { options.RootPath = _rootPath; })
-                .AddScoped(sp => sp.GetService<IOptions<X509IssuerStoreOptions>>().Value)
-                .AddSingleton<Step.Accounts.IX509IssuerStore, Step.Accounts.X509IssuerStore>();
-
-            // add TokenService
-            services.Configure<Step.Accounts.TokenOptions>(Configuration.GetSection("Account:Token"))
-                .AddScoped(sp => sp.GetService<IOptions<Step.Accounts.TokenOptions>>().Value)
-                .AddScoped<Step.Accounts.ITokenService, Step.Accounts.DefaultTokenService>();
-
-            // add ProfileResolver and ProfileService
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
-                .AddScoped<IProfileResolver, ProfileResolver>()
-                .AddScoped<IProfileService, ProfileService>();
 
             // Add framework services.
             services.AddMvc(options =>
@@ -93,23 +86,26 @@ namespace TopoMojo
             });
 
             // services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
-            services.AddDbContext<TopoMojoDbContext>(builder => builder.UseConfiguredDatabase(Configuration));
-
-            services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
-
+            services.AddDbContext<TopoMojoDbContext>(builder => builder.UseConfiguredDatabase(DbOptions));
             services.AddScoped<TopologyManager, TopologyManager>();
             services.AddScoped<TemplateManager, TemplateManager>();
             services.AddScoped<GamespaceManager, GamespaceManager>();
             services.AddScoped<ProfileManager, ProfileManager>();
 
-            string podManager = Configuration.GetSection("ApplicationOptions:Site:PodManagerType").Value ?? "";
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddScoped<IProfileResolver, ProfileResolver>();
+            services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            string podManager = Configuration.GetSection("Pod:Type").Value ?? "";
             if (podManager.ToLowerInvariant().Contains("vmock"))
                 services.AddSingleton<IPodManager, TopoMojo.vMock.PodManager>();
             else
                 services.AddSingleton<IPodManager, TopoMojo.vSphere.PodManager>();
 
+            services.AddSignalR(options =>
+                options.Hubs.EnableDetailedErrors = true);
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -141,7 +137,7 @@ namespace TopoMojo
                     {
                         string token = context.Request.QueryString.Value.Substring(1)
                             .Split('&')
-                            .SingleOrDefault(x => x.Contains("jwt"))?.Split('=')[1];
+                            .SingleOrDefault(x => x.Contains("bearer"))?.Split('=')[1];
                         if (!String.IsNullOrWhiteSpace(token))
                         {
                             context.Request.Headers.Add("Authorization", new[] {$"Bearer {token}"});
@@ -153,60 +149,49 @@ namespace TopoMojo
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationScheme = "Cookies"
-            });
-
             // handle IdentityServer bearer tokens
-            AuthorizationOptions authOptions = Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
+            IdentityServerAuthenticationOptions authOptions = Configuration.GetSection("OpenIdConnect").Get<IdentityServerAuthenticationOptions>();
+            authOptions.JwtBearerEvents = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = (context) => {
+                    Console.WriteLine(context.Exception.Message);
+                    context.SkipToNextMiddleware();
+                    return Task.FromResult(0);
+                }
+            };
+
             if (!String.IsNullOrWhiteSpace(authOptions.Authority))
             {
-                app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
-                {
-                    AuthenticationScheme = "oidc",
-                    SignInScheme = "Cookies",
-
-                    Authority = authOptions.Authority,
-                    RequireHttpsMetadata = authOptions.RequireHttpsMetadata,
-
-                    ClientId = authOptions.ClientId,
-                    ClientSecret = authOptions.ClientSecret,
-
-                    ResponseType = "code id_token",
-                    Scope = { authOptions.AuthorizationScope },
-
-                    GetClaimsFromUserInfoEndpoint = true,
-                    SaveTokens = true
-                });
-
-                app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-                {
-                    Authority = authOptions.Authority,
-                    AllowedScopes = { authOptions.AuthorizationScope },
-                    RequireHttpsMetadata = authOptions.RequireHttpsMetadata,
-
-                });
+                app.UseIdentityServerAuthentication(authOptions);
             }
 
             //handle local login bearer tokens
-            Models.IdentityOptions io = new Models.IdentityOptions();
-            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(io.Authentication.TokenKey));
+            AccountOptions accountOptions = app.ApplicationServices.GetService<AccountOptions>();
+            TokenOptions tokenOptions = accountOptions.Token;
+            //TokenOptions tokenOptions = Configuration.GetSection("Account:Token").Get<TokenOptions>();
+            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key));
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
+                AuthenticationScheme = tokenOptions.Scheme,
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     NameClaimType = "name",
                     RoleClaimType = "role",
                     IssuerSigningKey = signingKey,
-                    ValidIssuer = io.Authentication.TokenIssuer,
-                    ValidAudience = io.Authentication.TokenAudience
-                }
+                    ValidIssuer = tokenOptions.Issuer,
+                    ValidAudience = tokenOptions.Audience
+                },
+
             });
 
+            app.UseSignalR();
 
             app.UseMvc(routes =>
             {
+                routes.MapRoute(
+                    name:"console",
+                    template: "Console/{id}/{name?}");
+
                 routes.MapRoute(
                     name: "uploads",
                     template: "File/{action=Index}/{id}");
@@ -220,115 +205,14 @@ namespace TopoMojo
                     defaults: new { controller = "Home", action = "Index" });
             });
 
-            app.InitializeDatabase(Configuration, env.IsDevelopment());
+            app.InitializeDatabase(
+                DbOptions,
+                env.IsDevelopment()
+            );
 
-            // if (env.IsDevelopment())
-            // {
-            //     bool recreate = Convert.ToBoolean(Configuration["Database:DevModeRecreate"]);
-            //     app.InitializeDatabase(Convert.ToBoolean(Configuration["Database:AutoMigrate"]), recreate);
-            // }
-            // else
-            // {
-            //     app.InitializeDatabase(Convert.ToBoolean(Configuration["Database:AutoMigrate"]), false);
-            // }
         }
     }
 
-    public static class DatabaseStartupExtensions
-    {
-        public static DbContextOptionsBuilder UseConfiguredDatabase(
-            this DbContextOptionsBuilder builder,
-            IConfigurationRoot config
-        )
-        {
-            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-            string dbProvider = config["Database:Provider"];
-            var connectionString = config.GetConnectionString(dbProvider);
 
-            switch (dbProvider)
-            {
-                case "Sqlite":
-                builder.UseSqlite(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
-                break;
-
-                case "SqlServer":
-                builder.UseSqlServer(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
-                break;
-            }
-            return builder;
-        }
-
-        // public static void InitializeDatabase(this IApplicationBuilder app, bool autoMigrate, bool recreate)
-        // {
-        public static IApplicationBuilder InitializeDatabase(this IApplicationBuilder app, IConfigurationRoot config, bool isDevelopment)
-        {
-            using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
-            {
-                DatabaseOptions options = config.GetSection("Database").Get<DatabaseOptions>();
-                TopoMojoDbContext db = scope.ServiceProvider.GetRequiredService<TopoMojoDbContext>();
-                AccountDbContext accountsDb = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
-                if (isDevelopment && options.DevModeRecreate)
-                    db.Database.EnsureDeleted();
-
-                db.Database.Migrate();
-                accountsDb.Database.Migrate();
-                //Account user = mgr.FindByGuidAsync("9fd3c38e-58b0-4af1-80d1-1895af91f1f9").Result;
-
-                string guid = Guid.NewGuid().ToString();
-                if (!accountsDb.Accounts.Any())
-                {
-                    IAccountManager<Account> mgr = new AccountManager(
-                        accountsDb,
-                        new AccountOptions(),
-                        app.ApplicationServices.GetRequiredService<ILoggerFactory>(),
-                        null, null, null);
-                        //app.ApplicationServices.GetRequiredService<IAccountManager<Account>>();
-                    mgr.RegisterWithCredentialsAsync(
-                        new Credentials {
-                            Username = "admin@this.ws",
-                            Password = "321ChangeMe!"
-                        }, guid).Wait();
-                }
-
-                if (!db.Profiles.Any())
-                {
-                    db.Profiles.Add(new Profile {
-                        GlobalId = guid,
-                        Name = "Administrator",
-                        WhenCreated = DateTime.UtcNow,
-                        IsAdmin = true
-                    });
-                    db.SaveChanges();
-                }
-            }
-
-            return app;
-
-            // ApplicationDbContext appdb = app.ApplicationServices.GetService<ApplicationDbContext>();
-            // if (appdb != null)
-            // {
-            //     if (recreate)
-            //         appdb.Database.EnsureDeleted();
-
-            //     appdb.Database.EnsureCreated();
-            //     if (!appdb.Users.Any() && admin != null)
-            //     {
-            //         UserManager<ApplicationUser> mgr = app.ApplicationServices.GetRequiredService<UserManager<ApplicationUser>>();
-
-            //         string email = "admin@this.ws";
-            //         ApplicationUser user = new ApplicationUser {
-            //             Id = admin.GlobalId,
-            //             UserName = email,
-            //             Email = email,
-            //             EmailConfirmed = true,
-            //             IsAdmin = true,
-            //             PersonId = admin.Id
-            //         };
-            //         var result = mgr.CreateAsync(user, "321ChangeMe!").Result;
-
-            //     }
-            // }
-        }
-    }
 
 }

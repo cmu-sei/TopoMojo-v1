@@ -4,19 +4,24 @@ import { AuthGuardService } from '../auth/auth-guard.service';
 import { TopoComponent } from './topo.component';
 import { TopoBrowserComponent } from './topo-browser.component';
 import { WorkBrowserComponent } from './work-browser.component';
-import { TopoLaunchComponent } from './topo-launch.component';
 import { TopoDetailComponent } from './topo-detail.component';
 import { TopoCreatorComponent } from './topo-creator.component';
 import { TopoMembersComponent } from './topo-members.component';
 import { TemplateEditorComponent} from './template-editor.component';
-import { GamespaceComponent } from './gamespace.component';
 import { TopoEnlistComponent } from './enlist.component';
+import { ConnectionResolver } from '../shared/connection.resolver';
 
 const routes: Routes = [
     {
         path: 'browse',
-        component: TopoBrowserComponent,
-        canActivate: [AuthGuardService]
+        component: TopoComponent,
+        canActivate: [AuthGuardService],
+        children: [
+            {
+                path: '',
+                component: TopoBrowserComponent
+            }
+        ]
     },
     {
         path: 'topo',
@@ -25,26 +30,14 @@ const routes: Routes = [
         children: [
             {
                 path: '',
-                canActivateChild: [ AuthGuardService ],
+                //canActivateChild: [ AuthGuardService ],
                 children: [
-                    { path: ':id', component: TopoDetailComponent },
+                    {
+                        path: ':id',
+                        component: TopoDetailComponent,
+                        resolve: { connection: ConnectionResolver }
+                     },
                     { path: '', component: WorkBrowserComponent },
-                    // { path: '', component: TopoBrowserComponent }
-                ]
-            }
-        ]
-    },
-    {
-        path: 'mojo',
-        component: TopoComponent,
-        canActivate: [AuthGuardService],
-        children: [
-            {
-                path: '',
-                canActivateChild: [ AuthGuardService ],
-                children: [
-                    { path: ':id', component: TopoLaunchComponent },
-                    { path: '', component: GamespaceComponent }
                 ]
             }
         ]
@@ -56,7 +49,7 @@ const routes: Routes = [
         children: [
             {
                 path: '',
-                canActivateChild: [ AuthGuardService ],
+                //canActivateChild: [ AuthGuardService ],
                 children: [
                     { path: ':code', component: TopoEnlistComponent },
                     { path: '', component: TopoComponent }
@@ -74,13 +67,11 @@ export class TopoRoutingModule {
     static components = [
         TopoComponent,
         TopoBrowserComponent,
-        TopoLaunchComponent,
         TopoDetailComponent,
         TopoCreatorComponent,
         TopoMembersComponent,
         TemplateEditorComponent,
         WorkBrowserComponent,
-        GamespaceComponent,
         TopoEnlistComponent
      ]
 }

@@ -15,11 +15,11 @@ const routes: Routes = [
         children: [
             {
                 path: '',
-                canActivateChild: [ AdminGuard, AuthGuardService ],
+                //canActivateChild: [ AdminGuard, AuthGuardService ],
                 children: [
                     { path: 'templates', component: TemplateManagerComponent },
                     { path: 'users', component: UserManagerComponent },
-                    { path: '', component: AdminHomeComponent }
+                    //{ path: '', component: AdminComponent }
                 ]
             }
         ]

@@ -2,184 +2,149 @@ import { Injectable } from '@angular/core';
 import { Http, Headers, RequestOptions, Response } from '@angular/http';
 import { UserManager, UserManagerSettings, WebStorageStateStore, Log, MetadataService, User } from 'oidc-client';
 import { Observable, Subject } from 'rxjs/Rx';
+import { LocalUserService } from './localuser.service';
+import { SettingsService } from './settings.service';
 
 @Injectable()
 export class AuthService {
     mgr: UserManager;
+    localmgr: LocalUserService;
     currentUser: User;
     loggedIn: boolean = false;
-    private userSource: Subject<User> = new Subject<User>();
-    public user$: Observable<User> = this.userSource.asObservable();
     apiUrl : string;
     allowExternalLogin: boolean;
     redirectUrl: string;
-    storageKey: string = "local-auth-user";
+    private userSource: Subject<User> = new Subject<User>();
+    public user$: Observable<User> = this.userSource.asObservable();
+    private tokenStatus: Subject<string> = new Subject<string>();
+    tokenStatus$: Observable<string> = this.tokenStatus.asObservable();
+    lastCall : number;
 
     constructor(
-        private http: Http
+        private http: Http,
+        private settings: SettingsService
     ) {
-        Log.level = Log.DEBUG;
-        Log.logger = console;
-        this.apiUrl = window['clientAuthenticationSettings']['apiUrl'];
-        this.allowExternalLogin = window['clientAuthenticationSettings']['authority'] != '';
+        // Log.level = Log.DEBUG;
+        // Log.logger = console;
+        this.apiUrl = this.settings.urls.apiUrl;
+        this.allowExternalLogin = this.settings.oidc.authority != '';
 
-        this.mgr = new UserManager(window['clientAuthenticationSettings']);
-        this.mgr.events.addUserUnloaded(user => {
-            console.log('authService: user unloaded');
-            this.loadUser(user);
-        });
+        this.mgr = new UserManager(this.settings.oidc);
+        this.mgr.events.addUserLoaded(user => { this.onTokenLoaded(user); });
+        this.mgr.events.addUserUnloaded(user => { this.onTokenUnloaded(user); });
+        this.mgr.events.addAccessTokenExpiring(e => { this.onTokenExpiring(e); });
+        this.mgr.events.addAccessTokenExpired(e => { this.onTokenExpired(e); });
 
-        this.mgr.events.addUserLoaded(user => {
-            console.log('authService: user loaded');
-            this.loadUser(user);
-        });
+        this.localmgr = new LocalUserService();
+        this.localmgr.events.addTokenLoaded(user => { this.onTokenLoaded(user); });
+        this.localmgr.events.addTokenUnloaded(user => { this.onTokenUnloaded(user); });
+        this.localmgr.events.addTokenExpiring(e => { this.onTokenExpiring(e); });
+        this.localmgr.events.addTokenExpired(e => { this.onTokenExpired(e); });
 
-        this.mgr.events.addUserSignedOut(e => {
-            console.log('authService: user signed out');
-            this.removeUser();
-            this.loadUser(null);
-        });
-
-        this.mgr.events.addAccessTokenExpiring(e => {
-            //this.loadUser(null);
-            console.log('authService: access token expiring...');
-        });
-
-        this.mgr.events.addAccessTokenExpired(user => {
-            console.log('authService: access token expired');
-            this.removeUser();
-            this.loadUser(null);
-            this.clearState();
-        });
+        this.init();
     }
 
     init() {
-        this.getUser();
+        this.localmgr.init();
+        this.mgr.getUser().then(user => {
+            if (user) this.onTokenLoaded(user);
+        })
     }
 
     isAuthenticated() : Promise<boolean> {
-        if (this.currentUser) {
-            return Promise.resolve(true);
-        }
-
-        return Promise.resolve(this.getUser())
-            .then(user => {
-                return (this.currentUser != null);
-            });
+        return Promise.resolve(!!this.currentUser);
     }
 
-    loadUser(user) {
+    markAction() {
+        this.lastCall = Date.now();
+    }
+
+    private onTokenLoaded(user) {
+        this.currentUser = user;
         this.loggedIn = (user !== null);
-        console.log("loadUser() = " + this.loggedIn);
+        this.userSource.next(user);
+        this.tokenStatus.next("valid");
+    }
+
+    private onTokenUnloaded(user) {
         this.currentUser = user;
         this.userSource.next(user);
+        this.tokenStatus.next("invalid");
     }
 
-    clearState() {
-        this.mgr.clearStaleState().then(function () {
-            console.log("clearStateState success");
-        }).catch(function (e) {
-            console.log("clearStateState error", e.message);
-        });
+    private onTokenExpiring(e) {
+        if (Date.now() - this.lastCall < 15000)
+            this.refreshToken();
+        else
+            this.tokenStatus.next("expiring");
     }
 
-    getUser() : Promise<User> {
-        return this.mgr.getUser().then((user) => {
-            // if no external user, check for local user
-            if (!user)
-                user = JSON.parse(localStorage.getItem(this.storageKey));
-
-            this.loadUser(user);
-            return user;
-        }).catch(function (err) {
-            console.log(err);
-        });
-    }
-
-    removeUser() {
-        this.mgr.removeUser().then(() => {
-            localStorage.removeItem(this.storageKey);
-            console.log("user removed");
-        }).catch(function (err) {
-            console.log(err);
-        });
+    private onTokenExpired(e) {
+        this.tokenStatus.next("expired");
+        if (this.localmgr.getToken())
+            this.localmgr.removeUser();
+        else
+            this.mgr.removeUser();
     }
 
     localLogin(type, creds) {
         return this.http.post('/api/account/' + type, creds)
         .toPromise().then(response => {
             let user = response.json();
-            // this.mgr.signinLocal(user).then(user => {
-            //     console.log(user);
-            //     this.loadUser(user);
-            //     return user;
-            // });
-            localStorage.setItem(this.storageKey, JSON.stringify(user));
+            this.localmgr.addUser(user);
             return response;
         });
     }
 
-    logout() {
-        localStorage.removeItem(this.storageKey);
-        this.getUser().then(user => {
-            if (user)
-                this.initiateLogout();
-        });
-    }
-
-    confirm(u : string) {
-        return this.http.post('/api/account/confirm', { username: u });
-    }
-
-    initiateLogin(url) {
+    externalLogin(url) {
         this.mgr.signinRedirect({ state: url }).then(function () {
-            console.log("signinRedirect done");
+            //console.log("signinRedirect done");
         }).catch(function (err) {
             console.log(err);
         });
     }
 
-    validateLogin(url) : Promise<User> {
+    externalLoginCallback(url) : Promise<User> {
         return this.mgr.signinRedirectCallback(url);
     }
 
-    initiateLogout() {
-        this.mgr.signoutRedirect().then(function (resp) {
-            console.log("signed out", resp);
-            setTimeout(5000, () => {
-                console.log("testing to see if fired...");
-            })
-        }).catch(function (err) {
-            console.log(err);
-        });
-    };
+    logout() {
+        if (this.currentUser) {
 
-    finalizeLogout() {
-        this.mgr.signoutRedirectCallback().then(function (resp) {
-            console.log("signed out", resp);
-        }).catch(function (err) {
-            console.log(err);
-        });
-    };
+            if (this.localmgr.getToken()) {
+                this.localmgr.removeUser();
+            }
+            else {
+                this.mgr.signoutRedirect().then(resp => {
+                    console.log("initiated external logout");
+                }).catch(err => {
+                    console.log(err.text());
+                });
+            }
+        }
+    }
 
-    //todo: implement this!
+    sendAuthCode(u : string) {
+        return this.http.post('/api/account/confirm', { username: u });
+    }
+
+    refreshToken() {
+        if (this.localmgr.getToken()) {
+            let opts : RequestOptions = new RequestOptions();
+            opts.headers = new Headers();
+            opts.headers.set("Authorization", "Bearer " + this.currentUser.access_token);
+            this.http.get('/api/account/refresh', opts).subscribe(result => {
+                this.localmgr.addUser(result.json());
+            });
+        } else {
+            this.mgr.signinSilent().then(() => {
+
+            });
+        }
+
+    }
+
     isAdmin() {
-        console.log(this.currentUser);
-        return true || (this.currentUser && this.currentUser.profile.isAdmin);
+        return (this.currentUser && this.currentUser.profile.isAdmin);
     }
 }
-
-// const settings: UserManagerSettings = {
-//     authority: 'http://localhost:5000',
-//     client_id: 'sketch-browser',
-//     redirect_uri: 'http://localhost:5002/auth',
-//     post_logout_redirect_uri: 'http://localhost:5002',
-//     response_type: 'id_token token',
-//     scope: 'openid profile sketch-api',
-//     automaticSilentRenew: false,
-//     silent_redirect_uri: 'http://localhost:5000',
-//     //silentRequestTimeout:10000,
-//     filterProtocolClaims: true,
-//     loadUserInfo: true
-//     //userStore: new WebStorageStateStore({})
-// };

@@ -204,12 +204,12 @@ namespace TopoMojo.vMock
             if (progress < 0)
             {
                 Disk disk = template.Disks.First();
-                if (!_tasks.ContainsKey(key))
-                    _tasks.Add(key, new VmTask {
-                        Name = "initializing",
-                        WhenCreated = DateTime.UtcNow,
-                        Id = key
-                    });
+                // if (!_tasks.ContainsKey(key))
+                //     _tasks.Add(key, new VmTask {
+                //         Name = "initializing",
+                //         WhenCreated = DateTime.UtcNow,
+                //         Id = key
+                //     });
                 _logger.LogDebug("disk: creating " + disk.Path);
                 _disks.Add(new MockDisk
                 {
@@ -251,11 +251,20 @@ namespace TopoMojo.vMock
                         return 100;
 
                 MockDisk mock = _disks.FirstOrDefault(o=>o.Path == disk.Path);
-                if (mock != null)
-                {
-                    float elapsed = (int)DateTime.Now.Subtract(mock.CreatedAt).TotalSeconds;
-                    progress = (int) Math.Min(100, (elapsed / 10) * 100);
+                if (mock == null)
+                {    _disks.Add(new MockDisk
+                    {
+                        CreatedAt = DateTime.Now,
+                        Path = disk.Path,
+                        Disk = disk
+                    });
                 }
+                progress = 100;
+                // if (mock != null)
+                // {
+                //     float elapsed = (int)DateTime.Now.Subtract(mock.CreatedAt).TotalSeconds;
+                //     progress = (int) Math.Min(100, (elapsed / 10) * 100);
+                // }
             }
             return progress;
         }
@@ -289,7 +298,8 @@ namespace TopoMojo.vMock
                 Id = id,
                 Method = _optPod.DisplayMethod,
                 Url = _optPod.DisplayUrl,
-                Name = _vms[id].Name.Untagged()
+                Name = _vms[id].Name.Untagged(),
+                TopoId = _vms[id].Name.Tag()
             };
         }
 

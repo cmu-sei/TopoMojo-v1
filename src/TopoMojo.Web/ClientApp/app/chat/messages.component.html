@@ -1,0 +1,39 @@
+    <div class="presence-div">
+        <ul class="list-inline">
+            <li>
+                <button (click)="pasteUrl()" class="btn btn-default btn-sm" tooltip="copy share-url to clipboard">
+                    <i class="fa fa-clipboard"></i>
+                </button>
+            </li>
+            <li *ngFor="let member of members">
+                <span
+                    class="label label-default"
+                    [class.label-success]="member.online"
+                >{{member.name}}</span>
+            </li>
+        </ul>
+    </div>
+
+     <div class="messages-div" #scrollMe (scroll)="onScroll()">
+        <chat-message
+            *ngFor="let message of messages"
+            [message]="message">
+        </chat-message>
+    </div>
+
+    <div class="footer">
+        <textarea
+        [(ngModel)]="newMessage"
+        (keyup)="typing()"
+        (keyup.enter)="submitMessage()"
+        class="form-control"
+        placeholder="Write a note..."
+        resize="none"></textarea>
+
+        <div *ngIf="typers">
+            <i class="fa fa-keyboard-o"></i>
+            <span *ngIf="typers">{{typers}} is typing...</span>
+        </div>
+    </div>
+
+    <textarea id="clipboardText" class="offscreen"></textarea>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
@@ -15,12 +16,14 @@ namespace TopoMojo.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]
-    public class InstanceController : _Controller
+    public class InstanceController : HubController<TopologyHub>
     {
         public InstanceController(
             GamespaceManager instanceManager,
             IPodManager podManager,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp,
+            IConnectionManager sigr
+        ) : base(sigr, sp)
         {
             _pod = podManager;
             _mgr = instanceManager;
@@ -29,16 +32,17 @@ namespace TopoMojo.Controllers
         private readonly IPodManager _pod;
         private readonly GamespaceManager _mgr;
 
+
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilter]
-        public async Task<GamespaceSummary> Launch([FromRoute]int id)
+        public async Task<GameState> Launch([FromRoute]int id)
         {
             return await _mgr.Launch(id);
         }
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilter]
-        public async Task<GamespaceSummary> Check([FromRoute]int id)
+        public async Task<GameState> Check([FromRoute]int id)
         {
             return await _mgr.Check(id);
         }
@@ -62,6 +66,13 @@ namespace TopoMojo.Controllers
         public async Task<Player[]> Active()
         {
             return await _mgr.Gamespaces();
+        }
+
+        [HttpGetAttribute("{code}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Enlist([FromRoute] string code)
+        {
+            return await _mgr.Enlist(code);
         }
 
     }

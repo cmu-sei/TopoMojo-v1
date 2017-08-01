@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
+using TopoMojo.Core.Entities;
 
 namespace Tests
 {

@@ -1,46 +1,11 @@
-<!--<span>{{(profile) ? profile.name : "anonymous"}}</span>-->
-<div class="text-center">
-            <h2>TopoMojo</h2>
-    <!--<ul class='list-inline'>
-        <li *ngIf="profile">-->
-            <ul *ngIf="profile" class="list-inline">
-                <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/browse']" [routerLinkActive]="['link-active']" tooltip="browse">
-                        <span class='fa fa-list fa-2x'></span>
-                        <!--Browse-->
-                    </a>
-                </li>
-                <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/topo']" [routerLinkActive]="['link-active']" tooltip="workspace">
-                        <span class='fa fa-wrench fa-2x'></span>
-                        <!--Workspace-->
-                    </a>
-                </li>
-                <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/mojo']" [routerLinkActive]="['link-active']" tooltip="gamespace">
-                        <span class='fa fa-flash fa-2x'></span>
-                        <!--Gamespace-->
-                    </a>
-                </li>
-                <li *ngIf="profile.isAdmin || true" [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/admin']" [routerLinkActive]="['link-active']" tooltip="admin">
-                        <span class='fa fa-cog fa-2x'></span>
-                        <!--Admin-->
-                    </a>
-                </li>
-                <li>
-                    <a (click)="logout()" tooltip="logout">
-                        <span class='fa fa-lock fa-2x'></span>
-                        <!--Logout-->
-                    </a>
-                </li>
-            </ul>
-        <!--</li>
-    </ul>-->
-</div>
+<!-- <h4>App Module</h4> -->
+<navbar [layout]="layout"></navbar>
 
-<div class='container main-container'>
-    <!--<div class='row'>-->
-        <router-outlet></router-outlet>
-    <!--</div>-->
+<router-outlet></router-outlet>
+
+<div *ngIf="showExpiring" class="overlay">
+    <div class="row col-xs-4 col-xs-offset-4 well vcenter">
+        <h1>Still here?</h1>
+        <button class="btn btn-default btn-lg" (click)="continue()">Continue</button>
+    </div>
 </div>

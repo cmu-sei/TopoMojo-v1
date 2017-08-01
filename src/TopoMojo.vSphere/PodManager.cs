@@ -215,7 +215,7 @@ namespace TopoMojo.vSphere
             if (progress < 0)
             {
                 VimHost host = FindHostByRandom();
-                host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
+                Task cloneTask = host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
                 progress = 0;
             }
             return progress;
@@ -232,7 +232,9 @@ namespace TopoMojo.vSphere
                     //protect stock disks; only delete a disk if it is local to the topology
                     //i.e. the disk folder matches the topologyId
                     if (template.IsolationTag.HasValue() && disk.Path.Contains(template.IsolationTag))
-                        host.DeleteDisk(disk.Path);
+                    {
+                        Task deleteTask = host.DeleteDisk(disk.Path);
+                    }
                 }
                 return -1;
             }
@@ -261,6 +263,7 @@ namespace TopoMojo.vSphere
                 {
                     Id = id,
                     Name = vm.Name.Untagged(),
+                    TopoId = vm.Name.Tag(),
                     Method = _options.DisplayMethod,
                     Url = _options.DisplayUrl.Replace("{host}", h[0]) + ticket,
                     Conditions = conditions

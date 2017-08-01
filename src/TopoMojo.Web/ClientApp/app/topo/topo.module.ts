@@ -7,7 +7,13 @@ import { DocumentModule } from '../document/document.module';
 import { ProfileModule } from '../profile/profile.module';
 
 @NgModule({
-    imports: [ SharedModule, VmModule, TopoRoutingModule, DocumentModule, ProfileModule ],
+    imports: [
+        SharedModule,
+        VmModule,
+        TopoRoutingModule,
+        DocumentModule,
+        ProfileModule
+    ],
     declarations: [ TopoRoutingModule.components ],
     providers: [ TopoService ]
 })

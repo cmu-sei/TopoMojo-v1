@@ -13,10 +13,10 @@ namespace TopoMojo.Web
         private class JsonExceptionFilter : IExceptionFilter
         {
             private readonly IHostingEnvironment _hostingEnvironment;
-            private readonly ApplicationOptions _options;
+            private readonly ControlOptions _options;
             public JsonExceptionFilter(
                 IHostingEnvironment hostingEnvironment,
-                IOptions<ApplicationOptions> optionsAccessor)
+                IOptions<ControlOptions> optionsAccessor)
             {
                 _hostingEnvironment = hostingEnvironment;
                 _options = optionsAccessor.Value;
@@ -25,7 +25,7 @@ namespace TopoMojo.Web
             public void OnException(ExceptionContext context)
             {
                 JsonResult result = null;
-                if (_hostingEnvironment.IsDevelopment() || _options.Site.ShowExceptionDetail)
+                if (_hostingEnvironment.IsDevelopment() || _options.ShowExceptionDetail)
                 {
                     result = new JsonResult(context.Exception);
                 }

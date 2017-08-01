@@ -10,7 +10,7 @@ import { Collapser } from './collapser.component';
 import { InlineHelpComponent } from './inline-help.component';
 import { UntaggedStringPipe } from './pipes';
 import { ConfirmDeleteComponent } from './confirm-delete.component';
-
+import { ConnectionResolver } from './connection.resolver';
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
 
@@ -43,6 +43,9 @@ export * from "./tooltip.component";
         Collapser,
         UntaggedStringPipe,
         ConfirmDeleteComponent
+    ],
+    providers: [
+        ConnectionResolver
     ],
     entryComponents: [
         TooltipContent
