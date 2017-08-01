@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router , ActivatedRoute, Params} from '@angular/router';
-import { AuthService } from './auth.service';
+import { CoreAuthService } from './auth.service';
 import 'rxjs/add/operator/switchMap';
 
 @Component({
@@ -16,7 +16,7 @@ export class ProfileEditorComponent implements OnInit {
     errorMessage : string;
 
     constructor(
-        private service : AuthService,
+        private service : CoreAuthService,
         private router: Router,
         private route: ActivatedRoute
         ) { }

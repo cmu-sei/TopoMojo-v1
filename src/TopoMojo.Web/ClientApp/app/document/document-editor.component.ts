@@ -12,7 +12,33 @@ export class DocumentEditorComponent implements OnInit {
 
     @Input()
     id : any;
-    markdown: string = "# Title";
+    markdown: string = `
+# Title
+#### Subtitle
+
+This is an introductory paragraph.
+*Probably* important!
+
+0. Do some task.
+0. Do another task.
+
+> Block quote formatting
+
+Inline \`code formatting\` example.
+
+    prompt> cat hello world | base64 > encoded.txt
+
+or
+\`\`\`
+main() : void {
+    console.log("hello, world");
+}
+\`\`\`
+
+Normal markdown image linking works using \`![caption](url)\`.
+If you need to store graphics, use the image manager to upload,
+then paste in the MD text.
+    `
     rendered : string;
     private converter : Converter;
     dirty : boolean;

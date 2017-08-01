@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.6</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>Step.Accounts</AssemblyName>
+    <PackageId>Step.Accounts</PackageId>
+    <PackageTargetFallback>$(PackageTargetFallback);dotnet5.6</PackageTargetFallback>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.*" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.*" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.*" />
+    <PackageReference Include="System.Security.Claims" Version="4.3.*" />
+  </ItemGroup>
+
+</Project>

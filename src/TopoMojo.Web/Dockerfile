@@ -1,16 +1,14 @@
-FROM microsoft/dotnet:1.1.0-sdk-projectjson
-
-RUN apt-get update
-RUN wget -qO- https://deb.nodesource.com/setup_6.x | bash -
-RUN apt-get install -y build-essential nodejs
+FROM microsoft/aspnetcore-build:1.1.2
 
 COPY . /app
 
 WORKDIR /app
 
-RUN ["dotnet", "restore"]
-RUN ["dotnet", "build"]
+RUN dotnet restore && \
+    dotnet build && \
+    dotnet msbuild TopoMojo.Web.csproj /t:WebpackDev
 
-EXPOSE 5000/tcp
+EXPOSE 5004/tcp
 
-CMD ["dotnet", "run", "--server.urls", "http://*:5000"]
+CMD ["dotnet", "run", "--urls", "http://*:5004", "--environment", "development"]
+

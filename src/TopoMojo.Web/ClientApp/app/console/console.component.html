@@ -1,0 +1,74 @@
+<div id="console-canvas-div" style="position:absolute;width:100%;height:100%">
+    <div id="console-admin-div">
+        <button (click)="toggleTools()" class="btn btn-default" [class.hidden]="false">
+            <i class="fa fa-gear"></i>
+        </button>
+        <div [class.hidden]="!showTools">
+            <ul *ngIf="!wmks" class="list-unstyled">
+                <li><button (click)="wmks.sendCAD()" class="btn btn-link tool">
+                    <i class="fa fa-keyboard-o"></i> Ctrl-Alt-Del</button></li>
+                <li><button (click)="wmks.showKeyboard()" class="btn btn-link tool">
+                    <i class="fa fa-keyboard-o"></i> Keyboard</button></li>
+                <!--<li><button (click)="wmks.toggleExtendedKeypad" class="btn btn-link tool">
+                    <i class="glyphicon glyphicon-text"></i> Keypad</button></li>
+                <li><button (click)="wmks.toggleTrackpad()" class="btn btn-link tool">
+                    <i class="glyphicon glyphicon-text"></i> Trackpad</button></li>-->
+                <li><button (click)="tryFullScreen()" class="btn btn-link tool">
+                    <i class="glyphicon glyphicon-fullscreen"></i> Fullscreen</button></li>
+                <li><button (click)="tryScaling()" class="btn btn-link tool">
+                    <i class="glyphicon glyphicon-resize-full"></i> Fit</button></li>
+                <li>
+                    <button (click)="toggleNets()" class="btn btn-link tool">
+                        <i class="glyphicon glyphicon-random"></i> Change network</button>
+                    <ul class="list-unstyled">
+                        <li *ngFor="let net of networks"
+                            ><button class="btn btn-link">{{ net }}</button>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="list-unstyled">
+                <li>
+                    <button name="iso" class="btn btn-link tool"><i class="glyphicon glyphicon-cd"></i> Change ISO</button>
+                    <ul class="list-unstyled hidden">
+                        <li><button class="btn btn-link">loading...</button></li>
+                    </ul>
+                </li>
+            </ul>
+            <div>
+                <button name="upload" class="btn btn-link tool"><i class="glyphicon glyphicon-cd"></i> Upload ISO</button>
+                <div id="iso-upload-div" class="row hidden indent">
+                    <div class="radio">
+                        <label><input type="radio" class="radio" name="uploadDest" value="public" checked> Public (available to everyone)</label>
+                    </div>
+                    <div class="radio">
+                        <label><input type="radio" class="radio" name="uploadDest" value="temp"> Temp (availabe to topo vm's)</label>
+                    </div>
+                    <div class="col-md-11 input-group">
+                        <input id="iso-upload-input" type="file" name="file" class="form-control"/>
+                        <span class="input-group-btn">
+                            <button id="iso-progress-btn" class="btn btn-warning hidden">
+                                <span class="badge"><i class="glyphicon glyphicon-refresh"></i></span></button>
+                            <button id="iso-upload-btn" class="btn btn-default">
+                                <i class="glyphicon glyphicon-cloud-upload"></i></button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="feedback-div">
+        <button name="start" class="btn btn-default" style="display:none"><i class="glyphicon glyphicon-off"></i></button>
+        <p>Loading...</p>
+    </div>
+    <div id="feedback-log"></div>
+</div>
+<div id="proto-elements-div" style="display:none">
+    <div id="proto-error-div" class="alert alert-danger alert-dismissable error-div" style="display:inline-block">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    <div id="proto-question-div" class="alert alert-warning overlay">
+        <span style="display:inline-block"></span>
+        <button class="btn btn-warning" style="display:none"></button>
+    </div>
+</div>

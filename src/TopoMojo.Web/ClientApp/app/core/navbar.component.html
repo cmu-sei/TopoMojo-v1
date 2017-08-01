@@ -1,0 +1,36 @@
+<div *ngIf="!layout.embedded" class="text-center">
+    <h2>{{appName}}</h2>
+    <ul *ngIf="profile" class="list-inline">
+        <li [routerLinkActive]="['link-active']">
+            <a [routerLink]="['/browse']" [routerLinkActive]="['link-active']" tooltip="browse">
+                <span class='fa fa-list fa-2x'></span>
+                <!--Browse-->
+            </a>
+        </li>
+        <li [routerLinkActive]="['link-active']">
+            <a [routerLink]="['/topo']" [routerLinkActive]="['link-active']" tooltip="workspace">
+                <span class='fa fa-wrench fa-2x'></span>
+                <!--Workspace-->
+            </a>
+        </li>
+        <li [routerLinkActive]="['link-active']">
+            <a [routerLink]="['/mojo']" [routerLinkActive]="['link-active']" tooltip="gamespace">
+                <span class='fa fa-flash fa-2x'></span>
+                <!--Gamespace-->
+            </a>
+        </li>
+        <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
+            <a [routerLink]="['/admin']" [routerLinkActive]="['link-active']" tooltip="admin">
+                <span class='fa fa-cog fa-2x'></span>
+                <!--Admin-->
+            </a>
+        </li>
+        <li>
+            <a (click)="logout()" tooltip="logout">
+                <span class='fa fa-lock fa-2x'></span>
+                <!--Logout-->
+            </a>
+        </li>
+    </ul>
+</div>
+

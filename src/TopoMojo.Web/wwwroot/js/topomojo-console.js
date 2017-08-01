@@ -106,8 +106,11 @@ function stripHashTag(tag) {
  *
  */
 
-function WebConsole(id, topoid, url, conditions) {
+function WebConsole(
+    service
+) {
 
+    var settings = null;
     var wmks = null;
     var _disconnected = false;
     var VmStateOff = 0,
@@ -127,7 +130,7 @@ function WebConsole(id, topoid, url, conditions) {
         }
     });
 
-    function init() {
+    function initUi() {
 
         $('#console-tools-div button[name="cad"]').click(function() {
             if (wmks) {
@@ -167,18 +170,18 @@ function WebConsole(id, topoid, url, conditions) {
             $(this).nextAll().toggleClass('hidden');
         });
 
-        //uiConnected();
-
     }
 
     function showKeyboard() {
         if (wmks)
             wmks.showKeyboard();
     }
+
     function showExtKeypad() {
         if (wmks)
             wmks.toggleExtendedKeypad();
     }
+
     function showTrackpad() {
         if (wmks) {
             wmks.toggleTrackpad();
@@ -188,7 +191,6 @@ function WebConsole(id, topoid, url, conditions) {
     function uiConnected() {
         $("#console-tools-connected-div").removeClass('hidden');
         //$('#console-tools-connected-div button[name="fullscreen"]').toggleClass('hidden', wmks && wmks.canFullScreen());
-
     }
 
     function uiDisconnected() {
@@ -220,8 +222,7 @@ function WebConsole(id, topoid, url, conditions) {
         addSelectionItems($(this).next(), 'net');
     }
 
-    function addSelectionItems($ul, key)
-    {
+    function addSelectionItems($ul, key) {
         $ul.toggleClass('hidden');
         if ($ul.hasClass('hidden'))
             return;
@@ -230,41 +231,43 @@ function WebConsole(id, topoid, url, conditions) {
         $proto.removeClass('hidden');
         $proto.nextAll().remove();
 
-        $.get('/api/vm/' + key + 'options/' + id)
-        .done(function(options) {
-            var items = options[key];
-            for (i=0; i<items.length; i++) {
-                var $newitem = $proto.clone(true).prop('id', '').removeClass('hidden');
-                var $btn = $newitem.find('button');
-                $btn.val(items[i])
-                .data('key', key)
-                .click(vmChange)
-                .text(pathDisplayText(stripHashTag(items[i])));
-                $ul.append($newitem);
-            }
-            $proto.addClass('hidden');
-        });
+        service.options(key)
+            .done(function(options) {
+                var items = options[key];
+                for (i=0; i<items.length; i++) {
+                    var $newitem = $proto.clone(true).prop('id', '').removeClass('hidden');
+                    var $btn = $newitem.find('button');
+                    $btn.val(items[i])
+                    .data('key', key)
+                    .click(vmChange)
+                    .text(pathDisplayText(stripHashTag(items[i])));
+                    $ul.append($newitem);
+                }
+                $proto.addClass('hidden');
+            });
     }
 
     function vmStart() {
-        $(this).hide();//.addClass('pending');
-        $.post('/api/vm/start/' + id)
-        .fail(function(jqxhr, textStatus, err) {
-            $(this).next().text('Vm failed to start.');
-            $(this).removeClass('pending');
-        })
-        .done(function(data) {
-            window.location = '';
-        })
-        .always(function(jqxhr) {
-
-        });
+        $(this).hide();
+        service.start()
+            .done(function(vm) {
+                debug(vm);
+                window.location = '';
+            })
+            .fail(function(jqxhr, textStatus, err) {
+                $(this).next().text('Vm failed to start.');
+                $(this).removeClass('pending');
+            })
+            .always(function() {
+            });
     }
 
     function vmChange() {
         $('#item-selection-div').hide();
-        debug($(this).val());
-        $.jsonPost('/api/vm/change/' + id, { key: $(this).data('key'), value: $(this).val()});
+        service.change({ key: $(this).data('key'), value: $(this).val()})
+            .done(function(result) {
+                debug(result);
+            })
     }
 
     function uploadIso() {
@@ -394,24 +397,22 @@ function WebConsole(id, topoid, url, conditions) {
         });
 
         // wmks.connect("wss://ESXi.host.IP.Address:443/ticket/webmksTicket");
-
-        wmks.connect(url);
-
+        debug(settings);
+        wmks.connect(settings.url);
     }
 
     function postVmAnswer() {
         var $proto = $(this);
         var q = $proto.data('question');
-        $.post('/api/vm/answer/' + q.vid + '/' + q.qid + '/' + q.answer, {})
-        .fail(function(jqXhr, status, error) {
-            debug('postVmAnswer: ' + error);
-        })
-        .done(function(result) {
-
-        })
-        .always(function(){
-            $proto.parent().remove();
-        });
+        service.answer(q.qid, q.answer)
+            .done(function(result) {
+            })
+            .fail(function(jqXhr, status, error) {
+                debug('postVmAnswer: ' + error);
+            })
+            .always(function(){
+                $proto.parent().remove();
+            });
     }
 
     function handleQuestion(vm) {
@@ -440,43 +441,136 @@ function WebConsole(id, topoid, url, conditions) {
         }
     }
 
-    function loadVm() {
+    function loadVm(info) {
+        if (info) settings = info
+
         if (_disconnected)
             return;
 
-        $.get('/api/vm/load/' + id)
-        .fail(function(jqXhr, status, error){
-            debug(error);
-            $('#feedback-div p:first').text('Failed to load console');
-            uiDisconnected();
-        })
-        .done(function(vm) {
-            if (!_disconnected) {
-                $('#console-tools-btn').removeClass('hidden');
-                handleQuestion(vm);
-                if (!wmks) {
-                    if (vm.state == VmStateRunning) {
-                        $('#feedback-div button').hide();
-                        $('#feedback-div p:first').text('Connected');
-                        if (mock != 'mock')
-                            launch();
-                        else
-                            uiConnected();
-                    }
-                    else {
-                        $('#feedback-div p:first').text('');
-                        uiPoweredOff();
+        service.load()
+            .fail(function(jqXhr, status, error){
+                debug(error);
+                $('#feedback-div p:first').text('Failed to load console');
+                uiDisconnected();
+            })
+            .done(function(vm) {
+                if (!_disconnected) {
+                    $('#console-tools-btn').removeClass('hidden');
+                    handleQuestion(vm);
+                    if (!wmks) {
+                        if (vm.state == VmStateRunning) {
+                            $('#feedback-div button').hide();
+                            $('#feedback-div p:first').text('Connected');
+                            if (settings.method) {
+                                launch();
+                            }
+                            else {
+                                //todo: load mock graphic
+                                uiConnected();
+                                $('#console-canvas-div').addClass('mock-console');
+                                $('#feedback-div p:first').text('Connected to Mock Console');
+                            }
+                        }
+                        else {
+                            $('#feedback-div p:first').text('');
+                            $('#console-canvas-div').removeClass('mock-console');
+                            uiPoweredOff();
+                        }
                     }
                 }
-            }
-            if (!_disconnected)
-                setTimeout(loadVm, 10000);
-        })
-        .always(function() {
+                if (!_disconnected)
+                    setTimeout(loadVm, 10000);
+            })
+            .always(function() {
+            });
+    }
 
+    function init() {
+        service.ticket()
+            .done(loadVm)
+            .fail(function(jqXhr, status, error){
+                $('#feedback-div p:first').text('Failed to obtain ticket.');
+                debug(error);
+            })
+            .always(function() {
+                debug("preInit complete.");
+            })
+    }
+
+    initUi();
+    init();
+}
+
+/**
+ * UserManager
+ */
+function UserManager() {
+    var storageKey = 'sketch.auth.jwt';
+
+    this.getUser = function() {
+        return JSON.parse(localStorage.getItem(storageKey));
+    }
+
+    //todo: track token expiration
+}
+
+/**
+ * VmService
+ */
+function VmService(
+    id,
+    userManager
+) {
+    this.ticket = function() {
+        return get("/api/vm/ticket/" + id);
+    }
+
+    this.load = function() {
+        return get("/api/vm/load/" + id);
+    }
+
+    this.start = function() {
+        return post("/api/vm/start/" + id);
+    }
+
+    this.stop = function() {
+        return post("/api/vm/stop/" + id);
+    }
+
+    this.change = function(model) {
+        return post("/api/vm/change/" + id, model);
+    }
+
+    this.options = function(key) {
+        return get("/api/vm/" + key + "options/" + id);
+    }
+
+    this.answer = function(qid, answer) {
+        return post('/api/vm/answer/' + id + '/' + qid + '/' + answer);
+    }
+
+    function get(url) {
+        return $.ajax({
+            url: url,
+            type: 'GET',
+            headers: authHeader()
         });
     }
 
-    init();
-    loadVm();
+    function post(url, data) {
+        return $.ajax({
+            url: url,
+            type: 'POST',
+            contentType:"application/json; charset=utf-8",
+            dataType: "json",
+            data: JSON.stringify(data),
+            headers: authHeader()
+        });
+    }
+
+    function authHeader() {
+        return {
+            "Authorization": "Bearer " + userManager.getUser().access_token
+        };
+    }
 }

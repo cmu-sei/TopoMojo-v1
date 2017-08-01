@@ -1,3 +1,6 @@
 .selected {
     text-decoration: underline;
 }
+.toolbar {
+    margin: 10px;
+}

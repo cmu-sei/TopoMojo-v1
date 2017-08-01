@@ -1,4 +1,4 @@
-.truncate {
+/*.truncate {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -11,4 +11,7 @@
 
 p {
     padding-left: 16px;
+}*/
+div {
+    margin: 4px;
 }

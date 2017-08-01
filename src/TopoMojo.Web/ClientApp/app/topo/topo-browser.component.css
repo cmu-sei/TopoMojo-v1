@@ -1,13 +1,6 @@
-.tile.row {
-    border-radius: 4px;
-    padding: 16px;
-    margin: 4px 4px;
-}
-
 i {
-    font-size: 1.5em;
+    font-size: 1.3em;
 }
-
- i.avatar {
-     font-size: 3em;
- }
+h4 {
+    display: inline-block;
+}

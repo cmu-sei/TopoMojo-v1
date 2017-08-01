@@ -16,7 +16,19 @@ module.exports = (env) => {
         },
         module: {
             rules: [
-                { test: /\.ts$/, include: /ClientApp/, use: ['awesome-typescript-loader?silent=true', 'angular2-template-loader'] },
+                {
+                    test: /\.ts$/,
+                    include: /ClientApp/,
+                    use: [
+                        'awesome-typescript-loader?silent=true',
+                        'angular2-template-loader',
+                        {
+                           loader: 'ng-router-loader',
+                           options: {
+                            /* ng-router-loader options */
+                           }
+                        }
+                    ] },
                 { test: /\.html$/, use: 'html-loader?minimize=false' },
                 { test: /\.css$/, use: ['to-string-loader', 'css-loader'] },
                 { test: /\.(png|jpg|jpeg|gif|svg)$/, use: 'url-loader?limit=25000' }
@@ -47,25 +59,26 @@ module.exports = (env) => {
         ])
     });
 
-    // Configuration for server-side (prerendering) bundle suitable for running in Node
-    const serverBundleConfig = merge(sharedConfig, {
-        resolve: { mainFields: ['main'] },
-        entry: { 'main-server': './ClientApp/boot-server.ts' },
-        plugins: [
-            new webpack.DllReferencePlugin({
-                context: __dirname,
-                manifest: require('./ClientApp/dist/vendor-manifest.json'),
-                sourceType: 'commonjs2',
-                name: './vendor'
-            })
-        ],
-        output: {
-            libraryTarget: 'commonjs',
-            path: path.join(__dirname, './ClientApp/dist')
-        },
-        target: 'node',
-        devtool: 'inline-source-map'
-    });
+    // // Configuration for server-side (prerendering) bundle suitable for running in Node
+    // const serverBundleConfig = merge(sharedConfig, {
+    //     resolve: { mainFields: ['main'] },
+    //     entry: { 'main-server': './ClientApp/boot-server.ts' },
+    //     plugins: [
+    //         new webpack.DllReferencePlugin({
+    //             context: __dirname,
+    //             manifest: require('./ClientApp/dist/vendor-manifest.json'),
+    //             sourceType: 'commonjs2',
+    //             name: './vendor'
+    //         })
+    //     ],
+    //     output: {
+    //         libraryTarget: 'commonjs',
+    //         path: path.join(__dirname, './ClientApp/dist')
+    //     },
+    //     target: 'node',
+    //     devtool: 'inline-source-map'
+    // });
 
-    return [clientBundleConfig, serverBundleConfig];
+    return [clientBundleConfig];
+    //return [clientBundleConfig, serverBundleConfig];
 };

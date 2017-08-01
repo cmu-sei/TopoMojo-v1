@@ -5,11 +5,7 @@ import { VmService } from './vm.service';
     //moduleId: module.id,
     selector: 'vm-toolbar',
     templateUrl: 'vm-toolbar.component.html',
-    styles: [ `
-        .selected {
-            text-decoration: underline;
-        }
-    `]
+    styleUrls: [ 'vm-toolbar.component.css']
 
 })
 export class VmToolbarComponent implements OnChanges {
@@ -133,8 +129,16 @@ export class VmToolbarComponent implements OnChanges {
         });
     }
 
+    isRunning() {
+        return this.vm.state == 1;
+    }
+
+    isLinked() {
+        return !this.tref.owned;
+    }
+
     display() {
-        this.service.display(this.vm.id);
+        this.service.display(this.vm.id, this.vm.name);
     }
 
     clearError() {

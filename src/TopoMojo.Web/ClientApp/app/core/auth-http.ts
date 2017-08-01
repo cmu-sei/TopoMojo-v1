@@ -3,7 +3,7 @@ import { Http, Headers, Response } from '@angular/http';
 import { Router } from '@angular/router';
 
 @Injectable()
-export class AuthHttp {
+export class CoreAuthHttp {
     authKey : string = 'Bearer';
 
     constructor(

@@ -1,5 +1,6 @@
 ﻿using System;
 using TopoMojo.Core;
+using TopoMojo.Core.Entities;
 using Xunit;
 
 namespace Tests

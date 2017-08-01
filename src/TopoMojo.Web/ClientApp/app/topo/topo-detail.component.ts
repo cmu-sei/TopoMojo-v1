@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopoService } from './topo.service';
 import 'rxjs/add/operator/switchMap';
+import { DOCUMENT } from "@angular/platform-browser";
+import { SignalR, BroadcastEventListener, SignalRConnection } from 'ng2-signalr';
 
 @Component({
     selector: 'topo-detail',
-    templateUrl: './topo-detail.component.html'
+    templateUrl: './topo-detail.component.html',
+    styleUrls: [ './topo-detail.component.css' ]
 })
 export class TopoDetailComponent {
     topo: any;
@@ -17,25 +20,73 @@ export class TopoDetailComponent {
     deleteMsgVisible: boolean;
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
+    showing: string = "topo";
+    host: string;
+    private connection: SignalRConnection;
 
     constructor(
         private service: TopoService,
         private route: ActivatedRoute,
-        private router: Router
-    ) { }
+        private router: Router,
+        @Inject(DOCUMENT) private dom : Document
+    ) {
+        this.connection = this.route.snapshot.data['connection'];
+    }
 
     ngOnInit(): void {
+        let onMessageSent$  = this.connection.listenFor('topoUpdated');
+        onMessageSent$.subscribe(msg => {
+            console.log(msg);
+        });
+
         this.route.params
             .switchMap((params: Params) => this.service.loadTopo(params['id']))
-            .subscribe(result => {
-                this.topo = result as any;
-            }, (err) => { this.service.onError(err); });
+            .subscribe(
+                (result) => {
+                    this.topo = result as any;
+                    console.log(this.topo);
+                    this.connection.invoke('Listen', result.globalId, "jam-token")
+                        .catch(reason => {
+                        console.log(reason);
+                    });
+                },
+                (err) => { this.service.onError(err); });
 
         this.route.params
             .switchMap((params: Params) => this.service.listTopoTemplates(params['id']))
             .subscribe(result => {
                 this.trefs = result as any[];
             }, (err) => { this.service.onError(err); });
+
+        this.service.ipCheck().subscribe(data => {
+            console.log(data);
+            this.host = data.host;
+        });
+    }
+
+    ngOnDestroy() {
+        this.connection.invoke('Leave', this.topo.globalId)
+        .then(result => {
+            this.connection.stop();
+        })
+        .catch(reason => {
+            console.log(reason);
+        });
+    }
+
+    copyToClipboard(text : string) {
+        let el = this.dom.getElementById("clipboardText") as HTMLTextAreaElement;
+        el.value = text;
+        el.select();
+        this.dom.execCommand("copy");
+    }
+
+    clipShareUrl() {
+        this.copyToClipboard(this.host + "/enlist/" + this.topo.shareCode);
+    }
+
+    clipPublishUrl() {
+        this.copyToClipboard(this.host + "/mojo/" + this.topo.id);
     }
 
     toggleSelector() {
@@ -48,6 +99,7 @@ export class TopoDetailComponent {
     toggleDocument() {
         this.documentVisible = !this.documentVisible;
     }
+
     search(term) {
         this.service.listTemplates({
             term: term,
@@ -103,6 +155,39 @@ export class TopoDetailComponent {
 
         }, (err) => { this.service.onError(err)});
     }
+
+    show(section: string) : void {
+        this.showing = section;
+    }
+
+    publish() {
+        this.service.publish(this.topo.id)
+        .subscribe(data => {
+            this.topo.isPublished = true;
+        });
+    }
+
+    unpublish() {
+        this.service.unpublish(this.topo.id)
+        .subscribe(data => {
+            this.topo.isPublished = false;
+        });
+    }
+
+    share() {
+        this.service.share(this.topo.id)
+        .subscribe(data => {
+            this.topo.shareCode = data.url;
+        });
+    }
+
+    unshare() {
+        this.service.unshare(this.topo.id)
+        .subscribe(data => {
+            this.topo.shareCode = "";
+        });
+    }
+
 }
 
 

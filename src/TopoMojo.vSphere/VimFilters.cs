@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace TopoMojo.vSphere.Filters
+namespace TopoMojo.vSphere
 {
     public static class FilterFactory
     {

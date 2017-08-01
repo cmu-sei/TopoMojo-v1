@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>Step.Accounts.Tests</AssemblyName>
+    <PackageId>Step.Accounts.Tests</PackageId>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net451+win8</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Step.Accounts/Step.Accounts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170601-03" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.*" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.2.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="1.1.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.*" />
+  </ItemGroup>
+
+</Project>

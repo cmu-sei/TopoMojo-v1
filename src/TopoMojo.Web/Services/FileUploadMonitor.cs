@@ -4,15 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Services
 {
     public interface IFileUploadMonitor
     {
-        //Task Save(Stream source, Stream dest, long size, string key);
-        void Start(string key);
-        void Stop(string key);
         void Update(string key, int progress);
-        FileProgress Progress(string key);
+        FileProgress Check(string key);
     }
 
 
@@ -22,66 +19,10 @@ namespace TopoMojo.Web
         {
             _logger = logger;
             _monitor = new Dictionary<string, FileProgress>();
-            CleanupLoop();
+            Task task = CleanupLoop();
         }
         private readonly ILogger<FileUploadMonitor> _logger;
         private Dictionary<string, FileProgress> _monitor;
-
-        // public async Task Save(Stream source, Stream dest, long size, string key)
-        // {
-        //     if (_Monitor.ContainsKey(key))
-        //         throw new Exception("File with this key is already being uploaded.");
-
-        //     _Monitor.Add(key, new FileProgress {
-        //         Name = key,
-        //         Start = DateTime.UtcNow
-        //     });
-
-        //     byte[] buffer = new byte[4096];
-        //     int bytes = 0, progress = 0;
-        //     long totalBytes = 0, totalBlocks = 0;
-
-        //     do
-        //     {
-        //         bytes = await source.ReadAsync(buffer, 0, buffer.Length);
-        //         await dest.WriteAsync(buffer, 0, bytes);
-        //         totalBlocks += 1;
-        //         totalBytes += bytes;
-        //         if (totalBlocks % 1024 == 0)
-        //         {
-        //             progress = (int)(((float)totalBytes / (float)size) * 100);
-        //             _Monitor[key].Progress = progress;
-        //             //Console.WriteLine(progress + "%");
-        //         }
-        //     } while (bytes > 0);
-        //     _Monitor[key].Progress = (int)(((float)totalBytes / (float)size) * 100);
-        //     _Monitor[key].Stop = DateTime.UtcNow;
-        //     int duration = (int)_Monitor[key].Stop.Subtract(_Monitor[key].Start).TotalSeconds;
-        //     _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
-        //     ClearKey(key);
-        //     //Console.WriteLine(progress + "%");
-        // }
-
-        public void Start(string key)
-        {
-            if (!_monitor.ContainsKey(key))
-            {
-                _monitor.Add(key, new FileProgress
-                {
-                    Key = key,
-                    Start = DateTime.UtcNow
-                });
-            }
-        }
-
-        public void Stop(string key)
-        {
-            //await Task.Delay(10000);
-            // if (_Monitor.ContainsKey(key))
-            // {
-            //     _Monitor.Remove(key);
-            // }
-        }
 
         public void Update(string key, int progress)
         {
@@ -90,9 +31,18 @@ namespace TopoMojo.Web
                 _monitor[key].Progress = progress;
                 _monitor[key].Stop = DateTime.UtcNow;
             }
+            else
+            {
+                _monitor.Add(key, new FileProgress
+                {
+                    Key = key,
+                    Progress = 0,
+                    Start = DateTime.UtcNow
+                });
+            }
         }
 
-        public FileProgress Progress(string key)
+        public FileProgress Check(string key)
         {
             if (_monitor.ContainsKey(key))
                 return _monitor[key];

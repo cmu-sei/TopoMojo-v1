@@ -4,36 +4,47 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Models;
+using TopoMojo.Core.Entities;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]
-    public class InstanceController : _Controller
+    public class InstanceController : HubController<TopologyHub>
     {
         public InstanceController(
-            InstanceManager instanceManager,
+            GamespaceManager instanceManager,
             IPodManager podManager,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp,
+            IConnectionManager sigr
+        ) : base(sigr, sp)
         {
             _pod = podManager;
             _mgr = instanceManager;
         }
 
         private readonly IPodManager _pod;
-        private readonly InstanceManager _mgr;
+        private readonly GamespaceManager _mgr;
+
 
         [HttpGetAttribute("{id}")]
         [JsonExceptionFilter]
-        public async Task<InstanceSummary> Launch([FromRoute]int id)
+        public async Task<GameState> Launch([FromRoute]int id)
         {
             return await _mgr.Launch(id);
+        }
+
+        [HttpGetAttribute("{id}")]
+        [JsonExceptionFilter]
+        public async Task<GameState> Check([FromRoute]int id)
+        {
+            return await _mgr.Check(id);
         }
 
         [HttpDeleteAttribute("{id}")]
@@ -45,16 +56,23 @@ namespace TopoMojo.Controllers
 
         [HttpPostAttribute]
         [JsonExceptionFilterAttribute]
-        public async Task<SearchResult<Instance>> List(Search search)
+        public async Task<SearchResult<Gamespace>> List(Search search)
         {
             return await _mgr.ListAsync(search);
         }
 
         [HttpGetAttribute]
         [JsonExceptionFilterAttribute]
-        public async Task<InstanceMember[]> Active()
+        public async Task<Player[]> Active()
         {
-            return await _mgr.ProfileInstances();
+            return await _mgr.Gamespaces();
+        }
+
+        [HttpGetAttribute("{code}")]
+        [JsonExceptionFilterAttribute]
+        public async Task<bool> Enlist([FromRoute] string code)
+        {
+            return await _mgr.Enlist(code);
         }
 
     }

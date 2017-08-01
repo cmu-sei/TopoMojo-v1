@@ -7,7 +7,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
     styleUrls: [ 'entity-list.component.css' ]
 })
 export class EntityListComponent implements OnInit {
-    @Input() entities : any[];
+    @Input() entities : any[] = [];
     private entity: any;
     @Input() icon: string;
     @Output() onSelected: EventEmitter<any> = new EventEmitter<any>();

@@ -4,7 +4,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core;
 using TopoMojo.Abstractions;
-using TopoMojo.Models;
+using TopoMojo.Core.Entities;
+using TopoMojo.Core.Data;
 
 namespace Tests
 {
@@ -15,12 +16,12 @@ namespace Tests
             Initialize();
         }
 
-        protected IUserResolver _ur = null;
+        protected IProfileResolver _ur = null;
         protected const string _complexPassword = "~Tartans@1~";
         protected IOptions<CoreOptions> _optAccessor = null;
         protected CoreOptions _options = null;
 
-        protected Person _user = null;
+        protected Profile _user = null;
         protected ILoggerFactory _mill = null;
         private DbContextOptions<TopoMojoDbContext> _dbOptions;
 
@@ -55,8 +56,8 @@ namespace Tests
             {
                 ctx.Database.EnsureDeleted();
                 ctx.Database.EnsureCreated();
-                _user = new Person { Id = 1, Name = "tester" }; //AddTestUser("tester@step.local");
-                _ur = new UserResolver(_user);
+                _user = new Profile { Id = 1, Name = "tester" }; //AddTestUser("tester@step.local");
+                _ur = new ProfileResolver(_user);
             }
 
         }

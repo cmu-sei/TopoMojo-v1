@@ -5,13 +5,6 @@ using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere
 {
-    // public class Vlan
-    // {
-    //     public int Id { get; set; }
-    //     public int Count { get; set; }
-    //     public string Net { get; set; }
-    // }
-
     public class DatastorePath
     {
         public DatastorePath(string path)

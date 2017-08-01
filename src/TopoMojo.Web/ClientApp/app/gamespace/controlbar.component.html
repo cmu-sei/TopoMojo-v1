@@ -1,0 +1,25 @@
+<ul *ngIf="game" class="list-inline">
+    <li><h4>TopoMojo</h4></li>
+    <li *ngFor="let vm of game.vms">
+        <button *ngIf="!vm.visible" class="btn btn-success" (click)="launchConsole(vm.id)">
+            <i class="fa fa-desktop"></i> {{ vm.name | untagged }}
+        </button>
+    </li>
+    <li *ngIf="!game.id && !launching" class="pull-right">
+        <button (click)="launch()" class="btn btn-primary">
+            <i class="fa fa-play"></i> Launch
+        </button>
+    </li>
+    <li *ngIf="game.id" class="pull-right">
+        <confirm-delete
+            prompt="Confirm deletion of this instance."
+            tooltip="end instance"
+            (onDelete)="destroy($event)">
+        </confirm-delete>
+    </li>
+    <li *ngIf="loading" class="pull-right">
+        <button class="btn btn-warning">
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        </button>
+    </li>
+</ul>
