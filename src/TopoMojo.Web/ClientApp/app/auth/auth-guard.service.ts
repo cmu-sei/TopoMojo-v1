@@ -16,7 +16,7 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
         state: RouterStateSnapshot
     ) : Promise<boolean> {
         return this.authService.isAuthenticated().then(a => {
-            console.log("isAuth'd: " + a);
+            //console.log("isAuth'd: " + a);
             if (a) return a;
             this.authService.redirectUrl = state.url;
             this.router.navigate(["/auth/login"]);
