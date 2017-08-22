@@ -51,13 +51,30 @@ export class TemplateManagerComponent implements OnInit {
 
     fireSearch() {
         this.service.listTemplates(this.model)
-        .subscribe(data => {
-            this.templates = this.templates.concat(data.results as any[]);
-            this.hasMore = data.total - (data.skip+data.take);
-            this.template = null;
-        }, (err) => { this.service.onError(err) })
+            .subscribe(data => {
+                this.templates = this.templates.concat(data.results as any[]);
+                this.hasMore = data.total - (data.skip + data.take);
+                this.template = null;                
+                // traverse templates to see if they have an owner topology
+                if (this.templates != null) {
+                    for (let templateLocal of this.templates) {
+                        // only obtain topology if this template has a true owner
+                        if (templateLocal.ownerId != 0) {
+                            this.service.loadTopo(templateLocal.ownerId)
+                                .subscribe(topoData => {
+                                    // store the topology identifier in the template object.  if no description, using globalId for now
+                                    if (topoData.description != null && topoData.description != "") {
+                                        templateLocal.ownerDesc = topoData.description;
+                                    } 
+                                    else {
+                                        templateLocal.ownerDesc = topoData.globalId;
+                                    }
+                                }, (err) => { this.service.onError(err) })
+                        }
+                    }
+                }
+            }, (err) => { this.service.onError(err) })           
     }
-
     select(template) {
         if (this.template === template) {
             this.template = null;
