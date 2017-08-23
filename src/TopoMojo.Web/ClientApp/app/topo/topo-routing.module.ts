@@ -10,6 +10,7 @@ import { TopoMembersComponent } from './topo-members.component';
 import { TemplateEditorComponent} from './template-editor.component';
 import { TopoEnlistComponent } from './enlist.component';
 import { ConnectionResolver } from '../shared/connection.resolver';
+import { IsoManagerComponent } from './iso-manager.component';
 
 const routes: Routes = [
     {
@@ -72,6 +73,7 @@ export class TopoRoutingModule {
         TopoMembersComponent,
         TemplateEditorComponent,
         WorkBrowserComponent,
-        TopoEnlistComponent
+        TopoEnlistComponent,
+        IsoManagerComponent
      ]
 }

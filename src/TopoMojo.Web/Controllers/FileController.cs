@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
+using TopoMojo.Core;
 using TopoMojo.Models;
 using TopoMojo.Services;
 
@@ -23,16 +24,20 @@ namespace TopoMojo.Controllers
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
             IHostingEnvironment host,
-            IServiceProvider sp
+            IServiceProvider sp,
+            TopologyManager topoManager
         ) : base(sp)
         {
             _host = host;
             _monitor = monitor;
             _config = uploadOptions;
+            _topoManager = topoManager;
         }
         private readonly IHostingEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
+        private readonly TopologyManager _topoManager;
+
 
         [HttpGet("api/[controller]/[action]/{id}")]
         public IActionResult Progress([FromRoute]string id)
@@ -40,7 +45,7 @@ namespace TopoMojo.Controllers
             return Json(_monitor.Check(id).Progress);
         }
 
-        [HttpPost]
+        [HttpPost("api/[controller]/[action]")]
         [DisableFormValueModelBinding]
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload()
@@ -52,7 +57,7 @@ namespace TopoMojo.Controllers
 
             FormOptions _formOptions = new FormOptions
             {
-                MultipartBodyLengthLimit = (long)1E9
+                MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9)
             };
 
             string boundary = MultipartRequestHelper.GetBoundary(
@@ -73,15 +78,23 @@ namespace TopoMojo.Controllers
                         NameValueCollection fileMetadata = MultipartRequestHelper.FileProperties(contentDisposition.FileName);
 
                         string filename = fileMetadata["fn"];
-                        string pkey = fileMetadata["pk"];
+                        string pkey = fileMetadata["pk"] ?? Guid.NewGuid().ToString();
                         string key = fileMetadata["fk"];
                         string scope = fileMetadata["fd"];
                         long size = Int64.Parse(fileMetadata["fs"] ?? "0");
-                        if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
-                            throw new Exception($"File ${filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                        Log("uploaded", null, filename);
+                        if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
+                            throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
+
+                        if (scope == "private" && ! await _topoManager.CanEdit(key))
+                            throw new InvalidOperationException();
+
+                        if (scope == "public" && !_profile.IsAdmin)
+                            throw new InvalidOperationException();
+
+                        Log("uploading", null, filename);
                         string dest = DestinationPath(filename, key, scope);
+
                         using (var targetStream = System.IO.File.Create(dest))
                         {
                             await Save(section.Body, targetStream, size, pkey);

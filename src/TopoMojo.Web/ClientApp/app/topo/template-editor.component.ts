@@ -9,11 +9,14 @@ import { TopoService } from './topo.service';
 })
 export class TemplateEditorComponent implements OnInit {
     @Input() tref: any;
+    @Input() topo: any;
     @Output() onRemoved: EventEmitter<any> = new EventEmitter<any>();
     @ViewChild('cloneHelp') cloneHelp: any;
     editing: boolean;
     cloneVisible: boolean;
     vm: any;
+    isosVisible: boolean;
+    uploadVisible: boolean;
 
     constructor(private service : TopoService) { }
 
@@ -75,5 +78,11 @@ export class TemplateEditorComponent implements OnInit {
 
     vmLoaded(vm) {
         this.vm = vm;
+    }
+
+    isoChanged(iso : string) {
+        this.tref.iso = iso;
+        this.save();
+        this.isosVisible = false;
     }
 }

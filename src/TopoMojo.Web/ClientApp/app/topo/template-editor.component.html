@@ -63,6 +63,19 @@
                     </inline-help>
                 </div>
             </div>
+            <div class="col-xs-12 prop">
+                <div class="col-xs-2 prop-label">
+                    <span>Iso</span>
+                    <button (click)="isosVisible=!isosVisible" class="btn btn-link prop-button">
+                        <i class="fa fa-caret-down" [class.fa-caret-up]="isosVisible"></i>
+                    </button>
+                </div>
+                <div class="col-xs-10">
+                    <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="tref.iso"
+                        max="128" empty="none"></inline-editor>
+                    <iso-manager *ngIf="isosVisible" [id]="topo.globalId" (onSelected)="isoChanged($event)"></iso-manager>
+                </div>
+            </div>
             <!--<dl class="dl-horizontal">
                 <dt>Name</dt>
                 <dd>

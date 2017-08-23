@@ -150,6 +150,17 @@ export class TopoService {
         return this.http.gettext(url);
     }
 
+    public getIsos(id) {
+        return this.http.get(this.url() + "/topology/isos/" + id);
+    }
+
+    public uploadIso(id : string, file : File) {
+        let payload : FormData = new FormData();
+        let filename = `fn=${file.name}&fs=${file.size}&fk=${id}&fd=private`;
+        payload.append('file', file, filename);
+        return this.http.post(this.url() + '/file/upload', payload);
+    }
+
     public onError(err) {
         this.http.onError(err);
     }
