@@ -48,6 +48,43 @@ namespace TopoMojo.Controllers
         [HttpPost("api/[controller]/[action]")]
         [DisableFormValueModelBinding]
         //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadTest()
+        {
+            MultipartRequestHandler handler = new MultipartRequestHandler();
+            await handler.Process(
+                Request,
+                options => {
+                    options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
+                },
+                async header => {
+                    // NameValueCollection fileMetadata = MultipartRequestHelper.FileProperties(header.FileName);
+
+                    // string filename = fileMetadata["fn"];
+                    // string pkey = fileMetadata["pk"] ?? Guid.NewGuid().ToString();
+                    // string key = fileMetadata["fk"];
+                    // string scope = fileMetadata["fd"];
+                    // long size = Int64.Parse(fileMetadata["fs"] ?? "0");
+
+                    // if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
+                    //     throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
+
+                    // if (scope == "private" && ! await _topoManager.CanEdit(key))
+                    //     throw new InvalidOperationException();
+
+                    // if (scope == "public" && !_profile.IsAdmin)
+                    //     throw new InvalidOperationException();
+
+                    // Log("uploading", null, filename);
+                    // string dest = DestinationPath(filename, key, scope);
+
+                }
+            );
+            return Json(true);
+        }
+
+        [HttpPost("api/[controller]/[action]")]
+        [DisableFormValueModelBinding]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload()
         {
             if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))

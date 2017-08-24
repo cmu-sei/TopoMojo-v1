@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -84,12 +85,12 @@ namespace TopoMojo.Services
         public async Task Process(
             HttpRequest request,
             Action<FormOptions> optionsAction,
-            Action<ContentDispositionHeaderValue> dispositionAction
+            Action<NameValueCollection> dispositionAction
         )
         {
             if (!MultipartRequestHelper.IsMultipartContentType(request.ContentType))
             {
-                throw new Exception($"Expected a multipart request, but got {request.ContentType}");
+                throw new InvalidOperationException($"Expected a multipart request, but got {request.ContentType}");
             }
 
             optionsAction.Invoke(_formOptions);
@@ -98,19 +99,42 @@ namespace TopoMojo.Services
                 MediaTypeHeaderValue.Parse(request.ContentType),
                 _formOptions.MultipartBoundaryLengthLimit);
 
+            NameValueCollection metadata = new NameValueCollection();
             MultipartReader reader = new MultipartReader(boundary, request.Body);
-
             MultipartSection section = await reader.ReadNextSectionAsync();
             while (section != null)
             {
-                ContentDispositionHeaderValue contentDisposition;
-                bool hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
+                bool hasContentDispositionHeader = ContentDispositionHeaderValue
+                    .TryParse(section.ContentDisposition, out ContentDispositionHeaderValue contentDisposition);
 
                 if (hasContentDispositionHeader)
                 {
+                    if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+                    {
+                        //add form values to data collection
+                        var encoding = GetEncoding(section);
+                        using (var streamReader = new StreamReader(
+                            section.Body,
+                            encoding,
+                            detectEncodingFromByteOrderMarks: true,
+                            bufferSize: 1024,
+                            leaveOpen: true))
+                        {
+                            // The value length limit is enforced by MultipartBodyLengthLimit
+                            string value = await streamReader.ReadToEndAsync();
+                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
+                            {
+                                value = String.Empty;
+                            }
+                            metadata.Add(MultipartRequestHelper.FileProperties(value));
+                        }
+
+                    }
+
                     if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
                     {
-                        dispositionAction.Invoke(contentDisposition);
+                        metadata.Add("rawFilename", contentDisposition.FileName);
+                        dispositionAction.Invoke(metadata);
 
                         // handleAction.Invoke()
                         // Log("uploading", null, filename);
@@ -127,6 +151,19 @@ namespace TopoMojo.Services
                 // reads the headers for the next section.
                 section = await reader.ReadNextSectionAsync();
             }
+        }
+
+        private Encoding GetEncoding(MultipartSection section)
+        {
+            MediaTypeHeaderValue mediaType;
+            var hasMediaTypeHeader = MediaTypeHeaderValue.TryParse(section.ContentType, out mediaType);
+            // UTF-7 is insecure and should not be honored. UTF-8 will succeed in
+            // most cases.
+            if (!hasMediaTypeHeader || Encoding.UTF7.Equals(mediaType.Encoding))
+            {
+                return Encoding.UTF8;
+            }
+            return mediaType.Encoding;
         }
     }
 

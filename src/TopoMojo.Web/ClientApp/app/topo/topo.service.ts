@@ -157,6 +157,7 @@ export class TopoService {
     public uploadIso(id : string, file : File) {
         let payload : FormData = new FormData();
         let filename = `fn=${file.name}&fs=${file.size}&fk=${id}&fd=private`;
+        payload.append('meta', filename);
         payload.append('file', file, filename);
         return this.http.post(this.url() + '/file/upload', payload);
     }
