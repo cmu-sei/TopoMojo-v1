@@ -60,6 +60,9 @@ export class IsoManagerComponent implements OnInit {
         this.service.uploadIso(this.id, file).subscribe(
             (result) => {
                 this.select("private/" + file.name);
+            },
+            (err) => {
+                console.log(err.text());
             }
         );
     }

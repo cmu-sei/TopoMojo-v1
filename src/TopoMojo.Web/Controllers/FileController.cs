@@ -14,6 +14,7 @@ using Microsoft.Net.Http.Headers;
 using TopoMojo.Core;
 using TopoMojo.Models;
 using TopoMojo.Services;
+using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
@@ -21,6 +22,7 @@ namespace TopoMojo.Controllers
     public class FileController : _Controller
     {
         public FileController(
+            IFileUploadHandler uploader,
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
             IHostingEnvironment host,
@@ -32,12 +34,14 @@ namespace TopoMojo.Controllers
             _monitor = monitor;
             _config = uploadOptions;
             _topoManager = topoManager;
+            _uploader = uploader;
         }
         private readonly IHostingEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
         private readonly TopologyManager _topoManager;
 
+        private readonly IFileUploadHandler _uploader;
 
         [HttpGet("api/[controller]/[action]/{id}")]
         public IActionResult Progress([FromRoute]string id)
@@ -46,139 +50,147 @@ namespace TopoMojo.Controllers
         }
 
         [HttpPost("api/[controller]/[action]")]
+        [JsonExceptionFilter]
         [DisableFormValueModelBinding]
         //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadTest()
+        public async Task<IActionResult> Upload()
         {
-            MultipartRequestHandler handler = new MultipartRequestHandler();
-            await handler.Process(
+            await _uploader.Process(
                 Request,
-                options => {
-                    options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
-                },
-                async header => {
-                    // NameValueCollection fileMetadata = MultipartRequestHelper.FileProperties(header.FileName);
+                metadata => {
 
-                    // string filename = fileMetadata["fn"];
-                    // string pkey = fileMetadata["pk"] ?? Guid.NewGuid().ToString();
-                    // string key = fileMetadata["fk"];
-                    // string scope = fileMetadata["fd"];
-                    // long size = Int64.Parse(fileMetadata["fs"] ?? "0");
+                    string original = metadata["original-name"];
+                    string filename = metadata["name"] ?? original;
+                    string key = metadata["group-key"];
+                    string scope = metadata["scope"];
+                    long size = Int64.Parse(metadata["size"] ?? "0");
 
-                    // if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
-                    //     throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
+                    if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
+                        throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    // if (scope == "private" && ! await _topoManager.CanEdit(key))
-                    //     throw new InvalidOperationException();
+                    if (scope == "public" && !_profile.IsAdmin)
+                        throw new InvalidOperationException();
 
-                    // if (scope == "public" && !_profile.IsAdmin)
-                    //     throw new InvalidOperationException();
+                    if (scope == "private" && !_topoManager.CanEdit(key).Result)
+                        throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);
-                    // string dest = DestinationPath(filename, key, scope);
+                    string dest = BuildDestinationPath(filename, key, scope);
+                    string path = Path.GetDirectoryName(dest);
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
 
+                    return System.IO.File.Create(dest);
+                },
+                status => {
+                    _monitor.Update(status.Key, status.Progress);
+                    // TODO: broadcast progress to group
+                },
+                options => {
+                    options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
                 }
             );
             return Json(true);
         }
 
-        [HttpPost("api/[controller]/[action]")]
-        [DisableFormValueModelBinding]
-        //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload()
+        // [HttpPost("api/[controller]/[action]")]
+        // [DisableFormValueModelBinding]
+        // //[ValidateAntiForgeryToken]
+        // public async Task<IActionResult> Upload()
+        // {
+        //     if (!MultipartRequestExtensions.IsMultipartContentType(Request.ContentType))
+        //     {
+        //         return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
+        //     }
+
+        //     FormOptions _formOptions = new FormOptions
+        //     {
+        //         MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9)
+        //     };
+
+        //     string boundary = MultipartRequestExtensions.GetBoundary(
+        //         MediaTypeHeaderValue.Parse(Request.ContentType),
+        //         _formOptions.MultipartBoundaryLengthLimit);
+        //     MultipartReader reader = new MultipartReader(boundary, HttpContext.Request.Body);
+
+        //     MultipartSection section = await reader.ReadNextSectionAsync();
+        //     while (section != null)
+        //     {
+        //         ContentDispositionHeaderValue contentDisposition;
+        //         bool hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
+
+        //         if (hasContentDispositionHeader)
+        //         {
+        //             if (MultipartRequestExtensions.HasFileContentDisposition(contentDisposition))
+        //             {
+        //                 NameValueCollection metadata = MultipartRequestExtensions.ParseFormValues(contentDisposition.FileName);
+
+        //                 string filename = metadata["fn"];
+        //                 string pkey = metadata["pk"] ?? Guid.NewGuid().ToString();
+        //                 string key = metadata["fk"];
+        //                 string scope = metadata["fd"];
+        //                 long size = Int64.Parse(metadata["fs"] ?? "0");
+
+        //                 if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
+        //                     throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
+
+        //                 if (scope == "private" && ! await _topoManager.CanEdit(key))
+        //                     throw new InvalidOperationException();
+
+        //                 if (scope == "public" && !_profile.IsAdmin)
+        //                     throw new InvalidOperationException();
+
+        //                 Log("uploading", null, filename);
+        //                 string dest = DestinationPath(filename, key, scope);
+
+        //                 using (var targetStream = System.IO.File.Create(dest))
+        //                 {
+        //                     await Save(section.Body, targetStream, size, pkey);
+        //                 }
+        //             }
+        //         }
+
+        //         // Drains any remaining section body that has not been consumed and
+        //         // reads the headers for the next section.
+        //         section = await reader.ReadNextSectionAsync();
+        //     }
+
+        //     return Json(true);
+        // }
+
+        private string SanitizeFileName(string filename)
         {
-            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
-            {
-                return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
-            }
-
-            FormOptions _formOptions = new FormOptions
-            {
-                MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9)
-            };
-
-            string boundary = MultipartRequestHelper.GetBoundary(
-                MediaTypeHeaderValue.Parse(Request.ContentType),
-                _formOptions.MultipartBoundaryLengthLimit);
-            MultipartReader reader = new MultipartReader(boundary, HttpContext.Request.Body);
-
-            MultipartSection section = await reader.ReadNextSectionAsync();
-            while (section != null)
-            {
-                ContentDispositionHeaderValue contentDisposition;
-                bool hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
-
-                if (hasContentDispositionHeader)
-                {
-                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
-                    {
-                        NameValueCollection fileMetadata = MultipartRequestHelper.FileProperties(contentDisposition.FileName);
-
-                        string filename = fileMetadata["fn"];
-                        string pkey = fileMetadata["pk"] ?? Guid.NewGuid().ToString();
-                        string key = fileMetadata["fk"];
-                        string scope = fileMetadata["fd"];
-                        long size = Int64.Parse(fileMetadata["fs"] ?? "0");
-
-                        if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
-                            throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
-
-                        if (scope == "private" && ! await _topoManager.CanEdit(key))
-                            throw new InvalidOperationException();
-
-                        if (scope == "public" && !_profile.IsAdmin)
-                            throw new InvalidOperationException();
-
-                        Log("uploading", null, filename);
-                        string dest = DestinationPath(filename, key, scope);
-
-                        using (var targetStream = System.IO.File.Create(dest))
-                        {
-                            await Save(section.Body, targetStream, size, pkey);
-                        }
-                    }
-                }
-
-                // Drains any remaining section body that has not been consumed and
-                // reads the headers for the next section.
-                section = await reader.ReadNextSectionAsync();
-            }
-
-            return Json(true);
-        }
-
-        private string DestinationPath(string filename, string key, string scope)
-        {
-            string fn = "", keypath = "", root = "", path = "";
-
-            //sanitize fn
+            string fn = "";
             char[] bad = Path.GetInvalidFileNameChars();
             foreach (char c in filename.ToCharArray())
                 if (!bad.Contains(c))
                     fn += c;
+            return fn;
+        }
 
-            bad = Path.GetInvalidPathChars();
-            foreach (char c in key.ToCharArray())
+        private string SanitizeFilePath(string path)
+        {
+            string p = "";
+            char[] bad = Path.GetInvalidPathChars();
+            foreach (char c in path.ToCharArray())
                 if (!bad.Contains(c))
-                    keypath += c;
+                    p += c;
+            return p;
+        }
+
+        private string BuildDestinationPath(string filename, string key, string scope)
+        {
+            string fn = SanitizeFileName(filename);
+            string path = "";
 
             switch (scope)
             {
                 case "public":
-                    path = _config.IsoRoot; //Path.Combine(_config.IsoRoot, "public");
+                    path = _config.IsoRoot;
                     break;
 
                 case "private":
-                    path = Path.Combine(_config.TopoRoot, keypath);
-                    break;
-
-                case "temp":
-                    path = Path.Combine(_config.TopoRoot, keypath, "temp");
-                    root = _config.TopoRoot;
-                    break;
-
-                case "img":
-                    path = Path.Combine(_config.MiscRoot, keypath);
+                    path = Path.Combine(_config.TopoRoot, key);
                     break;
 
                 default:
@@ -186,39 +198,37 @@ namespace TopoMojo.Controllers
 
             }
 
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
+            path = SanitizeFilePath(path);
             path = Path.Combine(path, fn);
             return path;
         }
 
-        private async Task Save(Stream source, Stream dest, long size, string key)
-        {
-            _monitor.Update(key, 0);
+        // private async Task Save(Stream source, Stream dest, long size, string key)
+        // {
+        //     _monitor.Update(key, 0);
 
-            if (size == 0) size = (long)5E9;
-            byte[] buffer = new byte[4096];
-            int bytes = 0, progress = 0;
-            long totalBytes = 0, totalBlocks = 0;
+        //     if (size == 0) size = (long)5E9;
+        //     byte[] buffer = new byte[4096];
+        //     int bytes = 0, progress = 0;
+        //     long totalBytes = 0, totalBlocks = 0;
 
-            do
-            {
-                bytes = await source.ReadAsync(buffer, 0, buffer.Length);
-                await dest.WriteAsync(buffer, 0, bytes);
-                totalBlocks += 1;
-                totalBytes += bytes;
-                if (totalBlocks % 1024 == 0)
-                {
-                    progress = (int)(((float)totalBytes / (float)size) * 100);
-                    _monitor.Update(key, progress);
-                }
-            } while (bytes > 0);
-            _monitor.Update(key, 100);
-            FileProgress fp = _monitor.Check(key);
-            int duration = (int)fp.Stop.Subtract(fp.Start).TotalSeconds;
-            _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
-        }
+        //     do
+        //     {
+        //         bytes = await source.ReadAsync(buffer, 0, buffer.Length);
+        //         await dest.WriteAsync(buffer, 0, bytes);
+        //         totalBlocks += 1;
+        //         totalBytes += bytes;
+        //         if (totalBlocks % 1024 == 0)
+        //         {
+        //             progress = (int)(((float)totalBytes / (float)size) * 100);
+        //             _monitor.Update(key, progress);
+        //         }
+        //     } while (bytes > 0);
+        //     _monitor.Update(key, 100);
+        //     FileProgress fp = _monitor.Check(key);
+        //     int duration = (int)fp.Stop.Subtract(fp.Start).TotalSeconds;
+        //     _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
+        // }
 
         public IActionResult Error()
         {

@@ -95,6 +95,7 @@ namespace TopoMojo
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
             services.AddScoped<IProfileResolver, ProfileResolver>();
+            services.AddScoped<IFileUploadHandler, FileUploadHandler>();
             services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
