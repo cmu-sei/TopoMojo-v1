@@ -17,8 +17,8 @@
                         <i class="fa fa-file-o"></i>
                         <span>{{ t.name }}</span>
                     </button>
-                    <span *ngIf="t.ownerId" class="text text-muted">{{ t.ownerDesc }}</span>
-                    <span *ngIf="t.ownerId == 0" class="text text-muted">{{ t.globalId }}</span>
+                    <span *ngIf="t.ownerId" class="text text-muted">{{ t.ownerName }}</span>
+                    <span *ngIf="t.ownerId == 0" class="text text-muted">Stock</span>
                 </div>
                 <div *ngIf="t === template" spellcheck="false" class="well">
                     <div class="checkbox">

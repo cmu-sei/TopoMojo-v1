@@ -62,14 +62,30 @@ export class TemplateManagerComponent implements OnInit {
                         if (templateLocal.ownerId != 0) {
                             this.service.loadTopo(templateLocal.ownerId)
                                 .subscribe(topoData => {
-                                    // store the topology identifier in the template object.  if no description, using globalId for now
-                                    if (topoData.description != null && topoData.description != "") {
-                                        templateLocal.ownerDesc = topoData.description;
+                                    // store the topology identifier in the template object.  if no name, using globalId for now
+                                    if (topoData.name != null && topoData.name != "") {
+                                        templateLocal.ownerName = topoData.name;
                                     } 
                                     else {
-                                        templateLocal.ownerDesc = topoData.globalId;
+                                        templateLocal.ownerName = topoData.globalId;
                                     }
                                 }, (err) => { this.service.onError(err) })
+
+                            // TODO - get linked items
+                            //this.service.listTopoTemplates(templateLocal.ownerId)
+                            //    .subscribe(topoData => {
+                            //        if (topoData != null) 
+                            //        {
+                            //            templateLocal.linkers = [];
+                            //            for (let linkerList of topoData)
+                            //            {
+                            //                // only display subsequent linked topos
+                            //                if (!linkerList.owned) {
+                            //                    templateLocal.linkers.push(linkerList);
+                            //                }
+                            //            }
+                            //        }
+                            //    }, (err) => { this.service.onError(err) })
                         }
                     }
                 }
