@@ -6,6 +6,8 @@ namespace TopoMojo.Core.Entities
     public class Template : Entity
     {
         public int OwnerId { get; set; }
+        [NotMapped]
+        public string OwnerName { get; set; }
         public string Description { get; set; }
         public bool IsPublished { get; set; }
         public string Detail { get; set; }

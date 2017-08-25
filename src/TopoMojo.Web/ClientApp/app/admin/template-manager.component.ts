@@ -54,41 +54,7 @@ export class TemplateManagerComponent implements OnInit {
             .subscribe(data => {
                 this.templates = this.templates.concat(data.results as any[]);
                 this.hasMore = data.total - (data.skip + data.take);
-                this.template = null;                
-                // traverse templates to see if they have an owner topology
-                if (this.templates != null) {
-                    for (let templateLocal of this.templates) {
-                        // only obtain topology if this template has a true owner
-                        if (templateLocal.ownerId != 0) {
-                            this.service.loadTopo(templateLocal.ownerId)
-                                .subscribe(topoData => {
-                                    // store the topology identifier in the template object.  if no name, using globalId for now
-                                    if (topoData.name != null && topoData.name != "") {
-                                        templateLocal.ownerName = topoData.name;
-                                    } 
-                                    else {
-                                        templateLocal.ownerName = topoData.globalId;
-                                    }
-                                }, (err) => { this.service.onError(err) })
-
-                            // TODO - get linked items
-                            //this.service.listTopoTemplates(templateLocal.ownerId)
-                            //    .subscribe(topoData => {
-                            //        if (topoData != null) 
-                            //        {
-                            //            templateLocal.linkers = [];
-                            //            for (let linkerList of topoData)
-                            //            {
-                            //                // only display subsequent linked topos
-                            //                if (!linkerList.owned) {
-                            //                    templateLocal.linkers.push(linkerList);
-                            //                }
-                            //            }
-                            //        }
-                            //    }, (err) => { this.service.onError(err) })
-                        }
-                    }
-                }
+                this.template = null;                   
             }, (err) => { this.service.onError(err) })           
     }
     select(template) {
