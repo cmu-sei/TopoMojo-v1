@@ -9,6 +9,9 @@
                 <i class="fa fa-plus-circle"></i> Add New Template
             </button>
         </div>
+        <div *ngIf="loading" class="spaced text-center">
+            <span class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></span>
+        </div>
         <ul *ngIf="templates" class="list-unstyled">
             <li *ngFor="let t of templates" class="">
                 <div class="">

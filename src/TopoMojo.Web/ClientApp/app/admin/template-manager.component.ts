@@ -20,6 +20,7 @@ export class TemplateManagerComponent implements OnInit {
         take: 20,
         filters: []
     }
+    loading: boolean;
 
     constructor(
         private service : TopoService,
@@ -50,12 +51,16 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     fireSearch() {
+        this.loading = true;
         this.service.listTemplates(this.model)
         .subscribe(data => {
             this.templates = this.templates.concat(data.results as any[]);
             this.hasMore = data.total - (data.skip+data.take);
             this.template = null;
-        }, (err) => { this.service.onError(err) })
+            }, (err) => { this.service.onError(err) },
+            () => {
+                this.loading = false;
+            })
     }
 
     select(template) {
