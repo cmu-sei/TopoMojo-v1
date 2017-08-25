@@ -6,11 +6,7 @@ import { AdminService} from './admin.service';
     //moduleId: module.id,
     selector: 'user-manager',
     templateUrl: 'user-manager.component.html',
-    styles: [`
-        .subdued {
-            color: lightgray;
-        }
-    `]
+    styleUrls: ['user-manager.component.css']
 })
 export class UserManagerComponent implements OnInit {
     plist: string;

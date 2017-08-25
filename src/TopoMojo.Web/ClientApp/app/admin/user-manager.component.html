@@ -1,15 +1,16 @@
 <div class="row">
-    <div class="">
-        <h4>Users</h4>
-        <search-bar (onSearch)="termChanged($event)"></search-bar>
+    <div class="col-xs-12">
+        <div class="spaced">
+            <search-bar (onSearch)="termChanged($event)"></search-bar>
+        </div>
         <ul *ngIf="roster" class="list-unstyled">
             <li *ngFor="let person of roster" class="">
                 <div class="">
                     <i class="fa fa-user"></i>
                     <span>{{ person.name }}</span>
                     <span class="subdued">{{ person.globalId }}</span>
-                    <button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
-                    <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>
+                    <!--<button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
+                    <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>-->
                 </div>
             </li>
         </ul>

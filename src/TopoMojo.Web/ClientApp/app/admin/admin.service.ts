@@ -19,7 +19,7 @@ export class AdminService {
     }
 
     roster(search) {
-        return this.http.post(this.url() + '/account/roster', search);
+        return this.http.post(this.url() + '/profile/list', search);
     }
 
     grant(p) {
