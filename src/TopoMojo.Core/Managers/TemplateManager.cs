@@ -95,6 +95,8 @@ namespace TopoMojo.Core
                 {
                     t.OwnerName = _db.Topologies.First(topo => topo.Id == t.OwnerId).Name;
                 }
+				// add linkers to the template model
+                t.Linkers = await ListTopologies(t);
             }
 
             SearchResult<Template> result = new SearchResult<Template>();
@@ -106,6 +108,27 @@ namespace TopoMojo.Core
                 .Take(search.Take)
                 .ToArrayAsync();
             return result;
+        }
+
+        private async Task<Linker[]> ListTopologies(Template t, bool includeOwner = false)
+        {
+			// return linkers that are associated with this template.  
+			// optionally include the owner
+
+            if (includeOwner)
+            {
+                return await _db.Linkers
+                    .Include(tt => tt.Topology)
+                    .Where(tt => tt.TemplateId == t.Id)
+                    .ToArrayAsync();
+            }
+            else
+            {
+                return await _db.Linkers
+                    .Include(tt => tt.Topology)
+                    .Where(tt => tt.TemplateId == t.Id && tt.TopologyId != t.OwnerId)
+                    .ToArrayAsync();
+            }
         }
 
         public async Task<bool> RemoveTemplate(int id)

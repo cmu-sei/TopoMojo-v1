@@ -239,6 +239,7 @@ namespace TopoMojo.Core
         {
             return await _db.Linkers
                 .Include(tt => tt.Template)
+                .Include(tt => tt.Topology)
                 .Where(tt => tt.TopologyId == id)
                 .ToArrayAsync();
         }
