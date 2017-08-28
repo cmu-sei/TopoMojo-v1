@@ -16,8 +16,10 @@ export class IsoManagerComponent implements OnInit {
     @Output() onSelected: EventEmitter<string> = new EventEmitter<string>();
     isos: Array<any> = [];
     queuedFiles : any[] = [];
+    pendingFiles : any[] = [];
     loading: boolean;
     uploading: boolean;
+    errorMessage: string;
 
     ngOnInit() {
     }
@@ -40,29 +42,52 @@ export class IsoManagerComponent implements OnInit {
         this.onSelected.emit(iso);
     }
 
-    fileSelectorChanged(e) {
-        // console.log(e.srcElement.files);
-        this.queuedFiles = [ e.srcElement.files[0] ];
+    private fileSelectorChanged(e) {
+        console.log(e.srcElement.files);
+        this.queuedFiles = [];
+        for (let i = 0; i < e.srcElement.files.length; i++) {
+            let file = e.srcElement.files[i];
+            this.queuedFiles.push({
+                key: this.id + "-" + file.name,
+                name: file.name,
+                file: file,
+                progress: -1
+            });
+        }
+        //this.queuedFiles = [ e.srcElement.files[0] ];
+    }
+    dequeueFile(qf) {
+        this.queuedFiles.splice(this.queuedFiles.indexOf(qf),1);
     }
 
     filesQueued() {
         return this.queuedFiles.length > 0;
     }
 
-    upload() {
-        for (let i = 0; i < this.queuedFiles.length; i++)
-            this.uploadFile(this.queuedFiles[i]);
-        this.queuedFiles = [];
+    canUpload() {
+        return this.queuedFiles.length > 0 && !this.uploading;
     }
 
-    uploadFile(file) {
-        // console.log(file);
-        this.service.uploadIso(this.id, file).subscribe(
+    upload() {
+        this.uploading = true;
+        for (let i = 0; i < this.queuedFiles.length; i++)
+            this.uploadFile(this.queuedFiles[i]);
+        //this.queuedFiles = [];
+    }
+
+    private uploadFile(qf) {
+        qf.progress = 0;
+        this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
             (result) => {
-                this.select("private/" + file.name);
+                this.select(qf.name);
             },
             (err) => {
-                console.log(err.text());
+                console.log(err.json());
+                this.errorMessage = err.json().message;
+            },
+            () => {
+                this.queuedFiles = [];
+                this.uploading = false;
             }
         );
     }

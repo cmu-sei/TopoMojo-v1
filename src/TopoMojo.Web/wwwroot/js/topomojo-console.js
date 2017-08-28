@@ -281,20 +281,15 @@ function WebConsole(
         var dest = $('input[name="uploadDest"]:checked').val();
         var data = new FormData();
         $.each(files, function(i, file) {
-            data.append('file', file, 'fd='+dest+'&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
+            data.append('meta', 'scope=private' + "&size=" + file.size + '&group-key=' + settings.topoId + '&monitor-key=' + key)
+            data.append('file', file, file.name);
+            // data.append('file', file, 'fd='+dest+'&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
         });
         $this.prop('disabled', true);
         setTimeout(checkProgress, 2500);
 
-        $.ajax({
-            url: '/file/upload',
-            type: 'POST',
-            data: data,
-            cache: false,
-            dataType: 'json',
-            processData: false,
-            contentType: false
-        }).fail(function(jqXhr, textStatus, err)
+        service.uploadFile(data)
+        .fail(function(jqXhr, textStatus, err)
         {
             //$this.next().next().text(jqXhr.responseJSON.message).addClass('label-danger');
             debug(jqXhr.responseJSON);
@@ -319,7 +314,7 @@ function WebConsole(
         $progressBtn.removeClass('hidden');
         var key = $progressBtn.data('key');
 
-        $.get('/api/file/progress/' + key)
+        service.uploadProgress(key)
         .fail(function(jqXhr, status, error) {
             debug(status);
         })
@@ -549,6 +544,14 @@ function VmService(
         return post('/api/vm/answer/' + id + '/' + qid + '/' + answer);
     }
 
+    this.uploadFile = function(data) {
+        return postFile('/api/file/upload', data);
+    }
+
+    this.uploadProgress = function(key) {
+        return get('/api/file/progress/' + key);
+    }
+
     function get(url) {
         return $.ajax({
             url: url,
@@ -568,6 +571,18 @@ function VmService(
         });
     }
 
+    function postFile(url, data) {
+        return $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            cache: false,
+            dataType: 'json',
+            processData: false,
+            contentType: false,
+            headers: authHeader()
+        });
+    }
     function authHeader() {
         return {
             "Authorization": "Bearer " + userManager.getUser().access_token

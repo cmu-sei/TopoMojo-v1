@@ -76,6 +76,7 @@ namespace TopoMojo.Controllers
 
                     // Log("uploading", null, filename);
                     string dest = BuildDestinationPath(filename, key, scope);
+                    metadata.Add("destination-path", dest);
                     string path = Path.GetDirectoryName(dest);
                     if (!Directory.Exists(path))
                         Directory.CreateDirectory(path);
@@ -83,6 +84,12 @@ namespace TopoMojo.Controllers
                     return System.IO.File.Create(dest);
                 },
                 status => {
+                    if (status.Error != null)
+                    {
+                        string dp = status.Metadata["destination-path"];
+                        if (System.IO.File.Exists(dp))
+                            System.IO.File.Delete(dp);
+                    }
                     _monitor.Update(status.Key, status.Progress);
                     // TODO: broadcast progress to group
                 },
@@ -90,6 +97,9 @@ namespace TopoMojo.Controllers
                     options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
                 }
             );
+
+            //TODO: handle exceptions -- remove partially saved files
+
             return Json(true);
         }
 

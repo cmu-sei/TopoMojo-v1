@@ -111,35 +111,43 @@ namespace TopoMojo.Services
 
         private async Task Save(Stream source, Stream dest, FileUploadStatus status, Action<FileUploadStatus> statusUpdate)
         {
-            status.StartedAt = DateTime.UtcNow;
-            if (statusUpdate != null)
-                statusUpdate.Invoke(status);
-
-            byte[] buffer = new byte[4096];
-            int bytes = 0;
-            long totalBlocks = 0;
-
-            do
+            try
             {
-                bytes = await source.ReadAsync(buffer, 0, buffer.Length);
-                await dest.WriteAsync(buffer, 0, bytes);
-                totalBlocks += 1;
-                status.Count += bytes;
-                if (totalBlocks % 1024 == 0 && statusUpdate != null)
-                {
+                status.StartedAt = DateTime.UtcNow;
+                if (statusUpdate != null)
                     statusUpdate.Invoke(status);
-                }
-            } while (bytes > 0);
 
-            await dest.FlushAsync();
-            dest.Dispose();
+                byte[] buffer = new byte[4096];
+                int bytes = 0;
+                long totalBlocks = 0;
 
-            status.Count = status.Size;
-            status.StoppedAt = DateTime.UtcNow;
-            if (statusUpdate != null)
-                statusUpdate.Invoke(status);
+                do
+                {
+                    bytes = await source.ReadAsync(buffer, 0, buffer.Length);
+                    await dest.WriteAsync(buffer, 0, bytes);
+                    totalBlocks += 1;
+                    status.Count += bytes;
+                    if (totalBlocks % 1024 == 0 && statusUpdate != null)
+                    {
+                        statusUpdate.Invoke(status);
+                    }
+                } while (bytes > 0);
 
-            _logger.LogInformation("File upload complete: {0} {1}b {2}s {3}b/s", status.Key, status.Count, status.Duration, status.Rate);
+                status.Count = status.Size;
+                status.StoppedAt = DateTime.UtcNow;
+                _logger.LogInformation("File upload complete: {0} {1}b {2}s {3}b/s", status.Key, status.Count, status.Duration, status.Rate);
+            }
+            catch (Exception ex)
+            {
+                status.Error = ex;
+                _logger.LogError(0, ex, "File upload failed: {0}", status.Key);
+            }
+            finally
+            {
+                await dest.FlushAsync();
+                dest.Dispose();
+                statusUpdate.Invoke(status);  //give caller chance to clean up
+            }
         }
     }
 
@@ -151,6 +159,7 @@ namespace TopoMojo.Services
         public long Count { get; set; }
         public DateTime StartedAt { get; set; }
         public DateTime StoppedAt { get; set; }
+        public Exception Error { get; set; }
         public int Progress {
             get
             {

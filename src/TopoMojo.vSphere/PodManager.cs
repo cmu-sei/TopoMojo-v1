@@ -17,12 +17,12 @@ namespace TopoMojo.vSphere
     {
         public PodManager(
             PodConfiguration options,
-            TemplateOptions templateOptions,
+            //TemplateOptions templateOptions,
             ILoggerFactory mill
         )
         {
             _options = options;
-            _optTemplate = templateOptions;
+            //_optTemplate = templateOptions;
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
             _hostCache = new Dictionary<string, VimHost>();
@@ -33,7 +33,7 @@ namespace TopoMojo.vSphere
         }
 
         private readonly PodConfiguration _options;
-        private readonly TemplateOptions _optTemplate;
+        //private readonly TemplateOptions _optTemplate;
         private readonly ILogger<PodManager> _logger;
         private readonly ILoggerFactory _mill;
 
@@ -147,13 +147,25 @@ namespace TopoMojo.vSphere
             if (vm == null)
                 throw new InvalidOperationException();
 
+            VimHost host = FindHostByVm(id);
             VmOptions vmo = null;
             //sanitze inputs
             if (change.Key == "iso")
             {
-                 vmo = await GetVmIsoOptions(vm.Name.Tag());
+                vmo = await GetVmIsoOptions(vm.Name.Tag());
                 if (!vmo.Iso.Contains(change.Value))
                     throw new InvalidOperationException();
+
+                //translate display path back to actual path
+                if (change.Value.StartsWith("public"))
+                {
+                    change.Value = host.Options.IsoStore + System.IO.Path.GetFileName(change.Value);
+                }
+                else
+                {
+                    change.Value = host.Options.DiskStore + vm.Name.Tag() + "/" + System.IO.Path.GetFileName(change.Value);
+                }
+
             }
 
             if (change.Key == "net")
@@ -163,7 +175,6 @@ namespace TopoMojo.vSphere
                     throw new InvalidOperationException();
             }
 
-            VimHost host = FindHostByVm(id);
             return await host.Change(id, change);
         }
 
@@ -293,34 +304,34 @@ namespace TopoMojo.vSphere
         public async Task<TemplateOptions> GetTemplateOptions(string key)
         {
 
-            TemplateOptions to = new TemplateOptions
-            {
-                Cpu = _optTemplate.Cpu,
-                Ram = _optTemplate.Ram,
-                Adapters = _optTemplate.Adapters,
-                Iso = (_optTemplate.Iso != null) ? _optTemplate.Iso : new string[] {},
-                Source = (_optTemplate.Source != null) ? _optTemplate.Source : new string[] {},
-                Guest = (_optTemplate.Guest != null) ? _optTemplate.Guest : new string[] {}
-            };
+            TemplateOptions to = new TemplateOptions();
+            // {
+            //     Cpu = _optTemplate.Cpu,
+            //     Ram = _optTemplate.Ram,
+            //     Adapters = _optTemplate.Adapters,
+            //     Iso = (_optTemplate.Iso != null) ? _optTemplate.Iso : new string[] {},
+            //     Source = (_optTemplate.Source != null) ? _optTemplate.Source : new string[] {},
+            //     Guest = (_optTemplate.Guest != null) ? _optTemplate.Guest : new string[] {}
+            // };
 
-            VimHost host = FindHostByRandom();
-            if (host != null)
-            {
-                    List<Task<string[]>> taskList = new List<Task<string[]>>();
-                    taskList.Add(host.GetFiles(host.Options.IsoStore + "public/*.iso", false));
-                    taskList.Add(host.GetFiles(host.Options.DiskStore + key + "/*.iso", false));
-                    taskList.Add(host.GetFiles(host.Options.StockStore + "*.vmdk", false));
-                    taskList.Add(host.GetGuestIds(""));
-                    var aggr = await Task.WhenAll<string[]>(taskList);
-                    to.Iso = to.Iso.Union(aggr[0].Union(aggr[1]))
-                        //.Select(x => x.Replace(".iso",""))
-                        .ToArray();
-                    to.Source = to.Source.Union(aggr[2])
-                        .Where(x=>!x.Contains("-flat"))
-                        //.Select(x => x.Replace(".vmdk", ""))
-                        .ToArray();
-                    to.Guest = to.Guest.Union(aggr[3]).ToArray();
-            }
+            // VimHost host = FindHostByRandom();
+            // if (host != null)
+            // {
+            //         List<Task<string[]>> taskList = new List<Task<string[]>>();
+            //         taskList.Add(host.GetFiles(host.Options.IsoStore + "public/*.iso", false));
+            //         taskList.Add(host.GetFiles(host.Options.DiskStore + key + "/*.iso", false));
+            //         taskList.Add(host.GetFiles(host.Options.StockStore + "*.vmdk", false));
+            //         taskList.Add(host.GetGuestIds(""));
+            //         var aggr = await Task.WhenAll<string[]>(taskList);
+            //         to.Iso = to.Iso.Union(aggr[0].Union(aggr[1]))
+            //             //.Select(x => x.Replace(".iso",""))
+            //             .ToArray();
+            //         to.Source = to.Source.Union(aggr[2])
+            //             .Where(x=>!x.Contains("-flat"))
+            //             //.Select(x => x.Replace(".vmdk", ""))
+            //             .ToArray();
+            //         to.Guest = to.Guest.Union(aggr[3]).ToArray();
+            // }
             return to;
         }
 
@@ -328,8 +339,14 @@ namespace TopoMojo.vSphere
         {
             VimHost host = FindHostByRandom();
             List<string> isos = new List<string>();
-            isos.AddRange(await host.GetFiles(host.Options.IsoStore + "/*.iso", false));
-            isos.AddRange(await host.GetFiles(host.Options.DiskStore + id + "/*.iso", true));
+
+            //translate actual path to display path
+            isos.AddRange(
+                (await host.GetFiles(host.Options.IsoStore + "/*.iso", false))
+                .Select(x => "public/" + System.IO.Path.GetFileName(x)).ToArray());
+            isos.AddRange(
+                (await host.GetFiles(host.Options.DiskStore + id + "/*.iso", false))
+                .Select(x => System.IO.Path.GetFileName(x)));
             isos.Sort();
             return new VmOptions {
                 Iso = isos.ToArray()
@@ -358,11 +375,21 @@ namespace TopoMojo.vSphere
 
         private void NormalizeTemplate(Template template, PodConfiguration option)
         {
-            if (!template.Iso.HasValue()) template.Iso = option.IsoStore + "null.iso";
-            if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
+            if (!template.Iso.HasValue())
             {
-                template.Iso = option.IsoStore + template.Iso + ".iso";
+                template.Iso = option.IsoStore + "null.iso";
             }
+            else
+            {
+                template.Iso = (template.Iso.StartsWith("public"))
+                    ? template.Iso = option.IsoStore + System.IO.Path.GetFileName(template.Iso)
+                    : template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
+            }
+
+            // if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
+            // {
+            //     template.Iso = option.IsoStore + template.Iso + ".iso";
+            // }
 
             if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
             {

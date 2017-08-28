@@ -84,5 +84,6 @@ export class TemplateEditorComponent implements OnInit {
         this.tref.iso = iso;
         this.save();
         this.isosVisible = false;
+        // todo: if vm, change iso
     }
 }
