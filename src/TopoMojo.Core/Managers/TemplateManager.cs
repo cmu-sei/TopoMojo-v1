@@ -87,6 +87,16 @@ namespace TopoMojo.Core
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
 
+            // Obtain the owner's topology name
+            foreach (Template t in q)
+            {
+                t.OwnerName = string.Empty;
+                if (_db.Topologies.Any(topo => topo.Id == t.OwnerId))
+                {
+                    t.OwnerName = _db.Topologies.First(topo => topo.Id == t.OwnerId).Name;
+                }
+            }
+
             SearchResult<Template> result = new SearchResult<Template>();
             result.Search = search;
             result.Total = await q.CountAsync();

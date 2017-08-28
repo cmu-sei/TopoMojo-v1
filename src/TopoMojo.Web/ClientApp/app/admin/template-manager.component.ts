@@ -62,7 +62,6 @@ export class TemplateManagerComponent implements OnInit {
                 this.loading = false;
             })
     }
-
     select(template) {
         if (this.template === template) {
             this.template = null;

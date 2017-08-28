@@ -60,7 +60,7 @@ namespace TopoMojo.Controllers
             // Topology t = await _mgr.LoadAsync(id);
             // if (t.ShareCode.HasValue())
             //     t.ShareCode = $"{Request.Scheme}://{Request.Host}/enlist/{t.ShareCode}";
-            return await _mgr.LoadAsync(id);;
+            return await _mgr.LoadAsync(id);
         }
 
         [HttpDelete("{id}")]
