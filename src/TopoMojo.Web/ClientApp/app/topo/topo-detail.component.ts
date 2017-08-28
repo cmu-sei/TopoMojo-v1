@@ -3,7 +3,10 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopoService } from './topo.service';
 import 'rxjs/add/operator/switchMap';
 import { DOCUMENT } from "@angular/platform-browser";
-import { SignalR, BroadcastEventListener, SignalRConnection } from 'ng2-signalr';
+import { SignalR, BroadcastEventListener, ISignalRConnection } from 'ng2-signalr';
+import {Observable, Subscription, Subject} from 'rxjs/Rx';
+
+import { ORIGIN_URL } from '../shared/constants/baseurl.constants';
 
 @Component({
     selector: 'topo-detail',
@@ -21,47 +24,72 @@ export class TopoDetailComponent {
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
     showing: string = "topo";
-    host: string;
-    private connection: SignalRConnection;
+    //host: string;
+    private connection: ISignalRConnection;
+    private subs: Subscription[] = [];
+    private id: number;
 
     constructor(
         private service: TopoService,
         private route: ActivatedRoute,
         private router: Router,
+        @Inject(ORIGIN_URL) private origin,
         @Inject(DOCUMENT) private dom : Document
     ) {
         this.connection = this.route.snapshot.data['connection'];
     }
 
     ngOnInit(): void {
-        let onMessageSent$  = this.connection.listenFor('topoUpdated');
-        onMessageSent$.subscribe(msg => {
-            console.log(msg);
-        });
 
-        this.route.params
-            .switchMap((params: Params) => this.service.loadTopo(params['id']))
-            .subscribe(
-                (result) => {
-                    this.topo = result as any;
-                    console.log(this.topo);
-                    this.connection.invoke('Listen', result.globalId, "jam-token")
-                        .catch(reason => {
-                        console.log(reason);
-                    });
-                },
-                (err) => { this.service.onError(err); });
+        //this.loading = true;
+        this.id = +this.route.snapshot.paramMap.get('id');
+        this.service.loadTopo(this.id).subscribe(
+            (result) => {
+                this.topo = result as any;
+                //console.log(this.topo);
 
-        this.route.params
-            .switchMap((params: Params) => this.service.listTopoTemplates(params['id']))
-            .subscribe(result => {
-                this.trefs = result as any[];
-            }, (err) => { this.service.onError(err); });
+                this.initNotifications();
 
-        this.service.ipCheck().subscribe(data => {
-            console.log(data);
-            this.host = data.host;
-        });
+                this.service.listTopoTemplates(result.id).subscribe(
+                    (result) => {
+                        this.trefs = result as any[];
+                    },
+                    (err) => {
+                        this.service.onError(err);
+                    }
+                );
+            },
+            (err) => {
+                this.service.onError(err);
+            }
+        );
+
+    }
+
+    initNotifications() {
+        this.connection.start().then(
+            (conn: ISignalRConnection) => {
+                //this.game = game;
+                this.connection = conn;
+                this.subs.push(
+                    this.connection.listenFor('topoUpdated').subscribe(
+                        msg => {
+                            console.log(msg);
+                        }
+                    )
+                );
+                this.subs.push(
+                    this.connection.listenFor("vmUpdated").subscribe(
+                        (vm: any) => {
+                            console.log(vm);
+                            //this.onVmUpdated(vm);
+                        }
+                    )
+                );
+                this.connection.invoke("Listen", this.topo.globalId);
+                //this.loading = false;
+            }
+        );
     }
 
     ngOnDestroy() {
@@ -72,6 +100,12 @@ export class TopoDetailComponent {
         .catch(reason => {
             console.log(reason);
         });
+
+        this.subs.forEach(
+            (sub) => {
+                sub.unsubscribe();
+            }
+        );
     }
 
     copyToClipboard(text : string) {
@@ -82,11 +116,11 @@ export class TopoDetailComponent {
     }
 
     clipShareUrl() {
-        this.copyToClipboard(this.host + "/enlist/" + this.topo.shareCode);
+        this.copyToClipboard(this.origin + "/enlist/" + this.topo.shareCode);
     }
 
     clipPublishUrl() {
-        this.copyToClipboard(this.host + "/mojo/" + this.topo.id);
+        this.copyToClipboard(this.origin + "/mojo/" + this.topo.id);
     }
 
     toggleSelector() {

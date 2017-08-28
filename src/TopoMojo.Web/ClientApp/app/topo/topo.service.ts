@@ -18,10 +18,6 @@ export class TopoService {
         return this.settings.urls.apiUrl;
     }
 
-    public ipCheck() {
-        return this.http.get(this.url() + "/topology/ipcheck");
-    }
-
     public createTopo(topo) {
         return this.http.post(this.url() + "/topology/create", topo);
     }

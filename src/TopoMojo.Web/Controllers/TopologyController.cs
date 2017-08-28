@@ -190,15 +190,6 @@ namespace TopoMojo.Controllers
             return await _pod.GetVmNetOptions(id);
         }
 
-        [HttpGet]
-        [JsonExceptionFilter]
-        public object IpCheck()
-        {
-            return new {
-                Host = $"{Request.Scheme}://{Request.Host}",
-                IpAddress = Request.HttpContext.Connection.RemoteIpAddress
-            };
-        }
     }
 
 }
