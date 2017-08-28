@@ -22,6 +22,25 @@
                     </button>
                     <span *ngIf="t.ownerId" class="text text-muted">{{ t.ownerName }}</span>
                     <span *ngIf="t.ownerId == 0" class="text text-muted">Stock</span>
+                    <!-- only display linkers link if any are found -->
+                   <span *ngIf="t.linkers && t.linkers.length > 0">
+                        <button (click)="selectLinker(t)" class="btn btn-link">
+                            <span>Linked Topologies</span>
+                        </button>
+                   </span>
+                    <span *ngIf="t.linkers.length == 0">
+                        <span class="spaced text text-muted">No Linked Topologies</span>
+                    </span>
+                </div>
+                <!-- loop through the found links and display associated topo names -->
+                <div *ngIf="t === templateLinker">
+                    <ul *ngIf="t.linkers">
+                        <li *ngFor="let linker of t.linkers">
+                            <div class="">
+                                <span>{{linker.topology.name}}</span>
+                             </div>
+                        </li>
+                    </ul>
                 </div>
                 <div *ngIf="t === template" spellcheck="false" class="well">
                     <div class="checkbox">

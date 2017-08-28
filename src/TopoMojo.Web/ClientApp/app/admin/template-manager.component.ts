@@ -9,6 +9,7 @@ import { TopoService } from '../topo/topo.service';
 })
 export class TemplateManagerComponent implements OnInit {
     template: any;
+    templateLinker: any;
     templates: any[] = [];
     icon: string = 'fa fa-clipboard';
     //private term: string = '';
@@ -128,5 +129,13 @@ export class TemplateManagerComponent implements OnInit {
 
     clearError() {
         this.errorMessage = null;
+    }
+
+    selectLinker(template) {
+        if (this.templateLinker === template) {
+            this.templateLinker = null;
+        } else {
+            this.templateLinker = template;
+        }
     }
 }
