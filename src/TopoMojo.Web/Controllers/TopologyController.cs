@@ -176,6 +176,20 @@ namespace TopoMojo.Controllers
             return await _mgr.Publish(id, true);
         }
 
+        [HttpGet("{id}")]
+        [JsonExceptionFilter]
+        public async Task<VmOptions> Isos([FromRoute] string id)
+        {
+            return await _pod.GetVmIsoOptions(id);
+        }
+
+        [HttpGet("{id}")]
+        [JsonExceptionFilter]
+        public async Task<VmOptions> Nets([FromRoute] string id)
+        {
+            return await _pod.GetVmNetOptions(id);
+        }
+
         [HttpGet]
         [JsonExceptionFilter]
         public object IpCheck()
