@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SettingsService, Layout } from './auth/settings.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app',
@@ -21,8 +22,12 @@ export class AppComponent {
     constructor (
         private service : AuthService,
         private router: Router,
-        private settings: SettingsService
-    ){ }
+        private settings: SettingsService,
+        private translator: TranslateService
+    ){
+        translator.setDefaultLang('en');
+        translator.use('en');
+    }
 
     ngOnInit() {
         this.appName = this.settings.branding.applicationName || "TopoMojo";

@@ -3,4 +3,5 @@
 </button>
 <div *ngIf="visible" class="alert alert-info">
     <ng-content></ng-content>
+    <span *ngIf="message" translate>{{message}}</span>
 </div>

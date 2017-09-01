@@ -12,7 +12,7 @@ export class ConnectionResolver implements Resolve<ISignalRConnection> {
     )  { }
 
     resolve() {
-        console.log('ConnectionResolver. Resolving...');
+        // console.log('ConnectionResolver. Resolving...');
         let config: IConnectionOptions = { qs: "bearer=" + this.auth.currentUser.access_token };
         return this._signalR.createConnection(config);
     }

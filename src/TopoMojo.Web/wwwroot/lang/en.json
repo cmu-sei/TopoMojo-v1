@@ -1,0 +1,53 @@
+{
+    "BROWSE" : "Browse",
+    "WORKSPACE" : "Workspace",
+    "GAMESPACE" : "Gamespace",
+    "LOGOUT" : "Logout",
+    "NAME": "Name",
+    "CANCEL" : "Cancel",
+    "CONFIRM" : "Please confirm.",
+    "DESCRIPTION" : "Description",
+    "DELETE" : "Delete",
+    "DELETE-TOPO" : "Delete Topology",
+    "DELETE-TOPO-PROMPT" : "Please confirm you intend to delete this Topology along with its templates.",
+    "DELETE-TEMPLATE" : "Delete Template",
+    "DELETE-INSTANCE" : "Delete Gamespace",
+    "MACHINES" : "Machines",
+    "MORE" : "More",
+    "EDIT" : "Edit",
+    "LAUNCH" : "Launch",
+    "SEARCH" : "Search",
+    "NEW" : "New",
+    "DOCUMENT" : "Document",
+    "TOPOLOGY" : "Topo",
+    "SHARE" : "Share",
+    "ADMIN" : "Admin",
+    "AUTHORS" : "By",
+    "PUBLISH" : "Publish",
+    "ENGLISH": "English",
+    "PIGLATIN" : "Piglatin",
+    "MACHINE-LIST-EMPTY" : "No machines referenced yet.",
+    "ADD-MACHINES" : "Add Machines",
+    "EXTERNAL-URL" : "External Url",
+    "INTERNAL-DOC" : "Internal Doc",
+    "EVENT" : {
+        "PRESENCE": {
+            "ARRIVED" : "{{actor.name}} arrived.",
+            "GREETED" : "{{actor.name}}: \"Welcome!\"",
+            "DEPARTED" : "{{actor.name}} departed."
+        },
+        "TOPO" : {
+            "UPDATED": "{{actor.name}} updated topo.",
+            "SHARED": "{{actor.name}} shared topo.",
+            "PUBLISHED": "{{actor.name}} published topo.",
+            "DELETED": "{{actor.name}} deleted topo."
+        }
+    },
+    "HELP" : {
+        "ABOUT": "About",
+        "PUBLISH" : "When published, this topology is discoverable in the browser.",
+        "SHARE" : "Distribute this link to people you want to help build this topology.",
+        "EXTERNAL-URL" : "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document."
+
+    }
+}

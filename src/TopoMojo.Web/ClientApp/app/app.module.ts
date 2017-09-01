@@ -3,6 +3,9 @@ import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@an
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { APP_BASE_HREF } from '@angular/common';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
+import { TranslateHttpLoader} from '@ngx-translate/http-loader';
 import { ORIGIN_URL } from './shared/constants/baseurl.constants';
 import { AuthModule } from './auth/auth.module';
 import { CoreModule } from './core/core.module';
@@ -26,8 +29,18 @@ export function createConfig(): SignalRConfiguration {
     c.hubName = 'TopologyHub';
     c.qs = { user: 'jam' };
     c.url = getOriginUrl();
-    c.logging = true;
+    c.logging = false;
     return c;
+}
+export function createTranslateLoader(http: HttpClient, baseHref) {
+
+    // Temporary Azure hack
+    if (baseHref === 'undefined' && typeof window !== 'undefined') {
+        baseHref = window.location.origin;
+    }
+
+    // i18n files are in `wwwroot/lang/`
+    return new TranslateHttpLoader(http, `/lang/`, '.json');
 }
 
 @NgModule({
@@ -37,6 +50,7 @@ export function createConfig(): SignalRConfiguration {
     ],
     imports: [
         BrowserModule,
+        HttpClientModule,
         SharedModule,
         AuthModule,
         //ProfileModule,
@@ -46,6 +60,13 @@ export function createConfig(): SignalRConfiguration {
         AdminModule,
         CoreModule,
         ChatModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: (createTranslateLoader),
+                deps: [HttpClient]
+            }
+        }),
         SignalRModule.forRoot(createConfig),
         RouterModule.forRoot([
             { path: '', redirectTo: 'home', pathMatch: 'full' },

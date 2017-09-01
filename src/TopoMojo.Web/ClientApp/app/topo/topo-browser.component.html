@@ -34,17 +34,21 @@
                             <!--<p><span class="label label-default">Templates</span> {{t.templates || 'None'}}</p>-->
                             <!--<hr/>-->
                             <div class="pull-right">
-                                <button *ngIf="t.canManage" class="btn btn-link" tooltip="edit" [routerLink]="['/topo', t.id]">
+                                <button *ngIf="t.canManage" class="btn btn-link"
+                                [tooltip]="'EDIT'|translate|lowercase"
+                                [routerLink]="['/topo', t.id]">
                                     <i class="fa fa-edit text text-success"></i>
                                 </button>
-                                <button class="btn btn-link" tooltip="launch" [routerLink]="['/mojo', t.id]">
+                                <button class="btn btn-link"
+                                    [tooltip]="'LAUNCH'|translate|lowercase"
+                                    [routerLink]="['/mojo', t.id]">
                                     <i class="fa fa-flash text text-warning"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="col-xs-10 col-xs-offset-1">
-                            <p><span class="label label-default">By</span> {{t.people}}</p>
-                            <p><span class="label label-default">Description</span> {{ t.description }}</p>
+                            <p><span class="label label-default" translate>AUTHORS</span> {{t.people}}</p>
+                            <p><span class="label label-default" translate>DESCRIPTION</span> {{ t.description }}</p>
                         </div>
                         <!--<hr class="col-xs-10 col-xs-offset-1" />-->
                     <!--</div>-->
@@ -52,7 +56,7 @@
             <!--</div>-->
         <!--</div>-->
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
-            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+            <i class="fa fa-search"></i> <span translate>MORE</span> <span class="badge">{{hasMore}}</span>
         </button>
     </div>
     <!--</div>-->

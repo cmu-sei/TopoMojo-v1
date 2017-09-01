@@ -3,7 +3,7 @@
 <div class="input-group">
     <div class="form-group has-feedback has-clear">
         <input type="text" class="form-control"
-            placeholder="Search"
+            [placeholder]="'SEARCH'|translate"
             #term (keyup)="refresh(term.value)"
         />
     <!--<input id="search-term" type="text" class="form-control" placeholder="Search">-->
@@ -19,5 +19,5 @@
 <ng-content></ng-content>
 
 <button *ngIf="hasMore" (click)="more()" class="btn btn-primary">
-    <i class="fa fa-search"></i> More
+    <i class="fa fa-search"></i> <span translate>MORE</span>
 </button>

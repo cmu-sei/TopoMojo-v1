@@ -6,13 +6,14 @@ export class LocalUserService {
     constructor() {
     }
 
-    storageKey: string = "sketch.auth.jwt";
+    storageKey: string = "sketch.auth.jwt.";
     timer: any;
     token: any;
     events: LocalUserEvents = new LocalUserEvents();
     headsup: number = 60;
 
     init() : void {
+        this.storageKey += window.navigator.userAgent.substring(window.navigator.userAgent.lastIndexOf(' '));
         console.log("localtoken: loading token from storage");
         let token = localStorage.getItem(this.storageKey);
         if (!!token) {

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
-import { CommonModule }       from '@angular/common';
-import { FormsModule }        from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule} from '@ngx-translate/core';
 import { SearchBarComponent } from './searchbar.component';
 import { EntityListComponent } from './entity-list.component';
 import { InlineEditorComponent} from './inline-editor.component';
@@ -11,6 +12,8 @@ import { InlineHelpComponent } from './inline-help.component';
 import { UntaggedStringPipe } from './pipes';
 import { ConfirmDeleteComponent } from './confirm-delete.component';
 import { ConnectionResolver } from './connection.resolver';
+import { NotificationService } from './notification.service';
+import { NotificationPanelComponent }  from './notification-panel.component';
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
 
@@ -18,7 +21,8 @@ export * from "./tooltip.component";
 @NgModule({
     imports: [
         CommonModule,
-        FormsModule
+        FormsModule,
+        TranslateModule
     ],
     declarations: [
         SearchBarComponent,
@@ -29,11 +33,13 @@ export * from "./tooltip.component";
         TooltipContent,
         Collapser,
         UntaggedStringPipe,
-        ConfirmDeleteComponent
+        ConfirmDeleteComponent,
+        NotificationPanelComponent
     ],
     exports: [
         CommonModule,
         FormsModule,
+        TranslateModule,
         SearchBarComponent,
         EntityListComponent,
         InlineEditorComponent,
@@ -42,10 +48,12 @@ export * from "./tooltip.component";
         TooltipContent,
         Collapser,
         UntaggedStringPipe,
-        ConfirmDeleteComponent
+        ConfirmDeleteComponent,
+        NotificationPanelComponent
     ],
     providers: [
-        ConnectionResolver
+        ConnectionResolver,
+        NotificationService
     ],
     entryComponents: [
         TooltipContent

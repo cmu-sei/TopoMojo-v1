@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SettingsService, Layout } from '../auth/settings.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'navbar',
@@ -19,7 +20,8 @@ export class NavbarComponent {
     constructor (
         private service : AuthService,
         private router: Router,
-        private settings: SettingsService
+        private settings: SettingsService,
+        private translate: TranslateService
     ){ }
 
     ngOnInit() {
@@ -36,4 +38,7 @@ export class NavbarComponent {
         this.router.navigate(['/home']);
     }
 
+    lang(code) {
+        this.translate.use(code);
+    }
 }

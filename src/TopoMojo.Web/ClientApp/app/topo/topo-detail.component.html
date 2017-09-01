@@ -4,28 +4,28 @@
             <h4>{{ topo.name }}</h4>
             <div class="btn-group btn-group-justified">
                 <a class="btn btn-default btn-lg" [class.link-active]="showing=='topo'" (click)="show('topo')">
-                    <i class="fa fa-sitemap"></i> Topo
+                    <i class="fa fa-sitemap"></i> <span translate>TOPOLOGY</span>
                 </a>
                 <a class="btn btn-default btn-lg" [class.link-active]="showing=='templates'" (click)="show('templates')">
-                    <i class="fa fa-tv"></i> Machines
+                    <i class="fa fa-tv"></i> <span translate>MACHINES</span>
                 </a>
                 <a class="btn btn-default btn-lg" [class.link-active]="showing=='document'" (click)="show('document')">
-                    <i class="fa fa-file-text-o"></i> Document
+                    <i class="fa fa-file-text-o"></i> <span translate>DOCUMENT</span>
                 </a>
             </div>
             <p *ngIf="!trefs">Loading...</p>
         </div>
         <div [class.hidden]="showing!='topo'" class="col-xs-12 well">
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">Name</span>
+                <span class="col-xs-2 prop-label" translate>NAME</span>
                 <inline-editor class="col-xs-10" type="text" size="30" (onSave)="update()" [(ngModel)]="topo.name"></inline-editor>
             </div>
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">Description</span>
+                <span class="col-xs-2 prop-label" translate>DESCRIPTION</span>
                 <inline-editor class="col-xs-10" type="textarea" rows="3" (onSave)="update()" [(ngModel)]="topo.description"></inline-editor>
             </div>
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">Publish</span>
+                <span class="col-xs-2 prop-label" translate>PUBLISH</span>
                 <div class="col-xs-10">
                     <button *ngIf="!topo.isPublished" (click)="publish()" class="btn btn-link" tooltip="enable">
                         <i class="fa fa-toggle-off"></i>
@@ -38,13 +38,11 @@
                                 <i class="fa fa-clipboard"></i>
                         </button>
                     </span>
-                    <inline-help>
-                        When published, this topology is discoverable in the browser.
-                    </inline-help>
+                    <inline-help message="HELP.PUBLISH"></inline-help>
                 </div>
             </div>
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">Share</span>
+                <span class="col-xs-2 prop-label" translate>SHARE</span>
                 <div class="col-xs-10">
                     <button *ngIf="!topo.shareCode" (click)="share()" class="btn btn-link" tooltip="enable">
                         <i class="fa fa-toggle-off"></i>
@@ -58,29 +56,26 @@
                         </button>
                         <!--<a href="/enlist/{{topo.shareCode}}">url-to-distribute</a>-->
                     </span>
-                    <inline-help>
-                        Distribute this link to people you want to help build this topology.
-                    </inline-help>
+                    <inline-help message="HELP.SHARE"></inline-help>
                 </div>
             </div>
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">People</span>
+                <span class="col-xs-2 prop-label" translate>AUTHORS</span>
                 <topo-members class="col-xs-10" [topoId]="topo.id"></topo-members>
             </div>
             <div class="col-xs-12" style="text-align:center;">
                 <hr/>
                 <confirm-delete
                     (onDelete)="delete()"
-                    label="Delete Topology"
-                    prompt="Please confirm you intend to delete this Topology
-                    along with its templates.">
+                    label="DELETE-TOPO"
+                    prompt="DELETE-TOPO-PROMPT">
                 </confirm-delete>
             </div>
             <textarea id="clipboardText" class="offscreen"></textarea>
 
         </div>
         <div [class.hidden]="showing!='templates'"  class="col-xs-12 well">
-            <p *ngIf="!trefs || trefs.length == 0">No machines referenced yet.</p>
+            <p *ngIf="!trefs || trefs.length == 0" translate>MACHINE-LIST-EMPTY</p>
             <div *ngIf="trefs" >
                 <div *ngFor="let t of trefs" class="truncate">
                     <template-editor [topo]="topo" [tref]="t" (onRemoved)="remove($event)"></template-editor>
@@ -90,7 +85,7 @@
                 <hr/>
                 <div class="col-xs-12" style="text-align:center;">
                     <button (click)="toggleSelector()" class="btn btn-info">
-                        <i class="fa fa-plus-circle"></i> Add Machines
+                        <i class="fa fa-plus-circle"></i> <span translate>ADD-MACHINES</span>
                     </button>
                 </div>
                 <div *ngIf="selectorVisible">
@@ -104,7 +99,7 @@
         </div>
         <div [class.hidden]="showing!='document'"  class="col-xs-12 well">
             <div class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">External Url</span>
+                <span class="col-xs-2 prop-label" translate>EXTERNAL-URL</span>
                 <div class="col-xs-10">
                     <inline-editor
                         type="text" size="30"
@@ -113,14 +108,11 @@
                         default="none"
                         placeholder="External Document Url">
                     </inline-editor>
-                    <inline-help>
-                        If your Markdown document is hosted elsewhere, enter the url here.
-                        This value overrides the internal Markdown document.
-                    </inline-help>
+                    <inline-help message="HELP.EXTERNAL-URL"></inline-help>
                 </div>
             </div>
             <div *ngIf="!topo.documentUrl" class="col-xs-12 prop">
-                <span class="col-xs-2 prop-label">Internal Doc</span>
+                <span class="col-xs-2 prop-label" translate>INTERNAL-DOC</span>
                 <span class="col-xs-10"></span>
                 <div class="col-xs-12">
                     <document-editor [id]="topo.globalId"></document-editor>
@@ -131,3 +123,5 @@
         </div>
     </div>
 </div>
+
+<notification-panel></notification-panel>

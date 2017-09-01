@@ -107,6 +107,13 @@ namespace TopoMojo
 
             services.AddSignalR(options =>
                 options.Hubs.EnableDetailedErrors = true);
+
+            services.AddSingleton(_ => new JsonSerializer
+                {
+                    ContractResolver = new SignalRContractResolver(),
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                }
+            );
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)

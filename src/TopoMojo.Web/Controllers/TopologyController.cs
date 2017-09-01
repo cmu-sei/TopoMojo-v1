@@ -49,7 +49,9 @@ namespace TopoMojo.Controllers
         public async Task<Topology> Update([FromBody]Topology topo)
         {
             Topology t = await _mgr.Update(topo);
-            Clients.Group(topo.GlobalId).TopoUpdated(topo);
+            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.UPDATED", topo));
+            // Actor actor = HttpContext.User.AsActor();
+            // Clients.Group(topo.GlobalId).TopoEvent(topo);
             return t;
         }
 
@@ -70,7 +72,9 @@ namespace TopoMojo.Controllers
             Topology topo = await _mgr.LoadAsync(id);
             foreach (Vm vm in await _pod.Find(topo.GlobalId))
                 await _pod.Delete(vm.Id);
-            return await _mgr.DeleteAsync(topo);
+            Task<bool> task = _mgr.DeleteAsync(topo);
+            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.DELETED", topo));
+            return await task;
         }
 
         [HttpPost]

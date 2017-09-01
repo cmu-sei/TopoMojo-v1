@@ -1,0 +1,52 @@
+{
+    "BROWSE" : "Owsebray",
+    "WORKSPACE" : "Orkspaceway",
+    "GAMESPACE" : "Amespacegay",
+    "LOGOUT" : "Ogoutlay",
+    "NAME": "Amenay",
+    "CANCEL" : "Ancelcay",
+    "CONFIRM" : "Easeplay onfirmcay.",
+    "DESCRIPTION" : "Escriptionday",
+    "DELETE" : "Eleteday",
+    "DELETE-TOPO" : "Eleteday Opotay",
+    "DELETE-TOPO-PROMPT" : "Easplay onfirmcay youay intenday otay eleteday isthay opologytay alongay ithway itsay emplatestay.",
+    "DELETE-TEMPLATE" : "Eleteday Emplatetay",
+    "DELETE-INSTANCE" : "Eleteday Amespacegay",
+    "MACHINES" : "Achinesmay",
+    "MORE" : "Oremay",
+    "EDIT" : "Editay",
+    "LAUNCH" : "Aunchlay",
+    "SEARCH" : "Earchsay",
+    "NEW" : "Ewnay",
+    "DOCUMENT" : "Ocumentday",
+    "TOPOLOGY" : "Opotay",
+    "SHARE" : "Areshay",
+    "ADMIN" : "Minaday",
+    "AUTHORS" : "Iybay",
+    "PUBLISH" : "Ublishpay",
+    "ENGLISH": "Glishenay",
+    "PIGLATIN" : "Iglatinpay",
+    "MACHINE-LIST-EMPTY" : "No machines referenced yet.",
+    "ADD-MACHINES" : "Add Machines",
+    "EXTERNAL-URL" : "Externalay Urlay",
+    "INTERNAL-DOC" : "Internalay Ocday",
+    "EVENT" : {
+        "PRESENCE": {
+            "ARRIVED" : "{{actor.name}} ivedarray.",
+            "GREETED" : "{{actor.name}}: \"Elcomeway!\"",
+            "DEPARTED" : "{{actor.name}} eparteday."
+        },
+        "TOPO" : {
+            "UPDATED": "{{actor.name}} datedupay opotay.",
+            "SHARED": "{{actor.name}} aredshay opotay.",
+            "PUBLISHED": "{{actor.name}} ublishedpay opotay.",
+            "DELETED": "{{actor.name}} eletedday opotay."
+        }
+    },
+    "HELP" : {
+        "ABOUT": "About",
+        "PUBLISH" : "Enway ublishedpay, isthay opologytay isay iscoverableday inay theay owserbray.",
+        "SHARE" : "Istributeday isthay inklay otay eoplepay ouyay antway otay elphay uildbay isthay opologytay.",
+        "EXTERNAL-URL" : "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document."
+    }
+}

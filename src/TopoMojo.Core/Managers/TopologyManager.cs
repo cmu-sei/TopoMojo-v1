@@ -94,6 +94,7 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             topo.Linkers = null;
+            topo.Workers = null;
             return await base.SaveAsync(topo);
         }
 
@@ -150,7 +151,7 @@ namespace TopoMojo.Core
             if (_user.IsAdmin)
                 return true;
 
-            Worker worker = await _db.Workers.FindAsync(_user.Id);
+            Worker worker = await _db.Workers.Where(w => w.PersonId == _user.Id && w.TopologyId == topoId).SingleOrDefaultAsync();
             return worker != null && worker.CanEdit();
         }
 

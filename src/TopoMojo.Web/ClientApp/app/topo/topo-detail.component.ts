@@ -1,10 +1,12 @@
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopoService } from './topo.service';
+import { NotificationService } from '../shared/notification.service';
 import 'rxjs/add/operator/switchMap';
 import { DOCUMENT } from "@angular/platform-browser";
-import { SignalR, BroadcastEventListener, ISignalRConnection } from 'ng2-signalr';
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
+//import {TranslateService} from '@ngx-translate/core';
+
 
 import { ORIGIN_URL } from '../shared/constants/baseurl.constants';
 
@@ -24,19 +26,18 @@ export class TopoDetailComponent {
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
     showing: string = "topo";
-    //host: string;
-    private connection: ISignalRConnection;
+    //private connection: ISignalRConnection;
     private subs: Subscription[] = [];
     private id: number;
 
     constructor(
         private service: TopoService,
+        private notifier: NotificationService,
         private route: ActivatedRoute,
         private router: Router,
         @Inject(ORIGIN_URL) private origin,
         @Inject(DOCUMENT) private dom : Document
     ) {
-        this.connection = this.route.snapshot.data['connection'];
     }
 
     ngOnInit(): void {
@@ -48,7 +49,14 @@ export class TopoDetailComponent {
                 this.topo = result as any;
                 //console.log(this.topo);
 
-                this.initNotifications();
+                this.subs.push(
+                    this.notifier.topoEvents.subscribe(
+                        (event) => {
+                            this.topo = event.model;
+                        }
+                    )
+                );
+                this.notifier.start(this.topo.globalId);
 
                 this.service.listTopoTemplates(result.id).subscribe(
                     (result) => {
@@ -66,40 +74,8 @@ export class TopoDetailComponent {
 
     }
 
-    initNotifications() {
-        this.connection.start().then(
-            (conn: ISignalRConnection) => {
-                //this.game = game;
-                this.connection = conn;
-                this.subs.push(
-                    this.connection.listenFor('topoUpdated').subscribe(
-                        msg => {
-                            console.log(msg);
-                        }
-                    )
-                );
-                this.subs.push(
-                    this.connection.listenFor("vmUpdated").subscribe(
-                        (vm: any) => {
-                            console.log(vm);
-                            //this.onVmUpdated(vm);
-                        }
-                    )
-                );
-                this.connection.invoke("Listen", this.topo.globalId);
-                //this.loading = false;
-            }
-        );
-    }
-
     ngOnDestroy() {
-        this.connection.invoke('Leave', this.topo.globalId)
-        .then(result => {
-            this.connection.stop();
-        })
-        .catch(reason => {
-            console.log(reason);
-        });
+        this.notifier.stop();
 
         this.subs.forEach(
             (sub) => {
