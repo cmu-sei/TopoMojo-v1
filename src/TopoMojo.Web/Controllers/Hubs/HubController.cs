@@ -22,26 +22,10 @@ namespace TopoMojo.Controllers
             Groups = _hub.Groups;
         }
 
-        public Task Broadcast(string groupId, object model)
+        public Task Broadcast(string groupId, BroadcastEvent model)
         {
             return Clients.Group(groupId).TopoEvent(model);
         }
     }
 
-    public class BroadcastEvent<T> where T : class
-    {
-        public BroadcastEvent(
-            System.Security.Principal.IPrincipal user,
-            string action,
-            T model
-        ) {
-            Actor = user.AsActor();
-            Action = action;
-            Model = model;
-        }
-
-        public Actor Actor { get; private set; }
-        public string Action { get; set; }
-        public T Model { get; set; }
-    }
 }

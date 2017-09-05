@@ -5,9 +5,6 @@ import { NotificationService } from '../shared/notification.service';
 import 'rxjs/add/operator/switchMap';
 import { DOCUMENT } from "@angular/platform-browser";
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
-//import {TranslateService} from '@ngx-translate/core';
-
-
 import { ORIGIN_URL } from '../shared/constants/baseurl.constants';
 
 @Component({
@@ -26,7 +23,6 @@ export class TopoDetailComponent {
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
     showing: string = "topo";
-    //private connection: ISignalRConnection;
     private subs: Subscription[] = [];
     private id: number;
 
@@ -52,7 +48,28 @@ export class TopoDetailComponent {
                 this.subs.push(
                     this.notifier.topoEvents.subscribe(
                         (event) => {
-                            this.topo = event.model;
+                            switch (event.action) {
+                                case "TOPO.UPDATED":
+                                this.topo = event.model;
+                                break;
+                            }
+                        }
+                    ),
+                    this.notifier.templateEvents.subscribe(
+                        (event) => {
+                            switch (event.action) {
+                                case "TEMPLATE.ADDED":
+                                this.trefs.push(event.model);
+                                break;
+
+                                case "TEMPLATE.UPDATED":
+                                this.merge(event.model);
+                                break;
+
+                                case "TEMPLATE.REMOVED":
+                                this.remove(event.model);
+                                break;
+                            }
                         }
                     )
                 );
@@ -129,15 +146,26 @@ export class TopoDetailComponent {
             topologyId: this.topo.id,
             templateId: template.id})
         .subscribe(result => {
+            this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
             this.trefs.push(result);
         }, (err) => { this.service.onError(err); });
     }
 
+    merge(tref) {
+        for (let i=0; i<this.trefs.length; i++) {
+            if (this.trefs[i].id == tref.id) {
+                //this.trefs.splice(i, 1, tref);
+                this.trefs[i] = tref;
+                break;
+            }
+        }
+    }
+
     //remove tref from list
     remove(tref) {
-        let i = 0;
-        for (i=0; i<this.trefs.length; i++) {
+        for (let i=0; i<this.trefs.length; i++) {
             if (this.trefs[i].id == tref.id) {
+                //this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", tref);
                 this.trefs.splice(i, 1);
                 break;
             }

@@ -78,7 +78,7 @@
             <p *ngIf="!trefs || trefs.length == 0" translate>MACHINE-LIST-EMPTY</p>
             <div *ngIf="trefs" >
                 <div *ngFor="let t of trefs" class="truncate">
-                    <template-editor [topo]="topo" [tref]="t" (onRemoved)="remove($event)"></template-editor>
+                    <template-editor [topo]="topo" [trefs]="trefs" [tref]="t" (onRemoved)="remove($event)"></template-editor>
                 </div>
             </div>
             <div>

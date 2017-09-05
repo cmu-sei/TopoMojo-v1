@@ -116,6 +116,10 @@ export class NotificationService {
         return Promise.resolve<boolean>(true);
     }
 
+    sendTemplateEvent(e: string, model: any) : void {
+        this.connection.invoke("TemplateMessage", e, model);
+    }
+
     private setActor(event: any) : void {
         event.actor.isConnected = (event.action == "PRESENCE.ARRIVED" || event.action == "PRESENCE.GREETED");
         let found: boolean = false;

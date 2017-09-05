@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { TopoService } from './topo.service';
+import { NotificationService } from '../shared/notification.service';
 
 @Component({
     //moduleId: module.id,
@@ -9,6 +10,7 @@ import { TopoService } from './topo.service';
 })
 export class TemplateEditorComponent implements OnInit {
     @Input() tref: any;
+    @Input() trefs: any[];
     @Input() topo: any;
     @Output() onRemoved: EventEmitter<any> = new EventEmitter<any>();
     @ViewChild('cloneHelp') cloneHelp: any;
@@ -18,7 +20,10 @@ export class TemplateEditorComponent implements OnInit {
     isosVisible: boolean;
     uploadVisible: boolean;
 
-    constructor(private service : TopoService) { }
+    constructor(
+        private service : TopoService,
+        private notifier: NotificationService
+    ) { }
 
     ngOnInit() {
         this.cascadeFields();
@@ -43,20 +48,32 @@ export class TemplateEditorComponent implements OnInit {
         if ((!this.vm) || (this.vm.id))
             return; //don't remove if vm created
 
-        this.service.removeTemplate(this.tref)
-        .subscribe(result => {
-            if (result) {
-                this.onRemoved.emit(this.tref);
-            }
-        }, (err) => { this.service.onError(err); });
+        this.service.removeTemplate(this.tref).subscribe(
+            (result) => {
+                if (result) {
+                    this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.tref);
+                    for (let i=0; i<this.trefs.length; i++) {
+                        if (this.trefs[i].id == this.tref.id) {
+                            this.trefs.splice(i, 1);
+                            break;
+                        }
+                    }
+                    //this.onRemoved.emit(this.tref);
+                }
+            },
+            (err) => { this.service.onError(err); }
+        );
     }
 
     save() {
         //this.editing = false;
         //this.tref.template = null;
-        this.service.updateTemplate(this.tref)
-        .subscribe(result => {
-        }, (err) => { this.service.onError(err); });
+        this.service.updateTemplate(this.tref).subscribe(
+            (result) => {
+                //this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", this.tref);
+            },
+            (err) => { this.service.onError(err); }
+        );
     }
 
     clone() {
@@ -64,12 +81,13 @@ export class TemplateEditorComponent implements OnInit {
             return; //don't clone unless empty vm loaded
 
         this.cloneHelp.toggle();
-        //this.cloneVisible = false;
-        this.service.cloneTemplate(this.tref)
-        .subscribe(result => {
-            this.tref = result as any;
-            this.cascadeFields();
-        }, (err) => { this.service.onError(err); });
+        this.service.cloneTemplate(this.tref).subscribe(
+            (result) => {
+                this.tref = result as any;
+                this.cascadeFields();
+            },
+            (err) => { this.service.onError(err); }
+        );
     }
 
     toggleClone() {

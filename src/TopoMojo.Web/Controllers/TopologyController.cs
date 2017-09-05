@@ -105,13 +105,15 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<Linker> AddTemplate([FromBody]Linker tref)
         {
+            //Broadcast(tref.Topology.GlobalId, new BroadcastEvent<Linker>(HttpContext.User, "TEMPLATE.ADDED", tref));
             return await _mgr.AddTemplate(tref);
         }
 
-        [HttpPost]
+        [HttpPut]
         [JsonExceptionFilter]
         public async Task<Linker> UpdateTemplate([FromBody]Linker tref)
         {
+            Clients.Group(tref.Topology.GlobalId).TemplateEvent(new BroadcastEvent<Linker>(HttpContext.User, "TEMPLATE.UPDATED", tref));
             return await _mgr.UpdateTemplate(tref);
         }
 

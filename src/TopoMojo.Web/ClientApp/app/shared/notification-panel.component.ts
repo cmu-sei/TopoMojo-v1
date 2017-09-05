@@ -24,27 +24,26 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
             this.svc.presenceEvents.subscribe(
                 (event) => {
                     this.push(event);
-                    // this.add(new Notification(
-                    //     event.actor.name + " " + event.action + "."
-                    // ));
                 }
             ),
             this.svc.topoEvents.subscribe(
                 (event) => {
-                    this.add(new Notification(
-                        event.actor.name + " " + event.action + " topo."
-                    ));
+                    this.push(event);
+                }
+            ),
+            this.svc.templateEvents.subscribe(
+                (event) => {
+                    this.push(event);
+                }
+            ),
+            this.svc.vmEvents.subscribe(
+                (event) => {
+                    this.push(event);
                 }
             )
         );
     }
 
-    add(msg : Notification) : void {
-        this.messages.push(msg);
-        setTimeout(() => {
-            this.remove(msg);
-        }, 8000);
-    }
     push(event : any) : void {
         this.events.push(event);
         setTimeout(() => {
@@ -52,16 +51,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         }, 8000);
     }
 
-    remove(msg : Notification) : void {
-        this.messages.splice(this.messages.indexOf(msg), 1);
-    }
     pop(event : any) : void {
         this.events.splice(this.events.indexOf(event), 1);
     }
 
-    dotranslate(event : any) {
-        return this.translate.get(event.action, event.actor);
-    }
     ngOnDestroy() {
         for (let i = 0; i < this.subs.length; i++) {
             this.subs[i].unsubscribe();

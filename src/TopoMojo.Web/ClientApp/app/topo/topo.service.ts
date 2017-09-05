@@ -8,7 +8,7 @@ export class TopoService {
     constructor(
         private http: AuthHttp,
         private settings: SettingsService
-        ) {}
+    ) { }
 
     // public loadTopo(id: number) {
     //     return this.http.get(this.url() + "/topology/load/"+id);
@@ -75,7 +75,7 @@ export class TopoService {
     }
 
     public removeMember(id: number, personId: number) {
-        return this.http.post(this.url() + "/account/removetopouser", { topoId: id, personId: personId});
+        return this.http.post(this.url() + "/account/removetopouser", { topoId: id, personId: personId });
     }
 
     public createTemplate(template) {
@@ -83,7 +83,7 @@ export class TopoService {
     }
 
     public listTopoTemplates(id) {
-        return this.http.get(this.url() + "/topology/templates/"+id);
+        return this.http.get(this.url() + "/topology/templates/" + id);
     }
 
     public listTemplates(search) {
@@ -91,7 +91,7 @@ export class TopoService {
     }
 
     public loadTemplate(id) {
-        return this.http.get(this.url() + "/template/load/"+id);
+        return this.http.get(this.url() + "/template/load/" + id);
     }
 
     public saveTemplate(template) {
@@ -107,15 +107,15 @@ export class TopoService {
     }
 
     public updateTemplate(tref) {
-        return this.http.post(this.url() + "/topology/updatetemplate", tref);
+        return this.http.put(this.url() + "/topology/updatetemplate", tref);
     }
 
     public removeTemplate(tref) {
-        return this.http.delete(this.url() + "/template/remove/"+tref.id);
+        return this.http.delete(this.url() + "/template/remove/" + tref.id);
     }
 
     public cloneTemplate(tref) {
-        return this.http.post(this.url() + "/topology/clonetemplate/"+tref.id, {});
+        return this.http.post(this.url() + "/topology/clonetemplate/" + tref.id, {});
     }
 
     public launchInstance(id) {
@@ -150,8 +150,8 @@ export class TopoService {
         return this.http.get(this.url() + "/topology/isos/" + id);
     }
 
-    public uploadIso(id : string, progressKey: string, file : File) {
-        let payload : FormData = new FormData();
+    public uploadIso(id: string, progressKey: string, file: File) {
+        let payload: FormData = new FormData();
         let filename = `size=${file.size}&group-key=${id}&scope=private&monitor-key=${progressKey}`;
         payload.append('meta', filename);
         payload.append('file', file, file.name);

@@ -1,53 +1,70 @@
 {
-    "BROWSE" : "Browse",
-    "WORKSPACE" : "Workspace",
-    "GAMESPACE" : "Gamespace",
-    "LOGOUT" : "Logout",
+    "ADD-MACHINES": "Add Machines",
+    "ADMIN": "Admin",
+    "AUTHORS": "By",
+    "BROWSE": "Browse",
+    "CANCEL": "Cancel",
+    "CONFIRM": "Please confirm.",
+    "DESCRIPTION": "Description",
+    "DELETE": "Delete",
+    "DELETE-TOPO": "Delete Topology",
+    "DELETE-TOPO-PROMPT": "Please confirm you intend to delete this Topology along with its templates.",
+    "DELETE-TEMPLATE": "Delete Template",
+    "DELETE-TEMPLATE-PROMPT": "Confirm delete of this machine.",
+    "DELETE-INSTANCE": "Delete Gamespace",
+    "DOCUMENT": "Document",
+    "EDIT": "Edit",
+    "EXTERNAL-URL": "External Url",
+    "GAMESPACE": "Gamespace",
+    "INTERNAL-DOC": "Internal Doc",
+    "ISO": "Iso",
+    "LAUNCH": "Launch",
+    "LINKED": "linked",
+    "LOCAL": "local",
+    "LOGOUT": "Logout",
+    "MACHINES": "Machines",
+    "MACHINE-LIST-EMPTY": "No machines referenced yet.",
+    "MORE": "More",
     "NAME": "Name",
-    "CANCEL" : "Cancel",
-    "CONFIRM" : "Please confirm.",
-    "DESCRIPTION" : "Description",
-    "DELETE" : "Delete",
-    "DELETE-TOPO" : "Delete Topology",
-    "DELETE-TOPO-PROMPT" : "Please confirm you intend to delete this Topology along with its templates.",
-    "DELETE-TEMPLATE" : "Delete Template",
-    "DELETE-INSTANCE" : "Delete Gamespace",
-    "MACHINES" : "Machines",
-    "MORE" : "More",
-    "EDIT" : "Edit",
-    "LAUNCH" : "Launch",
-    "SEARCH" : "Search",
-    "NEW" : "New",
-    "DOCUMENT" : "Document",
-    "TOPOLOGY" : "Topo",
-    "SHARE" : "Share",
-    "ADMIN" : "Admin",
-    "AUTHORS" : "By",
-    "PUBLISH" : "Publish",
-    "ENGLISH": "English",
-    "PIGLATIN" : "Piglatin",
-    "MACHINE-LIST-EMPTY" : "No machines referenced yet.",
-    "ADD-MACHINES" : "Add Machines",
-    "EXTERNAL-URL" : "External Url",
-    "INTERNAL-DOC" : "Internal Doc",
-    "EVENT" : {
+    "NETWORKS": "Networks",
+    "NEW": "New",
+    "PUBLISH": "Publish",
+    "REFRESH-LIST": "Refresh list",
+    "SEARCH": "Search",
+    "SELECT-FILE": "Browse for file",
+    "SHARE": "Share",
+    "TOPOLOGY": "Topo",
+    "TYPE": "Type",
+    "UPLOAD": "Upload",
+    "WORKSPACE": "Workspace",
+    "EVENT": {
         "PRESENCE": {
-            "ARRIVED" : "{{actor.name}} arrived.",
-            "GREETED" : "{{actor.name}}: \"Welcome!\"",
-            "DEPARTED" : "{{actor.name}} departed."
+            "ARRIVED": "{{actor.name}} arrived.",
+            "DEPARTED": "{{actor.name}} departed.",
+            "GREETED": "{{actor.name}}: \"Welcome!\""
         },
-        "TOPO" : {
-            "UPDATED": "{{actor.name}} updated topo.",
-            "SHARED": "{{actor.name}} shared topo.",
+        "TOPO": {
+            "DELETED": "{{actor.name}} deleted topo.",
             "PUBLISHED": "{{actor.name}} published topo.",
-            "DELETED": "{{actor.name}} deleted topo."
+            "SHARED": "{{actor.name}} shared topo.",
+            "UPDATED": "{{actor.name}} updated topo."
+        },
+        "TEMPLATE": {
+            "ADDED": "{{actor.name}} added [{{model.name}}].",
+            "REMOVED": "{{actor.name}} removed [{{model.name}}].",
+            "UPDATED": "{{actor.name}} updated [{{model.name}}]."
         }
     },
-    "HELP" : {
+    "LANG": {
+        "ENGLISH": "English",
+        "PIGLATIN": "Piglatin"
+    },
+    "HELP": {
         "ABOUT": "About",
-        "PUBLISH" : "When published, this topology is discoverable in the browser.",
-        "SHARE" : "Distribute this link to people you want to help build this topology.",
-        "EXTERNAL-URL" : "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document."
-
+        "CLONE-TEMPLATE": "This machine is linked from a different topology; you cannot save disk changes. If you plan to alter the disk, ensure the machine is not deployed and then clone it",
+        "EXTERNAL-URL": "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document.",
+        "NETWORKS": "Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)",
+        "PUBLISH": "When published, this topology is discoverable in the browser.",
+        "SHARE": "Distribute this link to people you want to help build this topology."
     }
 }
