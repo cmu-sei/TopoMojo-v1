@@ -8,8 +8,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../TopoMojo.Abstractions/TopoMojo.Abstractions.csproj" />
+    <ProjectReference Include="../TopoMojo.Data/TopoMojo.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.*" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.*" />

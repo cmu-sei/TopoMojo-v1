@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vMock
 {
@@ -296,7 +297,7 @@ namespace TopoMojo.vMock
             return new DisplayInfo
             {
                 Id = id,
-                Method = _optPod.DisplayMethod,
+                // Method = _optPod.DisplayMethod,
                 Url = _optPod.DisplayUrl,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag()

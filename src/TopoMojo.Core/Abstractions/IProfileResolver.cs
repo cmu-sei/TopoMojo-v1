@@ -1,6 +1,6 @@
-using TopoMojo.Core.Entities;
+using TopoMojo.Core.Models;
 
-namespace TopoMojo.Abstractions
+namespace TopoMojo.Core.Abstractions
 {
     public interface IProfileResolver
     {

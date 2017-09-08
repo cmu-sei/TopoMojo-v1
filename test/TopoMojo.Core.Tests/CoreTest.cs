@@ -2,14 +2,16 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Core;
 using TopoMojo.Abstractions;
-using TopoMojo.Core.Entities;
-using TopoMojo.Core.Data;
+using TopoMojo.Core;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models;
+using TopoMojo.Data.EntityFrameworkCore;
+using Xunit;
 
 namespace Tests
 {
-    public class CoreTest
+    public class CoreTest : IClassFixture<MapperFixture>
     {
         public CoreTest()
         {
@@ -42,8 +44,6 @@ namespace Tests
         protected void Initialize()
         {
             _options = new CoreOptions();
-            _optAccessor = Options.Create(_options);
-
             _mill = new LoggerFactory();
             _mill.AddConsole();
             _mill.AddDebug();
@@ -56,27 +56,10 @@ namespace Tests
             {
                 ctx.Database.EnsureDeleted();
                 ctx.Database.EnsureCreated();
-                _user = new Profile { Id = 1, Name = "tester" }; //AddTestUser("tester@step.local");
+                _user = new Profile { Id = 1, Name = "tester" };
                 _ur = new ProfileResolver(_user);
             }
 
         }
-
-        // protected Person AddTestUser(string name)
-        // {
-        //     using (TopoMojoDbContext ctx = new TopoMojoDbContext(_dbOptions))
-        //     {
-        //         UserManager userManager = new UserManager(ctx, Options.Create(_options.Identity), Mill, null);
-        //         Person person = userManager.FindByAccountAsync(name).Result;
-        //         if (person == null)
-        //         {
-        //             person = userManager.RegisterWithCredentialsAsync(name, _complexPassword).Result;
-        //         }
-        //         ctx.Entry(person).Reference(o => o.Profile).Load();
-        //         return person;
-        //     }
-        // }
-
-
     }
 }

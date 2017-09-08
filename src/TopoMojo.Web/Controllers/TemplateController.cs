@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data.Entities;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -61,7 +61,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<bool> Delete([FromRoute]int id)
         {
-            return await _mgr.DeleteTemplate(id);
+            return await _mgr.Delete(id);
         }
 
         [HttpDelete("{id}")]

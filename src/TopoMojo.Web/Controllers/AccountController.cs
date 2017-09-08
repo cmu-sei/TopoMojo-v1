@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Jam.Accounts;
 using TopoMojo.Services;
 using TopoMojo.Web;
-using TopoMojo.Core.Data;
+using TopoMojo.Data;
 using TopoMojo.Extensions;
 using System.Security.Claims;
 using IdentityModel;

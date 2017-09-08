@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Abstractions
 {

@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vSphere
 {

@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data.Entities;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -65,7 +65,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilterAttribute]
         public async Task<Player[]> Active()
         {
-            return await _mgr.Gamespaces();
+            return await _mgr.List();
         }
 
         [HttpGetAttribute("{code}")]

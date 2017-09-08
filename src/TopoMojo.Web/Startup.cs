@@ -17,14 +17,17 @@ using Newtonsoft.Json;
 using Jam.Accounts;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data;
+using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.EntityFrameworkCore;
+using TopoMojo.Data.Entities;
 using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
 using TopoMojo.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.Tasks;
+using TopoMojo.Core.Abstractions;
 
 namespace TopoMojo
 {
@@ -87,6 +90,8 @@ namespace TopoMojo
 
             // services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
             services.AddDbContext<TopoMojoDbContext>(builder => builder.UseConfiguredDatabase(DbOptions));
+            services.AddRepositories();
+
             services.AddScoped<TopologyManager, TopologyManager>();
             services.AddScoped<TemplateManager, TemplateManager>();
             services.AddScoped<GamespaceManager, GamespaceManager>();

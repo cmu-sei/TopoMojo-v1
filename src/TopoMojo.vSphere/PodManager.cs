@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vSphere
 {
@@ -332,7 +333,7 @@ namespace TopoMojo.vSphere
             //             .ToArray();
             //         to.Guest = to.Guest.Union(aggr[3]).ToArray();
             // }
-            return to;
+            return await Task.FromResult(to);
         }
 
         public async Task<VmOptions> GetVmIsoOptions(string id)

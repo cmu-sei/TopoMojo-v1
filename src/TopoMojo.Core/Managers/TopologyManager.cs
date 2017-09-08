@@ -1,31 +1,41 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TopoMojo.Abstractions;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
-using TopoMojo.Core.Entities.Extensions;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Data;
+using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Entities;
+using TopoMojo.Data.Entities.Extensions;
 
 namespace TopoMojo.Core
 {
     public class TopologyManager : EntityManager<Topology>
     {
         public TopologyManager(
-            TopoMojoDbContext db,
+            IProfileRepository profileRepository,
+            ITopologyRepository repo,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver
-        ) : base (db, mill, options, profileResolver)
+        ) : base (profileRepository, mill, options, profileResolver)
         {
+            _repo = repo;
         }
 
-        public new async Task<SearchResult<TopoSummary>> ListAsync(Search search)
+        private readonly ITopologyRepository _repo;
+
+        public async Task<SearchResult<Models.Topology>> List(Search search)
         {
-            //get topo, workers, templates
-            IQueryable<Topology> q = base.ListQuery(search);
+            IQueryable<Topology> q = _repo.List();
+            if (search.Term.HasValue())
+            {
+                q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
+            }
 
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
@@ -33,11 +43,10 @@ namespace TopoMojo.Core
             return await ProcessQuery(search, q);
         }
 
-        public async Task<SearchResult<TopoSummary>> ListMine(Search search)
+        public async Task<SearchResult<Models.Topology>> ListMine(Search search)
         {
-            IQueryable<Topology> q = _db.Workers
-                .Where(p => p.PersonId == _user.Id)
-                .Select(p => p.Topology);
+            IQueryable<Topology> q = _repo.List()
+                .Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
 
             if (search.Term.HasValue())
             {
@@ -47,306 +56,254 @@ namespace TopoMojo.Core
             return await ProcessQuery(search, q);
         }
 
-        public async Task<SearchResult<TopoSummary>> ProcessQuery(Search search, IQueryable<Topology> q)
+        public async Task<SearchResult<Models.Topology>> ProcessQuery(Search search, IQueryable<Topology> q)
         {
-            SearchResult<TopoSummary> result = new SearchResult<TopoSummary>();
+            SearchResult<Models.Topology> result = new SearchResult<Models.Topology>();
             result.Search = search;
             result.Total = await q.CountAsync();
-            result.Results =  q
-                .Include(t => t.Workers)
-                //.Include(t => t.Linkers)
-                .OrderBy(t => t.Name)
-                .Skip(search.Skip)
-                .Take(search.Take)
-                .Select(t => new TopoSummary
-                {
-                    Id = t.Id,
-                    GlobalId = t.GlobalId,
-                    Name = t.Name,
-                    Description = t.Description,
-                    IsPublished = t.IsPublished,
-                    People = String.Join(", ", t.Workers.Select(p=>p.Person.Name).ToArray()),
-                    //Templates = String.Join(" | ", t.Linkers.Select(i=>i.Name).ToArray()),
-                    CanManage = _user.IsAdmin || t.Workers.Where(p => p.PersonId == _user.Id && p.Permission != Permission.None).Any()
-                })
-                .ToArray();
+            result.Results =  Mapper.Map<Models.Topology[]>(q.OrderBy(t => t.Name).Skip(search.Skip).Take(search.Take).ToArray(), WithActor());
             return result;
         }
 
-        public async Task<Topology> Create(Topology topology)
+        public async Task<Models.Topology> Create(Models.NewTopology model)
         {
-            if (topology.Id > 0)
-                throw new InvalidOperationException();
-
-            topology.Id = 0;
-            topology.Workers.Add(new Worker
+            Data.Entities.Topology topo = Mapper.Map<Data.Entities.Topology>(model);
+            topo.Workers.Add(new Worker
             {
-                PersonId = _user.Id,
+                Person = Profile,
                 Permission = Permission.Manager
             });
-            await base.SaveAsync(topology);
-            return topology;
+            topo = await _repo.Add(topo);
+            return Mapper.Map<Models.Topology>(topo, WithActor());
         }
 
-        public async Task<Topology> Update(Topology topo)
+        public async Task<Models.Topology> Update(Models.ChangedTopology model)
         {
-            if (! await CanEdit(topo.Id))
+            if (! await _repo.CanEdit(model.Id, Profile))
                 throw new InvalidOperationException();
 
-            topo.Linkers = null;
-            topo.Workers = null;
-            return await base.SaveAsync(topo);
-        }
-
-        public async Task<bool> DeleteAsync(Topology topo)
-        {
-            if (! await CanEdit(topo.Id))
+            Data.Entities.Topology entity = await _repo.Load(model.Id);
+            if (entity == null)
                 throw new InvalidOperationException();
 
-            _db.Topologies.Remove(topo);
-
-            Linker[] list = await _db.Linkers
-                .Include(t => t.Template)
-                .Where(t => t.TopologyId == topo.Id)
-                .ToArrayAsync();
-            _db.Linkers.RemoveRange(list);
-
-            foreach (Linker tref in list)
-                if (tref.Template.OwnerId == topo.Id)
-                    _db.Templates.Remove(tref.Template);
-
-            await _db.SaveChangesAsync();
-            return true;
+            Mapper.Map<Models.ChangedTopology, Data.Entities.Topology>(model, entity);
+            await _repo.Update(entity);
+            return Mapper.Map<Models.Topology>(entity, WithActor());
         }
 
-        protected override void Normalize(Topology topo)
+        public async Task<Models.Topology> DeleteAsync(int id)
         {
-            base.Normalize(topo);
-        }
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
 
-        public async Task<bool> AllowedInstanceAccess(string guid)
-        {
-            Player member = await _db.Players
-                .Where(m => m.PersonId == _user.Id
-                    && m.Gamespace.GlobalId == guid)
-                .SingleOrDefaultAsync();
-            return (member != null);
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidOperationException();
+
+            await _repo.Remove(topology);
+            return Mapper.Map<Models.Topology>(topology);
         }
 
         public async Task<bool> CanEdit(string guid)
         {
-            if (_user.IsAdmin)
-                return true;
+            Data.Entities.Topology topology = await _repo.FindByGlobalId(guid);
+            if (topology == null)
+                return false;
 
-            Worker permission = await _db.Workers
-                .Where(p => p.PersonId == _user.Id
-                    && p.Topology.GlobalId == guid
-                    && p.Permission.HasFlag(Permission.Editor))
-                    .SingleOrDefaultAsync();
-            return (permission != null);
+            return await _repo.CanEdit(topology.Id, Profile);
         }
 
         public async Task<bool> CanEdit(int topoId)
         {
-            if (_user.IsAdmin)
-                return true;
-
-            Worker worker = await _db.Workers.Where(w => w.PersonId == _user.Id && w.TopologyId == topoId).SingleOrDefaultAsync();
-            return worker != null && worker.CanEdit();
+            return await _repo.CanEdit(topoId, Profile);
         }
 
-        public async Task<Worker[]> Members(int id)
-        {
-            if (! await CanEdit(id))
-                throw new InvalidOperationException();
+        // public async Task<Worker[]> Members(int id)
+        // {
+        //     if (! await CanEdit(id))
+        //         throw new InvalidOperationException();
 
-            return await _db.Workers
-                .Where(m => m.TopologyId == id)
-                .Include(m => m.Person)
-                .ToArrayAsync();
-        }
+        //     return await _db.Workers
+        //         .Where(m => m.TopologyId == id)
+        //         .Include(m => m.Person)
+        //         .ToArrayAsync();
+        // }
 
-        public async Task<Linker[]> ListTemplates(int id)
-        {
-            return await _db.Linkers
-                .Include(tt => tt.Template)
-                .Include(tt => tt.Topology)
-                .Where(tt => tt.TopologyId == id)
-                .ToArrayAsync();
-        }
+        // public async Task<Linker[]> ListTemplates(int id)
+        // {
+        //     return await _db.Linkers
+        //         .Include(tt => tt.Template)
+        //         .Include(tt => tt.Topology)
+        //         .Where(tt => tt.TopologyId == id)
+        //         .ToArrayAsync();
+        // }
 
-        public async Task<Linker> AddTemplate(Linker tref)
-        {
-            if (! await CanEdit(tref.TopologyId))
-                throw new InvalidOperationException();
+        // public async Task<Linker> AddTemplate(Linker tref)
+        // {
+        //     if (! await CanEdit(tref.TopologyId))
+        //         throw new InvalidOperationException();
 
-            _db.Linkers.Add(tref);
-            await _db.SaveChangesAsync();
-            await _db.Entry(tref).Reference(t => t.Topology).LoadAsync();
-            await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
-            tref.Name = tref.Template.Name.ToLower().Replace(" ", "-");
-            await _db.SaveChangesAsync();
-            return tref;
-        }
+        //     _db.Linkers.Add(tref);
+        //     await _db.SaveChangesAsync();
+        //     await _db.Entry(tref).Reference(t => t.Topology).LoadAsync();
+        //     await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
+        //     tref.Name = tref.Template.Name.ToLower().Replace(" ", "-");
+        //     await _db.SaveChangesAsync();
+        //     return tref;
+        // }
 
-        public async Task<Linker> UpdateTemplate(Linker tref)
-        {
-            if (! await CanEdit(tref.TopologyId))
-                throw new InvalidOperationException();
+        // public async Task<Linker> UpdateTemplate(Linker tref)
+        // {
+        //     if (! await CanEdit(tref.TopologyId))
+        //         throw new InvalidOperationException();
 
-            _db.Attach(tref);
-            tref.Name = tref.Name.Replace(" ", "-");
-            if (tref.Owned)
-            {
-                tref.Template.Name = tref.Name;
-                tref.Template.Description = tref.Description;
+        //     _db.Attach(tref);
+        //     tref.Name = tref.Name.Replace(" ", "-");
+        //     if (tref.Owned)
+        //     {
+        //         tref.Template.Name = tref.Name;
+        //         tref.Template.Description = tref.Description;
 
-                TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
-                tu.Name = tref.Name;
-                tu.Networks = tref.Networks;
-                tu.Iso = tref.Iso;
-                tref.Template.Detail = tu.ToString();
+        //         TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
+        //         tu.Name = tref.Name;
+        //         tu.Networks = tref.Networks;
+        //         tu.Iso = tref.Iso;
+        //         tref.Template.Detail = tu.ToString();
 
-                //tref.Name = null;
-                tref.Networks = null;
-                tref.Iso = null;
-                tref.Description = null;
-            }
-            _db.Update(tref);
-            await _db.SaveChangesAsync();
-            return tref;
-        }
+        //         //tref.Name = null;
+        //         tref.Networks = null;
+        //         tref.Iso = null;
+        //         tref.Description = null;
+        //     }
+        //     _db.Update(tref);
+        //     await _db.SaveChangesAsync();
+        //     return tref;
+        // }
 
-        public async Task<bool> RemoveTemplate(int id)
-        {
-            Linker tref = await _db.Linkers
-                .Include(t => t.Template)
-                .Include(t => t.Topology)
-                .Where(t => t.Id == id)
-                .SingleOrDefaultAsync();
+        // public async Task<bool> RemoveTemplate(int id)
+        // {
+        //     Linker tref = await _db.Linkers
+        //         .Include(t => t.Template)
+        //         .Include(t => t.Topology)
+        //         .Where(t => t.Id == id)
+        //         .SingleOrDefaultAsync();
 
-            if (tref == null)
-                throw new InvalidOperationException();
+        //     if (tref == null)
+        //         throw new InvalidOperationException();
 
-            if (! await CanEdit(tref.TopologyId))
-                throw new InvalidOperationException();
+        //     if (! await CanEdit(tref.TopologyId))
+        //         throw new InvalidOperationException();
 
-            if (tref.Template.OwnerId == tref.TopologyId)
-            {
-                _db.Remove(tref.Template);
-            }
-            _db.Remove(tref);
-            await _db.SaveChangesAsync();
-            return true;
-        }
+        //     if (tref.Template.OwnerId == tref.TopologyId)
+        //     {
+        //         _db.Remove(tref.Template);
+        //     }
+        //     _db.Remove(tref);
+        //     await _db.SaveChangesAsync();
+        //     return true;
+        // }
 
-        public async Task<Linker> CloneTemplate(int id)
-        {
-            Linker tref = await _db.Linkers
-                .Include(t => t.Template)
-                .Include(t => t.Topology)
-                .Where(t => t.Id == id)
-                .SingleOrDefaultAsync();
+        // public async Task<Linker> CloneTemplate(int id)
+        // {
+        //     Linker tref = await _db.Linkers
+        //         .Include(t => t.Template)
+        //         .Include(t => t.Topology)
+        //         .Where(t => t.Id == id)
+        //         .SingleOrDefaultAsync();
 
-            if (tref == null)
-                throw new InvalidOperationException();
+        //     if (tref == null)
+        //         throw new InvalidOperationException();
 
-            if (! await CanEdit(tref.TopologyId))
-                throw new InvalidOperationException();
+        //     if (! await CanEdit(tref.TopologyId))
+        //         throw new InvalidOperationException();
 
-            Template template = new Template {
-                Name = tref.Name ?? tref.Template.Name,
-                Description = tref.Description ?? tref.Template.Description,
-                GlobalId = Guid.NewGuid().ToString(),
-                WhenCreated = DateTime.UtcNow,
-                Detail = tref.Template.Detail,
-                OwnerId = tref.TopologyId
-            };
-            TemplateUtility tu = new TemplateUtility(template.Detail);
-            tu.Name = template.Name;
-            tu.LocalizeDiskPaths(tref.Topology.GlobalId, template.GlobalId);
-            template.Detail = tu.ToString();
-            //_db.Templates.Add(template);
-            tref.Template = template;
-            await _db.SaveChangesAsync();
-            //tref.TemplateId = template.Id);
-            //await _db.SaveChanges();
-            return tref;
-        }
+        //     Template template = new Template {
+        //         Name = tref.Name ?? tref.Template.Name,
+        //         Description = tref.Description ?? tref.Template.Description,
+        //         GlobalId = Guid.NewGuid().ToString(),
+        //         WhenCreated = DateTime.UtcNow,
+        //         Detail = tref.Template.Detail,
+        //         OwnerId = tref.TopologyId
+        //     };
+        //     TemplateUtility tu = new TemplateUtility(template.Detail);
+        //     tu.Name = template.Name;
+        //     tu.LocalizeDiskPaths(tref.Topology.GlobalId, template.GlobalId);
+        //     template.Detail = tu.ToString();
+        //     //_db.Templates.Add(template);
+        //     tref.Template = template;
+        //     await _db.SaveChangesAsync();
+        //     //tref.TemplateId = template.Id);
+        //     //await _db.SaveChanges();
+        //     return tref;
+        // }
 
         public async Task<string> Share(int id, bool revoke)
         {
-            Worker worker = await _db.Workers
-                .Include(m => m.Topology)
-                .Where(m => m.TopologyId == id && m.PersonId == _user.Id)
-                .SingleOrDefaultAsync();
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidTimeZoneException();
 
-            if (worker == null || worker.PersonId != _user.Id || !worker.CanManage())
+            if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
             string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
-            worker.Topology.ShareCode = code;
-            await _db.SaveChangesAsync();
+            topology.ShareCode = code;
+            await _repo.Update(topology);
             return code;
         }
 
         public async Task<bool> Publish(int id, bool revoke)
         {
-            Worker worker = await _db.Workers
-                .Include(m => m.Topology)
-                .Where(m => m.TopologyId == id && m.PersonId == _user.Id)
-                .SingleOrDefaultAsync();
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidTimeZoneException();
 
-            if (worker == null || worker.PersonId != _user.Id || !worker.CanManage())
+            if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
-            worker.Topology.IsPublished = !revoke;
-            await _db.SaveChangesAsync();
+            topology.IsPublished = !revoke;
+            await _repo.Update(topology);
             return true;
         }
 
         public async Task<bool> Enlist(string code)
         {
-            Topology workspace = await _db.Topologies
-                .Include(i => i.Workers)
-                .Where(i => i.ShareCode == code)
-                .SingleOrDefaultAsync();
+            Topology topology = await _repo.FindByShareCode(code);
 
-            if (workspace == null)
+            if (topology == null)
                 throw new InvalidOperationException();
 
-            if (!workspace.Workers.Where(m => m.PersonId == _user.Id).Any())
+            if (!topology.Workers.Where(m => m.PersonId == Profile.Id).Any())
             {
-                workspace.Workers.Add(new Worker
+                topology.Workers.Add(new Worker
                 {
-                    PersonId = _user.Id,
+                    PersonId = Profile.Id,
                     Permission = Permission.Editor
                 });
-                await _db.SaveChangesAsync();
+                await _repo.Update(topology);
             }
             return true;
         }
 
         public async Task<bool> Delist(int topoId, int memberId)
         {
-            Topology topo = await _db.Topologies
-                .Include(t => t.Workers)
-                .Where(t => t.Id == topoId)
-                .SingleOrDefaultAsync();
+            Topology topology = await _repo.Load(topoId);
 
-            Worker actor = topo.Workers
-                .Where(p => p.PersonId == _user.Id)
-                .SingleOrDefault();
+            if (topology == null)
+                throw new InvalidOperationException();
 
-            Worker target = topo.Workers
+            if (! await _repo.CanManage(topoId, Profile))
+                throw new InvalidOperationException();
+
+            Worker member = topology.Workers
                 .Where(p => p.PersonId == memberId)
                 .SingleOrDefault();
 
-            if (actor == null || !actor.CanManage() || target == null)
-                throw new InvalidOperationException();
-
-            topo.Workers.Remove(target);
-            await _db.SaveChangesAsync();
+            if (member != null)
+            {
+                topology.Workers.Remove(member);
+                await _repo.Update(topology);
+            }
             return true;
         }
     }

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data.Entities;
 using TopoMojo.Models;
 using TopoMojo.Web;
 

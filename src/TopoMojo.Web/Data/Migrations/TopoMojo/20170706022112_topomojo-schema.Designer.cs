@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data;
+using TopoMojo.Data.Entities;
 
 namespace TopoMojo.Web.Data.Migrations.TopoMojo
 {
@@ -17,7 +17,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2");
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Gamespace", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Gamespace", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -39,7 +39,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Gamespaces");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Linker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Linker", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -65,7 +65,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Linkers");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Player", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Player", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -85,7 +85,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Players");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Profile", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Profile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -103,7 +103,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Profiles");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Template", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Template", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -127,7 +127,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Templates");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Topology", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Topology", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -151,7 +151,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Topologies");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Worker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Worker", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -171,48 +171,48 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                     b.ToTable("Workers");
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Gamespace", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Gamespace", b =>
                 {
-                    b.HasOne("TopoMojo.Core.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
                         .WithMany("Gamespaces")
                         .HasForeignKey("TopologyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Linker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Linker", b =>
                 {
-                    b.HasOne("TopoMojo.Core.Entities.Template", "Template")
+                    b.HasOne("TopoMojo.Data.Entities.Template", "Template")
                         .WithMany("Linkers")
                         .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("TopoMojo.Core.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
                         .WithMany("Linkers")
                         .HasForeignKey("TopologyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Player", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Player", b =>
                 {
-                    b.HasOne("TopoMojo.Core.Entities.Gamespace", "Gamespace")
+                    b.HasOne("TopoMojo.Data.Entities.Gamespace", "Gamespace")
                         .WithMany("Players")
                         .HasForeignKey("GamespaceId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("TopoMojo.Core.Entities.Profile", "Person")
+                    b.HasOne("TopoMojo.Data.Entities.Profile", "Person")
                         .WithMany("Gamespaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopoMojo.Core.Entities.Worker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Entities.Worker", b =>
                 {
-                    b.HasOne("TopoMojo.Core.Entities.Profile", "Person")
+                    b.HasOne("TopoMojo.Data.Entities.Profile", "Person")
                         .WithMany("Workspaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("TopoMojo.Core.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
                         .WithMany("Workers")
                         .HasForeignKey("TopologyId")
                         .OnDelete(DeleteBehavior.Cascade);

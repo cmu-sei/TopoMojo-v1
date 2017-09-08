@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vSphere
 {

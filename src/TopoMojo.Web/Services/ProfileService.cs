@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Jam.Accounts;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data.Entities;
 
 namespace TopoMojo.Services
 {

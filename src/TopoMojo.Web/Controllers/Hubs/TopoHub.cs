@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel;
 using Microsoft.AspNetCore.SignalR;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data.Entities;
 
 namespace TopoMojo.Controllers
 {

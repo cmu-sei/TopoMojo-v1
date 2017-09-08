@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data;
+using TopoMojo.Data.Entities;
 
 namespace TopoMojo.Extensions
 {
