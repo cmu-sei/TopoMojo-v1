@@ -9,7 +9,7 @@ namespace TopoMojo.Core
         public int Skip { get; set; }
         public int Take { get; set; }
         public int Sort { get; set; }
-        public SearchFilter[] Filters { get; set; } = new SearchFilter[] {};
+        public string[] Filters { get; set; } = new string[] {};
     }
 
     public class SearchResult<T> where T : class
@@ -29,12 +29,12 @@ namespace TopoMojo.Core
     {
         public static bool HasFilter(this Search search, string name)
         {
-            return search.Filters.Where(f => f.Name.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).Any();
+            return search.Filters.Where(f => f.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).Any();
         }
 
-        public static SearchFilter GetFilter(this Search search, string name)
+        public static string GetFilter(this Search search, string name)
         {
-            return search.Filters.Where(f => f.Name.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).FirstOrDefault();
+            return search.Filters.Where(f => f.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).FirstOrDefault();
         }
     }
 }

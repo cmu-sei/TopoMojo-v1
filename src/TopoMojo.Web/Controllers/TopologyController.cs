@@ -10,192 +10,158 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Data.Entities;
+using TopoMojo.Core.Models;
 using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
+    // [Route("api/[controller]/[action]")]
     public class TopologyController : HubController<TopologyHub>
     {
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
-            IHostingEnvironment env,
+            //IHostingEnvironment env,
             IServiceProvider sp,
             IConnectionManager sigr
         ) : base(sigr, sp)
         {
             _pod = podManager;
             _mgr = topologyManager;
-            _env = env;
+            //_env = env;
         }
 
         private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
-        private readonly IHostingEnvironment _env;
+        //private readonly IHostingEnvironment _env;
 
-        [HttpPost]
+        [HttpGet("api/topologies")]
+        [ProducesResponseType(typeof(SearchResult<Topology>), 200)]
         [JsonExceptionFilter]
-        public async Task<Topology> Create([FromBody]Topology topo)
+        public async Task<IActionResult> List([FromQuery]Search search)
         {
-            return await _mgr.Create(topo);
+            // List<SearchFilter> filters = search.Filters.ToList();
+            // filters.Add(new SearchFilter { Name = "published"});
+            // search.Filters = filters.ToArray();
+            var result = await _mgr.List(search);
+            return Ok(result);
         }
 
-        [HttpPost]
+        // [HttpGet]
+        // [JsonExceptionFilter]
+        // public async Task<SearchResult<Topology>> Mine([FromBody]Search search)
+        // {
+        //     return await _mgr.ListMine(search);
+        // }
+
+        [HttpPost("api/topology")]
+        [ProducesResponseType(typeof(Topology), 200)]
         [JsonExceptionFilter]
-        public async Task<Topology> Update([FromBody]Topology topo)
+        public async Task<IActionResult> Create([FromBody]NewTopology model)
         {
-            Topology t = await _mgr.Update(topo);
+            Topology topo = await _mgr.Create(model);
+            return Ok(topo);
+        }
+
+        [HttpPut("api/topology")]
+        [ProducesResponseType(typeof(Topology), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Update([FromBody]ChangedTopology model)
+        {
+            Topology topo = await _mgr.Update(model);
             Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.UPDATED", topo));
-            // Actor actor = HttpContext.User.AsActor();
-            // Clients.Group(topo.GlobalId).TopoEvent(topo);
-            return t;
+            return Ok(topo);
         }
 
-        [HttpGet("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<Topology> Load([FromRoute]int id)
+        [HttpGet("api/topology/{id}")]
+        [ProducesResponseType(typeof(Topology), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Load([FromRoute]int id)
         {
-            // Topology t = await _mgr.LoadAsync(id);
-            // if (t.ShareCode.HasValue())
-            //     t.ShareCode = $"{Request.Scheme}://{Request.Host}/enlist/{t.ShareCode}";
-            return await _mgr.LoadAsync(id);
+            Topology topo = await _mgr.Load(id);
+            return Ok(topo);
         }
 
-        [HttpDelete("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Delete([FromRoute]int id)
+        [HttpDelete("api/topology/{id}")]
+        [ProducesResponseType(typeof(bool), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Delete([FromRoute]int id)
         {
-            Topology topo = await _mgr.LoadAsync(id);
-            foreach (Vm vm in await _pod.Find(topo.GlobalId))
-                await _pod.Delete(vm.Id);
-            Task<bool> task = _mgr.DeleteAsync(topo);
+            Topology topo = await _mgr.DeleteAsync(id);
             Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.DELETED", topo));
-            return await task;
+            return Ok(true);
         }
 
-        [HttpPost]
+        [HttpGet("api/topology/{id}/publish")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
         [JsonExceptionFilter]
-        public async Task<SearchResult<TopoSummary>> List([FromBody]Search search)
+        public async Task<IActionResult> Publish([FromRoute] int id)
         {
-            List<SearchFilter> filters = search.Filters.ToList();
-            filters.Add(new SearchFilter { Name = "published"});
-            search.Filters = filters.ToArray();
-            return await _mgr.ListAsync(search);
+            TopologyState state = await _mgr.Publish(id, false);
+            return Ok(state);
         }
 
-        [HttpPost]
+        [HttpGet("api/topology/{id}/unpublish")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
         [JsonExceptionFilter]
-        public async Task<SearchResult<TopoSummary>> Mine([FromBody]Search search)
+        public async Task<IActionResult> Unpublish([FromRoute] int id)
         {
-            return await _mgr.ListMine(search);
+            TopologyState state = await _mgr.Publish(id, true);
+            return Ok(state);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("api/topology/{id}/share")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
         [JsonExceptionFilter]
-        public async Task<Linker[]> Templates([FromRoute]int id)
+        public async Task<IActionResult> Share([FromRoute] int id)
         {
-            return await _mgr.ListTemplates(id);
+            TopologyState state = await _mgr.Share(id, false);
+            return Ok(state);
         }
 
-        [HttpPost]
+        [HttpGet("api/topology/{id}/unshare")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
         [JsonExceptionFilter]
-        public async Task<Linker> AddTemplate([FromBody]Linker tref)
+        public async Task<IActionResult> Unshare([FromRoute] int id)
         {
-            //Broadcast(tref.Topology.GlobalId, new BroadcastEvent<Linker>(HttpContext.User, "TEMPLATE.ADDED", tref));
-            return await _mgr.AddTemplate(tref);
+            TopologyState state = await _mgr.Share(id, false);
+            return Ok(state);
         }
 
-        [HttpPut]
+        [HttpGet("api/topology/enlist/{code}")]
+        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<Linker> UpdateTemplate([FromBody]Linker tref)
+        public async Task<IActionResult> Enlist([FromRoute] string code)
         {
-            Clients.Group(tref.Topology.GlobalId).TemplateEvent(new BroadcastEvent<Linker>(HttpContext.User, "TEMPLATE.UPDATED", tref));
-            return await _mgr.UpdateTemplate(tref);
+            return Ok(await _mgr.Enlist(code));
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("api/topology/{id}/delist/{memberId}")]
+        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<bool> RemoveTemplate([FromRoute]int id)
+        public async Task<IActionResult> Delist([FromRoute] int id, [FromRoute] int memberId)
         {
-            return await _mgr.RemoveTemplate(id);
+            return Ok(await _mgr.Delist(id, memberId));
         }
 
-        [HttpPost("{id}")]
+        [HttpGet("api/topology/{id}/isos")]
+        [ProducesResponseType(typeof(VmOptions), 200)]
         [JsonExceptionFilter]
-        public async Task<Linker> CloneTemplate([FromRoute]int id)
+        public async Task<IActionResult> Isos([FromRoute] string id)
         {
-            return await _mgr.CloneTemplate(id);
+            VmOptions result = await _pod.GetVmIsoOptions(id);
+            return Ok(result);
         }
 
-        [HttpGetAttribute("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<Worker[]> Members([FromRoute] int id)
-        {
-            return await _mgr.Members(id);
-        }
-
-        [HttpGetAttribute("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<object> Share([FromRoute] int id)
-        {
-            string code = await _mgr.Share(id, false);
-            return new { url = code };
-        }
-
-        [HttpGetAttribute("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Unshare([FromRoute] int id)
-        {
-            await _mgr.Share(id, true);
-            return true;
-        }
-
-        [HttpGetAttribute("{code}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Enlist([FromRoute] string code)
-        {
-            return await _mgr.Enlist(code);
-        }
-
-        [HttpDeleteAttribute("{id}/{memberId}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Delist([FromRoute] int id, [FromRoute] int memberId)
-        {
-            return await _mgr.Delist(id, memberId);
-        }
-
-        [HttpPutAttribute("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Publish([FromRoute] int id)
-        {
-            return await _mgr.Publish(id, false);
-        }
-
-        [HttpPutAttribute("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<bool> Unpublish([FromRoute] int id)
-        {
-            return await _mgr.Publish(id, true);
-        }
-
-        [HttpGet("{id}")]
+        [HttpGet("api/topology/{id}/nets")]
+        [ProducesResponseType(typeof(VmOptions), 200)]
         [JsonExceptionFilter]
-        public async Task<VmOptions> Isos([FromRoute] string id)
+        public async Task<IActionResult> Nets([FromRoute] string id)
         {
-            return await _pod.GetVmIsoOptions(id);
+            VmOptions result = await _pod.GetVmNetOptions(id);
+            return Ok(result);
         }
-
-        [HttpGet("{id}")]
-        [JsonExceptionFilter]
-        public async Task<VmOptions> Nets([FromRoute] string id)
-        {
-            return await _pod.GetVmNetOptions(id);
-        }
-
     }
-
 }

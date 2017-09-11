@@ -21,7 +21,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 result = await Load(profile.Id);
 
             if (result == null)
-                result = await LoadByGlobalId(profile.GlobalId);
+                result = await FindByGlobalId(profile.GlobalId);
 
             if (result == null)
                 result = await Add(profile);
@@ -39,12 +39,43 @@ namespace TopoMojo.Data.EntityFrameworkCore
             return profile;
         }
 
-        public async Task<Profile> LoadByGlobalId(string guid)
+        public async Task<bool> CanEditSpace(string globalId, Profile profile)
         {
-            return await DbContext.Profiles
-                    .Where(p => p.GlobalId == guid)
+            bool result = false;
+
+            if (profile.IsAdmin)
+                result = true;
+
+            if (!result)
+            {
+                Topology topology = await DbContext.Topologies
+                    .Where(t => t.GlobalId == globalId)
                     .SingleOrDefaultAsync();
 
+                if (topology != null)
+                {
+                    result = await DbContext.Workers
+                    .Where(p => p.TopologyId == topology.Id
+                        && p.PersonId == profile.Id
+                        && p.Permission.HasFlag(Permission.Editor))
+                    .AnyAsync();
+                }
+            }
+
+            if (!result)
+            {
+                Gamespace gamespace = await DbContext.Gamespaces
+                    .Where(t => t.GlobalId == globalId)
+                    .SingleOrDefaultAsync();
+
+                result = await DbContext.Players
+                .Where(p => p.GamespaceId == gamespace.Id
+                    && p.PersonId == profile.Id
+                    && p.Permission.HasFlag(Permission.Editor))
+                .AnyAsync();
+            }
+
+            return result;
         }
     }
 }

@@ -42,28 +42,35 @@ namespace TopoMojo.Core
                 : null;
         }
 
+        public async Task<bool> CanEditSpace(string globalId)
+        {
+            return await _profileRepo.CanEditSpace(globalId, Profile);
+        }
 
-        // public async Task<bool> CanAccessGamespace(string guid)
-        // {
-        //     Player member = await _db.Players
-        //         .Where(m => m.PersonId == _user.Id
-        //             && m.Gamespace.GlobalId == guid)
-        //         .SingleOrDefaultAsync();
-        //     return (member != null);
-        // }
+        public async Task<SearchResult<Models.Profile>> List(Search search)
+        {
+            IQueryable<Data.Entities.Profile> q = _profileRepo.List();
+            if (search.Term.HasValue())
+                q = q.Where(p => p.Name.Contains(search.Term));
 
-        // public async Task<bool> CanEditWorkspace(string guid)
-        // {
-        //     if (_user.IsAdmin)
-        //         return true;
+            if (search.HasFilter("admins"))
+                q = q.Where(p => p.IsAdmin);
 
-        //     Worker permission = await _db.Workers
-        //         .Where(p => p.PersonId == _user.Id
-        //             && p.Topology.GlobalId == guid
-        //             && p.Permission.HasFlag(Permission.Editor))
-        //             .SingleOrDefaultAsync();
-        //     return (permission != null);
-        // }
+
+            SearchResult<Models.Profile> result = new SearchResult<Models.Profile>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+
+            if (search.Skip > 0)
+                q = q.Skip(search.Skip);
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+            var list = await q.ToArrayAsync();
+            result.Results = Mapper.Map<Models.Profile[]>(list);
+            return result;
+        }
+
+
 
     }
 }

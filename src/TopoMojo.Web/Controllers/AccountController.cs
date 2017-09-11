@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Jam.Accounts;
 using TopoMojo.Services;
 using TopoMojo.Web;
-using TopoMojo.Data;
 using TopoMojo.Extensions;
 using System.Security.Claims;
 using IdentityModel;
@@ -19,20 +18,17 @@ namespace TopoMojo.Controllers
         private readonly IAccountManager _accountManager;
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
-        private readonly TopoMojoDbContext _db;
 
         public AccountController(
             IAccountManager accountManager,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            TopoMojoDbContext db,
             IServiceProvider sp
         ) : base(sp)
         {
             _accountManager = accountManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
-            _db = db;
         }
 
         // login(u,p), return token

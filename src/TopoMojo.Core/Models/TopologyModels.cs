@@ -30,6 +30,13 @@ namespace TopoMojo.Core.Models
         public string Description { get; set; }
     }
 
+    public class TopologyState
+    {
+        public int Id { get; set; }
+        public string ShareCode { get; set; }
+        public bool IsPublished { get; set; }
+    }
+
     public class Worker
     {
         public int Id { get; set; }

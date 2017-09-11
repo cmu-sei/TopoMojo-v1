@@ -50,14 +50,15 @@ namespace Tests
                         mgr.Publish(topo.Id, false).Wait();
                 }
 
-                var list = mgr.ListMine(new Search {
+                var list = mgr.List(new Search {
                     Take = 50,
-                    Term = "2",
-                    Filters = new SearchFilter[] {
-                        new SearchFilter {Name = "published" }
+                    //Term = "2",
+                    Filters = new string[] {
+                        "published",
+                        "mine"
                     }
                 }).Result;
-                Assert.True(list.Total == 1);
+                Assert.True(list.Total == 2);
             }
         }
     }

@@ -8,13 +8,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Data.Entities;
+using TopoMojo.Core.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
     public class TemplateController : _Controller
     {
         public TemplateController(
@@ -29,50 +28,80 @@ namespace TopoMojo.Controllers
         private readonly TemplateManager _mgr;
         private readonly IPodManager _pod;
 
-        [HttpGet("{id}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<Template> Load([FromRoute]int id)
+        [HttpGet("api/templates")]
+        [ProducesResponseType(typeof(SearchResult<Template>), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> List([FromQuery]Search search)
         {
-            return await _mgr.LoadAsync(id);
+            var result = await _mgr.List(search);
+            return Ok(result);
         }
 
-        [HttpPost]
+        [HttpGet("api/templates/detail")]
+        [ProducesResponseType(typeof(SearchResult<TemplateDetail>), 200)]
         [JsonExceptionFilter]
-        public async Task<SearchResult<Template>> List([FromBody]Search search)
+        public async Task<IActionResult> ListDetail([FromQuery]Search search)
         {
-            return await _mgr.List(search);
+            var result = await _mgr.ListDetail(search);
+            return Ok(result);
         }
 
-        [HttpPost]
+        [HttpGet("api/template/{id}")]
+        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
-        public async Task<TemplateModel> Create([FromBody]TemplateModel model)
+        public async Task<IActionResult> Load([FromRoute]int id)
         {
-            return await _mgr.Create(model);
+            var result = await _mgr.Load(id);
+            return Ok(result);
         }
 
-        [HttpPost]
+        [HttpPost("api/template/detail")]
+        [ProducesResponseType(typeof(TemplateDetail), 200)]
         [JsonExceptionFilter]
-        public async Task<Template> Save([FromBody]Template template)
+        public async Task<IActionResult> Create([FromBody]NewTemplateDetail model)
         {
-            return await _mgr.Save(template);
+            var result = await _mgr.Create(model);
+            return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpPut("api/template/detail")]
+        [ProducesResponseType(typeof(TemplateDetail), 200)]
         [JsonExceptionFilter]
-        public async Task<bool> Delete([FromRoute]int id)
+        public async Task<IActionResult> Configure([FromBody]TemplateDetail template)
         {
-            return await _mgr.Delete(id);
+            var result = await _mgr.Configure(template);
+            return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpPost("api/template/{id}/link/{topoId}")]
+        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
-        public async Task<bool> Remove([FromRoute]int id)
+        public async Task<IActionResult> Link([FromRoute]int id, int topoId)
         {
-            Models.Template template = await _mgr.GetDeployableTemplate(id, null);
-            await _mgr.RemoveTemplate(id);
-            await _pod.DeleteDisks(template); //only remove disks if removetemplate doesn't throw
-            return true;
+            var result = await _mgr.Link(id, topoId);
+            //TODO: Broadcast
+            return Ok(result);
         }
+
+        [HttpPut("api/template")]
+        [ProducesResponseType(typeof(Template), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Update([FromBody]ChangedTemplate template)
+        {
+            var result = await _mgr.Update(template);
+            //TODO: Broadcast
+            return Ok(result);
+        }
+
+        [HttpDelete("api/template/{id}")]
+        [ProducesResponseType(typeof(bool), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Delete([FromRoute]int id)
+        {
+            await _mgr.Delete(id);
+            //TODO: Broadcast
+            return Ok(true);
+        }
+
     }
-
 }

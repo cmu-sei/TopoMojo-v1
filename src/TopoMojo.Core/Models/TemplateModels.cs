@@ -8,6 +8,7 @@ namespace TopoMojo.Core.Models
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
+        public string TopologyGlobalId { get; set; }
         public TemplateSummary Parent { get; set; }
         // public string ParentId { get; set; }
         // public string ParentName { get; set; }

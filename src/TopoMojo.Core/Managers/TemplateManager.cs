@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
@@ -19,13 +20,25 @@ namespace TopoMojo.Core
             ITemplateRepository repo,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
+            IProfileResolver profileResolver,
+            IPodManager podManager
         ) : base(profileRepository, mill, options, profileResolver)
         {
             _repo = repo;
+            _pod = podManager;
         }
 
         private readonly ITemplateRepository _repo;
+        private readonly IPodManager _pod;
+
+        public async Task<Models.Template> Load(int id)
+        {
+            Data.Entities.Template template = await _repo.Load(id);
+            if (template == null)
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.Template>(template, WithActor());
+        }
 
         public async Task<Models.TemplateDetail> Create(Models.NewTemplateDetail model)
         {
@@ -82,7 +95,7 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(linked, WithActor());
         }
 
-        public async Task<Models.Template> Unlink(int id)
+        public async Task<Models.Template> Unlink(int id) //CLONE
         {
             Template entity = await _repo.Load(id);
             if (entity == null)
@@ -105,18 +118,28 @@ namespace TopoMojo.Core
 
         public async Task<Models.Template> Delete(int id)
         {
-            Template entity = await _repo.Load(id);
-            if (entity == null)
+            Template template = await _repo.Load(id);
+            if (template == null)
                 throw new InvalidOperationException();
 
-            if (! await _repo.CanEdit(entity.TopologyId ?? 0, Profile))
+            if (! await _repo.CanEdit(template.TopologyId ?? 0, Profile))
                 throw new InvalidOperationException();
 
             if (! await _repo.IsParentTemplate(id))
                 throw new ParentTemplateException();
 
-            await _repo.Remove(entity);
-            return Mapper.Map<Models.Template>(entity);
+            //delete associated vm
+            TopoMojo.Models.Virtual.Template deployable = await GetDeployableTemplate(id);
+            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(deployable.Name))
+                await _pod.Delete(vm.Id);
+
+            // TODO: Enforce only topo disks here?  (vSphere Pod only deletes topo-isolated disks, not stock disks.)
+            //if root template, delete disk(s)
+            if (template.Parent == null)
+                await _pod.DeleteDisks(deployable);
+
+            await _repo.Remove(template);
+            return Mapper.Map<Models.Template>(template);
         }
 
         public async Task<SearchResult<Models.TemplateSummary>> List(Search search)
@@ -167,7 +190,7 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.TemplateSummary[]>(results);
         }
 
-        public async Task<TopoMojo.Models.Virtual.Template> GetDeployableTemplate(int id, string tag)
+        public async Task<TopoMojo.Models.Virtual.Template> GetDeployableTemplate(int id, string tag = "")
         {
             Template template = await _repo.Load(id);
 

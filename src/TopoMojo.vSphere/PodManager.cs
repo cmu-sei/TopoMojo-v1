@@ -284,10 +284,10 @@ namespace TopoMojo.vSphere
             return di;
         }
 
-        public async Task<Vm> Answer(string id, string question, string answer)
+        public async Task<Vm> Answer(string id, VmAnswer answer)
         {
             VimHost host = FindHostByVm(id);
-            return await host.AnswerVmQuestion(id, question, answer);
+            return await host.AnswerVmQuestion(id, answer.QuestionId, answer.ChoiceKey);
         }
 
         public async Task<TemplateOptions> GetTemplateOptionsFromCache(string key)

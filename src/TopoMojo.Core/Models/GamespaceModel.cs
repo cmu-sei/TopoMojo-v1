@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TopoMojo.Core.Models
 {
-    public class GamespaceSummary
+    public class Gamespace
     {
         public int Id { get; set; }
         public string WhenCreated { get; set; }

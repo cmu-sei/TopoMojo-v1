@@ -16,6 +16,7 @@ namespace TopoMojo.Core.Mappers
                     opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())))
                 .ReverseMap();
 
+            CreateMap<Data.Entities.Topology, Models.TopologyState>();
             CreateMap<Models.NewTopology, Data.Entities.Topology>();
 
             CreateMap<Models.ChangedTopology, Data.Entities.Topology>();

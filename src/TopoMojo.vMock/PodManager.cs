@@ -377,7 +377,7 @@ namespace TopoMojo.vMock
             return opt;
         }
 
-        public async Task<Vm> Answer(string id, string question, string answer)
+        public async Task<Vm> Answer(string id, VmAnswer answer)
         {
             await Task.Delay(0);
             Vm vm = _vms[id];

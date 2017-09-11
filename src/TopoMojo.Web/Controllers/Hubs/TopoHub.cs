@@ -3,7 +3,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel;
 using Microsoft.AspNetCore.SignalR;
-using TopoMojo.Data.Entities;
+using TopoMojo.Core.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Controllers
 {
@@ -62,8 +63,8 @@ namespace TopoMojo.Controllers
             return Clients.OthersInGroup(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
         }
 
-        public Task TemplateMessage(string action, Linker model){
-            return Clients.OthersInGroup(model.Topology.GlobalId).TemplateEvent(new BroadcastEvent<Linker>(Context.User, action, model));
+        public Task TemplateMessage(string action, Core.Models.Template model){
+            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
         }
 
         // private Actor Actor
@@ -81,9 +82,9 @@ namespace TopoMojo.Controllers
         // Task Posted(BroadcastEvent<string> be);
         //Task Destroying(Actor actor);
         Task TopoEvent(BroadcastEvent<Topology> be);
-        Task TemplateEvent(BroadcastEvent<Linker> be);
+        Task TemplateEvent(BroadcastEvent<Core.Models.Template> be);
         Task ChatEvent(BroadcastEvent<string> be);
-        Task VmEvent(BroadcastEvent<Models.Vm> be);
+        Task VmEvent(BroadcastEvent<Vm> be);
         Task PresenceEvent(BroadcastEvent be);
 
     }

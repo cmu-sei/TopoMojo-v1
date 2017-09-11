@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Jam.Accounts;
 using TopoMojo.Core;
-using TopoMojo.Data.Entities;
+using TopoMojo.Core.Models;
 
 namespace TopoMojo.Services
 {
@@ -29,7 +29,7 @@ namespace TopoMojo.Services
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, globalId));
 
-            Profile profile = await _profileManager.LoadByGlobalId(globalId);
+            Profile profile = await _profileManager.FindByGlobalId(globalId);
             if (profile != null)
             {
                 claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
@@ -43,7 +43,7 @@ namespace TopoMojo.Services
 
         public async Task<object> GetProfileAsync(string globalId)
         {
-            Profile profile = await _profileManager.LoadByGlobalId(globalId);
+            Profile profile = await _profileManager.FindByGlobalId(globalId);
             return new {
                 Name = profile.Name,
                 IsAdmin = profile.IsAdmin
@@ -52,10 +52,10 @@ namespace TopoMojo.Services
 
         public async Task AddProfileAsync(string globalId, string name)
         {
-            await _profileManager.SaveAsync(new Profile() {
-                GlobalId = globalId,
-                Name = name
-            });
+            // await _profileManager.SaveAsync(new Profile() {
+            //     GlobalId = globalId,
+            //     Name = name
+            // });
         }
     }
 }

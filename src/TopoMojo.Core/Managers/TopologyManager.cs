@@ -6,11 +6,13 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.Entities.Extensions;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
 {
@@ -21,13 +23,16 @@ namespace TopoMojo.Core
             ITopologyRepository repo,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
+            IProfileResolver profileResolver,
+            IPodManager podManager
         ) : base (profileRepository, mill, options, profileResolver)
         {
             _repo = repo;
+            _pod = podManager;
         }
 
         private readonly ITopologyRepository _repo;
+        private readonly IPodManager _pod;
 
         public async Task<SearchResult<Models.Topology>> List(Search search)
         {
@@ -40,21 +45,24 @@ namespace TopoMojo.Core
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
 
-            return await ProcessQuery(search, q);
-        }
-
-        public async Task<SearchResult<Models.Topology>> ListMine(Search search)
-        {
-            IQueryable<Topology> q = _repo.List()
-                .Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
-
-            if (search.Term.HasValue())
-            {
-                q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
-            }
+            if (search.HasFilter("mine"))
+                q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
 
             return await ProcessQuery(search, q);
         }
+
+        // public async Task<SearchResult<Models.Topology>> ListMine(Search search)
+        // {
+        //     IQueryable<Topology> q = _repo.List()
+        //         .Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
+
+        //     if (search.Term.HasValue())
+        //     {
+        //         q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
+        //     }
+
+        //     return await ProcessQuery(search, q);
+        // }
 
         public async Task<SearchResult<Models.Topology>> ProcessQuery(Search search, IQueryable<Topology> q)
         {
@@ -63,6 +71,15 @@ namespace TopoMojo.Core
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.Topology[]>(q.OrderBy(t => t.Name).Skip(search.Skip).Take(search.Take).ToArray(), WithActor());
             return result;
+        }
+
+        public async Task<Models.Topology> Load(int id)
+        {
+            Data.Entities.Topology topo = await _repo.Load(id);
+            if (topo == null)
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.Topology>(topo, WithActor());
         }
 
         public async Task<Models.Topology> Create(Models.NewTopology model)
@@ -99,6 +116,9 @@ namespace TopoMojo.Core
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
                 throw new InvalidOperationException();
+
+            foreach (Vm vm in await _pod.Find(topology.GlobalId))
+                _pod.Delete(vm.Id);
 
             await _repo.Remove(topology);
             return Mapper.Map<Models.Topology>(topology);
@@ -237,7 +257,7 @@ namespace TopoMojo.Core
         //     return tref;
         // }
 
-        public async Task<string> Share(int id, bool revoke)
+        public async Task<Models.TopologyState> Share(int id, bool revoke)
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
@@ -246,13 +266,12 @@ namespace TopoMojo.Core
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
-            string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
-            topology.ShareCode = code;
+            topology.ShareCode = (revoke) ? "" : Guid.NewGuid().ToString("N");
             await _repo.Update(topology);
-            return code;
+            return Mapper.Map<Models.TopologyState>(topology);
         }
 
-        public async Task<bool> Publish(int id, bool revoke)
+        public async Task<Models.TopologyState> Publish(int id, bool revoke)
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
@@ -263,7 +282,7 @@ namespace TopoMojo.Core
 
             topology.IsPublished = !revoke;
             await _repo.Update(topology);
-            return true;
+            return Mapper.Map<Models.TopologyState>(topology);
         }
 
         public async Task<bool> Enlist(string code)

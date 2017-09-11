@@ -47,9 +47,7 @@ namespace Tests
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new SearchFilter[] {
-                        new SearchFilter {Name = "published" }
-                    }
+                    Filters = new string[] { "published" }
                 }).Result;
                 Assert.True(list.Total == 3);
             }
@@ -80,8 +78,8 @@ namespace Tests
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new SearchFilter[] {
-                        //new SearchFilter {Name = "published" }
+                    Filters = new string[] {
+                        //"published"
                     }
                 }).Result;
                 Assert.True(list.Total == 6);

@@ -27,6 +27,12 @@ namespace TopoMojo.Models.Virtual
         public VmQuestionChoice[] Choices { get; set; }
     }
 
+    public class VmAnswer
+    {
+        public string QuestionId { get; set; }
+        public string ChoiceKey { get; set; }
+    }
+
     public class VmQuestionChoice
     {
         public string Key { get; set; }

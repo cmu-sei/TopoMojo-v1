@@ -8,14 +8,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.Entities.Extensions;
-using TopoMojo.Core.Models;
-using TopoMojo.Core.Models.Extensions;
+//using TopoMojo.Core.Models;
+//using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Extensions;
-using TopoMojo.Models.Virtual;
+//using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
 {
@@ -40,7 +41,13 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
 
-        public async Task<GameState> Create(int topoId)
+        public async Task<Models.Gamespace[]> List()
+        {
+            var list = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
+            return Mapper.Map<Models.Gamespace[]>(list);
+        }
+
+        public async Task<Models.GameState> Launch(int topoId)
         {
             Gamespace[] gamespaces = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
 
@@ -67,20 +74,20 @@ namespace TopoMojo.Core
                 );
                 await _repo.Add(game);
             }
-            return await Deploy(game.Id);
+            return await Deploy(game);
         }
 
-        public async Task<Models.GameState> Deploy(int id)
+        private async Task<Models.GameState> Deploy(Gamespace gamespace)
         {
-            Gamespace gamespace = await _repo.Load(id);
-            if (gamespace == null)
-                throw new InvalidOperationException();
+            // Gamespace gamespace = await _repo.Load(id);
+            // if (gamespace == null)
+            //     throw new InvalidOperationException();
 
-            if (! await _repo.CanEdit(id, Profile))
-                throw new InvalidOperationException();
+            // if (! await _repo.CanEdit(id, Profile))
+            //     throw new InvalidOperationException();
 
-            List<Task<Vm>> tasks = new List<Task<Vm>>();
-            foreach (Data.Entities.Template template in gamespace.Topology.Templates)
+            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            foreach (Template template in gamespace.Topology.Templates)
             {
                 TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
                 tu.Name = template.Name;
@@ -156,9 +163,9 @@ namespace TopoMojo.Core
             return await LoadState(gamespace, topoId);
         }
 
-        private async Task<GameState> LoadState(Gamespace gamespace, int topoId)
+        private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
         {
-            GameState state = null;
+            Models.GameState state = null;
 
             if (gamespace == null)
             {
@@ -166,18 +173,18 @@ namespace TopoMojo.Core
                 if (topo == null)
                     throw new InvalidOperationException();
 
-                state = new GameState();
+                state = new Models.GameState();
                 state.Document = topo.Document;
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
+                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
             }
             else
             {
                 state = Mapper.Map<Models.GameState>(gamespace);
                 state.Vms = gamespace.Topology.Templates
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
+                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
                 state.MergeVms(await _pod.Find(gamespace.GlobalId));
             }
@@ -253,21 +260,14 @@ namespace TopoMojo.Core
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
-            List<Task<Vm>> tasks = new List<Task<Vm>>();
-            foreach (Vm vm in await _pod.Find(gamespace.GlobalId))
+            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
                 tasks.Add(_pod.Delete(vm.Id));
             Task.WaitAll(tasks.ToArray());
-            //_pod.DeleteGroup(player.Gamespace.GlobalId);
+            //TODO: _pod.DeleteMatches(player.Gamespace.GlobalId);
 
-            await _repo.Remove(gamespace);
+             await _repo.Remove(gamespace);
             return Mapper.Map<Models.GameState>(gamespace);
-        }
-
-        public async Task<Models.GamespaceSummary[]> List()
-        {
-            return await _repo.ListByProfile(Profile.Id)
-                .Select(g => Mapper.Map<Models.GamespaceSummary>(g))
-                .ToArrayAsync();
         }
 
         // public async Task<Player[]> Players(int id)
@@ -319,14 +319,14 @@ namespace TopoMojo.Core
             return true;
         }
 
-        public async Task<bool> Delist(int topoId, int memberId)
+        public async Task<bool> Delist(int id, int memberId)
         {
-            Gamespace gamespace = await _repo.Load(topoId);
+            Gamespace gamespace = await _repo.Load(id);
 
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            if (! await _repo.CanManage(topoId, Profile))
+            if (! await _repo.CanManage(id, Profile))
                 throw new InvalidOperationException();
 
             Player member = gamespace.Players
