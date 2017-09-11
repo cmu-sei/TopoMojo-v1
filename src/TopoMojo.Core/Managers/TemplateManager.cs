@@ -1,24 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AutoMapper;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Core.Abstractions;
-using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
-using TopoMojo.Data.Entities.Extensions;
-using TopoMojo.Core.Models;
 
 namespace TopoMojo.Core
 {
-    public class TemplateManager : EntityManager<Data.Entities.Template>
+    public class TemplateManager : EntityManager<Template>
     {
         public TemplateManager(
-            //TopoMojoDbContext db,
             IProfileRepository profileRepository,
             ITemplateRepository repo,
             ILoggerFactory mill,
@@ -27,101 +23,153 @@ namespace TopoMojo.Core
         ) : base(profileRepository, mill, options, profileResolver)
         {
             _repo = repo;
-            Mapper.Initialize(config =>
-                config.CreateMap<Models.Template, Data.Entities.Template>()
-            );
         }
 
         private readonly ITemplateRepository _repo;
 
-        public async Task<Models.Template> Create(Models.Template model)
+        public async Task<Models.TemplateDetail> Create(Models.NewTemplateDetail model)
         {
-
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            Data.Entities.Template t = new Data.Entities.Template
-            {
-                Name = model.Name,
-                Description = model.Description,
-                Networks = "lan"
-            };
-
-            t = await _repo.Add(t);
-            model.Id = t.Id;
-            return model;
+            Template t = Mapper.Map<Template>(model);
+            await _repo.Add(t);
+            return Mapper.Map<Models.TemplateDetail>(t);
         }
 
-        public async Task<Models.Template> Update(Models.Template template)
+        public async Task<Models.TemplateDetail> Configure(Models.TemplateDetail template)
         {
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            Data.Entities.Template entity = await _repo.Load(template.Id);
+            Template entity = await _repo.Load(template.Id);
             if (entity == null)
                 throw new InvalidOperationException();
 
-            if (!template.Name.HasValue())
-                template.Name = "[TemplateName]";
-
-            entity = Mapper.Map<Models.Template, Data.Entities.Template>(template, entity);
+            Mapper.Map<Models.TemplateDetail, Template>(template, entity);
             await _repo.Update(entity);
-            return template;
+            return Mapper.Map<Models.TemplateDetail>(entity);
+        }
+
+        public async Task<Models.Template> Update(Models.ChangedTemplate template)
+        {
+            Template entity = await _repo.Load(template.Id);
+            if (entity == null)
+                throw new InvalidOperationException();
+
+            if (! await _repo.CanEdit(template.Id, Profile))
+                throw new InvalidOperationException();
+
+            Mapper.Map<Models.ChangedTemplate, Template>(template, entity);
+            await _repo.Update(entity);
+            return Mapper.Map<Models.Template>(entity);
+        }
+
+        public async Task<Models.Template> Link(int templateId, int topoId)
+        {
+            Template entity = await _repo.Load(templateId);
+            if (entity == null || entity.Parent != null || !entity.IsPublished)
+                throw new InvalidOperationException();
+
+            //assuming topo exists; EF will throw if nonexistent
+            Template linked = Mapper.Map<Template>(entity);
+            linked.TopologyId = topoId;
+            // linked.Id = 0;
+            // linked.Detail = "";
+            // linked.IsPublished = false;
+            // linked.ParentId = entity.Id;
+            await _repo.Add(linked);
+            return Mapper.Map<Models.Template>(linked, WithActor());
+        }
+
+        public async Task<Models.Template> Unlink(int id)
+        {
+            Template entity = await _repo.Load(id);
+            if (entity == null)
+                throw new InvalidOperationException();
+
+            if (! await _repo.CanEdit(entity.TopologyId ?? 0, Profile))
+                throw new InvalidOperationException();
+
+            if (entity.Parent != null)
+            {
+                TemplateUtility tu = new TemplateUtility(entity.Parent.Detail);
+                tu.Name = entity.Name;
+                tu.LocalizeDiskPaths(entity.Topology.GlobalId, entity.GlobalId);
+                entity.Detail = tu.ToString();
+                entity.Parent = null;
+                await _repo.Update(entity);
+            }
+            return Mapper.Map<Models.Template>(entity, WithActor());
         }
 
         public async Task<Models.Template> Delete(int id)
         {
-            Data.Entities.Template entity = await _repo.Load(id);
-
+            Template entity = await _repo.Load(id);
             if (entity == null)
                 throw new InvalidOperationException();
 
-            if (! await CanEdit(entity.TopologyId ?? 0))
+            if (! await _repo.CanEdit(entity.TopologyId ?? 0, Profile))
                 throw new InvalidOperationException();
 
-            if (! await _repo.HasLinkedTemplates(id))
-                throw new InvalidOperationException("Template is linked by others.");
+            if (! await _repo.IsParentTemplate(id))
+                throw new ParentTemplateException();
 
             await _repo.Remove(entity);
             return Mapper.Map<Models.Template>(entity);
         }
 
-        private async Task<bool> CanEdit(int topoId)
+        public async Task<SearchResult<Models.TemplateSummary>> List(Search search)
         {
-            return  await _repo.CanEdit(topoId, Profile);
+            IQueryable<Template> q = BuildQuery(search);
+            SearchResult<Models.TemplateSummary> result = new SearchResult<Models.TemplateSummary>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+            result.Results = Mapper.Map<Models.TemplateSummary[]>(await RunQuery(search, q));
+            return result;
         }
 
-        public async Task<SearchResult<Models.Template>> ListAsync(Search search)
+        public async Task<SearchResult<Models.TemplateDetail>> ListDetail(Search search)
         {
-            IQueryable<Data.Entities.Template> q = _repo.List();
+            IQueryable<Template> q = BuildQuery(search);
+            SearchResult<Models.TemplateDetail> result = new SearchResult<Models.TemplateDetail>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+            result.Results = Mapper.Map<Models.TemplateDetail[]>(await RunQuery(search, q));
+            return result;
+        }
+
+        private IQueryable<Template> BuildQuery(Search search)
+        {
+            IQueryable<Template> q = _repo.List();
+
+            if (search.HasFilter("parents"))
+                q = q.Where(t => t.ParentId == 0);
 
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
 
-            SearchResult<Models.Template> result = new SearchResult<Models.Template>();
-            result.Search = search;
-            result.Total = await q.CountAsync();
-            result.Results = await q
+            return q;
+        }
+
+        private async Task<Template[]> RunQuery(Search search, IQueryable<Template> q)
+        {
+            return await q
                 .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)
-                .Select(t => Mapper.Map<Models.Template>(t))
                 .ToArrayAsync();
-            return result;
         }
 
-        private async Task<Models.LinkedTemplate[]> GetLinkedTemplates(int templateId)
+        public async Task<Models.TemplateSummary[]> ListChildTemplates(int templateId)
         {
             var results = await _repo.ListLinkedTemplates(templateId);
-            return results
-                .Select(t => Mapper.Map<Models.LinkedTemplate>(t))
-                .ToArray();
+            return Mapper.Map<Models.TemplateSummary[]>(results);
         }
-
 
         public async Task<TopoMojo.Models.Virtual.Template> GetDeployableTemplate(int id, string tag)
         {
-            Data.Entities.Template template = await _repo.Load(id);
+            Template template = await _repo.Load(id);
 
             if (template == null)
                 throw new InvalidOperationException();
@@ -135,25 +183,5 @@ namespace TopoMojo.Core
             return tu.AsTemplate();
         }
 
-        public async Task<Models.Template> Clone(int id)
-        {
-            Data.Entities.Template template = await _repo.Load(id);
-            if (template == null)
-                throw new InvalidOperationException();
-
-            if (! await CanEdit(template.TopologyId ?? 0))
-                throw new InvalidOperationException();
-
-            if (template.Parent != null)
-            {
-                TemplateUtility tu = new TemplateUtility(template.Parent.Detail);
-                tu.Name = template.Name;
-                tu.LocalizeDiskPaths(template.Topology.GlobalId, template.GlobalId);
-                template.Detail = tu.ToString();
-                template.Parent = null;
-                await _repo.Update(template);
-            }
-            return Mapper.Map<Models.Template>(template);
-        }
     }
 }

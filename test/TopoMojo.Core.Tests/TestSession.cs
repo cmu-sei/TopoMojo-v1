@@ -29,12 +29,12 @@ namespace Tests
                 _mill,
                 _coreOptions,
                 new ProfileResolver(new Profile
-                    {
-                        Name = "admin",
-                        IsAdmin = true
-                    }
-                )
+                {
+                    Name = "admin@test",
+                    IsAdmin = true
+                })
             );
+            AddUser("tester@test", true, true);
         }
 
         private readonly TopoMojoDbContext _ctx = null;
@@ -95,6 +95,20 @@ namespace Tests
             return mgr as TopologyManager;
         }
 
+        public TemplateManager GetTemplateManager()
+        {
+            Type t = typeof(TemplateManager);
+            object mgr = FindManager(t);
+            if (mgr == null)
+            {
+                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
+                    new TemplateRepository(_ctx),
+                    _mill, _coreOptions, _ur);
+                _mgrStore[_actor].Add(t.Name, mgr);
+            }
+            return mgr as TemplateManager;
+        }
+
         #endregion
 
         public Profile AddActor(string name)
@@ -107,13 +121,14 @@ namespace Tests
             return AddUser(name, false);
         }
 
-        public Profile AddUser(string name, bool makeActor)
+        public Profile AddUser(string name, bool makeActor, bool isAdmin = false)
         {
             if (!_actors.ContainsKey(name))
             {
                 Profile target = new Profile
                 {
                     Name = name,
+                    IsAdmin = isAdmin,
                     GlobalId = Guid.NewGuid().ToString()
                 };
 

@@ -31,5 +31,4 @@ namespace TopoMojo.Core.Models
         public bool IsRunning { get; set; }
     }
 
-
 }

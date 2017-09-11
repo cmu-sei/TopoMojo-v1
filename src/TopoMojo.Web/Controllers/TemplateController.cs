@@ -40,7 +40,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<SearchResult<Template>> List([FromBody]Search search)
         {
-            return await _mgr.ListAsync(search);
+            return await _mgr.List(search);
         }
 
         [HttpPost]

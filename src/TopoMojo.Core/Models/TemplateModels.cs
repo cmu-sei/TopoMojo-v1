@@ -8,24 +8,45 @@ namespace TopoMojo.Core.Models
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
-        public Template Parent { get; set; }
+        public TemplateSummary Parent { get; set; }
+        // public string ParentId { get; set; }
+        // public string ParentName { get; set; }
+    }
+
+    public class ChangedTemplate
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Networks { get; set; }
+        public string Iso { get; set; }
+    }
+
+    public class NewTemplateDetail
+    {
+        public string Name { get; set; }
+        public string Networks { get; set; }
+        public string Detail { get; set; }
+        public bool IsPublished { get; set; }
     }
 
     public class TemplateDetail
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Networks { get; set; }
         public string Detail { get; set; }
         public bool IsPublished { get; set; }
-        public TemplateDetail Parent { get; set; }
     }
 
-    public class LinkedTemplate
+    public class TemplateSummary
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public int TopologyId { get; set; }
         public string TopologyName { get; set; }
+        public string ParentId { get; set; }
+        public string ParentName { get; set; }
     }
 
 }

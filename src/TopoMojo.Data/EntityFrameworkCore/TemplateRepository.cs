@@ -22,7 +22,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<bool> HasLinkedTemplates(int parentId)
+        public async Task<bool> IsParentTemplate(int parentId)
         {
              return await DbContext.Templates
                 .Where(t => t.ParentId == parentId)

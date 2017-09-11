@@ -22,7 +22,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
 
         public virtual async Task<TEntity> Add(TEntity entity)
         {
-            entity.Name = entity.Name ?? "New " + typeof(TEntity).Name;
+            entity.Name = entity.Name ?? $"[{typeof(TEntity).Name}Name]";
             entity.WhenCreated = DateTime.UtcNow;
             entity.GlobalId = Guid.NewGuid().ToString();
             DbContext.Add(entity);
@@ -32,7 +32,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
 
         public virtual async Task Update(TEntity entity)
         {
-            entity.Name = entity.Name ?? "New " + typeof(TEntity).Name;
+            entity.Name = entity.Name ?? $"[{typeof(TEntity).Name}Name]";
             DbContext.Update(entity);
             await DbContext.SaveChangesAsync();
         }

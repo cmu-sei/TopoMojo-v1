@@ -5,7 +5,7 @@ namespace TopoMojo.Data.Abstractions
 {
     public interface ITemplateRepository : IRepository<Template>
     {
-        Task<bool> HasLinkedTemplates(int parentId);
+        Task<bool> IsParentTemplate(int parentId);
         Task<Template[]> ListLinkedTemplates(int parentId);
     }
 }
