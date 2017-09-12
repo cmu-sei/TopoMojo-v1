@@ -28,6 +28,8 @@ using TopoMojo.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.Tasks;
 using TopoMojo.Core.Abstractions;
+using ModelTransforms;
+using System.IO;
 
 namespace TopoMojo
 {
@@ -222,6 +224,15 @@ namespace TopoMojo
                 DbOptions,
                 env.IsDevelopment()
             );
+
+            if (env.IsDevelopment())
+            {
+                using (TextWriter tw = File.CreateText(Path.Combine(env.ContentRootPath, "ClientApp", "app", "api-models.ts")))
+                {
+                    var transformer = new TypeScriptTransformer(tw, false);
+                    transformer.Transform("TopoMojo.Core.Models");
+                }
+            }
 
         }
     }
