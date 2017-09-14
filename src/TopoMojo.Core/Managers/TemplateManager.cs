@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 
@@ -142,27 +143,27 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(template);
         }
 
-        public async Task<SearchResult<Models.TemplateSummary>> List(Search search)
+        public async Task<Models.SearchResult<Models.TemplateSummary>> List(Models.Search search)
         {
             IQueryable<Template> q = BuildQuery(search);
-            SearchResult<Models.TemplateSummary> result = new SearchResult<Models.TemplateSummary>();
+            Models.SearchResult<Models.TemplateSummary> result = new Models.SearchResult<Models.TemplateSummary>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results = Mapper.Map<Models.TemplateSummary[]>(await RunQuery(search, q));
             return result;
         }
 
-        public async Task<SearchResult<Models.TemplateDetail>> ListDetail(Search search)
+        public async Task<Models.SearchResult<Models.TemplateDetail>> ListDetail(Models.Search search)
         {
             IQueryable<Template> q = BuildQuery(search);
-            SearchResult<Models.TemplateDetail> result = new SearchResult<Models.TemplateDetail>();
+            Models.SearchResult<Models.TemplateDetail> result = new Models.SearchResult<Models.TemplateDetail>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results = Mapper.Map<Models.TemplateDetail[]>(await RunQuery(search, q));
             return result;
         }
 
-        private IQueryable<Template> BuildQuery(Search search)
+        private IQueryable<Template> BuildQuery(Models.Search search)
         {
             IQueryable<Template> q = _repo.List();
 
@@ -175,7 +176,7 @@ namespace TopoMojo.Core
             return q;
         }
 
-        private async Task<Template[]> RunQuery(Search search, IQueryable<Template> q)
+        private async Task<Template[]> RunQuery(Models.Search search, IQueryable<Template> q)
         {
             return await q
                 .OrderBy(t => t.Name)

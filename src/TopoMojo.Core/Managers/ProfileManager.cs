@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
@@ -47,7 +48,7 @@ namespace TopoMojo.Core
             return await _profileRepo.CanEditSpace(globalId, Profile);
         }
 
-        public async Task<SearchResult<Models.Profile>> List(Search search)
+        public async Task<Models.SearchResult<Models.Profile>> List(Models.Search search)
         {
             IQueryable<Data.Entities.Profile> q = _profileRepo.List();
             if (search.Term.HasValue())
@@ -57,7 +58,7 @@ namespace TopoMojo.Core
                 q = q.Where(p => p.IsAdmin);
 
 
-            SearchResult<Models.Profile> result = new SearchResult<Models.Profile>();
+            Models.SearchResult<Models.Profile> result = new Models.SearchResult<Models.Profile>();
             result.Search = search;
             result.Total = await q.CountAsync();
 

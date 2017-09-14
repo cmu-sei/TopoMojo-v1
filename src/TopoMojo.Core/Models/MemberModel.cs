@@ -1,4 +1,4 @@
-namespace TopoMojo.Models
+namespace TopoMojo.Core.Models
 {
     public class PlayerModel
     {

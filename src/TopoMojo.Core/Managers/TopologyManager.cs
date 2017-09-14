@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
@@ -34,7 +35,7 @@ namespace TopoMojo.Core
         private readonly ITopologyRepository _repo;
         private readonly IPodManager _pod;
 
-        public async Task<SearchResult<Models.Topology>> List(Search search)
+        public async Task<Models.SearchResult<Models.Topology>> List(Models.Search search)
         {
             IQueryable<Topology> q = _repo.List();
             if (search.Term.HasValue())
@@ -64,9 +65,9 @@ namespace TopoMojo.Core
         //     return await ProcessQuery(search, q);
         // }
 
-        public async Task<SearchResult<Models.Topology>> ProcessQuery(Search search, IQueryable<Topology> q)
+        public async Task<Models.SearchResult<Models.Topology>> ProcessQuery(Models.Search search, IQueryable<Topology> q)
         {
-            SearchResult<Models.Topology> result = new SearchResult<Models.Topology>();
+            Models.SearchResult<Models.Topology> result = new Models.SearchResult<Models.Topology>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.Topology[]>(q.OrderBy(t => t.Name).Skip(search.Skip).Take(search.Take).ToArray(), WithActor());

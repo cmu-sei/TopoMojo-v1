@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TopoMojo.Web.Data.Migrations.TopoMojo
@@ -13,6 +14,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     GlobalId = table.Column<string>(nullable: true),
                     IsAdmin = table.Column<bool>(nullable: false),
@@ -29,6 +31,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     Description = table.Column<string>(nullable: true),
                     DocumentUrl = table.Column<string>(nullable: true),
@@ -48,6 +51,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     GlobalId = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
@@ -71,6 +75,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     Description = table.Column<string>(nullable: true),
                     Detail = table.Column<string>(nullable: true),
@@ -106,6 +111,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     Permission = table.Column<int>(nullable: false),
                     PersonId = table.Column<int>(nullable: false),
@@ -133,6 +139,7 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     GamespaceId = table.Column<int>(nullable: false),
                     Permission = table.Column<int>(nullable: false),

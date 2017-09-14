@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace TopoMojo.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    //[Route("api/[controller]/[action]")]
     public class AccountController : _Controller
     {
         private readonly IAccountManager _accountManager;
@@ -37,7 +37,7 @@ namespace TopoMojo.Controllers
         // confirm(account), return bool
         // [Authorize] refresh(), return token
 
-        [HttpPost]
+        [HttpPost("api/account/login")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Login([FromBody] Credentials model)
         {
@@ -48,7 +48,8 @@ namespace TopoMojo.Controllers
 
             return Json(_accountManager.GenerateJwtToken(account.GlobalId));
         }
-        [HttpPost]
+
+        [HttpPost("api/account/otp")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Otp([FromBody] Credentials model)
         {
@@ -60,7 +61,7 @@ namespace TopoMojo.Controllers
             return Json(_accountManager.GenerateJwtToken(account.GlobalId));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/tfa")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Tfa([FromBody] Credentials model)
         {
@@ -72,7 +73,7 @@ namespace TopoMojo.Controllers
             return Json(_accountManager.GenerateJwtToken(account.GlobalId));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/register")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Register([FromBody] Credentials model)
         {
@@ -85,7 +86,7 @@ namespace TopoMojo.Controllers
             return Json(_accountManager.GenerateJwtToken(account.GlobalId));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/reset")]
         [JsonExceptionFilter]
          public async Task<IActionResult> Reset([FromBody] Credentials model)
         {
@@ -101,7 +102,7 @@ namespace TopoMojo.Controllers
             return Json(_accountManager.GenerateJwtToken(account.GlobalId));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/confirm")]
         [JsonExceptionFilter]
         public async Task<bool> Confirm([FromBody] Credentials model)
         {
@@ -116,7 +117,7 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize]
-        [HttpGet]
+        [HttpGet("api/accout/refresh")]
         public async Task<IActionResult> Refresh()
         {
             string subject = HttpContext.User.FindFirstValue(JwtClaimTypes.Subject);

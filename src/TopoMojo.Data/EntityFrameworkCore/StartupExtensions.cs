@@ -3,7 +3,7 @@ using TopoMojo.Data.EntityFrameworkCore;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class StartupExtensions
+    public static class RepositoryStartupExtensions
     {
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {

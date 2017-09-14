@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Core.Models
 {
     public class Search
     {
@@ -25,16 +25,4 @@ namespace TopoMojo.Core
         public int Id { get; set; }
     }
 
-    public static class SearchExtensions
-    {
-        public static bool HasFilter(this Search search, string name)
-        {
-            return search.Filters.Where(f => f.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).Any();
-        }
-
-        public static string GetFilter(this Search search, string name)
-        {
-            return search.Filters.Where(f => f.IndexOf(name, StringComparison.CurrentCultureIgnoreCase)>=0).FirstOrDefault();
-        }
-    }
 }

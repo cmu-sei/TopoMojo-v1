@@ -13,7 +13,7 @@ namespace TopoMojo.Controllers
 {
     public class ConsoleController : Controller
     {
-       [HttpGet("/console/{id}/{name?}")]
+        //[HttpGet("api/console/{id}/{name?}")]
         public IActionResult Index([FromRoute] string id, [FromRoute] string name)
         {
             ViewBag.Title = "console: " + name.Untagged();

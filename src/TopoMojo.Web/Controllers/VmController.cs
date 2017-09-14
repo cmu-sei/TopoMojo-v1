@@ -65,7 +65,7 @@ namespace TopoMojo.Controllers
         //     return Ok(vm);
         // }
 
-        [HttpGet("api/vm/{id}")]
+        [HttpGet("api/vm/{id}/load")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Load(string id)
@@ -75,7 +75,7 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/vm/{id}/start")]
+        [HttpGet("api/vm/{id}/start")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Start(string id)
@@ -86,7 +86,7 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/vm/{id}/stop")]
+        [HttpGet("api/vm/{id}/stop")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Stop(string id)
@@ -97,7 +97,7 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/vm/{id}/save")]
+        [HttpGet("api/vm/{id}/save")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Save(string id)
@@ -107,7 +107,7 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/vm/{id}/revert")]
+        [HttpGet("api/vm/{id}/revert")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Revert(string id)
@@ -118,7 +118,7 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpDelete("api/vm/{id}")]
+        [HttpDelete("api/vm/{id}/delete")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Delete([FromRoute]string id)
@@ -138,7 +138,7 @@ namespace TopoMojo.Controllers
             return Ok(await _pod.Change(id, change));
         }
 
-        [HttpPost("api/vm/{id}/deploy")]
+        [HttpGet("api/vm/{id}/deploy")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Deploy([FromRoute]int id)
@@ -147,7 +147,7 @@ namespace TopoMojo.Controllers
             return Ok(await _pod.Deploy(template));
         }
 
-        [HttpPost("api/vm/{id}/init")]
+        [HttpGet("api/vm/{id}/init")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Initialize([FromRoute]int id)
