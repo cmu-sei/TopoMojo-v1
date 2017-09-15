@@ -29,7 +29,7 @@ namespace TopoMojo.Controllers
         private readonly IPodManager _pod;
 
         [HttpGet("api/templates")]
-        [ProducesResponseType(typeof(SearchResult<Template>), 200)]
+        [ProducesResponseType(typeof(SearchResult<TemplateSummary>), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> List([FromQuery]Search search)
         {
@@ -55,7 +55,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpPost("api/template/detail")]
+        [HttpPost("api/template/create")]
         [ProducesResponseType(typeof(TemplateDetail), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Create([FromBody]NewTemplateDetail model)
@@ -64,7 +64,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpPut("api/template/detail")]
+        [HttpPut("api/template/configure")]
         [ProducesResponseType(typeof(TemplateDetail), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Configure([FromBody]TemplateDetail template)

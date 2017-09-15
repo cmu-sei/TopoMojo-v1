@@ -15,9 +15,9 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    public class InstanceController : HubController<TopologyHub>
+    public class GamespaceController : HubController<TopologyHub>
     {
-        public InstanceController(
+        public GamespaceController(
             GamespaceManager instanceManager,
             IPodManager podManager,
             IServiceProvider sp,
@@ -78,7 +78,7 @@ namespace TopoMojo.Controllers
             return Ok(true);
         }
 
-        [HttpGet("api/gamespace/enlist/{code}")]
+        [HttpGet("api/player/enlist/{code}")]
         [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Enlist([FromRoute] string code)
@@ -86,12 +86,12 @@ namespace TopoMojo.Controllers
             return Ok(await _mgr.Enlist(code));
         }
 
-        [HttpDelete("api/gamespace/{id}/delist/{memberId}")]
+        [HttpDelete("api/player/delist/{playerId}")]
         [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delist([FromRoute] int id, [FromRoute] int memberId)
+        public async Task<IActionResult> Delist([FromRoute] int playerId)
         {
-            return Ok(await _mgr.Delist(id, memberId));
+            return Ok(await _mgr.Delist(playerId));
         }
 
 

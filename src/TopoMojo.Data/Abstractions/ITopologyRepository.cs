@@ -6,5 +6,6 @@ namespace TopoMojo.Data.Abstractions
     public interface ITopologyRepository : IRepository<Topology>
     {
         Task<Topology> FindByShareCode(string code);
+        Task<Topology> FindByWorker(int id);
     }
 }

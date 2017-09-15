@@ -33,6 +33,18 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .SingleOrDefaultAsync();
         }
 
+        public async Task<Topology> FindByWorker(int workerId)
+        {
+            int id = await DbContext.Workers
+                .Where(p => p.Id == workerId)
+                .Select(p => p.TopologyId)
+                .SingleOrDefaultAsync();
+
+            return (id > 0)
+                ? await Load(id)
+                : null;
+        }
+
         public override async Task<bool> CanEdit(int entityId, Profile profile)
         {
             if (profile.IsAdmin)

@@ -14,7 +14,6 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
     public class ProfileController : _Controller
     {
         public ProfileController(

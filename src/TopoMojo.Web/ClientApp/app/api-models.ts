@@ -21,11 +21,30 @@ export interface VmState {
 	isRunning?: boolean;
 }
 
+export interface PlayerModel {
+	id?: number;
+	name?: string;
+	online?: boolean;
+}
+
 export interface Profile {
 	id?: number;
 	globalId?: string;
 	name?: string;
 	isAdmin?: boolean;
+}
+
+export interface Search {
+	term?: string;
+	skip?: number;
+	take?: number;
+	sort?: number;
+	filters?: Array<string>;
+}
+
+export interface SearchFilter {
+	name?: string;
+	id?: number;
 }
 
 export interface Template {

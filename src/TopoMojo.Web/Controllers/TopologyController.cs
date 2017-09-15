@@ -130,7 +130,7 @@ namespace TopoMojo.Controllers
             return Ok(state);
         }
 
-        [HttpGet("api/topology/enlist/{code}")]
+        [HttpGet("api/worker/enlist/{code}")]
         [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> Enlist([FromRoute] string code)
@@ -138,12 +138,12 @@ namespace TopoMojo.Controllers
             return Ok(await _mgr.Enlist(code));
         }
 
-        [HttpDelete("api/topology/{id}/delist/{memberId}")]
+        [HttpDelete("api/worker/delist/{workerId}")]
         [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delist([FromRoute] int id, [FromRoute] int memberId)
+        public async Task<IActionResult> Delist([FromRoute] int workerId)
         {
-            return Ok(await _mgr.Delist(id, memberId));
+            return Ok(await _mgr.Delist(workerId));
         }
 
         [HttpGet("api/topology/{id}/isos")]

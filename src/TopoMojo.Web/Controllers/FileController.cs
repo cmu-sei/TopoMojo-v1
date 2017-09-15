@@ -43,13 +43,15 @@ namespace TopoMojo.Controllers
 
         private readonly IFileUploadHandler _uploader;
 
-        [HttpGet("api/[controller]/[action]/{id}")]
+        [HttpGet("api/file/progess/{id}")]
+        [ProducesResponseType(typeof(int), 200)]
         public IActionResult Progress([FromRoute]string id)
         {
             return Json(_monitor.Check(id).Progress);
         }
 
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost("api/file/upload")]
+        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
         [DisableFormValueModelBinding]
         //[ValidateAntiForgeryToken]

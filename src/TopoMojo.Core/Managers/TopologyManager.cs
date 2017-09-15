@@ -305,18 +305,18 @@ namespace TopoMojo.Core
             return true;
         }
 
-        public async Task<bool> Delist(int topoId, int memberId)
+        public async Task<bool> Delist(int workerId)
         {
-            Topology topology = await _repo.Load(topoId);
+            Topology topology = await _repo.FindByWorker(workerId);
 
             if (topology == null)
                 throw new InvalidOperationException();
 
-            if (! await _repo.CanManage(topoId, Profile))
+            if (! await _repo.CanManage(topology.Id, Profile))
                 throw new InvalidOperationException();
 
             Worker member = topology.Workers
-                .Where(p => p.PersonId == memberId)
+                .Where(p => p.PersonId == workerId)
                 .SingleOrDefault();
 
             if (member != null)

@@ -319,18 +319,18 @@ namespace TopoMojo.Core
             return true;
         }
 
-        public async Task<bool> Delist(int id, int memberId)
+        public async Task<bool> Delist(int playerId)
         {
-            Gamespace gamespace = await _repo.Load(id);
+            Gamespace gamespace = await _repo.FindByPlayer(playerId);
 
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            if (! await _repo.CanManage(id, Profile))
+            if (! await _repo.CanManage(gamespace.Id, Profile))
                 throw new InvalidOperationException();
 
             Player member = gamespace.Players
-                .Where(p => p.PersonId == memberId)
+                .Where(p => p.PersonId == playerId)
                 .SingleOrDefault();
 
             if (member != null)

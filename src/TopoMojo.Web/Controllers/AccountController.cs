@@ -117,7 +117,7 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize]
-        [HttpGet("api/accout/refresh")]
+        [HttpGet("api/account/refresh")]
         public async Task<IActionResult> Refresh()
         {
             string subject = HttpContext.User.FindFirstValue(JwtClaimTypes.Subject);
