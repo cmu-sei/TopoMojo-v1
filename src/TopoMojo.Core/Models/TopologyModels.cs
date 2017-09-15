@@ -14,7 +14,7 @@ namespace TopoMojo.Core.Models
         public bool CanEdit { get; set; }
         public bool IsPublished { get; set; }
         public Worker[] Workers { get; set; }
-        public TopologyTemplate[] Templates { get; set; }
+        public Template[] Templates { get; set; }
     }
 
     public class NewTopology

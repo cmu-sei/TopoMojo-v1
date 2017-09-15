@@ -1,6 +1,6 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { Converter } from 'showdown/dist/showdown';
-import { DocumentService } from './document.service';
+import { DocumentService } from '../api/document.service';
 import { SHOWDOWN_OPTS } from '../shared/constants/ui-params';
 
 @Component({
@@ -64,14 +64,15 @@ then paste in the MD text.
     }
 
     load() {
-        this.service.loadDoc(this.id).subscribe(result => {
-            this.markdown = result;
-            this.render();
-        });
+        // this.service.loadDoc(this.id).subscribe(result => {
+        //     this.markdown = result;
+        //     this.render();
+        // });
     }
 
     save() {
-        this.service.saveDoc(this.id, this.markdown).subscribe(result => {
+        this.service.putDocument(this.id, this.markdown)
+        .subscribe(result => {
             this.dirty = false;
         });
     }

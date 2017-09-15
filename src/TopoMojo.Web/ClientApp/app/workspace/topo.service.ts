@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { SettingsService } from "../auth/settings.service";
 
 @Injectable()
-export class TopoService {
+export class TopologyService {
 
     constructor(
         private http: AuthHttp,

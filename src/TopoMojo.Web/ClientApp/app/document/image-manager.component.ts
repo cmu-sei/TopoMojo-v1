@@ -1,10 +1,7 @@
 import { Component, OnInit, Input, Inject } from '@angular/core';
-import { DocumentService } from './document.service';
 import { DOCUMENT } from "@angular/platform-browser";
-
-export interface DocImage {
-    filename: string;
-}
+import { DocumentService } from '../api/document.service';
+import { ImageFile } from "../api/api-models";
 
 @Component({
     //moduleId: module.id,
@@ -28,7 +25,7 @@ export interface DocImage {
 export class ImageManagerComponent implements OnInit {
 
     @Input() id : string;
-    images : DocImage[] = [];
+    images : ImageFile[] = [];
     queuedFiles : any[] = [];
     clipboardText : string = '';
 
@@ -57,28 +54,37 @@ export class ImageManagerComponent implements OnInit {
     }
 
     uploadFile(file) {
-        this.service.upload(this.id, file).subscribe((result : DocImage) => {
-            let found = false;
-            for (let i = 0; i < this.images.length; i++) {
-                found = this.images[i].filename == result.filename;
-                if (found) break;
-            }
-            if (!found)
+        this.service.postImage(this.id, file)
+        .subscribe((result : ImageFile) => {
+            let found = this.images.filter(
+                (e) => {
+                    return e.filename == result.filename;
+                }
+            );
+            if (found.length == 0)
                 this.images.push(result);
+
+            // let found = false;
+            // for (let i = 0; i < this.images.length; i++) {
+            //     found = this.images[i].filename == result.filename;
+            //     if (found) break;
+            // }
+            // if (!found)
         });
     }
 
-    imagePath(img: DocImage) : string {
+    imagePath(img: ImageFile) : string {
         return "/docs/" + this.id + "/"+ img.filename;
     }
 
     list() {
-        this.service.listFiles(this.id).subscribe((result : DocImage[]) => {
+        this.service.getImages(this.id)
+        .subscribe((result : ImageFile[]) => {
             this.images = result;
         });
     }
 
-    genMd(img : DocImage) {
+    genMd(img : ImageFile) {
         let url = this.imagePath(img);
         this.clipboardText = "![" + img.filename + "](" + url + ")";
         let el = this.dom.getElementById("clipboardText") as HTMLTextAreaElement;
@@ -87,8 +93,9 @@ export class ImageManagerComponent implements OnInit {
         this.dom.execCommand("copy");
     }
 
-    delete(img : DocImage) {
-        this.service.delete(this.id, img.filename).subscribe((result : DocImage) => {
+    delete(img : ImageFile) {
+        this.service.deleteImage(this.id, img.filename)
+        .subscribe((result : ImageFile) => {
             this.removeImage(result.filename);
         });
     }

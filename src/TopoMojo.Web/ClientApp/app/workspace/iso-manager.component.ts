@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { TopoService } from './topo.service';
+import { TopologyService } from '../api/topology.service';
+import { VmOptions } from "../api/api-models";
 
 @Component({
     selector: 'iso-manager',
@@ -9,12 +10,12 @@ import { TopoService } from './topo.service';
 export class IsoManagerComponent implements OnInit {
 
     constructor(
-        private service: TopoService
+        private service: TopologyService
     ) { }
 
     @Input() id: string;
     @Output() onSelected: EventEmitter<string> = new EventEmitter<string>();
-    isos: Array<any> = [];
+    isos: Array<string> = [];
     queuedFiles : any[] = [];
     pendingFiles : any[] = [];
     loading: boolean;
@@ -26,7 +27,8 @@ export class IsoManagerComponent implements OnInit {
 
     refresh() {
         this.loading = true;
-        this.service.getIsos(this.id).subscribe(
+        this.service.isosTopology(this.id)
+        .subscribe(
             (result) => {
                 this.isos = result.iso;
             },
@@ -77,19 +79,19 @@ export class IsoManagerComponent implements OnInit {
 
     private uploadFile(qf) {
         qf.progress = 0;
-        this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
-            (result) => {
-                this.select(qf.name);
-            },
-            (err) => {
-                console.log(err.json());
-                this.errorMessage = err.json().message;
-            },
-            () => {
-                this.queuedFiles = [];
-                this.uploading = false;
-            }
-        );
+        // this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
+        //     (result) => {
+        //         this.select(qf.name);
+        //     },
+        //     (err) => {
+        //         console.log(err.json());
+        //         this.errorMessage = err.json().message;
+        //     },
+        //     () => {
+        //         this.queuedFiles = [];
+        //         this.uploading = false;
+        //     }
+        // );
     }
 
 }

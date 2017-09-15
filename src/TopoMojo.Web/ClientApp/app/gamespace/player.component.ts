@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
-import { GamespaceService } from './gamespace.service';
+import { GamespaceService } from '../api/gamespace.service';
+import { GameState } from "../api/api-models";
 import { Converter } from 'showdown/dist/showdown';
 import { SHOWDOWN_OPTS } from '../shared/constants/ui-params';
 import { VmService } from '../vm/vm.service';
@@ -14,7 +15,7 @@ import {Observable, Subscription, Subject} from 'rxjs/Rx';
     styleUrls: [ 'player.component.css']
 })
 export class PlayerComponent implements OnInit {
-    game: any = {};
+    game: GameState;
     errorMessage: string;
     renderedDocument: string;
     launching: boolean;
@@ -45,29 +46,30 @@ export class PlayerComponent implements OnInit {
     ngOnInit() {
         this.loading = true;
         this.id = +this.route.snapshot.paramMap.get('id');
-        this.service.checkInstance(this.id).subscribe(
+        this.service.getGamespace(this.id)
+        .subscribe(
             (result) => {
 
-                this.service.loadUrl(result.document).subscribe(
-                    (text) => {
-                        //todo: update console urls
-                        //todo: enforce image size?
-                        let newHtml = this.converter.makeHtml(text);
-                        //newHtml = newHtml.replace(/href="console"/g, 'href="console" target="console"');
-                        this.renderedDocument = newHtml;
-                        //this.status = '';
-                    },
-                    (err) => {
-                        console.log(err);
+                // this.service.loadUrl(result.document).subscribe(
+                //     (text) => {
+                //         //todo: update console urls
+                //         //todo: enforce image size?
+                //         let newHtml = this.converter.makeHtml(text);
+                //         //newHtml = newHtml.replace(/href="console"/g, 'href="console" target="console"');
+                //         this.renderedDocument = newHtml;
+                //         //this.status = '';
+                //     },
+                //     (err) => {
+                //         console.log(err);
 
-                        //this.status = '';
-                        //this.errorMessage = "No document specified";
-                    },
-                    () => {
-                        //console.log("done.");
-                        //this.status = '';
-                    }
-                );
+                //         //this.status = '';
+                //         //this.errorMessage = "No document specified";
+                //     },
+                //     () => {
+                //         //console.log("done.");
+                //         //this.status = '';
+                //     }
+                // );
 
                 this.initGame(result);
             },
@@ -83,7 +85,7 @@ export class PlayerComponent implements OnInit {
 
     }
 
-    private initGame(game: any) {
+    private initGame(game: GameState) {
 
         this.game = game;
 
@@ -143,7 +145,7 @@ export class PlayerComponent implements OnInit {
     launch() {
         this.loading = true;
         //this.status = "Launching topology instance...";
-        this.service.launchInstance(this.id).subscribe(
+        this.service.launchGamespace(this.id).subscribe(
             (result) => {
                 //this.game = result;
                 this.initGame(result);
@@ -160,29 +162,29 @@ export class PlayerComponent implements OnInit {
         );
     }
 
-    //wmks : any;
-    launchConsole(vm) {
-        //console.log('launch console ' + vm.id);
-        this.vmService.display(vm.id, vm.name);
-        //this.vmService.launchPage("/vm/display/" + id);
-        // this.vmService.ticket(id).subscribe(
-        //     (result) => {
-        //         console.log(result);
-        //         //let test = new WMKS();
-        //         this.wmks = WMKS.createWMKS('console-canvas-div',{
-        //             rescale: false,
-        //             position: 0,
-        //             changeResolution: false,
-        //             useVNCHandshake: false
-        //         });
-        //         console.log(this.wmks);
-        //     }
-        // );
-    }
+    // //wmks : any;
+    // launchConsole(vm) {
+    //     //console.log('launch console ' + vm.id);
+    //     this.vmService.display(vm.id, vm.name);
+    //     //this.vmService.launchPage("/vm/display/" + id);
+    //     // this.vmService.ticket(id).subscribe(
+    //     //     (result) => {
+    //     //         console.log(result);
+    //     //         //let test = new WMKS();
+    //     //         this.wmks = WMKS.createWMKS('console-canvas-div',{
+    //     //             rescale: false,
+    //     //             position: 0,
+    //     //             changeResolution: false,
+    //     //             useVNCHandshake: false
+    //     //         });
+    //     //         console.log(this.wmks);
+    //     //     }
+    //     // );
+    // }
 
     destroy() {
         this.loading = true;
-        this.service.destroyInstance(this.game.id).subscribe(
+        this.service.deleteGamespace(this.game.id).subscribe(
             (result) => {
                 this.connection.invoke("Destroying", this.game.globalId);
                 this.game = null;

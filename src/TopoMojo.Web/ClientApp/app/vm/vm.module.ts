@@ -2,12 +2,12 @@ import { NgModule } from '@angular/core';
 
 import { SharedModule } from '../shared/shared.module';
 import { VmToolbarComponent } from './vm-toolbar.component';
-import { VmService } from './vm.service';
+//import { VmService } from './vm.service';
 
 @NgModule({
     imports: [ SharedModule ],
     declarations: [ VmToolbarComponent ],
     exports: [VmToolbarComponent],
-    providers: [VmService]
+    providers: []
 })
 export class VmModule { }

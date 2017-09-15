@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
-import { VmService } from '../vm/vm.service';
+import { VmService } from '../api/vm.service';
 //import { WMKS } from 'vmware-wmks/wmks.min';
 
 @Component({

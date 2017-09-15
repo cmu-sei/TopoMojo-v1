@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { GamespaceService } from './gamespace.service';
+import { GamespaceService } from '../api/gamespace.service';
 import { VmService } from '../vm/vm.service';
 
 @Component({
@@ -40,11 +40,11 @@ export class ControlBarComponent implements OnInit {
 
     launchConsole(id) {
         console.log('launch console ' + id);
-        this.vmService.launchPage("/vm/display/" + id);
+        //this.vmService.launchPage("/vm/display/" + id);
     }
 
     destroy() {
-        this.service.destroyInstance(this.game.id)
+        this.service.deleteGamespace(this.game.id)
         .subscribe(result => {
             this.game = null;
             this.router.navigate(['/']);

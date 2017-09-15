@@ -1,20 +1,22 @@
 import { NgModule } from '@angular/core';
 import { SharedModule } from '../shared/shared.module';
 import { TopoRoutingModule } from './topo-routing.module';
-import { TopoService } from './topo.service';
+import { TopologyService } from '../api/topology.service';
 import { VmModule } from '../vm/vm.module';
 import { DocumentModule } from '../document/document.module';
 import { ProfileModule } from '../profile/profile.module';
+import { ApiModule } from '../api/api.module';
 
 @NgModule({
     imports: [
         SharedModule,
+        ApiModule,
         VmModule,
         TopoRoutingModule,
         DocumentModule,
         ProfileModule
     ],
     declarations: [ TopoRoutingModule.components ],
-    providers: [ TopoService ]
+    providers: [  ]
 })
-export class TopoModule { }
+export class WorkspaceModule { }

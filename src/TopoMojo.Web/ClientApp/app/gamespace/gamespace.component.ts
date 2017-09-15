@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { GamespaceService } from './gamespace.service';
+import { GamespaceService } from '../api/gamespace.service';
+import { Gamespace } from "../api/api-models";
 
 @Component({
     selector: 'gamespace',
@@ -8,7 +9,7 @@ import { GamespaceService } from './gamespace.service';
     styleUrls: ['./gamespace.component.css']
 })
 export class GamespaceComponent {
-    instances: any[];
+    instances: Gamespace[];
     loading: boolean = true;
 
     constructor(
@@ -24,7 +25,8 @@ export class GamespaceComponent {
 
     loadActive() {
         this.loading = true;
-        this.service.activeInstances().subscribe(result => {
+        this.service.getGamespaces()
+        .subscribe(result => {
             this.instances = result;
         },
         (err) => {},
@@ -35,7 +37,8 @@ export class GamespaceComponent {
 
     destroyInstance(id: number) {
         this.loading = true;
-        this.service.destroyInstance(id).subscribe(result => {
+        this.service.deleteGamespace(id)
+        .subscribe(result => {
             this.loadActive();
         })
     }

@@ -1,8 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { TopoService } from './topo.service';
+import { TopologyService } from '../api/topology.service';
+import { Worker } from "../api/api-models";
 
 @Component({
-    //moduleId: module.id,
     selector: 'topo-members',
     templateUrl: 'topo-members.component.html',
     styles: [`
@@ -15,24 +15,22 @@ import { TopoService } from './topo.service';
     `]
 })
 export class TopoMembersComponent implements OnInit {
-    permissions : any[];
-    addUserEmail: string = "add-user-email(s) ";
-    @Input() topoId: number;
+    @Input() workers : Worker[];
 
     constructor(
-        private service: TopoService
+        private service: TopologyService
     ) { }
 
     ngOnInit() {
-        this.refresh();
+        //this.refresh();
     }
 
-    refresh() {
-        this.service.listMembers(this.topoId)
-        .subscribe(result => {
-            this.permissions = result as any[];
-        }, (err) => { this.service.onError(err); });
-    }
+    // refresh() {
+    //     this.service.listMembers(this.topoId)
+    //     .subscribe(result => {
+    //         this.permissions = result as any[];
+    //     }, (err) => { this.service.onError(err); });
+    // }
 
     // addUser() {
     //     this.service.addMembers(this.topoId, this.addUserEmail)
@@ -42,11 +40,11 @@ export class TopoMembersComponent implements OnInit {
     //     }, (err) => { this.service.onError(err)});
     // }
 
-    delist(personId) {
-        this.service.delist(this.topoId, personId)
+    delist(workerId) {
+        this.service.delistWorker(workerId)
         .subscribe(data => {
-            this.refresh();
-        }, (err) => { this.service.onError(err)});
+            //todo: remove worker from list
+        }, (err) => { });
     }
 
 }

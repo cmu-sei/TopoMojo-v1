@@ -395,7 +395,8 @@ const GenerateAngularClient = function(argv) {
 const crlf = "\r\n";
 const ngServiceHeader = `
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/core/http";
+//import { HttpClient } from "@angular/common/http";
+import { AuthHttp } from "../auth/auth-http";
 import { Observable } from 'rxjs/Rx';
 import { UrlHelper } from "./url-helper";
 import { ##REFS## } from "./api-models";
@@ -404,7 +405,8 @@ import { ##REFS## } from "./api-models";
 export class ##SVC##Service {
 
     constructor(
-        private http: HttpClient
+        private http: AuthHttp
+        //private http: HttpClient
     ) { }
 
 `;

@@ -9,7 +9,7 @@ import { TranslateHttpLoader} from '@ngx-translate/http-loader';
 import { ORIGIN_URL } from './shared/constants/baseurl.constants';
 import { AuthModule } from './auth/auth.module';
 import { CoreModule } from './core/core.module';
-import { TopoModule } from './topo/topo.module';
+import { WorkspaceModule } from './workspace/workspace.module';
 import { GamespaceModule } from './gamespace/gamespace.module';
 import { ConsoleModule } from './console/console.module';
 import { AdminModule } from './admin/admin.module';
@@ -19,6 +19,7 @@ import { AppComponent } from './app.component'
 import { SignalRModule } from 'ng2-signalr';
 import { SignalRConfiguration } from 'ng2-signalr';
 import { ChatModule } from './chat/chat.module';
+import { ApiModule } from './api/api.module';
 
 export function getOriginUrl() {
   return window.location.origin;
@@ -53,9 +54,10 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
         HttpClientModule,
         SharedModule,
         AuthModule,
+        ApiModule,
         //ProfileModule,
         //ConsoleModule,
-        TopoModule,
+        WorkspaceModule,
         GamespaceModule,
         AdminModule,
         CoreModule,

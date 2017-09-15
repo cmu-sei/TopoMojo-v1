@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, NgZone } from '@angular/core';
-import { TopoService } from '../topo/topo.service';
+import { TemplateService } from '../api/template.service';
 
 @Component({
     //moduleId: module.id,
@@ -24,7 +24,7 @@ export class TemplateManagerComponent implements OnInit {
     loading: boolean;
 
     constructor(
-        private service : TopoService,
+        private service : TemplateService,
         private _ngZone : NgZone
         ) { }
 
@@ -53,12 +53,12 @@ export class TemplateManagerComponent implements OnInit {
 
     fireSearch() {
         this.loading = true;
-        this.service.listTemplates(this.model)
+        this.service.getTemplates(this.model)
         .subscribe(data => {
             this.templates = this.templates.concat(data.results as any[]);
-            this.hasMore = data.total - (data.skip+data.take);
+            this.hasMore = data.total - (data.search.skip+data.search.take);
             this.template = null;
-            }, (err) => { this.service.onError(err) },
+            }, (err) => { },
             () => {
                 this.loading = false;
             })
@@ -91,19 +91,19 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     create() {
-        this.service.saveTemplate({ name: 'new-template'})
+        this.service.createTemplate({ name: 'new-template'})
         .subscribe(data => {
             this.templates.push(data);
             this.template = data;
             this._ngZone.runOutsideAngular(() => {
                 setTimeout(() => this.focusEditor(), 5);
             });
-        }, (err) => { this.service.onError(err) });
+        }, (err) => { });
 
     }
 
     save() {
-        this.service.saveTemplate(this.template)
+        this.service.configureTemplate(this.template)
         .subscribe(data => {
             // for (let i=0; i<this.templates.length; i++) {
             //     if (this.templates[i].id == data.id) {
@@ -113,7 +113,7 @@ export class TemplateManagerComponent implements OnInit {
             // }
             // this.templates.push(data);
             this.template = null;
-        }, (err) => { this.service.onError(err) });
+        }, (err) => { });
     }
 
     delete() {
@@ -123,7 +123,6 @@ export class TemplateManagerComponent implements OnInit {
             this.termChanged(this.model.term);
         }, (err) => {
             this.errorMessage = JSON.parse(err.text()).message;
-            this.service.onError(err);
         })
     }
 

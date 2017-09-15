@@ -16,15 +16,15 @@ export class ChatService {
     ) { }
 
     members(id: string) : Observable<Array<ActorModel>> {
-        return this.http.get('/api/mojo/' + id + '/members');
+        return this.http.get('/api/gamespace/' + id + '/members');
     }
 
     messages(id: string, page : PageModel) : Observable<Array<MessageModel>> {
-        return this.http.get('/ap/mojo/' + id + '/messages', this.http.queryStringify(page, '?'));
+        return this.http.get('/ap/gamespace/' + id + '/messages', this.http.queryStringify(page, '?'));
     }
 
     post(id: string, msg : MessageModel) : Observable<void> {
-        return this.http.post('/api/mojo/' + id + '/message', msg);
+        return this.http.post('/api/gamespace/' + id + '/message', msg);
     }
 
 

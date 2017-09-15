@@ -73,12 +73,22 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpPost("api/template/{id}/link/{topoId}")]
-        [ProducesResponseType(typeof(Template), 200)]
+        [HttpGet("api/template/{id}/link")]
+        [ProducesResponseType(typeof(TopologyTemplate), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Link([FromRoute]int id, int topoId)
+        public async Task<IActionResult> Link([FromRoute]int id, [FromBody]int topoId)
         {
             var result = await _mgr.Link(id, topoId);
+            //TODO: Broadcast
+            return Ok(result);
+        }
+
+        [HttpGet("api/template/{id}/unlink")]
+        [ProducesResponseType(typeof(TopologyTemplate), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> UnLink([FromRoute]int id)
+        {
+            var result = await _mgr.Unlink(id);
             //TODO: Broadcast
             return Ok(result);
         }

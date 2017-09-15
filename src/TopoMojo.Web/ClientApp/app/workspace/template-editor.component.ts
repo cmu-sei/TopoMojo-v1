@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
-import { TopoService } from './topo.service';
+import { TemplateService } from '../api/template.service';
 import { NotificationService } from '../shared/notification.service';
+import { Topology, Template, ChangedTemplate } from "../api/api-models";
 
 @Component({
     //moduleId: module.id,
@@ -9,9 +10,8 @@ import { NotificationService } from '../shared/notification.service';
     styleUrls: [ 'template-editor.component.css' ]
 })
 export class TemplateEditorComponent implements OnInit {
-    @Input() tref: any;
-    @Input() trefs: any[];
-    @Input() topo: any;
+    @Input() template: Template;
+    @Input() topo: Topology;
     @Output() onRemoved: EventEmitter<any> = new EventEmitter<any>();
     @ViewChild('cloneHelp') cloneHelp: any;
     editing: boolean;
@@ -21,24 +21,13 @@ export class TemplateEditorComponent implements OnInit {
     uploadVisible: boolean;
 
     constructor(
-        private service : TopoService,
+        private service : TemplateService,
         private notifier: NotificationService
     ) { }
 
     ngOnInit() {
-        this.cascadeFields();
     }
 
-    cascadeFields() {
-        let tref = this.tref;
-        if (!tref.name) tref.name = tref.template.name;
-        if (!tref.description) tref.description = tref.template.description;
-        if (!tref.iso) tref.iso = tref.template.iso;
-        let detail = JSON.parse(tref.template.detail);
-        if (!tref.networks) tref.networks = JSON.parse(tref.template.detail).Eth
-            .map(function(e){ return e.Net;})
-            .join(', ');
-    }
 
     edit() {
         this.editing = !this.editing;
@@ -48,31 +37,31 @@ export class TemplateEditorComponent implements OnInit {
         if ((!this.vm) || (this.vm.id))
             return; //don't remove if vm created
 
-        this.service.removeTemplate(this.tref).subscribe(
+        this.service.deleteTemplate(this.template.id)
+        .subscribe(
             (result) => {
                 if (result) {
-                    this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.tref);
-                    for (let i=0; i<this.trefs.length; i++) {
-                        if (this.trefs[i].id == this.tref.id) {
-                            this.trefs.splice(i, 1);
-                            break;
-                        }
-                    }
-                    //this.onRemoved.emit(this.tref);
+                    this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.template);
+                    this.topo.templates.splice(this.topo.templates.indexOf(this.template), 1);
+                    // for (let i=0; i<this.topo.templates.length; i++) {
+                    //     if (this.topo.templates[i].id == this.tref.id) {
+                    //         this.topo.templates.splice(i, 1);
+                    //         break;
+                    //     }
+                    // }
+                    // //this.onRemoved.emit(this.tref);
                 }
             },
-            (err) => { this.service.onError(err); }
+            (err) => { }
         );
     }
 
     save() {
-        //this.editing = false;
-        //this.tref.template = null;
-        this.service.updateTemplate(this.tref).subscribe(
+        this.service.putTemplate(this.template as ChangedTemplate).subscribe(
             (result) => {
                 //this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", this.tref);
             },
-            (err) => { this.service.onError(err); }
+            (err) => { }
         );
     }
 
@@ -81,12 +70,13 @@ export class TemplateEditorComponent implements OnInit {
             return; //don't clone unless empty vm loaded
 
         this.cloneHelp.toggle();
-        this.service.cloneTemplate(this.tref).subscribe(
+        this.service.unlinkTemplate(this.template.id)
+        .subscribe(
             (result) => {
-                this.tref = result as any;
-                this.cascadeFields();
+                let i = this.topo.templates.indexOf(this.template);
+                this.topo.templates.splice(i, 1, result);
             },
-            (err) => { this.service.onError(err); }
+            (err) => { }
         );
     }
 
@@ -99,7 +89,7 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     isoChanged(iso : string) {
-        this.tref.iso = iso;
+        this.template.iso = iso;
         this.save();
         this.isosVisible = false;
         // todo: if vm, change iso

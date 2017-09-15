@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { TopoService } from './topo.service';
+import { TopologyService } from '../api/topology.service';
+import { Search, TopologySearchResult, Topology } from '../api/api-models';
 
 @Component({
-    selector: 'topo-browser',
-    templateUrl: './topo-browser.component.html',
-    styleUrls: ['./topo-browser.component.css']
+    selector: 'workspace-browser',
+    templateUrl: './work-browser.component.html',
+    styleUrls: ['./work-browser.component.css']
 })
-export class TopoBrowserComponent {
-    topos: any[] = [];
+export class WorkBrowserComponent {
+    topos: Topology[] = [];
     term: string;
-    model: any = {
+    model: Search = {
         term: '',
         skip: 0,
         take: 20,
@@ -21,7 +22,7 @@ export class TopoBrowserComponent {
     loading: boolean;
 
     constructor(
-        private service: TopoService,
+        private service: TopologyService,
         private router: Router
     ) {
         this.service = service;
@@ -46,13 +47,14 @@ export class TopoBrowserComponent {
 
     search() {
         this.loading = true;
-        this.service.listtopo(this.model)
+        this.model.filters = ["mine"];
+        this.service.getTopologies(this.model)
         .subscribe(
             (data) => {
                 this.topos = this.topos.concat(data.results);
-                this.hasMore = data.total - (data.skip+data.take);
+                this.hasMore = data.total - (data.search.skip+data.search.take);
             },
-            (err) => { this.service.onError(err); },
+            (err) => { },
             () => {
                 this.loading = false;
             }

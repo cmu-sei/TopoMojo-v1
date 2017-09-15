@@ -75,6 +75,18 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
+        [HttpGet("api/vm/{id}/resolve")]
+        [ProducesResponseType(typeof(Vm), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Resolve(int id)
+        {
+            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            Vm vm = await _pod.Refresh(template);
+            await AuthorizeAction(vm, "resolve");
+            //Vm vm = await _pod.Load(id);
+            return Ok(vm);
+        }
+
         [HttpGet("api/vm/{id}/start")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
@@ -199,6 +211,11 @@ namespace TopoMojo.Controllers
                 return true;
 
             Vm vm = _pod.Find(id).Result.FirstOrDefault();
+            return await AuthorizeAction(vm, method);
+        }
+
+        private async Task<bool> AuthorizeAction(Vm vm, string method)
+        {
             if (vm == null)
                 throw new InvalidOperationException();
 
@@ -214,14 +231,13 @@ namespace TopoMojo.Controllers
             if (!result)
                 throw new InvalidOperationException();
 
-            if (method != "load")
+            if (!"load resolve".Contains(method))
             {
                 Log(method, vm);
                 //_logger.LogInformation($"vm-action {method} {id}");
             }
             return result;
         }
-
         private void SendBroadcast(Vm vm)
         {
             Clients.Group(vm.Name.Tag()).VmUpdated(new {
