@@ -56,4 +56,5 @@ export class VmService {
 	public netsVm(id: string) : Observable<VirtualVm> {
 		return this.http.get("/api/vm/" + id + "/nets");
 	}
+
 }

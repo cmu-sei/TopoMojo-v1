@@ -19,6 +19,7 @@ export class TemplateEditorComponent implements OnInit {
     vm: any;
     isosVisible: boolean;
     uploadVisible: boolean;
+    errors: any[] = [];
 
     constructor(
         private service : TemplateService,
@@ -34,7 +35,7 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     remove() {
-        if ((!this.vm) || (this.vm.id))
+        if ((this.vm) && (this.vm.id))
             return; //don't remove if vm created
 
         this.service.deleteTemplate(this.template.id)
@@ -52,16 +53,16 @@ export class TemplateEditorComponent implements OnInit {
                     // //this.onRemoved.emit(this.tref);
                 }
             },
-            (err) => { }
+            (err) => { this.onError(err);}
         );
     }
 
     save() {
         this.service.putTemplate(this.template as ChangedTemplate).subscribe(
-            (result) => {
-                //this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", this.tref);
+            (result : Template) => {
+                this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", result);
             },
-            (err) => { }
+            (err) => { this.onError(err);}
         );
     }
 
@@ -76,7 +77,7 @@ export class TemplateEditorComponent implements OnInit {
                 let i = this.topo.templates.indexOf(this.template);
                 this.topo.templates.splice(i, 1, result);
             },
-            (err) => { }
+            (err) => { this.onError(err);}
         );
     }
 
@@ -94,4 +95,15 @@ export class TemplateEditorComponent implements OnInit {
         this.isosVisible = false;
         // todo: if vm, change iso
     }
+
+    hasParent() : boolean {
+        return !!this.template.parentId;
+    }
+
+    onError(err) {
+        let text = JSON.parse(err.text());
+        this.errors.push(text);
+        console.debug(text);
+    }
+
 }

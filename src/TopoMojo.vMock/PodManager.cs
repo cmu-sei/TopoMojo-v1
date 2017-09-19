@@ -49,7 +49,7 @@ namespace TopoMojo.vMock
             }
             else
             {
-                vm = new Vm() { Status = "created" };
+                vm = new Vm() { Name = template.Name, Status = "created" };
                 if (VerifyDisks(template).Result == 100)
                     vm.Status = "initialized";
             }

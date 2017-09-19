@@ -56,6 +56,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Launch([FromRoute]int id)
         {
             var result = await _mgr.Launch(id);
+            Log("launched", result);
             return Ok(result);
         }
 
@@ -74,7 +75,8 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Destroy([FromRoute] int id)
         {
             var result = await _mgr.Destroy(id);
-            //TODO: Broadcast
+            Log("destroyed", result);
+            Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
             return Ok(true);
         }
 

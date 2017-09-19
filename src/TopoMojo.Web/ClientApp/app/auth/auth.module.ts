@@ -3,6 +3,7 @@ import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule} from '@ngx-translate/core';
 import { AuthService } from './auth.service';
 import { AuthHttp } from './auth-http';
 import { AuthGuardService } from './auth-guard.service';
@@ -34,6 +35,7 @@ import { AuthComponent } from './auth.component';
         HttpModule,
         CommonModule,
         FormsModule,
+        TranslateModule,
         RouterModule.forChild([
             {
                 path: 'auth',

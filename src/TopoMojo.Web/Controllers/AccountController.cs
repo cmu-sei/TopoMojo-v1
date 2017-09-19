@@ -1,14 +1,14 @@
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityModel;
+using Jam.Accounts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Jam.Accounts;
+using TopoMojo.Extensions;
 using TopoMojo.Services;
 using TopoMojo.Web;
-using TopoMojo.Extensions;
-using System.Security.Claims;
-using IdentityModel;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TopoMojo.Controllers
 {
@@ -44,9 +44,9 @@ namespace TopoMojo.Controllers
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCredentialAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
         [HttpPost("api/account/otp")]
@@ -56,9 +56,9 @@ namespace TopoMojo.Controllers
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCodeAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
         [HttpPost("api/account/tfa")]
@@ -68,9 +68,9 @@ namespace TopoMojo.Controllers
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCredentialAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
         [HttpPost("api/account/register")]
@@ -81,9 +81,9 @@ namespace TopoMojo.Controllers
 
             AccountSummary account = await _accountManager.RegisterWithCredentialsAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
         [HttpPost("api/account/reset")]
@@ -97,9 +97,9 @@ namespace TopoMojo.Controllers
                 : await _accountManager.AuthenticateWithCodeAsync(model, "");
 
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
         [HttpPost("api/account/confirm")]
@@ -121,12 +121,18 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Refresh()
         {
             string subject = HttpContext.User.FindFirstValue(JwtClaimTypes.Subject);
+            string name = HttpContext.User.FindFirstValue(JwtClaimTypes.Name);
             _logger.LogDebug($"Attempting refresh for {subject}");
             AccountSummary account = await _accountManager.FindByGuidAsync(subject);
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, name));
+        }
+
+        private object GetJWT(string guid, string name)
+        {
+            return (_accountManager.GenerateJwtToken(guid, name.ExtractBefore("@")));
         }
         // private async Task SignIn(Account account, string username)
         // {

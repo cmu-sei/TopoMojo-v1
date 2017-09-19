@@ -18,6 +18,8 @@ label {
     right: 0;
     bottom: 75px;
     overflow-y: auto;
+    background-color: whitesmoke;
+    border-radius: 4px;
 }
 
 .footer {

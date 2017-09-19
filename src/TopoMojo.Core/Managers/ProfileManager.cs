@@ -52,7 +52,7 @@ namespace TopoMojo.Core
         {
             IQueryable<Data.Entities.Profile> q = _profileRepo.List();
             if (search.Term.HasValue())
-                q = q.Where(p => p.Name.Contains(search.Term));
+                q = q.Where(p => p.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1);
 
             if (search.HasFilter("admins"))
                 q = q.Where(p => p.IsAdmin);
@@ -66,6 +66,7 @@ namespace TopoMojo.Core
                 q = q.Skip(search.Skip);
             if (search.Take > 0)
                 q = q.Take(search.Take);
+            q = q.OrderBy(p => p.Name);
             var list = await q.ToArrayAsync();
             result.Results = Mapper.Map<Models.Profile[]>(list);
             return result;

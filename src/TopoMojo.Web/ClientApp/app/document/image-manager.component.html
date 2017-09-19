@@ -5,27 +5,33 @@
             <input id="fileSelector" multiple type="file" style="display:none;" (change)="fileSelectorChanged($event)">
             Browse to upload
         </label>
-        <textarea id="clipboardText" class="offscreen"></textarea>
         <div *ngIf="filesQueued()">
-            <p *ngFor="let f of queuedFiles">
-                <i class="fa fa-image"></i> {{ f.name }}
-            </p>
+            <div *ngFor="let qf of queuedFiles">
+                <span *ngIf="qf.progress >= 0" class="badge badge-warning"><i class="fa fa-circle-o-notch fa-spin"></i> {{ qf.progress }}%</span>
+                <i class="fa fa-image"></i> <span>{{ qf.name }}</span>
+                <button *ngIf="!uploading" class="btn btn-link" (click)="dequeueFile(qf)">&times;</button>
+            </div>
             <button (click)="upload()" class="btn btn-primary">Upload</button>
         </div>
     </div>
-    <div *ngIf="images" class="row">
-        <div *ngFor="let img of images" class="col-md-3 thumbnail">
-            <img [src]="imagePath(img)" (click)="imageClicked(img)"/>
-            <div class="caption">
-                <span>{{img.filename}}</span>
-                <button class="btn btn-default btn-sm" (click)="genMd(img)">
-                    <i class="fa fa-clipboard"></i> MD
-                </button>
-                <button class="btn btn-danger btn-sm pull-right" (click)="delete(img)">
-                    <i class="fa fa-trash"></i>
-                </button>
+    <div *ngIf="images" class="row display-flex">
+        <div *ngFor="let img of images" class="col-md-4">
+            <div class="thumb">
+                <img [src]="imagePath(img)" (click)="imageClicked(img)" class="img-responsive"/>
+                <div class="pic-overlay">
+                    <!-- <span>{{img.filename}}</span> -->
+                    <button class="btn btn-default btn-sm" (click)="genMd(img)"
+                        [tooltip]="'COPY'|translate|lowercase">
+                        <i class="fa fa-clipboard"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" (click)="delete(img)"
+                        [tooltip]="'DELETE'|translate|lowercase">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
+        <textarea id="image-clipboard" class="offscreen"></textarea>
     </div>
 <!--</div>-->
 

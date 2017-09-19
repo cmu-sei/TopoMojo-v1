@@ -1,6 +1,6 @@
 import { OnInit, Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from './auth/auth.service';
+import { AuthService, AuthTokenState } from './auth/auth.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SettingsService, Layout } from './auth/settings.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -15,6 +15,7 @@ export class AppComponent {
     profile$: Subscription;
     status$: Subscription;
     showExpiring: boolean;
+    showExpired: boolean;
     layout: Layout;
     layout$: Subscription;
     appName: string = "TopoMojo";
@@ -25,8 +26,9 @@ export class AppComponent {
         private settings: SettingsService,
         private translator: TranslateService
     ){
-        translator.setDefaultLang('en');
-        translator.use('en');
+        let lang = (settings.lang || "en").trim().split(' ').shift();
+        translator.setDefaultLang(lang);
+        translator.use(lang);
     }
 
     ngOnInit() {
@@ -40,8 +42,10 @@ export class AppComponent {
 
         this.status$ = this.service.tokenStatus$
         .subscribe(status => {
-            this.showExpiring = (status == "expiring");
-            if (status == "expired")
+            console.log(status);
+            this.showExpiring = (status == AuthTokenState.expiring);
+            this.showExpired = (status == AuthTokenState.expired);
+            if (status == AuthTokenState.invalid)
                 this.router.navigate(['/home']);
         });
 

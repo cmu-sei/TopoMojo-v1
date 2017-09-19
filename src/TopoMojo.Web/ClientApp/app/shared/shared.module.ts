@@ -14,6 +14,7 @@ import { ConfirmDeleteComponent } from './confirm-delete.component';
 import { ConnectionResolver } from './connection.resolver';
 import { NotificationService } from './notification.service';
 import { NotificationPanelComponent }  from './notification-panel.component';
+import { ErrorDivComponent} from './error-div.component';
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
 
@@ -34,7 +35,8 @@ export * from "./tooltip.component";
         Collapser,
         UntaggedStringPipe,
         ConfirmDeleteComponent,
-        NotificationPanelComponent
+        NotificationPanelComponent,
+        ErrorDivComponent
     ],
     exports: [
         CommonModule,
@@ -49,7 +51,8 @@ export * from "./tooltip.component";
         Collapser,
         UntaggedStringPipe,
         ConfirmDeleteComponent,
-        NotificationPanelComponent
+        NotificationPanelComponent,
+        ErrorDivComponent
     ],
     providers: [
         ConnectionResolver,

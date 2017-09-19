@@ -162,9 +162,10 @@ namespace TopoMojo
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-                    HotModuleReplacement = true
-                });
+                if (!Configuration.GetValue<bool>("NoDevWebpack"))
+                    app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
+                        HotModuleReplacement = true
+                    });
             }
             else
             {
@@ -269,14 +270,14 @@ namespace TopoMojo
                 env.IsDevelopment()
             );
 
-            if (env.IsDevelopment())
-            {
-                using (TextWriter tw = File.CreateText(Path.Combine(env.ContentRootPath, "ClientApp", "app", "api-models.ts")))
-                {
-                    var transformer = new TypeScriptTransformer(tw, false);
-                    transformer.Transform("TopoMojo.Core.Models");
-                }
-            }
+            // if (env.IsDevelopment())
+            // {
+            //     using (TextWriter tw = File.CreateText(Path.Combine(env.ContentRootPath, "ClientApp", "app", "api-models.ts")))
+            //     {
+            //         var transformer = new TypeScriptTransformer(tw, false);
+            //         transformer.Transform("TopoMojo.Core.Models");
+            //     }
+            // }
 
         }
     }

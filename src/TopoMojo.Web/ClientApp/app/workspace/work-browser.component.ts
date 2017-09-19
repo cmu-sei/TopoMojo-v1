@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
-import { Search, TopologySearchResult, Topology } from '../api/api-models';
+import { Search, TopologySummarySearchResult, Topology } from '../api/api-models';
 
 @Component({
     selector: 'workspace-browser',

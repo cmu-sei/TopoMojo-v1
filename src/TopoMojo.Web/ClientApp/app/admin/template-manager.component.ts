@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, NgZone } from '@angular/core';
 import { TemplateService } from '../api/template.service';
+import { Search, TemplateSummary, TemplateDetail } from "../api/api-models";
 
 @Component({
     //moduleId: module.id,
@@ -8,19 +9,15 @@ import { TemplateService } from '../api/template.service';
     styleUrls: [ 'template-manager.component.css' ]
 })
 export class TemplateManagerComponent implements OnInit {
-    template: any;
-    templateLinker: any;
-    templates: any[] = [];
+    template: TemplateDetail;
+    //templateLinker: any;
+    templates: TemplateSummary[] = [];
+    selected: number;
     icon: string = 'fa fa-clipboard';
     //private term: string = '';
     errorMessage: string;
     hasMore: number;
-    model: any = {
-        term: '',
-        skip: 0,
-        take: 20,
-        filters: []
-    }
+    model: Search = {};
     loading: boolean;
 
     constructor(
@@ -55,7 +52,7 @@ export class TemplateManagerComponent implements OnInit {
         this.loading = true;
         this.service.getTemplates(this.model)
         .subscribe(data => {
-            this.templates = this.templates.concat(data.results as any[]);
+            this.templates = this.templates.concat(data.results);
             this.hasMore = data.total - (data.search.skip+data.search.take);
             this.template = null;
             }, (err) => { },
@@ -63,28 +60,37 @@ export class TemplateManagerComponent implements OnInit {
                 this.loading = false;
             })
     }
-    select(template) {
-        if (this.template === template) {
+
+    select(selected : number) {
+        if (this.selected === selected) {
             this.template = null;
+            this.selected = 0;
         } else {
-            this.template = template;
-            this._ngZone.runOutsideAngular(() => {
-                setTimeout(() => this.focusEditor(), 5);
-            });
+            //load template detail
+            this.selected = selected;
+            this.service.detailedTemplate(selected)
+            .subscribe(
+                (result: TemplateDetail) => {
+                    this.template = result;
+                    this._ngZone.runOutsideAngular(() => {
+                        setTimeout(() => this.focusEditor(), 5);
+                    });
+                }
+            )
         }
     }
 
-    load(template) {
-        this.template = template;
+    // load(template) {
+    //     this.template = template;
 
-        this._ngZone.runOutsideAngular(() => {
-            setTimeout(() => this.focusEditor(), 5);
-        });
-        // this.service.loadTemplate(id)
-        // .subscribe(result => {
-        //     this.template = result as any;
-        // })
-    }
+    //     this._ngZone.runOutsideAngular(() => {
+    //         setTimeout(() => this.focusEditor(), 5);
+    //     });
+    //     // this.service.loadTemplate(id)
+    //     // .subscribe(result => {
+    //     //     this.template = result as any;
+    //     // })
+    // }
 
     focusEditor() {
         this.focusTagEl.nativeElement.focus();
@@ -93,7 +99,9 @@ export class TemplateManagerComponent implements OnInit {
     create() {
         this.service.createTemplate({ name: 'new-template'})
         .subscribe(data => {
-            this.templates.push(data);
+            this.selected = data.id;
+            this.templates.unshift({ id: data.id, name: data.name });
+            //this.templates.push(data);
             this.template = data;
             this._ngZone.runOutsideAngular(() => {
                 setTimeout(() => this.focusEditor(), 5);
@@ -112,6 +120,13 @@ export class TemplateManagerComponent implements OnInit {
             //     }
             // }
             // this.templates.push(data);
+
+            //TODO: find cleaner way to keep summary sync'd with detail
+            this.templates.map(
+                (v) => {
+                    if (v.id == data.id) v.name = data.name;
+                }
+            );
             this.template = null;
         }, (err) => { });
     }
@@ -130,11 +145,11 @@ export class TemplateManagerComponent implements OnInit {
         this.errorMessage = null;
     }
 
-    selectLinker(template) {
-        if (this.templateLinker === template) {
-            this.templateLinker = null;
-        } else {
-            this.templateLinker = template;
-        }
-    }
+    // selectLinker(template) {
+    //     if (this.templateLinker === template) {
+    //         this.templateLinker = null;
+    //     } else {
+    //         this.templateLinker = template;
+    //     }
+    // }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
-import { Topology, Search, TopologySearchResult } from "../api/api-models";
+import { TopologySummary, Search, TopologySummarySearchResult } from "../api/api-models";
 
 @Component({
     selector: 'topo-browser',
@@ -9,7 +9,7 @@ import { Topology, Search, TopologySearchResult } from "../api/api-models";
     styleUrls: ['./topo-browser.component.css']
 })
 export class TopoBrowserComponent {
-    topos: Topology[] = [];
+    topos: TopologySummary[] = [];
     term: string;
     model: Search = {
         term: '',

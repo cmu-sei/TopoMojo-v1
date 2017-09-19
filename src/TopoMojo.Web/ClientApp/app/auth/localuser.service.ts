@@ -10,11 +10,11 @@ export class LocalUserService {
     timer: any;
     token: any;
     events: LocalUserEvents = new LocalUserEvents();
-    headsup: number = 60;
+    headsup: number = 20;
 
     init() : void {
-        this.storageKey += window.navigator.userAgent.substring(window.navigator.userAgent.lastIndexOf(' '));
-        console.log("localtoken: loading token from storage");
+        this.storageKey += window.navigator.userAgent.split(' ').pop(); //.substring(window.navigator.userAgent.lastIndexOf(' '));
+        //console.log("localtoken: loading token from storage");
         let token = localStorage.getItem(this.storageKey);
         if (!!token) {
             this.token = JSON.parse(token);
@@ -25,7 +25,7 @@ export class LocalUserService {
 
     addUser(token) : void {
         if (token) {
-            console.log("localtoken: added local token");
+            //console.log("localtoken: added local token");
             token.expires_at = (Date.now() / 1000) + token.expires_in;
             localStorage.setItem(this.storageKey, JSON.stringify(token));
             this.token = token;
@@ -35,7 +35,7 @@ export class LocalUserService {
     }
 
     removeUser() : void {
-        console.log("localtoken: removed local token");
+        //console.log("localtoken: removed local token");
         localStorage.removeItem(this.storageKey);
         this.killTimer();
         this.token = null;
@@ -51,13 +51,13 @@ export class LocalUserService {
         console.log("localtoken: starting timer for " + duration + " seconds");
         this.timer = window.setTimeout(() => { this.onTimer(); }, duration * 1000);
         window["localUserManagerTimer"] = this.timer;
-        console.log('storing timer ' + window["localUserManagerTimer"]);
+        //console.log('storing timer ' + window["localUserManagerTimer"]);
 
     }
 
     private killTimer() {
         if (window["localUserManagerTimer"]) {
-            console.log('killing timer ' + window["localUserManagerTimer"]);
+            //console.log('killing timer ' + window["localUserManagerTimer"]);
             window.clearTimeout(window["localUserManagerTimer"]);
             window["localUserManagerTimer"] = null;
         }
@@ -65,19 +65,20 @@ export class LocalUserService {
             window.clearTimeout(this.timer);
     }
 
-    private ttn() {
+    private ttn() :number {
         return Math.max(this.ttl() - this.headsup, 0);
     }
 
-    private ttl() {
-        return Math.max(this.token.expires_at - (Date.now() / 1000), 0);
+    private ttl() : number {
+        return Math.max(this.token.expires_at - 7 - (Date.now() / 1000), 0); //leaves 7 seconds for cleanup
     }
 
     private onTimer() {
-        console.log("localtoken: timeout reached");
-        if (this.ttl()) {
+        //console.log("localtoken: timeout reached");
+        let ttl = this.ttl();
+        if (ttl > 0) {
             this.events.onTokenExpiring();
-            this.startTimer(this.ttl());
+            this.startTimer(ttl);
         } else {
             this.events.onTokenExpired();
         }

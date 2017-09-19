@@ -1,26 +1,15 @@
 import { Component, OnInit, Input, Inject } from '@angular/core';
-import { DOCUMENT } from "@angular/platform-browser";
+import { HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
+import { DOCUMENT } from '@angular/platform-browser';
 import { DocumentService } from '../api/document.service';
+import { CustomService } from '../api/custom.service';
 import { ImageFile } from "../api/api-models";
 
 @Component({
     //moduleId: module.id,
     selector: 'image-manager',
     templateUrl: 'image-manager.component.html',
-    styles: [`
-        .offscreen {
-            height: 0px;
-            width: 0px;
-            resize: none;
-            border: 0px;
-        }
-        h4 {
-            display: inline-block;
-        }
-        .upload-ui {
-            display: inline-block;
-        }
-    `]
+    styleUrls: ['image-manager.component.css']
 })
 export class ImageManagerComponent implements OnInit {
 
@@ -31,6 +20,7 @@ export class ImageManagerComponent implements OnInit {
 
     constructor(
         private service : DocumentService,
+        private custom : CustomService,
         @Inject(DOCUMENT) private dom : Document
     ) { }
 
@@ -38,39 +28,71 @@ export class ImageManagerComponent implements OnInit {
         this.list();
     }
 
-    fileSelectorChanged(e) {
-        console.log(e.srcElement.files);
-        this.queuedFiles = e.srcElement.files;
+    // fileSelectorChanged(e) {
+    //     console.log(e.srcElement.files);
+    //     this.queuedFiles = e.srcElement.files;
+    // }
+    private fileSelectorChanged(e) {
+        //console.log(e.srcElement.files);
+        this.queuedFiles = [];
+        for (let i = 0; i < e.srcElement.files.length; i++) {
+            let file = e.srcElement.files[i];
+            this.queuedFiles.push({
+                key: this.id + "-" + file.name,
+                name: file.name,
+                file: file,
+                progress: -1
+            });
+        }
+        //this.queuedFiles = [ e.srcElement.files[0] ];
     }
 
     filesQueued() {
         return this.queuedFiles.length > 0;
     }
 
+    dequeueFile(qf) {
+        this.queuedFiles.splice(this.queuedFiles.indexOf(qf),1);
+    }
     upload() {
         for (let i = 0; i < this.queuedFiles.length; i++)
             this.uploadFile(this.queuedFiles[i]);
-        this.queuedFiles = [];
+        //this.queuedFiles = [];
     }
 
-    uploadFile(file) {
-        this.service.postImage(this.id, file)
-        .subscribe((result : ImageFile) => {
-            let found = this.images.filter(
-                (e) => {
-                    return e.filename == result.filename;
+    uploadFile(qf) {
+        this.custom.uploadImage(this.id, qf.file)
+        .finally(() => this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1))
+        .subscribe(
+            (event) => {
+                if (event.type === HttpEventType.UploadProgress) {
+                    qf.progress = Math.round(100 * event.loaded / event.total);
+                } else if (event instanceof HttpResponse) {
+                    let imagefile = event.body;
+                    let found = this.images.filter(
+                        (e) => {
+                            return e.filename == imagefile.filename;
+                        }
+                    );
+                    if (found.length == 0)
+                        this.images.push(imagefile);
                 }
-            );
-            if (found.length == 0)
-                this.images.push(result);
+            },
+            (err) => {
 
-            // let found = false;
-            // for (let i = 0; i < this.images.length; i++) {
-            //     found = this.images[i].filename == result.filename;
-            //     if (found) break;
-            // }
-            // if (!found)
-        });
+            }
+        );
+        // this.custom.uploadImage(this.id, file)
+        // .subscribe((result : ImageFile) => {
+        //     let found = this.images.filter(
+        //         (e) => {
+        //             return e.filename == result.filename;
+        //         }
+        //     );
+        //     if (found.length == 0)
+        //         this.images.push(result);
+
+        // });
     }
 
     imagePath(img: ImageFile) : string {
@@ -84,24 +106,23 @@ export class ImageManagerComponent implements OnInit {
         });
     }
 
-    genMd(img : ImageFile) {
-        let url = this.imagePath(img);
-        this.clipboardText = "![" + img.filename + "](" + url + ")";
-        let el = this.dom.getElementById("clipboardText") as HTMLTextAreaElement;
-        el.value = this.clipboardText;
+    copyToClipboard(text : string) : void {
+        let el = this.dom.getElementById("image-clipboard") as HTMLTextAreaElement;
+        //console.log(el);
+        el.value = text;
         el.select();
         this.dom.execCommand("copy");
     }
 
+    genMd(img : ImageFile) : void {
+        this.copyToClipboard(`![${img.filename}](${this.imagePath(img)})`);
+    }
+
     delete(img : ImageFile) {
-        this.service.deleteImage(this.id, img.filename)
+        this.custom.deleteImage(this.id, img.filename)
         .subscribe((result : ImageFile) => {
             this.removeImage(result.filename);
         });
-    }
-
-    imageClicked(img) {
-        console.log(img);
     }
 
     private removeImage(fn) {

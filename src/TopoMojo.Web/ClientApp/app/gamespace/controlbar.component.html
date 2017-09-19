@@ -13,7 +13,7 @@
     <li *ngIf="game.id" class="pull-right">
         <confirm-delete
             prompt="Confirm deletion of this instance."
-            tooltip="end instance"
+            [tooltip]="'DELETE-GAME' | translate | lowercase"
             (onDelete)="destroy($event)">
         </confirm-delete>
     </li>

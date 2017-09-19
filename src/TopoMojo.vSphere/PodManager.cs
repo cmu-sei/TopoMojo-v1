@@ -50,14 +50,15 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Refresh(Template template)
         {
-            Vm vm = (await Find(template.Name + "#" + template.IsolationTag)).FirstOrDefault();
+            string target = template.Name + "#" + template.IsolationTag;
+            Vm vm = (await Find(target)).FirstOrDefault();
             if (vm != null)
             {
                 vm.Status = "deployed";
             }
             else
             {
-                vm = new Vm() { Status = "created" };
+                vm = new Vm() { Name = target, Status = "created" };
                 int progress = await VerifyDisks(template);
                 if (progress == 100)
                     vm.Status = "initialized";

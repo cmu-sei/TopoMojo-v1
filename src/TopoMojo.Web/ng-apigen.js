@@ -12,7 +12,7 @@ var https = require('https');
 var fs = require('fs');
 var fspath = require('path');
 
-const GenerateAngularClient = function(argv) {
+(function GenerateAngularClient(argv) {
 
     function CreateClient(api, output = "api-module") {
 
@@ -41,6 +41,23 @@ const GenerateAngularClient = function(argv) {
                 }
             );
         }
+
+        //add a CustomService, if it doesn't already exist
+        meta.Custom = [];
+        let customSvcPath = fspath.join(output, "custom.service.ts");
+        fs.access(
+            customSvcPath,
+            (err) => {
+                if (err) {
+                    fs.writeFile(
+                        customSvcPath,
+                        GenerateServices(meta, "Custom", {}),
+                        (err) => { }
+                    );
+                }
+            }
+        );
+
 
         //write api.module.ts
         fs.writeFile(
@@ -149,7 +166,7 @@ const GenerateAngularClient = function(argv) {
                 }
             }
         }
-        text += "}" + crlf;
+        text += ngServiceFooter;
         return text;
     }
 
@@ -389,7 +406,7 @@ const GenerateAngularClient = function(argv) {
     if (args.help || !args.url) {
         showUsage();
     }
-}
+})(process.argv);
 
 /* TEMPLATES */
 const crlf = "\r\n";
@@ -430,30 +447,28 @@ const ngUrlHelper = `
 export class UrlHelper {
 
     public static queryStringify(obj : any) : string {
-        var keys = (obj) ? Object.keys(obj) : [];
-        if (keys.length > 0) {
-            var segments = [];
-            for (var i = 0; i < keys.length; i++) {
-                let prop = obj[keys[i]];
-                if (prop !== undefined) {
-                    if (Array.isArray(prop)) {
-                        prop.forEach(element => {
-                            segments.push(this.encodeKVP(keys[i], element));
-                        });
-                    } else {
-                        segments.push(this.encodeKVP(keys[i], prop));
-                    }
+        var segments = [];
+        for (let p in obj) {
+            let prop = obj[p];
+            if (prop) {
+                if (Array.isArray(prop)) {
+                    prop.forEach(element => {
+                        segments.push(this.encodeKVP(p, element));
+                    });
+                } else {
+                    segments.push(this.encodeKVP(p, prop));
                 }
             }
-            return "?" + segments.join('&');
         }
-        return "";
+        let qs = segments.join('&');
+        return (qs) ? "?" + qs : "";
     }
 
     private static encodeKVP(key : string, value: string) {
         return encodeURIComponent(key) + "=" + encodeURIComponent(value);
     }
 }
+
 `;
 
-GenerateAngularClient(process.argv);
+//GenerateAngularClient(process.argv);

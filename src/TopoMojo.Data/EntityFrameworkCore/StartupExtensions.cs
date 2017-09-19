@@ -10,6 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return services
                 .AddScoped<ITemplateRepository, TemplateRepository>()
                 .AddScoped<ITopologyRepository, TopologyRepository>()
+                .AddScoped<IGamespaceRepository, GamespaceRepository>()
                 .AddScoped<IProfileRepository, ProfileRepository>();
 
         }

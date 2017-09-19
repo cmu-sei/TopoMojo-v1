@@ -11,3 +11,10 @@
   a {
     color: black;
   }
+
+  .lang-btn,h2 {
+    display: inline-block;
+  }
+  .showdrop {
+    display: inline-block;
+  }

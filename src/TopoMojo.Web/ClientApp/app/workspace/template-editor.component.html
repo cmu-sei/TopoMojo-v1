@@ -1,5 +1,6 @@
 
 <div class="row">
+    <error-div [errors]="errors"></error-div>
     <div class="col-xs-3 prop-label">
         <span>
             <!--<i class="fa fa-desktop"></i> <span>{{template.name}}</span>-->
@@ -20,9 +21,9 @@
                 <!--<span *ngIf="template.owned" class="label label-default">local</span>-->
                 <span class="prop-label col-xs-2" translate>TYPE</span>
                 <div class="col-xs-10">
-                <span *ngIf="template.parent" class="label label-warning" translate>LINKED</span>
-                <span *ngIf="!template.parent" class="label label-info" translate>LOCAL</span>
-                <inline-help *ngIf="template.parent" #cloneHelp>
+                <span *ngIf="hasParent()" class="label label-warning" translate>LINKED</span>
+                <span *ngIf="!hasParent()" class="label label-info" translate>LOCAL</span>
+                <inline-help *ngIf="hasParent()" #cloneHelp>
                     <span>
                         <span translate>HELP.CLONE-TEMPLATE</span>
                         <button (click)="clone()" class="btn btn-default" [class.disabled]="((!vm) || (vm.id))">
@@ -57,6 +58,15 @@
                         max="128"></inline-editor>
                     <inline-help>
                         <span translate>HELP.NETWORKS</span>
+                    </inline-help>
+                </div>
+            </div>
+            <div class="col-xs-12 prop">
+                <span class="col-xs-2 prop-label" translate>Hidden</span>
+                <div class="col-xs-10">
+                    <input type="checkbox" (onChanged)="save()" [(ngModel)]="template.isHidden">
+                    <inline-help>
+                        <span translate>HELP.HIDDEN-TEMPLATE</span>
                     </inline-help>
                 </div>
             </div>

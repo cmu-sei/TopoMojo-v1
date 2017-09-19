@@ -76,23 +76,27 @@ export class AuthHttp {
         return encodeURIComponent(key) + "=" + encodeURIComponent(value);
     }
     queryStringify(obj : object, prefix? : string) {
-        var keys = (obj) ? Object.keys(obj) : [];
-        if (keys.length > 0) {
+        //var keys = (obj) ? Object.keys(obj) : [];
+        //if (keys.length > 0) {
             var segments = [];
-            for (var i = 0; i < keys.length; i++) {
-                let prop = obj[keys[i]];
+            // for (var i = 0; i < keys.length; i++) {
+            //     let prop = obj[keys[i]];
+            for (let p in obj) {
+                let prop = obj[p];
                 if (prop !== undefined) {
                     if (Array.isArray(prop)) {
                         prop.forEach(element => {
-                            segments.push(this.encodeKVP(keys[i], element));
+                            segments.push(this.encodeKVP(p, element));
                         });
                     } else {
-                        segments.push(this.encodeKVP(keys[i], prop));
+                        console.log(p + " " + prop);
+                        if (prop)
+                            segments.push(this.encodeKVP(p, prop));
                     }
                 }
             }
             return (prefix||'') + segments.join('&');
-        }
-        return "";
+        //}
+        //return "";
     }
 }

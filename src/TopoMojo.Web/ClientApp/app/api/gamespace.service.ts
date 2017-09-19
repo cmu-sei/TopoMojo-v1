@@ -35,4 +35,5 @@ export class GamespaceService {
 	public delistPlayer(playerId: number) : Observable<boolean> {
 		return this.http.delete("/api/player/delist/" + playerId);
 	}
+
 }

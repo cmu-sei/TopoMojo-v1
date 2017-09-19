@@ -4,7 +4,7 @@ import { Injectable } from "@angular/core";
 import { AuthHttp } from "../auth/auth-http";
 import { Observable } from 'rxjs/Rx';
 import { UrlHelper } from "./url-helper";
-import { ImageFile,HttpIFormFile } from "./api-models";
+import { ImageFile } from "./api-models";
 
 @Injectable()
 export class DocumentService {
@@ -20,10 +20,8 @@ export class DocumentService {
 	public getImages(guid: string) : Observable<Array<ImageFile>> {
 		return this.http.get("/api/images/" + guid);
 	}
-	public postImage(guid: string, file: HttpIFormFile) : Observable<ImageFile> {
-		return this.http.post("/api/image/" + guid, file);
-	}
 	public deleteImage(guid: string, filename: string) : Observable<ImageFile> {
 		return this.http.delete("/api/image/" + guid);
 	}
+
 }

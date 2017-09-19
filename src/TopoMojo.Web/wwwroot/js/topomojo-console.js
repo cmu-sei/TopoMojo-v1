@@ -170,6 +170,15 @@ function WebConsole(
             $(this).nextAll().toggleClass('hidden');
         });
 
+        service.addHandler(handleExpiration);
+        // service.registerHandler(function() {
+        //     console.log("Auth Token Expired!");
+        // });
+    }
+
+    function handleExpiration() {
+        console.log("Auth Token Expired!");
+        if (wmks) wmks.disconnect();
     }
 
     function showKeyboard() {
@@ -201,7 +210,6 @@ function WebConsole(
         $('#console-tools-btn').addClass('hidden');
         $('#console-tools-div').addClass('hidden');
         $("#console-tools-connected-div").addClass('hidden');
-
     }
 
     function uiPoweredOff() {
@@ -364,7 +372,8 @@ function WebConsole(
                 // wmks.disableInputDevice(0);
                 // wmks.disableInputDevice(1);
                 // wmks.disableInputDevice(2);
-                wmks.disconnect();
+
+                //wmks.disconnect();
                 wmks.destroy();
 
                 //wmks = null;
@@ -399,7 +408,7 @@ function WebConsole(
     function postVmAnswer() {
         var $proto = $(this);
         var q = $proto.data('question');
-        service.answer(q.qid, q.answer)
+        service.answer(q.vid, { questionId: q.qid, choiceKey: q.answer})
             .done(function(result) {
             })
             .fail(function(jqXhr, status, error) {
@@ -484,11 +493,11 @@ function WebConsole(
         service.ticket()
             .done(loadVm)
             .fail(function(jqXhr, status, error){
-                $('#feedback-div p:first').text('Failed to obtain ticket.');
+                $('#feedback-div p:first').text('Unable to load console.');
                 debug(error);
             })
             .always(function() {
-                debug("preInit complete.");
+                //debug("preInit complete.");
             })
     }
 
@@ -500,13 +509,37 @@ function WebConsole(
  * UserManager
  */
 function UserManager() {
-    var storageKey = 'sketch.auth.jwt';
+    console.log(window.navigator.userAgent);
+    const storageKey = 'sketch.auth.jwt.' + window.navigator.userAgent.split(' ').pop(); //.substring(window.navigator.userAgent.lastIndexOf(' '));
+    const oidcKey = 'oidc.user:https://id.sketchdemo.us:topomojo';
+    var token = null;
+    var timer;
+    var expiringEvent = new CustomEvent("AuthExpiringEvent");
 
     this.getUser = function() {
-        return JSON.parse(localStorage.getItem(storageKey));
+        //console.log("getUser: " + !!token);
+        return token;
     }
 
-    //todo: track token expiration
+    this.addHandler = function(h) {
+        addEventListener("AuthExpiringEvent", h, false);
+    }
+
+
+    function init() {
+        let item = localStorage.getItem(storageKey);
+        if (!item) item = localStorage.getItem(oidcKey);
+        if (!item) item = sessionStorage.getItem(oidcKey);
+        token = (!!item) ? JSON.parse(item) : null;
+        //console.log("init: " + !!token);
+        if (token==null){
+            dispatchEvent(expiringEvent);
+            clearInterval(timer);
+        }
+    }
+
+    init();
+    timer = setInterval(init, 5000);
 }
 
 /**
@@ -516,32 +549,42 @@ function VmService(
     id,
     userManager
 ) {
+    this.userManager = function() {
+        return userManager;
+    }
+
+    this.addHandler = function(cb) {
+        //console.log("adding callback");
+        userManager.addHandler(cb);
+    }
+
     this.ticket = function() {
-        return get("/api/vm/ticket/" + id);
+        console.log("requesting mks ticket");
+        return get("/api/vm/" + id + "/ticket");
     }
 
     this.load = function() {
-        return get("/api/vm/load/" + id);
+        return get("/api/vm/" + id + "/load");
     }
 
     this.start = function() {
-        return post("/api/vm/start/" + id);
+        return get("/api/vm/" + id + "/start");
     }
 
     this.stop = function() {
-        return post("/api/vm/stop/" + id);
+        return get("/api/vm/" + id + "/stop");
     }
 
     this.change = function(model) {
-        return post("/api/vm/change/" + id, model);
+        return post("/api/vm/" + id + "/change", model);
     }
 
     this.options = function(key) {
-        return get("/api/vm/" + key + "options/" + id);
+        return get("/api/vm/" + id + "/" + key + "s");
     }
 
     this.answer = function(qid, answer) {
-        return post('/api/vm/answer/' + id + '/' + qid + '/' + answer);
+        return post("/api/vm/" + id + "/answer", answer);
     }
 
     this.uploadFile = function(data) {
@@ -553,6 +596,7 @@ function VmService(
     }
 
     function get(url) {
+        //console.log("sending ajax get");
         return $.ajax({
             url: url,
             type: 'GET',
@@ -583,9 +627,12 @@ function VmService(
             headers: authHeader()
         });
     }
+
     function authHeader() {
+        let user = userManager.getUser();
+        //console.log("user: " + !!user);
         return {
-            "Authorization": "Bearer " + userManager.getUser().access_token
+            "Authorization": "Bearer " + ((user) ? user.access_token : "")
         };
     }
 }

@@ -16,6 +16,14 @@ namespace TopoMojo.Core.Mappers
                     opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())))
                 .ReverseMap();
 
+            CreateMap<Data.Entities.Topology, Models.TopologySummary>()
+                .ForMember(d => d.Author, opt =>
+                    opt.ResolveUsing((s, d, m, r) => s.Workers.FirstOrDefault()?.Person?.Name))
+                .ForMember(d => d.CanManage, opt =>
+                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanManage())))
+                .ForMember(d => d.CanEdit, opt =>
+                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())));
+
             CreateMap<Data.Entities.Topology, Models.TopologyState>();
             CreateMap<Models.NewTopology, Data.Entities.Topology>();
 
@@ -25,7 +33,7 @@ namespace TopoMojo.Core.Mappers
                 .ForMember(d => d.CanManage, opt => opt.ResolveUsing((s) => s.CanManage()))
                 .ForMember(d => d.CanEdit, opt => opt.ResolveUsing((s) => s.CanEdit()));
 
-            CreateMap<Data.Entities.Template, Models.TopologyTemplate>();
+            // CreateMap<Data.Entities.Template, Models.TopologyTemplate>();
         }
     }
 }

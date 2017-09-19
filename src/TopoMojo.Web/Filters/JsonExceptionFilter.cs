@@ -31,8 +31,13 @@ namespace TopoMojo.Web
                 }
                 else
                 {
+                    string ex = context.Exception
+                        .GetType().Name
+                        .Replace("Exception", "")
+                        .ToUpper();
+
                     result = new JsonResult(new {
-                        Message = context.Exception.Message
+                        Message = $"EXCEPTION.{ex} {context.Exception.Message}"
                     });
                 }
                 result.StatusCode = 400;

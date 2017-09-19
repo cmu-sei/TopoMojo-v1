@@ -14,7 +14,7 @@ namespace TopoMojo.Data.Entities
         public string ShareCode { get; set; }
         public int TopologyId { get; set; }
         public virtual Topology Topology { get; set; }
-        public virtual ICollection<Player> Players { get; set; }
+        public virtual ICollection<Player> Players { get; set; } = new List<Player>();
     }
 
 }

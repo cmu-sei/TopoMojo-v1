@@ -24,7 +24,7 @@ namespace TopoMojo.Services
         protected readonly ProfileManager _profileManager;
         protected readonly ILogger _logger;
 
-        public async Task<Claim[]> GetClaimsAsync(string globalId)
+        public async Task<Claim[]> GetClaimsAsync(string globalId, string name)
         {
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, globalId));
@@ -37,17 +37,25 @@ namespace TopoMojo.Services
                 if (profile.IsAdmin)
                     claims.Add(new Claim("role", "admin"));
             }
+            else {
+                claims.Add(new Claim("name", name));
+            }
 
             return claims.ToArray();
         }
 
-        public async Task<object> GetProfileAsync(string globalId)
+        public async Task<object> GetProfileAsync(string globalId, string name)
         {
             Profile profile = await _profileManager.FindByGlobalId(globalId);
-            return new {
-                Name = profile.Name,
-                IsAdmin = profile.IsAdmin
-            };
+            if (profile != null)
+            {
+                return new {
+                    Name = profile.Name,
+                    IsAdmin = profile.IsAdmin
+                };
+            }
+
+            return new {Name = name};
         }
 
         public async Task AddProfileAsync(string globalId, string name)

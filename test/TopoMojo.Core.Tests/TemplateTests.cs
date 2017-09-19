@@ -13,7 +13,7 @@ namespace Tests
             using (TestSession test = CreateSession())
             {
                 TemplateManager mgr = test.GetTemplateManager();
-                TemplateDetail template = mgr.Create(new NewTemplateDetail {
+                TemplateDetail template = mgr.Create(new TemplateDetail {
                     Name = "JamOn",
                     Detail = "original"
                 }).Result;
@@ -37,7 +37,7 @@ namespace Tests
                 TemplateManager mgr = test.GetTemplateManager();
                 for (int i = 0; i < 5; i++)
                 {
-                    TemplateDetail template = mgr.Create(new NewTemplateDetail {
+                    TemplateDetail template = mgr.Create(new TemplateDetail {
                         Name = "JamOn" + i.ToString(),
                         Detail = i.ToString(),
                         IsPublished = (i%2==0)
@@ -66,7 +66,7 @@ namespace Tests
                 TemplateManager mgr = test.GetTemplateManager();
                 for (int i = 1; i < 6; i++)
                 {
-                    TemplateDetail template = mgr.Create(new NewTemplateDetail {
+                    TemplateDetail template = mgr.Create(new TemplateDetail {
                         Name = "JamOn" + i.ToString(),
                         // Detail = "",
                         IsPublished = (i%2==1)

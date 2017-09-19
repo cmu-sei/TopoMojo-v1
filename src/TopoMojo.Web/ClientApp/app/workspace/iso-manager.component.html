@@ -5,11 +5,11 @@
     </label>
     <!-- <input id="fileSelector" type="file" (change)="fileSelectorChanged($event)"> -->
     <div *ngIf="filesQueued()">
-        <p *ngFor="let qf of queuedFiles">
-            {{ qf.name }}
+        <div *ngFor="let qf of queuedFiles">
+            <span *ngIf="qf.progress >= 0" class="badge badge-warning"><i class="fa fa-circle-o-notch fa-spin"></i> {{ qf.progress }}%</span>
+            <span>{{ qf.name }}</span>
             <button *ngIf="!uploading" class="btn btn-link" (click)="dequeueFile(qf)">&times;</button>
-            <i *ngIf="qf.progress >= 0" class="fa fa-circle-o-notch fa-spin"></i>
-        </p>
+        </div>
     </div>
     <button *ngIf="canUpload()" (click)="upload()" class="btn btn-primary" translate>UPLOAD</button>
     <div *ngIf="errorMessage" class="alert alert-danger alert-dismissable" role="alert">

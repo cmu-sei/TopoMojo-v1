@@ -82,7 +82,8 @@ namespace TopoMojo.Controllers
         {
             Template template  = await _mgr.GetDeployableTemplate(id, null);
             Vm vm = await _pod.Refresh(template);
-            await AuthorizeAction(vm, "resolve");
+            if (vm != null)
+                await AuthorizeAction(vm, "resolve");
             //Vm vm = await _pod.Load(id);
             return Ok(vm);
         }
@@ -94,7 +95,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "start");
             Vm vm = await _pod.Start(id);
-            SendBroadcast(vm);
+            SendBroadcast(vm, "start");
             return Ok(vm);
         }
 
@@ -105,7 +106,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "stop");
             Vm vm = await _pod.Stop(id);
-            SendBroadcast(vm);
+            SendBroadcast(vm, "stop");
             return Ok(vm);
         }
 
@@ -116,6 +117,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "save");
             Vm vm = await _pod.Save(id);
+            SendBroadcast(vm, "save");
             return Ok(vm);
         }
 
@@ -126,7 +128,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "revert");
             Vm vm = await _pod.Revert(id);
-            SendBroadcast(vm);
+            SendBroadcast(vm, "revert");
             return Ok(vm);
         }
 
@@ -137,6 +139,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "delete");
             Vm vm = await _pod.Delete(id);
+            SendBroadcast(vm, "delete");
             return Ok(vm);
         }
 
@@ -147,6 +150,7 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "change");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
+            SendBroadcast(vm, "change");
             return Ok(await _pod.Change(id, change));
         }
 
@@ -156,7 +160,9 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Deploy([FromRoute]int id)
         {
             Template template  = await _mgr.GetDeployableTemplate(id, null);
-            return Ok(await _pod.Deploy(template));
+            Vm vm = await _pod.Deploy(template);
+            SendBroadcast(vm, "deploy");
+            return Ok(vm);
         }
 
         [HttpGet("api/vm/{id}/init")]
@@ -174,7 +180,9 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Answer([FromRoute]string id, [FromBody] VmAnswer answer)
         {
             await AuthorizeAction(id, "answer");
-            return Ok(await _pod.Answer(id, answer));
+            Vm vm = await _pod.Answer(id, answer);
+            SendBroadcast(vm, "answer");
+            return Ok(vm);
         }
 
         [HttpGet("api/vm/{id}/isos")]
@@ -224,6 +232,7 @@ namespace TopoMojo.Controllers
                 throw new InvalidOperationException();
 
             bool result = await _profileManager.CanEditSpace(instanceId);
+            _logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
 
             // if (!result && "ticket load".Contains(method))
             //     result = await _topoManager.AllowedInstanceAccess(instanceId);
@@ -238,13 +247,20 @@ namespace TopoMojo.Controllers
             }
             return result;
         }
-        private void SendBroadcast(Vm vm)
+        private void SendBroadcast(Vm vm, string action)
         {
-            Clients.Group(vm.Name.Tag()).VmUpdated(new {
-                id = vm.Id,
-                name = vm.Name.Untagged(),
-                isRunning = vm.State == VmPowerState.running
-            });
+            Core.Models.VmState state = new Core.Models.VmState
+            {
+                Id = vm.Id,
+                Name = vm.Name.Untagged(),
+                IsRunning = vm.State == VmPowerState.running
+            };
+            Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
+            // Clients.Group(vm.Name.Tag()).VmUpdated(new {
+            //     id = vm.Id,
+            //     name = vm.Name.Untagged(),
+            //     isRunning = vm.State == VmPowerState.running
+            // });
 
         }
     }

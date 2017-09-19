@@ -13,6 +13,12 @@ namespace TopoMojo.Data.EntityFrameworkCore
             TopoMojoDbContext db
         ) : base(db) { }
 
+        public override IQueryable<Template> List()
+        {
+            return DbContext.Templates
+                .Include(t => t.Topology);
+        }
+
         public override async Task<Template> Load(int id)
         {
             return await DbContext.Templates
@@ -22,10 +28,10 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<bool> IsParentTemplate(int parentId)
+        public async Task<bool> IsParentTemplate(int id)
         {
              return await DbContext.Templates
-                .Where(t => t.ParentId == parentId)
+                .Where(t => t.ParentId == id)
                 .AnyAsync();
         }
 
@@ -49,5 +55,12 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .AnyAsync();
 
         }
+
+        public async Task<bool> AtTemplateLimit(int topoId)
+        {
+            Topology topo = await DbContext.Topologies.FindAsync(topoId);
+            int count = await DbContext.Templates.Where(t => t.TopologyId == topoId).CountAsync();
+            return count >= topo.TemplateLimit;
         }
+    }
 }

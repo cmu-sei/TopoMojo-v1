@@ -35,7 +35,7 @@ namespace TopoMojo.Core
         private readonly ITopologyRepository _repo;
         private readonly IPodManager _pod;
 
-        public async Task<Models.SearchResult<Models.Topology>> List(Models.Search search)
+        public async Task<Models.SearchResult<Models.TopologySummary>> List(Models.Search search)
         {
             IQueryable<Topology> q = _repo.List();
             if (search.Term.HasValue())
@@ -65,12 +65,16 @@ namespace TopoMojo.Core
         //     return await ProcessQuery(search, q);
         // }
 
-        public async Task<Models.SearchResult<Models.Topology>> ProcessQuery(Models.Search search, IQueryable<Topology> q)
+        public async Task<Models.SearchResult<Models.TopologySummary>> ProcessQuery(Models.Search search, IQueryable<Topology> q)
         {
-            Models.SearchResult<Models.Topology> result = new Models.SearchResult<Models.Topology>();
+            Models.SearchResult<Models.TopologySummary> result = new Models.SearchResult<Models.TopologySummary>();
             result.Search = search;
             result.Total = await q.CountAsync();
-            result.Results =  Mapper.Map<Models.Topology[]>(q.OrderBy(t => t.Name).Skip(search.Skip).Take(search.Take).ToArray(), WithActor());
+            result.Results =  Mapper.Map<Models.TopologySummary[]>(q
+                .OrderBy(t => t.Name)
+                .Skip(search.Skip)
+                .Take(search.Take)
+                .ToArray(), WithActor());
             return result;
         }
 
@@ -86,12 +90,15 @@ namespace TopoMojo.Core
         public async Task<Models.Topology> Create(Models.NewTopology model)
         {
             Data.Entities.Topology topo = Mapper.Map<Data.Entities.Topology>(model);
+            topo.TemplateLimit = _options.WorkspaceTemplateLimit;
+            topo = await _repo.Add(topo);
             topo.Workers.Add(new Worker
             {
-                Person = Profile,
+                PersonId = Profile.Id,
                 Permission = Permission.Manager
             });
-            topo = await _repo.Add(topo);
+            await _repo.Update(topo);
+
             return Mapper.Map<Models.Topology>(topo, WithActor());
         }
 
@@ -109,7 +116,7 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Topology>(entity, WithActor());
         }
 
-        public async Task<Models.Topology> DeleteAsync(int id)
+        public async Task<Models.Topology> Delete(int id)
         {
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();

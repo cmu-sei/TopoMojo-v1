@@ -3,9 +3,10 @@
 
 <router-outlet></router-outlet>
 
-<div *ngIf="showExpiring" class="overlay">
+<div *ngIf="showExpiring || showExpired" class="overlay">
     <div class="row col-xs-4 col-xs-offset-4 well vcenter">
-        <h1>Still here?</h1>
-        <button class="btn btn-default btn-lg" (click)="continue()">Continue</button>
+        <h1 *ngIf="showExpiring">Still here?</h1>
+        <button *ngIf="showExpiring" class="btn btn-default btn-lg" (click)="continue()">Continue</button>
+        <h1 *ngIf="showExpired">Session expired.</h1>
     </div>
 </div>

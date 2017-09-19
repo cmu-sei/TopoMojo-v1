@@ -11,7 +11,7 @@ export class SettingsService {
         this.oidc = all['oidc'];
         this.urls = all['urls'];
         this.branding = all['branding'];
-
+        this.lang = all['lang'] || 'en';
         this.hostUrl = window.location.origin;
     }
 
@@ -19,6 +19,7 @@ export class SettingsService {
     oidc : any;
     urls : any;
     branding : any;
+    lang : string;
 
     hostUrl: string;
     layout: Layout = new Layout();

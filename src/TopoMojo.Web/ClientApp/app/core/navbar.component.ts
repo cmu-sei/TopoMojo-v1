@@ -16,15 +16,23 @@ export class NavbarComponent {
     status: Subscription;
     appName: string = "TopoMojo";
     @Input() layout: Layout;
+    currentLanguage: string = "LANG.EN";
+    dropDownVisible: boolean = false;
+    lang: string[] = [];
 
     constructor (
         private service : AuthService,
         private router: Router,
         private settings: SettingsService,
         private translate: TranslateService
-    ){ }
+    ){
+        // let lang = (settings.lang || "en").split(' ').shift().toUpperCase();
+        // this.currentLanguage = "LANG." + lang;
+    }
 
     ngOnInit() {
+        this.lang = (this.settings.lang || 'en').trim().split(' ');
+        this.setCulture(this.lang[0]);
         this.appName = this.settings.branding.applicationName || this.appName;
         this.profileSubscription = this.service.user$
         .subscribe(p =>  {
@@ -38,7 +46,14 @@ export class NavbarComponent {
         this.router.navigate(['/home']);
     }
 
-    lang(code) {
+    setCulture(code: string) : void {
         this.translate.use(code);
+        this.currentLanguage = "LANG." + code.toUpperCase();
+        this.dropDownVisible = false;
+
+    }
+
+    toggleDropdown() : void {
+        this.dropDownVisible = !this.dropDownVisible;
     }
 }

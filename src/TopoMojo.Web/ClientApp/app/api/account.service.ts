@@ -35,4 +35,5 @@ export class AccountService {
 	public refreshAccount() : Observable<any> {
 		return this.http.get("/api/account/refresh");
 	}
+
 }

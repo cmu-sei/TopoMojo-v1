@@ -8,27 +8,20 @@ export interface ImageFile {
 	filename?: string;
 }
 
-export interface HttpIFormFile {
-	contentType?: string;
-	contentDisposition?: string;
-	headers?: object;
-	length?: number;
-	name?: string;
-	fileName?: string;
-}
-
 export interface Gamespace {
 	id?: number;
+	name?: string;
 	whenCreated?: string;
-	document?: string;
-	vmCount?: number;
+	topologyDocument?: string;
+	topologyId?: number;
 }
 
 export interface GameState {
 	id?: number;
+	name?: string;
 	globalId?: string;
 	whenCreated?: string;
-	document?: string;
+	topologyDocument?: string;
 	shareCode?: string;
 	vms?: Array<VmState>;
 }
@@ -76,10 +69,16 @@ export interface TemplateSummary {
 	parentName?: string;
 }
 
-export interface TemplateDetailSearchResult {
-	search?: Search;
-	total?: number;
-	results?: Array<TemplateDetail>;
+export interface Template {
+	id?: number;
+	parentId?: number;
+	canEdit?: boolean;
+	name?: string;
+	description?: string;
+	networks?: string;
+	iso?: string;
+	isHidden?: boolean;
+	topologyGlobalId?: string;
 }
 
 export interface TemplateDetail {
@@ -90,42 +89,34 @@ export interface TemplateDetail {
 	isPublished?: boolean;
 }
 
-export interface Template {
-	id?: number;
-	canEdit?: boolean;
-	name?: string;
-	description?: string;
-	networks?: string;
-	iso?: string;
-	topologyGlobalId?: string;
-	parent?: TemplateSummary;
-}
-
-export interface NewTemplateDetail {
-	name?: string;
-	networks?: string;
-	detail?: string;
-	isPublished?: boolean;
-}
-
-export interface TopologyTemplate {
-	id?: number;
-	name?: string;
-	parentName?: string;
-}
-
 export interface ChangedTemplate {
 	id?: number;
 	name?: string;
 	description?: string;
 	networks?: string;
 	iso?: string;
+	isHidden?: boolean;
 }
 
-export interface TopologySearchResult {
+export interface TopologySummarySearchResult {
 	search?: Search;
 	total?: number;
-	results?: Array<Topology>;
+	results?: Array<TopologySummary>;
+}
+
+export interface TopologySummary {
+	id?: number;
+	name?: string;
+	description?: string;
+	canManage?: boolean;
+	canEdit?: boolean;
+	isPublished?: boolean;
+	author?: string;
+}
+
+export interface NewTopology {
+	name?: string;
+	description?: string;
 }
 
 export interface Topology {
@@ -137,6 +128,7 @@ export interface Topology {
 	shareCode?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
+	templateLimit?: number;
 	isPublished?: boolean;
 	workers?: Array<Worker>;
 	templates?: Array<Template>;
@@ -147,11 +139,6 @@ export interface Worker {
 	personName?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
-}
-
-export interface NewTopology {
-	name?: string;
-	description?: string;
 }
 
 export interface ChangedTopology {

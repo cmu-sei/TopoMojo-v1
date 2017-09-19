@@ -16,8 +16,8 @@ export class AuthService {
     redirectUrl: string;
     private userSource: Subject<User> = new Subject<User>();
     public user$: Observable<User> = this.userSource.asObservable();
-    private tokenStatus: Subject<string> = new Subject<string>();
-    tokenStatus$: Observable<string> = this.tokenStatus.asObservable();
+    private tokenStatus: Subject<AuthTokenState> = new Subject<AuthTokenState>();
+    tokenStatus$: Observable<AuthTokenState> = this.tokenStatus.asObservable();
     lastCall : number;
 
     constructor(
@@ -55,6 +55,12 @@ export class AuthService {
         return Promise.resolve(!!this.currentUser);
     }
 
+    getAuthorizationHeader() : string {
+        return "Bearer " + ((this.currentUser)
+            ? this.currentUser.access_token
+            : "no_token");
+    }
+
     markAction() {
         this.lastCall = Date.now();
     }
@@ -63,28 +69,32 @@ export class AuthService {
         this.currentUser = user;
         this.loggedIn = (user !== null);
         this.userSource.next(user);
-        this.tokenStatus.next("valid");
+        this.tokenStatus.next(AuthTokenState.valid);
     }
 
     private onTokenUnloaded(user) {
         this.currentUser = user;
         this.userSource.next(user);
-        this.tokenStatus.next("invalid");
+        this.tokenStatus.next(AuthTokenState.invalid);
     }
 
     private onTokenExpiring(e) {
         if (Date.now() - this.lastCall < 15000)
             this.refreshToken();
         else
-            this.tokenStatus.next("expiring");
+            this.tokenStatus.next(AuthTokenState.expiring);
     }
 
     private onTokenExpired(e) {
-        this.tokenStatus.next("expired");
-        if (this.localmgr.getToken())
-            this.localmgr.removeUser();
-        else
-            this.mgr.removeUser();
+        this.tokenStatus.next(AuthTokenState.expired);
+
+        //give any clean process 10 seconds or so.
+        setTimeout(() => {
+            if (this.localmgr.getToken())
+                this.localmgr.removeUser();
+            else
+                this.mgr.removeUser();
+        }, 10000);
     }
 
     localLogin(type, creds) {
@@ -147,4 +157,11 @@ export class AuthService {
     isAdmin() {
         return (this.currentUser && this.currentUser.profile.isAdmin);
     }
+}
+
+export enum AuthTokenState {
+    valid = <any>'valid',
+    invalid = <any>'invalid',
+    expiring = <any>'expiring',
+    expired = <any>'expired'
 }

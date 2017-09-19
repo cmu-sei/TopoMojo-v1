@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AdminService} from './admin.service';
+import { ProfileService} from '../api/profile.service';
+import { Search, ProfileSearchResult, Profile } from "../api/api-models";
 
 @Component({
     //moduleId: module.id,
@@ -13,10 +14,10 @@ export class UserManagerComponent implements OnInit {
     activeTopoId: number;
     userUploadVisible: boolean;
     //person: any;
-    roster: any[] = [];
+    roster: Profile[] = [];
     icon: string = 'fa fa-user';
     hasMore: number;
-    model: any = {
+    model: Search = {
         term: '',
         skip: 0,
         take: 50,
@@ -24,7 +25,7 @@ export class UserManagerComponent implements OnInit {
     }
 
     constructor(
-        private service : AdminService,
+        private service : ProfileService,
         private router : Router,
         ) { }
 
@@ -45,42 +46,42 @@ export class UserManagerComponent implements OnInit {
         this.search();
     }
     search() {
-        this.service.roster(this.model)
+        this.service.getProfiles(this.model)
         .subscribe(data => {
             this.roster = this.roster.concat(data.results);
-            this.hasMore = data.total - (data.skip+data.take);
+            this.hasMore = data.total - (data.search.skip+data.search.take);
             //this.person = null;
-        }, (err) => { this.service.onError(err) });
+        }, (err) => { });
     }
 
     load(person) {
         //this.person = person;
     }
 
-    grant(person) {
-        this.service.grant(person)
-        .subscribe(result => {
-            person.isAdmin = true;
-            //this.person = result as any;
-        }, (err) => { this.service.onError(err) });
+    // grant(person) {
+    //     this.service.grant(person)
+    //     .subscribe(result => {
+    //         person.isAdmin = true;
+    //         //this.person = result as any;
+    //     }, (err) => { this.service.onError(err) });
 
-    }
-    deny(person) {
-        this.service.deny(person)
-        .subscribe(result => {
-            person.isAdmin = false;
-            //this.person = result as any;
-        }, (err) => { this.service.onError(err) });
-    }
+    // }
+    // deny(person) {
+    //     this.service.deny(person)
+    //     .subscribe(result => {
+    //         person.isAdmin = false;
+    //         //this.person = result as any;
+    //     }, (err) => { this.service.onError(err) });
+    // }
 
     toggleUpload() {
         this.userUploadVisible = !this.userUploadVisible;
 
     }
-    upload() {
-        this.service.upload(this.plist)
-        .subscribe(result => {
-            this.search();
-        }, (err) => { this.service.onError(err) });
-    }
+    // upload() {
+    //     this.service.upload(this.plist)
+    //     .subscribe(result => {
+    //         this.search();
+    //     }, (err) => { this.service.onError(err) });
+    // }
 }

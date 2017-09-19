@@ -44,9 +44,18 @@
         }
     },
     "HELP" : {
-        "ABOUT": "About",
+        "ABOUT": "Boutay",
         "PUBLISH" : "Enway ublishedpay, isthay opologytay isay iscoverableday inay theay owserbray.",
         "SHARE" : "Istributeday isthay inklay otay eoplepay ouyay antway otay elphay uildbay isthay opologytay.",
-        "EXTERNAL-URL" : "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document."
+        "EXTERNAL-URL" : "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document.",
+        "DESCRIPTION": "Anay applicationay orfay uildingfay anday unningray irtualvay opologiestay.",
+        "HOME-BROWSE" : "Ookinglay otay indfay anday unray anay existingta opologytay? Owsebray ethay opoloty ibrarylay otay indfay atwhay ouyar eednay!",
+        "HOME-WORK": "Antway otay uildbay ourya ownay opologytay?  Oray ontinuecay orkway onay omethingsay ouveyay artedstay?  Eadhay otay ouryay orkspaceway otay accessay ouryay uffstay.",
+        "HOME-PLAY": "Alreadyay avehay oneay unningray?  Eadhay erehay otay ickpay upay erewhay ouyay eftlay offay."
+    },
+    "LANG": {
+        "EN": "Glishenay",
+        "IG": "Iglatinpay"
     }
+
 }

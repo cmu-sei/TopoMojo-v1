@@ -1,5 +1,18 @@
 <div *ngIf="!layout.embedded" class="text-center">
-    <h2>{{appName}}</h2>
+    <div>
+        <h2>{{appName}}</h2>
+        <div *ngIf="lang.length>1" class="btn-group lang-btn">
+            <!-- <button type="button" (click)="toggleDropdown()" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> -->
+            <button type="button" (click)="toggleDropdown()" class="btn btn-link btn-sm" aria-haspopup="true" aria-expanded="false">
+                <span translate>{{currentLanguage}}</span> <span class="caret"></span>
+            </button>
+            <ul [class.showdrop]="dropDownVisible" class="dropdown-menu">
+                <li *ngFor="let code of lang"><a (click)="setCulture(code)" translate>LANG.{{code|uppercase}}</a></li>
+                <!-- <li><a (click)="lang('en')" translate>LANG.EN</a></li>
+                <li><a (click)="lang('ig')" translate>LANG.IG</a></li> -->
+            </ul>
+        </div>
+    </div>
     <ul *ngIf="profile" class="list-inline">
         <li [routerLinkActive]="['link-active']">
             <a [routerLink]="['/browse']" [routerLinkActive]="['link-active']" [tooltip]="'BROWSE' | translate | lowercase">
@@ -32,14 +45,7 @@
             </a>
         </li>
         <li>
-            <a (click)="lang('en')" [tooltip]="'LANG.ENGLISH' | translate | lowercase">
-                <span>en</span>
-            </a>
-        </li>
-        <li>
-            <a (click)="lang('ig')" [tooltip]="'LANG.PIGLATIN' | translate | lowercase">
-                <span>ig</span>
-            </a>
+
         </li>
     </ul>
 </div>

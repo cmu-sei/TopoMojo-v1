@@ -1,6 +1,9 @@
-import { Component, OnInit, Input, Output, OnChanges, SimpleChanges, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, OnChanges, OnDestroy, SimpleChanges, EventEmitter } from '@angular/core';
 import { VmService } from "../api/vm.service";
+import { CustomService } from "../api/custom.service";
 import { Template, VirtualVm, VirtualVmAnswer, VirtualVmStateEnum } from "../api/api-models";
+import { NotificationService } from '../shared/notification.service';
+import {Observable, Subscription, Subject} from 'rxjs/Rx';
 
 @Component({
     //moduleId: module.id,
@@ -16,10 +19,12 @@ export class VmToolbarComponent implements OnChanges {
     status: string;
     timer: any;
     working: boolean = true;
-    error: string;
-
+    errors: any[] = [];
+    subs: Subscription[] = [];
     constructor(
-        private service: VmService
+        private service: VmService,
+        private custom: CustomService,
+        private notifier: NotificationService
     ) { }
 
     // ngOnInit() {
@@ -30,11 +35,40 @@ export class VmToolbarComponent implements OnChanges {
         if (changes['template']) {
             this.status = "created";
             this.startRefresh();
+            this.subs.push(
+                this.notifier.topoEvents.subscribe(
+                    (event) => {
+                        if (this.template.name == event.model.name
+                            ||event.model.id == this.vm.id) {
+
+                            switch (event.action) {
+                                case "VM.DELETE":
+                                this.vm = null;
+                                break;
+
+                                // default:
+                                // this.startRefresh();
+                                // break;
+                            }
+                            this.startRefresh();
+
+                        }
+                    }
+                ),
+            );
         }
+    }
+    ngOnDestroy() {
+
+        this.subs.forEach(
+            (sub) => {
+                sub.unsubscribe();
+            }
+        );
     }
 
     refresh() {
-        let svc = (this.vm)
+        let svc = (this.vm && this.vm.id)
             ? this.service.loadVm(this.vm.id)
             : this.service.resolveVm(this.template.id);
         svc.subscribe(data => {
@@ -81,8 +115,8 @@ export class VmToolbarComponent implements OnChanges {
         this.vm.task = { name: "deleting" };
         this.service.deleteVm(this.vm.id)
         .subscribe(data => {
-            this.vm = data;
-            this.refresh();
+            this.vm = null;
+            this.startRefresh();
         }, (err) => { this.onError(err); })
     }
 
@@ -129,30 +163,32 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     answer(c) {
-        this.service.answerVm(this.vm.id, c as VirtualVmAnswer)
+        this.service.answerVm(this.vm.id, { questionId: this.vm.question.id, choiceKey: c.key } as VirtualVmAnswer)
         .subscribe(data => {
             this.vm = data;
         });
     }
 
     isRunning() {
-        return this.vm.state == VirtualVmStateEnum.running;
+        return this.vm.state == 1; //VirtualVmStateEnum.running;
     }
 
-    isLinked() {
-        return (this.template.parent);
+    hasParent() {
+        return (this.template.parentId);
     }
 
     display() {
-        this.service.ticketVm(this.vm.id);
+        this.custom.openConsole(this.vm.id, this.vm.name);
     }
 
-    clearError() {
-        this.error = null;
+    errorCleared() {
         this.startRefresh();
     }
 
     onError(err) {
-        this.error = JSON.parse(err.text()).message;
+        let text = JSON.parse(err.text());
+        this.errors.push(text);
+        console.debug(text);
     }
+
 }

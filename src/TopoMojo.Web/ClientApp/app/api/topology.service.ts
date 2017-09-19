@@ -4,7 +4,7 @@ import { Injectable } from "@angular/core";
 import { AuthHttp } from "../auth/auth-http";
 import { Observable } from 'rxjs/Rx';
 import { UrlHelper } from "./url-helper";
-import { TopologySearchResult,Search,Topology,ChangedTopology,Worker,Template,NewTopology,TopologyState,VmOptions } from "./api-models";
+import { TopologySummarySearchResult,Search,TopologySummary,ChangedTopology,Topology,Worker,Template,NewTopology,TopologyState,VmOptions } from "./api-models";
 
 @Injectable()
 export class TopologyService {
@@ -14,7 +14,7 @@ export class TopologyService {
         //private http: HttpClient
     ) { }
 
-	public getTopologies(search : Search) : Observable<TopologySearchResult> {
+	public getTopologies(search : Search) : Observable<TopologySummarySearchResult> {
 		return this.http.get("/api/topologies" + UrlHelper.queryStringify(search));
 	}
 	public putTopology(model: ChangedTopology) : Observable<Topology> {
@@ -53,4 +53,5 @@ export class TopologyService {
 	public netsTopology(id: string) : Observable<VmOptions> {
 		return this.http.get("/api/topology/" + id + "/nets");
 	}
+
 }

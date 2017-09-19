@@ -37,14 +37,14 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpGet("api/templates/detail")]
-        [ProducesResponseType(typeof(SearchResult<TemplateDetail>), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> ListDetail([FromQuery]Search search)
-        {
-            var result = await _mgr.ListDetail(search);
-            return Ok(result);
-        }
+        // [HttpGet("api/templates/detail")]
+        // [ProducesResponseType(typeof(SearchResult<TemplateDetail>), 200)]
+        // [JsonExceptionFilter]
+        // public async Task<IActionResult> ListDetail([FromQuery]Search search)
+        // {
+        //     var result = await _mgr.ListDetail(search);
+        //     return Ok(result);
+        // }
 
         [HttpGet("api/template/{id}")]
         [ProducesResponseType(typeof(Template), 200)]
@@ -55,10 +55,19 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
+        [HttpGet("api/template/{id}/detailed")]
+        [ProducesResponseType(typeof(TemplateDetail), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> LoadDetail([FromRoute]int id)
+        {
+            var result = await _mgr.LoadDetail(id);
+            return Ok(result);
+        }
+
         [HttpPost("api/template/create")]
         [ProducesResponseType(typeof(TemplateDetail), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Create([FromBody]NewTemplateDetail model)
+        public async Task<IActionResult> Create([FromBody]TemplateDetail model)
         {
             var result = await _mgr.Create(model);
             return Ok(result);
@@ -73,10 +82,10 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpGet("api/template/{id}/link")]
-        [ProducesResponseType(typeof(TopologyTemplate), 200)]
+        [HttpGet("api/template/{id}/link/{topoId}")]
+        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Link([FromRoute]int id, [FromBody]int topoId)
+        public async Task<IActionResult> Link([FromRoute]int id, [FromRoute]int topoId)
         {
             var result = await _mgr.Link(id, topoId);
             //TODO: Broadcast
@@ -84,7 +93,7 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/template/{id}/unlink")]
-        [ProducesResponseType(typeof(TopologyTemplate), 200)]
+        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> UnLink([FromRoute]int id)
         {

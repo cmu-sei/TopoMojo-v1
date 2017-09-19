@@ -1,17 +1,19 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Converter } from 'showdown/dist/showdown';
 import { DocumentService } from '../api/document.service';
+import { CustomService } from '../api/custom.service';
 import { SHOWDOWN_OPTS } from '../shared/constants/ui-params';
 
 @Component({
-    //moduleId: module.id,
     selector: 'document-editor',
     templateUrl: 'document-editor.component.html'
 })
 export class DocumentEditorComponent implements OnInit {
 
-    @Input()
-    id : any;
+    private converter : Converter;
+    @Input() id : string;
+    rendered : string;
+    dirty : boolean;
     markdown: string = `
 # Title
 #### Subtitle
@@ -38,36 +40,32 @@ main() : void {
 Normal markdown image linking works using \`![caption](url)\`.
 If you need to store graphics, use the image manager to upload,
 then paste in the MD text.
-    `
-    rendered : string;
-    private converter : Converter;
-    dirty : boolean;
+`
 
     constructor(
         private service: DocumentService,
+        private custom: CustomService
     ) {
         this.converter = new Converter(SHOWDOWN_OPTS);
     }
 
     ngOnInit() {
-        //load doc from id
-        this.load();
-        this.render();
+        this.custom.getDocument(this.id)
+        .finally(() => this.render())
+        .subscribe(
+            (text : string) => {
+                this.markdown = text;
+            }
+        );
     }
 
-    ngOnChanges() {
-
+    reRender() {
+        this.dirty = true;
+        this.render();
     }
 
     render() {
         this.rendered = this.converter.makeHtml(this.markdown);
-    }
-
-    load() {
-        // this.service.loadDoc(this.id).subscribe(result => {
-        //     this.markdown = result;
-        //     this.render();
-        // });
     }
 
     save() {

@@ -20,15 +20,16 @@
             <div class="col-xs-12">
                 <h4>{{ t.name }}</h4>
                 <div class="pull-right">
-                    <button *ngIf="t.canManage" class="btn btn-link" tooltip="edit" [routerLink]="['/topo', t.id]">
+                    <button *ngIf="t.canEdit" class="btn btn-link" [tooltip]="'EDIT' | translate | lowercase" [routerLink]="['/topo', t.id]">
                         <i class="fa fa-edit text text-success"></i>
                     </button>
                 </div>
             </div>
             <div class="col-xs-10 col-xs-offset-1">
-                <p><span class="label label-default" translate>AUTHORS</span> {{t.people}}</p>
+                <p><span class="label label-default" translate>AUTHORS</span> {{t.author}}</p>
                 <p><span class="label label-default" translate>DESCRIPTION</span> {{ t.description }}</p>
             </div>
         </div>
+        <div *ngIf="topos && topos.length == 0" class="hang" translate>WORKSPACE-LIST-EMPTY</div>
     </search-bar>
 </div>

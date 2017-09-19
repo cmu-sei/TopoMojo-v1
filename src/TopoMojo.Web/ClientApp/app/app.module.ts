@@ -3,6 +3,7 @@ import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@an
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { APP_BASE_HREF } from '@angular/common';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
 import { TranslateHttpLoader} from '@ngx-translate/http-loader';
@@ -20,6 +21,7 @@ import { SignalRModule } from 'ng2-signalr';
 import { SignalRConfiguration } from 'ng2-signalr';
 import { ChatModule } from './chat/chat.module';
 import { ApiModule } from './api/api.module';
+import { AuthInterceptor } from './auth/http-auth-interceptor';
 
 export function getOriginUrl() {
   return window.location.origin;
@@ -79,6 +81,11 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
         {
             provide: ORIGIN_URL,
             useFactory: (getOriginUrl)
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true,
         }
     ]
 })

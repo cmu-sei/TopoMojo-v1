@@ -17,13 +17,11 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    // [Route("api/[controller]/[action]")]
     public class TopologyController : HubController<TopologyHub>
     {
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
-            //IHostingEnvironment env,
             IServiceProvider sp,
             IConnectionManager sigr
         ) : base(sigr, sp)
@@ -35,26 +33,15 @@ namespace TopoMojo.Controllers
 
         private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
-        //private readonly IHostingEnvironment _env;
 
         [HttpGet("api/topologies")]
-        [ProducesResponseType(typeof(SearchResult<Topology>), 200)]
+        [ProducesResponseType(typeof(SearchResult<TopologySummary>), 200)]
         [JsonExceptionFilter]
         public async Task<IActionResult> List([FromQuery]Search search)
         {
-            // List<SearchFilter> filters = search.Filters.ToList();
-            // filters.Add(new SearchFilter { Name = "published"});
-            // search.Filters = filters.ToArray();
             var result = await _mgr.List(search);
             return Ok(result);
         }
-
-        // [HttpGet]
-        // [JsonExceptionFilter]
-        // public async Task<SearchResult<Topology>> Mine([FromBody]Search search)
-        // {
-        //     return await _mgr.ListMine(search);
-        // }
 
         [HttpPost("api/topology")]
         [ProducesResponseType(typeof(Topology), 200)]
@@ -71,7 +58,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Update([FromBody]ChangedTopology model)
         {
             Topology topo = await _mgr.Update(model);
-            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.UPDATED", topo));
+            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
             return Ok(topo);
         }
 
@@ -89,8 +76,9 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Delete([FromRoute]int id)
         {
-            Topology topo = await _mgr.DeleteAsync(id);
-            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(HttpContext.User, "TOPO.DELETED", topo));
+            Topology topo = await _mgr.Delete(id);
+            Log("deleted", topo);
+            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
             return Ok(true);
         }
 

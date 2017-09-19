@@ -129,6 +129,8 @@ namespace TopoMojo.Web.Data.Migrations.TopoMojo
 
                     b.Property<string>("ShareCode");
 
+                    b.Property<int>("TemplateLimit");
+
                     b.Property<DateTime>("WhenCreated");
 
                     b.HasKey("Id");

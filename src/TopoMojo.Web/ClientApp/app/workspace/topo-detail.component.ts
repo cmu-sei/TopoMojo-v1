@@ -2,10 +2,10 @@ import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
 import { TemplateService } from '../api/template.service';
-import { Topology, TopologyTemplate, TemplateSummary, TemplateSummarySearchResult } from "../api/api-models";
+import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from "../api/api-models";
 import { NotificationService } from '../shared/notification.service';
 import 'rxjs/add/operator/switchMap';
-import { DOCUMENT } from "@angular/platform-browser";
+import { DOCUMENT } from '@angular/platform-browser';
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
 import { ORIGIN_URL } from '../shared/constants/baseurl.constants';
 
@@ -16,7 +16,6 @@ import { ORIGIN_URL } from '../shared/constants/baseurl.constants';
 })
 export class TopoDetailComponent {
     topo: Topology;
-    trefs: any[];
     publishedTemplates: TemplateSummary[];
     selectorVisible: boolean;
     documentVisible: boolean;
@@ -25,6 +24,8 @@ export class TopoDetailComponent {
     ttIcon: string = 'fa fa-clipboard';
     addIcon: string = 'fa fa-plus-circle';
     showing: string = "topo";
+    errors: any[] = [];
+    showOverlay: boolean;
     private subs: Subscription[] = [];
     private id: number;
 
@@ -44,7 +45,7 @@ export class TopoDetailComponent {
         //this.loading = true;
         this.id = +this.route.snapshot.paramMap.get('id');
         this.service.getTopology(this.id).subscribe(
-            (result) => {
+            (result: Topology) => {
                 this.topo = result;
                 //console.log(this.topo);
 
@@ -55,6 +56,10 @@ export class TopoDetailComponent {
                                 case "TOPO.UPDATED":
                                 this.topo = event.model;
                                 break;
+
+                                case "TOPO.DELETED":
+                                this.showOverlay = true;
+                                break;
                             }
                         }
                     ),
@@ -62,7 +67,7 @@ export class TopoDetailComponent {
                         (event) => {
                             switch (event.action) {
                                 case "TEMPLATE.ADDED":
-                                this.trefs.push(event.model);
+                                this.topo.templates.push(event.model);
                                 break;
 
                                 case "TEMPLATE.UPDATED":
@@ -136,32 +141,36 @@ export class TopoDetailComponent {
             take: 100,
             filters: ["published"]
         })
-        .subscribe(data => {
-            this.publishedTemplates = data.results;
-        }, (err) => { });
+        .subscribe(
+            (data) => {
+                this.publishedTemplates = data.results;
+            },
+            (err) => { this.onError(err);  }
+        );
     }
 
     onAdded(template : TemplateSummary) {
-        //this.trefs.push(template);
         this.templateSvc.linkTemplate(template.id, this.topo.id)
-        .subscribe(result => {
-            this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
-            this.topo.templates.push(result);
-        }, (err) => { });
+        .subscribe(
+            (result: Template) => {
+                this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
+                this.topo.templates.push(result);
+            },
+            (err) => {  this.onError(err); }
+        );
     }
 
     merge(tref) {
-        for (let i=0; i<this.trefs.length; i++) {
-            if (this.trefs[i].id == tref.id) {
-                //this.trefs.splice(i, 1, tref);
-                this.trefs[i] = tref;
-                break;
+        this.topo.templates.forEach(
+            (v, i, a) => {
+                if (v.id == tref.id)
+                    a[i] = tref;
             }
-        }
+        )
     }
 
     //remove tref from list
-    remove(template: TopologyTemplate) {
+    remove(template: Template) {
         this.topo.templates.splice(
             this.topo.templates.indexOf(template),
             1
@@ -187,14 +196,14 @@ export class TopoDetailComponent {
         this.service.deleteTopology(this.topo.id)
         .subscribe(data => {
             this.router.navigate(['/topo']);
-        }, (err) => { });
+        }, (err) => {  this.onError(err); });
     }
 
     update() {
         this.service.putTopology(this.topo)
         .subscribe(data => {
 
-        }, (err) => { });
+        }, (err) => {  this.onError(err); });
     }
 
     show(section: string) : void {
@@ -203,32 +212,53 @@ export class TopoDetailComponent {
 
     publish() {
         this.service.publishTopology(this.topo.id)
-        .subscribe(data => {
-            this.topo.isPublished = true;
-        });
+        .subscribe(
+            (data) => {
+                this.topo.isPublished = true;
+            },
+            (err) => { this.onError(err); }
+        );
     }
 
     unpublish() {
         this.service.unpublishTopology(this.topo.id)
-        .subscribe(data => {
-            this.topo.isPublished = false;
-        });
+        .subscribe(
+            (data) => {
+                this.topo.isPublished = false;
+            },
+            (err) => { this.onError(err); }
+        );
     }
 
     share() {
         this.service.shareTopology(this.topo.id)
-        .subscribe(data => {
-            this.topo.shareCode = data.shareCode;
-        });
+        .subscribe(
+            (data) => {
+                this.topo.shareCode = data.shareCode;
+            },
+            (err) => { this.onError(err); }
+        );
     }
 
     unshare() {
         this.service.unshareTopology(this.topo.id)
-        .subscribe(data => {
-            this.topo.shareCode = data.shareCode;
-        });
+        .subscribe(
+            (data) => {
+                this.topo.shareCode = data.shareCode;
+            },
+            (err) => { this.onError(err); }
+        );
     }
 
+    onError(err) {
+        let text = JSON.parse(err.text());
+        this.errors.push(text);
+        console.debug(text);
+    }
+
+    redirect() {
+        this.router.navigate(['/topo']);
+    }
 }
 
 

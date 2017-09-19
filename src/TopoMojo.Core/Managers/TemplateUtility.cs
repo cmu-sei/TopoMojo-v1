@@ -58,7 +58,7 @@ namespace TopoMojo.Core
             set
             {
                 List<Eth> nics = _template.Eth.ToList();
-                if (nics.Count == 0)
+                if (nics.Count == 0 || !value.HasValue())
                     return;
                 Eth proto = nics.First();
 

@@ -9,14 +9,13 @@ import { Gamespace } from "../api/api-models";
     styleUrls: ['./gamespace.component.css']
 })
 export class GamespaceComponent {
-    instances: Gamespace[];
+    games: Gamespace[];
     loading: boolean = true;
 
     constructor(
         private service: GamespaceService,
         private router: Router
     ) {
-        this.service = service;
     }
 
     ngOnInit(): void {
@@ -27,7 +26,7 @@ export class GamespaceComponent {
         this.loading = true;
         this.service.getGamespaces()
         .subscribe(result => {
-            this.instances = result;
+            this.games = result;
         },
         (err) => {},
         () => {
@@ -35,7 +34,7 @@ export class GamespaceComponent {
         });
     }
 
-    destroyInstance(id: number) {
+    delete(id: number) {
         this.loading = true;
         this.service.deleteGamespace(id)
         .subscribe(result => {

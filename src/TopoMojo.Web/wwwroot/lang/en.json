@@ -3,21 +3,30 @@
     "ADMIN": "Admin",
     "AUTHORS": "By",
     "BROWSE": "Browse",
+    "BROWSE-LIST-EMPTY": "No topologies have been published yet.",
     "CANCEL": "Cancel",
     "CONFIRM": "Please confirm.",
+    "CONSOLE": "Console",
+    "CONTINUE": "Continue",
+    "CREATED": "Created",
     "DESCRIPTION": "Description",
     "DELETE": "Delete",
+    "DELETE-GAME": "End Game",
+    "DELETE-GAME-PROMPT": "Please confirm you are done.",
     "DELETE-TOPO": "Delete Topology",
     "DELETE-TOPO-PROMPT": "Please confirm you intend to delete this Topology along with its templates.",
     "DELETE-TEMPLATE": "Delete Template",
     "DELETE-TEMPLATE-PROMPT": "Confirm delete of this machine.",
-    "DELETE-INSTANCE": "Delete Gamespace",
+    "DEPLOY": "Deploy",
     "DOCUMENT": "Document",
     "EDIT": "Edit",
     "EXTERNAL-URL": "External Url",
+    "GAME-LIST-EMPTY": "You've got no mojo right now.",
     "GAMESPACE": "Gamespace",
+    "INITIALIZE": "Initialize",
     "INTERNAL-DOC": "Internal Doc",
     "ISO": "Iso",
+    "IS-TYPING": "is typing...",
     "LAUNCH": "Launch",
     "LINKED": "linked",
     "LOCAL": "local",
@@ -28,16 +37,37 @@
     "NAME": "Name",
     "NETWORKS": "Networks",
     "NEW": "New",
+    "OPEN-CONSOLE": "View",
+    "PLAYER-LIST-EMPTY": "You've got no friends right now.",
     "PUBLISH": "Publish",
+    "REFRESH": "Refresh",
     "REFRESH-LIST": "Refresh list",
+    "REVERT": "Revert",
     "SEARCH": "Search",
     "SELECT-FILE": "Browse for file",
     "SHARE": "Share",
+    "START": "Start",
+    "STOP": "Stop",
     "TOPOLOGY": "Topo",
     "TYPE": "Type",
     "UPLOAD": "Upload",
     "WORKSPACE": "Workspace",
+    "WORKSPACE-LIST-EMPTY": "You've got no topo right now.",
+    "AUTH" : {
+        "CONFIRMATION-NEEDS-USERNAME": "Please specify the username to confirm.",
+        "EXCEPTION.AUTHENTICATIONFAILED": "Authentication failed.",
+        "PASSWORDS-MUST-MATCH": "Passwords need to match.",
+        "CODE-SENT": "Code has been sent.",
+        "LOGIN": "Login",
+        "OTP": "Login with One-Time-Passcode",
+        "2FA": "Login with Two-Factor-Auth",
+        "RESET": "Reset Password",
+        "REGISTER": "Register New Account"
+    },
     "EVENT": {
+        "GAME": {
+            "OVER": "GAME OVER"
+        },
         "PRESENCE": {
             "ARRIVED": "{{actor.name}} arrived.",
             "DEPARTED": "{{actor.name}} departed.",
@@ -45,6 +75,7 @@
         },
         "TOPO": {
             "DELETED": "{{actor.name}} deleted topo.",
+            "OVER": "Topo was deleted.",
             "PUBLISHED": "{{actor.name}} published topo.",
             "SHARED": "{{actor.name}} shared topo.",
             "UPDATED": "{{actor.name}} updated topo."
@@ -53,18 +84,41 @@
             "ADDED": "{{actor.name}} added [{{model.name}}].",
             "REMOVED": "{{actor.name}} removed [{{model.name}}].",
             "UPDATED": "{{actor.name}} updated [{{model.name}}]."
+        },
+        "VM": {
+            "ANSWER": "{{actor.name}} answered [{{model.name}}].",
+            "CHANGE": "{{actor.name}} changed [{{model.name}}].",
+            "DELETE": "{{actor.name}} deleted [{{model.name}}].",
+            "DEPLOY": "{{actor.name}} deployed [{{model.name}}].",
+            "REVERT": "{{actor.name}} reverted [{{model.name}}].",
+            "SAVE": "{{actor.name}} saved [{{model.name}}].",
+            "START": "{{actor.name}} started [{{model.name}}].",
+            "STOP": "{{actor.name}} stopped [{{model.name}}]."
         }
     },
     "LANG": {
-        "ENGLISH": "English",
-        "PIGLATIN": "Piglatin"
+        "EN": "English",
+        "IG": "Piglatin"
     },
     "HELP": {
         "ABOUT": "About",
         "CLONE-TEMPLATE": "This machine is linked from a different topology; you cannot save disk changes. If you plan to alter the disk, ensure the machine is not deployed and then clone it",
+        "DESCRIPTION": "An application for building and running virtual topologies.",
         "EXTERNAL-URL": "If your Markdown document is hosted elsewhere, enter the url here. This value overrides the internal Markdown document.",
+        "HIDDEN-TEMPLATE": "Check this to prevent console access to this vm when deployed in a gamespace.",
+        "HOME-BROWSE" : "Looking to find and run an existing topology?  Browse the topology library to find what you need!",
+        "HOME-WORK": "Want to build your own topology?  Or continue work on something you've started?  Head to your workspace to access your stuff.",
+        "HOME-PLAY": "Already have one running?  Head here to pick up where you left off.",
         "NETWORKS": "Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)",
         "PUBLISH": "When published, this topology is discoverable in the browser.",
         "SHARE": "Distribute this link to people you want to help build this topology."
+    },
+    "EXCEPTION": {
+        "GAMESPACELIMIT": "The gamespace limit for individuals prevented your action.",
+        "GENERAL": "Sorry for this generic error message. We'll get to the bottom of it.",
+        "INVALIDOPERATION": "Can't do that. Probably because a resource doesn't exist",
+        "NODOCUMENT": "No instruction document available.",
+        "PARENTTEMPLATE": "This template is linked by other templates, so your action cannot be completed.",
+        "WORKSPACETEMPLATELIMIT": "The template limit for this workspace prevented your action."
     }
 }

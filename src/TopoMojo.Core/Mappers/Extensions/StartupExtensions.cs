@@ -13,6 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 cfg.AddProfile<ActorProfile>();
                 cfg.AddProfile<TopologyProfile>();
                 cfg.AddProfile<TemplateProfile>();
+                cfg.AddProfile<GamespaceProfile>();
             });
             return services;
 

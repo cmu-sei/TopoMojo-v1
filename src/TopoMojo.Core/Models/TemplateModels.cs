@@ -3,13 +3,16 @@ namespace TopoMojo.Core.Models
     public class Template
     {
         public int Id { get; set; }
+        public int ParentId { get; set; }
         public bool CanEdit { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
+        public bool IsHidden { get; set; }
+        public int TopologyId { get; set; }
         public string TopologyGlobalId { get; set; }
-        public TemplateSummary Parent { get; set; }
+        //  public TemplateSummary Parent { get; set; }
         // public string ParentId { get; set; }
         // public string ParentName { get; set; }
     }
@@ -21,6 +24,8 @@ namespace TopoMojo.Core.Models
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
+        public bool IsHidden { get; set; }
+        public int TopologyId { get; set; }
     }
 
     public class NewTemplateDetail

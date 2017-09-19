@@ -48,7 +48,6 @@ namespace TopoMojo.Controllers
             return false;
         }
 
-
         [HttpGet("api/images/{guid}")]
         [ProducesResponseType(typeof(ImageFile[]), 200)]
         [JsonExceptionFilter]
@@ -66,7 +65,7 @@ namespace TopoMojo.Controllers
                     );
                 }
             }
-            return null;
+            return Ok(new ImageFile[]{});
         }
 
         [HttpDelete("api/image/{guid}")]
@@ -89,7 +88,8 @@ namespace TopoMojo.Controllers
         [HttpPost("api/image/{guid}")]
         [ProducesResponseType(typeof(ImageFile), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Upload([FromRoute] string guid, [FromBody]IFormFile file)
+        [ApiExplorerSettings(IgnoreApi=true)]
+        public async Task<IActionResult> Upload([FromRoute] string guid, IFormFile file)
         {
             if (file.Length > 0)
             {
@@ -102,12 +102,11 @@ namespace TopoMojo.Controllers
                     {
                         await file.CopyToAsync(stream);
                     }
-                    return Json(new ImageFile { Filename = filename});
+                    return Ok(new ImageFile { Filename = filename});
                 }
             }
             throw new InvalidOperationException();
         }
-
 
         private string GetPath(params string[] segments)
         {

@@ -31,7 +31,7 @@ export class ChatService {
 }
 
 export class MessageModel {
-    actor: ActorModel;
+    actor: string;
     text: string;
     time: string;
 }

@@ -31,7 +31,8 @@ namespace TopoMojo.Data.EntityFrameworkCore
 
         public override async Task<Profile> Add(Profile profile)
         {
-            profile.Name = (profile.Name.HasValue()) ? profile.Name : "Anonymous";
+            string name = profile.Name.ExtractBefore("@");
+            profile.Name = (name.HasValue()) ? name : "Anonymous";
             profile.GlobalId = (profile.GlobalId.HasValue()) ? profile.GlobalId : Guid.NewGuid().ToString();
             profile.WhenCreated = DateTime.UtcNow;
             DbContext.Profiles.Add(profile);

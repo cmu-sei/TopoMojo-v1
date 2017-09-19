@@ -15,25 +15,31 @@
         <ul *ngIf="templates" class="list-unstyled">
             <li *ngFor="let t of templates" class="">
                 <div class="">
-                    <button class="btn btn-link" (click)="select(t)"
-                        [class.btn-primary]="t === template">
+                    <button class="btn btn-link" (click)="select(t.id)"
+                        [disabled]="t.parentId"
+                        [class.btn-primary]="t.id === selected">
                         <i class="fa fa-file-o"></i>
                         <span>{{ t.name }}</span>
                     </button>
-                    <span *ngIf="t.ownerId" class="text text-muted">{{ t.ownerName }}</span>
-                    <span *ngIf="t.ownerId == 0" class="text text-muted">Stock</span>
+                    <span class="text text-muted">{{ t.topologyName || "Stock" }} </span>
+                    <button *ngIf="t.parentId" class="btn btn-link" (click)="select(t.parentId)"
+                        [class.btn-primary]="t.parentId === selected">
+                        <i class="fa fa-file-o"></i>
+                        <span>{{ t.parentName }}</span>
+                    </button>
+                    <!-- <span *ngIf="!t.topologyId" class="text text-muted">Stock</span> -->
                     <!-- only display linkers link if any are found -->
-                   <span *ngIf="t.linkers && t.linkers.length > 0">
+                   <!-- <span *ngIf="t.linkers && t.linkers.length > 0">
                         <button (click)="selectLinker(t)" class="btn btn-link">
                             <span>Linked Topologies</span>
                         </button>
                    </span>
                     <span *ngIf="t.linkers.length == 0">
                         <span class="spaced text text-muted">No Linked Topologies</span>
-                    </span>
+                    </span> -->
                 </div>
                 <!-- loop through the found links and display associated topo names -->
-                <div *ngIf="t === templateLinker">
+                <!-- <div *ngIf="t === templateLinker">
                     <ul *ngIf="t.linkers">
                         <li *ngFor="let linker of t.linkers">
                             <div class="">
@@ -41,16 +47,17 @@
                              </div>
                         </li>
                     </ul>
-                </div>
-                <div *ngIf="t === template" spellcheck="false" class="well">
+                </div> -->
+                <div *ngIf="template && template.id == t.id" spellcheck="false" class="well">
                     <div class="checkbox">
                         <label>
-                            <input type="checkbox" [(ngModel)]="t.isPublished"> Published
+                            <input type="checkbox" [(ngModel)]="template.isPublished"> Published
                         </label>
                     </div>
-                    <input #focusTag [(ngModel)]="t.name" class="form-control" placeholder="Name"/>
-                    <textarea [(ngModel)]="t.description" class="form-control" placeholder="Description"></textarea>
-                    <textarea [(ngModel)]="t.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
+                    <input #focusTag [(ngModel)]="template.name" class="form-control" placeholder="Name"/>
+                    <textarea [(ngModel)]="template.description" class="form-control" placeholder="Description"></textarea>
+                    <input [(ngModel)]="template.networks" class="form-control" placeholder="Networks"/>
+                    <textarea [(ngModel)]="template.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
                     <div>
                         <button class="btn btn-primary" (click)="save()">
                             <i class="fa fa-save"></i> Save</button>

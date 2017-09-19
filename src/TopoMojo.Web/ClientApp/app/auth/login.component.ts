@@ -45,7 +45,7 @@ export class LoginComponent implements OnInit {
 
         if (this.mode > 2) {
             if (this.pass1 == null || this.pass2 == null || this.pass1 != this.pass2) {
-                this.errorMessage = "Passwords need to match.";
+                this.errorMessage = "AUTH.PASSWORDS-MUST-MATCH";
                 return;
             }
         }
@@ -53,20 +53,21 @@ export class LoginComponent implements OnInit {
         this.auth.localLogin(this.action, this.getCreds())
         .then(result => {
             this.router.navigate([this.url]);
-        }, (err) => {
-            console.error(err);
-            this.errorMessage = "Invalid credentials";
+        }).catch((err) => {
+            let e = JSON.parse(err.text());
+            console.error(e);
+            this.errorMessage = e.message;
         });
     }
 
     requestCode() {
         if (!this.username) {
-            this.infoMessage = "Please specify the username to confirm.";
+            this.infoMessage = "AUTH.CONFIRMATION-NEEDS-USERNAME";
             return;
         }
 
         this.auth.sendAuthCode(this.username).subscribe(result => {
-            this.infoMessage = "Code sent to " + this.username;
+            this.infoMessage = "AUTH.CODE-SENT";
             this.codeSent = true;
         })
     }

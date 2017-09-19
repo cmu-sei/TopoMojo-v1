@@ -41,11 +41,21 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(template, WithActor());
         }
 
-        public async Task<Models.TemplateDetail> Create(Models.NewTemplateDetail model)
+        public async Task<Models.TemplateDetail> LoadDetail(int id)
+        {
+            Data.Entities.Template template = await _repo.Load(id);
+            if (template == null)
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.TemplateDetail>(template, WithActor());
+        }
+
+        public async Task<Models.TemplateDetail> Create(Models.TemplateDetail model)
         {
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
+            model.Detail = new TemplateUtility("").ToString();
             Template t = Mapper.Map<Template>(model);
             await _repo.Add(t);
             return Mapper.Map<Models.TemplateDetail>(t);
@@ -71,7 +81,7 @@ namespace TopoMojo.Core
             if (entity == null)
                 throw new InvalidOperationException();
 
-            if (! await _repo.CanEdit(template.Id, Profile))
+            if (! await _repo.CanEdit(template.TopologyId, Profile))
                 throw new InvalidOperationException();
 
             Mapper.Map<Models.ChangedTemplate, Template>(template, entity);
@@ -85,14 +95,14 @@ namespace TopoMojo.Core
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
-            //assuming topo exists; EF will throw if nonexistent
+            if (await _repo.AtTemplateLimit(topoId))
+                throw new WorkspaceTemplateLimitException();
+
             Template linked = Mapper.Map<Template>(entity);
             linked.TopologyId = topoId;
-            // linked.Id = 0;
-            // linked.Detail = "";
-            // linked.IsPublished = false;
-            // linked.ParentId = entity.Id;
             await _repo.Add(linked);
+            //TODO: streamline object graph hydration
+            linked = await _repo.Load(linked.Id);
             return Mapper.Map<Models.Template>(linked, WithActor());
         }
 
@@ -126,7 +136,7 @@ namespace TopoMojo.Core
             if (! await _repo.CanEdit(template.TopologyId ?? 0, Profile))
                 throw new InvalidOperationException();
 
-            if (! await _repo.IsParentTemplate(id))
+            if (await _repo.IsParentTemplate(id))
                 throw new ParentTemplateException();
 
             //delete associated vm
@@ -147,25 +157,31 @@ namespace TopoMojo.Core
         {
             IQueryable<Template> q = BuildQuery(search);
             Models.SearchResult<Models.TemplateSummary> result = new Models.SearchResult<Models.TemplateSummary>();
+            if (search.Take == 0) search.Take = 50;
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results = Mapper.Map<Models.TemplateSummary[]>(await RunQuery(search, q));
             return result;
         }
 
-        public async Task<Models.SearchResult<Models.TemplateDetail>> ListDetail(Models.Search search)
-        {
-            IQueryable<Template> q = BuildQuery(search);
-            Models.SearchResult<Models.TemplateDetail> result = new Models.SearchResult<Models.TemplateDetail>();
-            result.Search = search;
-            result.Total = await q.CountAsync();
-            result.Results = Mapper.Map<Models.TemplateDetail[]>(await RunQuery(search, q));
-            return result;
-        }
+        // public async Task<Models.SearchResult<Models.TemplateDetail>> ListDetail(Models.Search search)
+        // {
+        //     IQueryable<Template> q = BuildQuery(search);
+        //     Models.SearchResult<Models.TemplateDetail> result = new Models.SearchResult<Models.TemplateDetail>();
+        //     if (search.Take == 0) search.Take = 50;
+        //     result.Search = search;
+        //     result.Total = await q.CountAsync();
+        //     result.Results = Mapper.Map<Models.TemplateDetail[]>(await RunQuery(search, q));
+        //     return result;
+        // }
 
         private IQueryable<Template> BuildQuery(Models.Search search)
         {
             IQueryable<Template> q = _repo.List();
+
+            if (search.Term.HasValue())
+                q = q.Where(t => t.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1
+                || (t.Description!=null && t.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1));
 
             if (search.HasFilter("parents"))
                 q = q.Where(t => t.ParentId == 0);
@@ -200,7 +216,7 @@ namespace TopoMojo.Core
 
             TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
             tu.Name = template.Name;
-            tu.Networks = template.Networks;
+            tu.Networks = template.Networks ?? "lan";
             tu.Iso = template.Iso;
             tu.IsolationTag = tag.HasValue() ? tag : template.Topology.GlobalId;
             tu.Id = template.Id.ToString();

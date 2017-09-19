@@ -1,4 +1,4 @@
 <div *ngIf="message" class="message">
-    <div *ngIf="message.actor.name" class="text-muted">{{message.actor.name}}</div>
+    <div class="text-muted">{{message.actor || 'Anonymous'}}</div>
     <div class="text" [innerHtml]="renderedHtml"></div>
 </div>

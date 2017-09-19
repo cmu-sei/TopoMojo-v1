@@ -1,6 +1,6 @@
 import { SignalR, ISignalRConnection, IConnectionOptions, BroadcastEventListener } from 'ng2-signalr';
 import { Injectable } from '@angular/core';
-import { AuthService } from '../auth/auth.service';
+import { AuthService, AuthTokenState } from '../auth/auth.service';
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
 
 @Injectable()
@@ -37,9 +37,16 @@ export class NotificationService {
 
     private initTokenRefresh() : void {
         this.auth.tokenStatus$.subscribe(
-            (state) => {
-                if (state == "valid") {
+            (state : AuthTokenState) => {
+                switch (state) {
+                    case AuthTokenState.valid:
                     this.restart();
+                    break;
+
+                    case AuthTokenState.invalid:
+                    case AuthTokenState.expired:
+                    this.stop();
+                    break;
                 }
             }
         );
@@ -49,6 +56,7 @@ export class NotificationService {
         if (this.isConnected) {
             this.stop().then(
                 () => {
+                    this.log("sigr: leave/stop complete. starting");
                     this.start(this.key);
                 }
             );
@@ -65,8 +73,10 @@ export class NotificationService {
                 }
             )
         );
+        this.log("starting sigr");
         return this.connection.start().then(
             (conn: ISignalRConnection) => {
+                this.log("started sigr");
                 this.subs.push(
                     this.connection.listenFor("presenceEvent").subscribe(
                         (event : any) => {
@@ -90,34 +100,55 @@ export class NotificationService {
                         (msg) => { this.templateSource.next(msg); }
                     )
                 );
-                this.connection.invoke("Listen", this.key);
+                this.log("sigr: invoking Listen");
+                this.connection.invoke("Listen", this.key).then(
+                    (result) => this.log("sigr: invoked Listen"));
                 return true;
             }
         );
     }
 
     stop() : Promise<boolean> {
-        if (this.isConnected) {
-            this.connection.invoke('Leave', this.key).then(
-                (result) => {
-                        this.connection.stop();
-                        for (let i = 0; i < this.subs.length; i++) {
-                            this.subs[i].unsubscribe();
-                        }
-                        this.subs = [];
-                        return true;
+        if (!this.isConnected)
+            return Promise.resolve<boolean>(true);
+
+        this.log("sigr: invoking Leave");
+        return this.connection.invoke('Leave', this.key).then(
+            (result) => {
+                    this.log("sigr: invoked Leave, stopping");
+                    this.connection.stop();
+                    for (let i = 0; i < this.subs.length; i++) {
+                        this.subs[i].unsubscribe();
+                    }
+                    this.subs = [];
+                    this.actors = [];
+                    return true;
+            }
+        ).catch(
+            (reason) => {
+                this.log("sigr: failed to Leave");
+                this.log(reason);
+                this.connection.stop();
+                for (let i = 0; i < this.subs.length; i++) {
+                    this.subs[i].unsubscribe();
                 }
-            ).catch(
-                (reason) => {
-                    console.log(reason);
-                }
-            );
-        }
-        return Promise.resolve<boolean>(true);
+                this.subs = [];
+                this.actors = [];
+                return true;
+            }
+        );
     }
 
     sendTemplateEvent(e: string, model: any) : void {
         this.connection.invoke("TemplateMessage", e, model);
+    }
+
+    typing() : void {
+        this.connection.invoke("Typing", this.key);
+    }
+
+    sendChat(text : string) : void {
+        this.connection.invoke("Post", this.key, text);
     }
 
     private setActor(event: any) : void {
@@ -135,4 +166,9 @@ export class NotificationService {
             this.actors.push(event.actor);
         }
     }
+
+    log(msg) : void {
+        //console.log(msg);
+    }
+
 }

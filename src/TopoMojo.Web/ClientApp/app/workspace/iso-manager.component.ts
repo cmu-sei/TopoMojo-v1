@@ -1,5 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
 import { TopologyService } from '../api/topology.service';
+import { CustomService } from '../api/custom.service';
 import { VmOptions } from "../api/api-models";
 
 @Component({
@@ -10,7 +12,8 @@ import { VmOptions } from "../api/api-models";
 export class IsoManagerComponent implements OnInit {
 
     constructor(
-        private service: TopologyService
+        private service: TopologyService,
+        private custom: CustomService
     ) { }
 
     @Input() id: string;
@@ -77,21 +80,37 @@ export class IsoManagerComponent implements OnInit {
         //this.queuedFiles = [];
     }
 
-    private uploadFile(qf) {
-        qf.progress = 0;
-        // this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
-        //     (result) => {
-        //         this.select(qf.name);
-        //     },
-        //     (err) => {
-        //         console.log(err.json());
-        //         this.errorMessage = err.json().message;
-        //     },
-        //     () => {
-        //         this.queuedFiles = [];
-        //         this.uploading = false;
-        //     }
-        // );
+    private uploadFile(qf) : void {
+        this.custom.uploadIso(this.id, qf.key, qf.file)
+            .finally(() => this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1))
+            .subscribe(
+                (event) => {
+                    if (event.type === HttpEventType.UploadProgress) {
+                        qf.progress = Math.round(100 * event.loaded / event.total);
+                    } else if (event instanceof HttpResponse) {
+                        this.select(qf.name);
+                    }
+                },
+                (err) => {
+
+                }
+            );
     }
+    // private uploadFile(qf) {
+    //     qf.progress = 0;
+    //     // this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
+    //     //     (result) => {
+    //     //         this.select(qf.name);
+    //     //     },
+    //     //     (err) => {
+    //     //         console.log(err.json());
+    //     //         this.errorMessage = err.json().message;
+    //     //     },
+    //     //     () => {
+    //     //         this.queuedFiles = [];
+    //     //         this.uploading = false;
+    //     //     }
+    //     // );
+    // }
 
 }

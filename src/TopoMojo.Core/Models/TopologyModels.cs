@@ -12,9 +12,21 @@ namespace TopoMojo.Core.Models
         public string ShareCode { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
+        public int TemplateLimit { get; set; }
         public bool IsPublished { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
+    }
+
+    public class TopologySummary
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public bool CanManage { get; set; }
+        public bool CanEdit { get; set; }
+        public bool IsPublished { get; set; }
+        public string Author { get; set; }
     }
 
     public class NewTopology
@@ -45,10 +57,10 @@ namespace TopoMojo.Core.Models
         public bool CanEdit { get; set; }
     }
 
-    public class TopologyTemplate
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string ParentName { get; set; }
-    }
+    // public class TopologyTemplate
+    // {
+    //     public int Id { get; set; }
+    //     public string Name { get; set; }
+    //     public string ParentName { get; set; }
+    // }
 }

@@ -57,11 +57,16 @@ namespace TopoMojo.Core
 
             if (game == null)
             {
+                Topology topology = await _topos.Load(topoId);
+                if (topology == null)
+                    throw new InvalidOperationException();
+
                 if (gamespaces.Length >= _options.ConcurrentInstanceMaximum)
-                    throw new MaximumInstancesDeployedException();
+                    throw new GamespaceLimitException();
 
                 game = new Gamespace
                 {
+                    Name = topology.Name,
                     TopologyId = topoId,
                     ShareCode = Guid.NewGuid().ToString("N")
                 };
@@ -74,7 +79,7 @@ namespace TopoMojo.Core
                 );
                 await _repo.Add(game);
             }
-            return await Deploy(game);
+            return await Deploy(await _repo.Load(game.Id));
         }
 
         private async Task<Models.GameState> Deploy(Gamespace gamespace)
@@ -174,7 +179,7 @@ namespace TopoMojo.Core
                     throw new InvalidOperationException();
 
                 state = new Models.GameState();
-                state.Document = topo.Document;
+                state.TopologyDocument = topo.Document;
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
@@ -184,6 +189,7 @@ namespace TopoMojo.Core
             {
                 state = Mapper.Map<Models.GameState>(gamespace);
                 state.Vms = gamespace.Topology.Templates
+                    .Where(t => !t.IsHidden)
                     .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
                 state.MergeVms(await _pod.Find(gamespace.GlobalId));

@@ -14,10 +14,8 @@ export class FileService {
         //private http: HttpClient
     ) { }
 
-	public progessFile(id: string) : Observable<number> {
-		return this.http.get("/api/file/progess/" + id);
+	public progressFile(id: string) : Observable<number> {
+		return this.http.get("/api/file/progress/" + id);
 	}
-	public uploadFile() : Observable<boolean> {
-		return this.http.post("/api/file/upload", {});
-	}
+
 }

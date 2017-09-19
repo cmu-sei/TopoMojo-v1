@@ -13,6 +13,13 @@ namespace TopoMojo.Data.EntityFrameworkCore
             TopoMojoDbContext db
         ) : base(db) { }
 
+        public override IQueryable<Topology> List()
+        {
+            return DbContext.Topologies
+                .Include(t => t.Workers)
+                .ThenInclude(w => w.Person);
+        }
+
         public override async Task<Topology> Load(int id)
         {
             return await DbContext.Topologies
@@ -70,5 +77,11 @@ namespace TopoMojo.Data.EntityFrameworkCore
 
         }
 
+        public override async Task Remove(Topology topology)
+        {
+            DbContext.Templates.RemoveRange(topology.Templates);
+            DbContext.Remove(topology);
+            await DbContext.SaveChangesAsync();
+        }
     }
 }

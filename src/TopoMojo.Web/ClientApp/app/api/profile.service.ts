@@ -17,4 +17,5 @@ export class ProfileService {
 	public getProfiles(search : Search) : Observable<ProfileSearchResult> {
 		return this.http.get("/api/profiles" + UrlHelper.queryStringify(search));
 	}
+
 }
