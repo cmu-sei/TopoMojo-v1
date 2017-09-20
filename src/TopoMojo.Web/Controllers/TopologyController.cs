@@ -34,6 +34,7 @@ namespace TopoMojo.Controllers
         private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
 
+        [AllowAnonymous]
         [HttpGet("api/topologies")]
         [ProducesResponseType(typeof(SearchResult<TopologySummary>), 200)]
         [JsonExceptionFilter]

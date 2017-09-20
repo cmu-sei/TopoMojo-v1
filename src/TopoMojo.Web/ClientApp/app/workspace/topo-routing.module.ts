@@ -16,7 +16,7 @@ const routes: Routes = [
     {
         path: 'browse',
         component: TopoComponent,
-        canActivate: [AuthGuardService],
+        //canActivate: [AuthGuardService],
         children: [
             {
                 path: '',
