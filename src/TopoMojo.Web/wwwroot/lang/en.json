@@ -1,4 +1,17 @@
 {
+    "contributing": [
+        "TopoMojo translation file : EN",
+        "",
+        "If you'd like to help provide translations for this app,",
+        "please update the 'values' in these \"KEY\": \"Value\", pairs.",
+        "",
+        "(To revise an existing translation, try grabbing it at this",
+        "same url with a different 2-character culture code)",
+        "Then send it to cyberleapfwd-support@cert.org",
+        "",
+        "We'll thank you 'til your better paid!",
+        ""
+    ],
     "ADD-MACHINES": "Add Machines",
     "ADMIN": "Admin",
     "AUTHORS": "By",
@@ -8,6 +21,7 @@
     "CONFIRM": "Please confirm.",
     "CONSOLE": "Console",
     "CONTINUE": "Continue",
+    "CONTRIBUTE": "Contribute",
     "CREATED": "Created",
     "DESCRIPTION": "Description",
     "DELETE": "Delete",

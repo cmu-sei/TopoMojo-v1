@@ -8,8 +8,8 @@
             </button>
             <ul [class.showdrop]="dropDownVisible" class="dropdown-menu">
                 <li *ngFor="let code of lang"><a (click)="setCulture(code)" translate>LANG.{{code|uppercase}}</a></li>
-                <!-- <li><a (click)="lang('en')" translate>LANG.EN</a></li>
-                <li><a (click)="lang('ig')" translate>LANG.IG</a></li> -->
+                <li role="separator" class="divider"></li>
+                <li><a (click)="contribute()" translate>CONTRIBUTE</a></li>
             </ul>
         </div>
     </div>

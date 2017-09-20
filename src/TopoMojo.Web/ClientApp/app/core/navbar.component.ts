@@ -53,6 +53,12 @@ export class NavbarComponent {
 
     }
 
+    contribute() {
+        let url = `/lang/${this.currentLanguage.split('.').pop().toLowerCase()}.json`;
+        window.open(url);
+        this.dropDownVisible = false;
+    }
+
     toggleDropdown() : void {
         this.dropDownVisible = !this.dropDownVisible;
     }
