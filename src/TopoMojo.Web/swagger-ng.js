@@ -4,8 +4,8 @@
  * Angular Api Module Generator
  * jmattson@sei.cmu.edu
  *
- * Usage: ng-apigen.js -u url -o outputPath [-h help]
- *    or: node ng-apigen.js -u url -o output [-h help]
+ * Usage: swagger-ng.js -u url -o outputPath [-h help]
+ *    or: node swagger-ng.js -u url -o output [-h help]
 */
 var http = require('http');
 var https = require('https');
@@ -18,11 +18,22 @@ var fspath = require('path');
 
         //make folder
         fs.mkdir(output, function(err) {});
+        fs.mkdir(output, function(err) {});
+        fs.mkdir(fspath.join(output, "gen"), function(err) {});
 
-        //write api-models.ts
+        //write gen/models.ts
         fs.writeFile(
-            fspath.join(output, "api-models.ts"),
+            fspath.join(output, "gen", "models.ts"),
             GenerateModels(api.definitions),
+            (err) => {
+                if (err) console.log(err.message);
+            }
+        );
+
+        //write gen/_service.ts
+        fs.writeFile(
+            fspath.join(output, "gen", "_service.ts"),
+            ngBaseService,
             (err) => {
                 if (err) console.log(err.message);
             }
@@ -31,10 +42,10 @@ var fspath = require('path');
         //generate metadata
         let meta = GenerateMetadata(api);
 
-        //write tag.service.ts files
+        //write gen/tag.service.ts files
         for (var svc in meta) {
             fs.writeFile(
-                fspath.join(output, svc.toLowerCase() + ".service.ts"),
+                fspath.join(output, "gen", svc.toLowerCase() + ".service.ts"),
                 GenerateServices(meta, svc, api.paths),
                 (err) => {
                     if (err) console.log(err.message);
@@ -42,22 +53,25 @@ var fspath = require('path');
             );
         }
 
-        //add a CustomService, if it doesn't already exist
-        meta.Custom = [];
-        let customSvcPath = fspath.join(output, "custom.service.ts");
-        fs.access(
-            customSvcPath,
-            (err) => {
-                if (err) {
-                    fs.writeFile(
-                        customSvcPath,
-                        GenerateServices(meta, "Custom", {}),
-                        (err) => { }
-                    );
+        //add extended service, if it doesn't already exist
+        for (let svc in meta) {
+            let svcPath = fspath.join(output, svc.toLowerCase() + ".service.ts");
+            fs.access(
+                svcPath,
+                (err) => {
+                    if (err) {
+                        fs.writeFile(
+                            svcPath,
+                            ngService
+                                .replace(/##SVC##/g, svc)
+                                .replace(/##svc##/g, svc.toLowerCase())
+                                .replace(/##REFS##/, meta[svc]),
+                            (err) => { }
+                        );
+                    }
                 }
-            }
-        );
-
+            );
+        }
 
         //write api.module.ts
         fs.writeFile(
@@ -68,14 +82,7 @@ var fspath = require('path');
             }
         );
 
-        //write url-helper.ts
-        fs.writeFile(
-            fspath.join(output, "url-helper.ts"),
-            ngUrlHelper,
-            (err) => {
-                if (err) console.log(err.message);
-            }
-        );
+
     }
 
     function GenerateModule(meta) {
@@ -149,7 +156,7 @@ var fspath = require('path');
     }
 
     function GenerateServices(meta, svc, paths) {
-        let text = ngServiceHeader
+        let text = ngGeneratedService
             .replace(/##SVC##/, svc)
             .replace(/##REFS##/, meta[svc]);
         for (let path in paths) {
@@ -159,14 +166,14 @@ var fspath = require('path');
                     let opn = OperationName(operation.operationId);
                     let opi = OperationInput(operation.parameters);
                     let opr = OperationResponse(operation.responses);
-                    let opb = OperationBody(path, method, operation.parameters);
-                    text += "\tpublic " + opn + "(" + opi + ") : " + opr + " {" + crlf; //" + operation.operationId);
+                    let opb = OperationBody(path, method, opr, operation.parameters);
+                    text += "\tpublic " + opn + "(" + opi + ") : Observable<" + opr + "> {" + crlf; //" + operation.operationId);
                     text += "\t\treturn " + opb + crlf;
                     text += "\t}" + crlf;
                 }
             }
         }
-        text += ngServiceFooter;
+        text += ngGeneratedServiceTail;
         return text;
     }
 
@@ -226,22 +233,23 @@ var fspath = require('path');
                     : "any";
             }
         }
-        return "Observable<" + rt + ">";
+        return rt;
     }
 
-    function OperationBody(path, op, params) {
+    function OperationBody(path, op, opr, params) {
         path = path.replace(/\{(\w+)\}/g, '" + $1 + "');
         let bodyparam = "";
         if (params) {
             for (let i in params) {
                 if (params[i].in == "body") bodyparam = ", " + params[i].name;
                 if (params[i].name == "Skip" && params[i].in == "query") {
-                    bodyparam = " + UrlHelper.queryStringify(search)";
+                    bodyparam = " + this.queryStringify(search)";
                     break;
                 }
             }
         }
-        return ("this.http." + op + '("' + path + '"' + bodyparam + ');').replace(/ \+ \"\"/, "");
+        return `this.http.${op}<${opr}>("${path}"${bodyparam});`.replace(/ \+ \"\"/, "");
+        //return ("this.http." + op + '("' + path + '"' + bodyparam + ');').replace(/ \+ \"\"/, "");
     }
 
     function FindEnumTypes(path, props) {
@@ -410,32 +418,13 @@ var fspath = require('path');
 
 /* TEMPLATES */
 const crlf = "\r\n";
-const ngServiceHeader = `
-import { Injectable } from "@angular/core";
-//import { HttpClient } from "@angular/common/http";
-import { AuthHttp } from "../auth/auth-http";
-import { Observable } from 'rxjs/Rx';
-import { UrlHelper } from "./url-helper";
-import { ##REFS## } from "./api-models";
-
-@Injectable()
-export class ##SVC##Service {
-
-    constructor(
-        private http: AuthHttp
-        //private http: HttpClient
-    ) { }
-
-`;
-
-const ngServiceFooter = `
-}
-`;
 
 const ngModule = `
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from "@angular/common/http";
 
 @NgModule({
+    imports: [ HttpClientModule ],
     providers: [
         ##SVCS##
     ]
@@ -443,10 +432,16 @@ import { NgModule } from '@angular/core';
 export class ApiModule { }
 `;
 
-const ngUrlHelper = `
-export class UrlHelper {
+const ngBaseService = `
+import { HttpClient } from "@angular/common/http";
 
-    public static queryStringify(obj : any) : string {
+export class GeneratedService {
+
+    constructor(
+        protected http : HttpClient
+    ){ }
+
+    protected queryStringify(obj : any) : string {
         var segments = [];
         for (let p in obj) {
             let prop = obj[p];
@@ -464,11 +459,46 @@ export class UrlHelper {
         return (qs) ? "?" + qs : "";
     }
 
-    private static encodeKVP(key : string, value: string) {
+    private encodeKVP(key : string, value: string) {
         return encodeURIComponent(key) + "=" + encodeURIComponent(value);
     }
 }
 
 `;
 
-//GenerateAngularClient(process.argv);
+const ngGeneratedService = `
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from 'rxjs/Rx';
+import { GeneratedService } from "./_service";
+import { ##REFS## } from "./models";
+
+@Injectable()
+export class Generated##SVC##Service extends GeneratedService {
+
+    constructor(
+       protected http: HttpClient
+    ) { super(http); }
+
+`;
+
+const ngGeneratedServiceTail = `
+}
+
+`;
+
+const ngService = `
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from 'rxjs/Rx';
+import { Generated##SVC##Service } from "./gen/##svc##.service";
+import { ##REFS## } from "./gen/models";
+
+@Injectable()
+export class ##SVC##Service extends Generated##SVC##Service {
+
+    constructor(
+       protected http: HttpClient
+    ) { super(http); }
+}
+`;

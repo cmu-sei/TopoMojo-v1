@@ -20,12 +20,4 @@ export class ErrorDivComponent implements OnInit {
         this.onErrorCleared.emit(e);
     }
 
-    isTranslatable(text : string) : boolean {
-        return !!(text.match(/^[A-Z\.]+$/));
-    }
-
-    filter(text : string) : string {
-        let key = text.match(/.*(EXCEPTION\.[A-Z]+)[^A-Z](.*)/);
-        return (!!key) ? key[1] : text;
-    }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProfileService} from '../api/profile.service';
-import { Search, ProfileSearchResult, Profile } from "../api/api-models";
+import { Search, ProfileSearchResult, Profile } from "../api/gen/models";
 
 @Component({
     //moduleId: module.id,

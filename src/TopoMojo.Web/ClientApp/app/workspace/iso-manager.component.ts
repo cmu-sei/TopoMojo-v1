@@ -1,8 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
 import { TopologyService } from '../api/topology.service';
-import { CustomService } from '../api/custom.service';
-import { VmOptions } from "../api/api-models";
+import { FileService } from '../api/file.service';
+import { VmOptions } from "../api/gen/models";
 
 @Component({
     selector: 'iso-manager',
@@ -13,7 +13,7 @@ export class IsoManagerComponent implements OnInit {
 
     constructor(
         private service: TopologyService,
-        private custom: CustomService
+        private fileSvc: FileService
     ) { }
 
     @Input() id: string;
@@ -81,7 +81,7 @@ export class IsoManagerComponent implements OnInit {
     }
 
     private uploadFile(qf) : void {
-        this.custom.uploadIso(this.id, qf.key, qf.file)
+        this.fileSvc.uploadIso(this.id, qf.key, qf.file)
             .finally(() => this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1))
             .subscribe(
                 (event) => {

@@ -69,7 +69,6 @@
     "WORKSPACE-LIST-EMPTY": "You've got no topo right now.",
     "AUTH" : {
         "CONFIRMATION-NEEDS-USERNAME": "Please specify the username to confirm.",
-        "EXCEPTION.AUTHENTICATIONFAILED": "Authentication failed.",
         "PASSWORDS-MUST-MATCH": "Passwords need to match.",
         "CODE-SENT": "Code has been sent.",
         "LOGIN": "Login",
@@ -128,6 +127,7 @@
         "SHARE": "Distribute this link to people you want to help build this topology."
     },
     "EXCEPTION": {
+        "AUTHENTICATIONFAILURE": "Authentication failed.",
         "GAMESPACELIMIT": "The gamespace limit for individuals prevented your action.",
         "GENERAL": "Sorry for this generic error message. We'll get to the bottom of it.",
         "INVALIDOPERATION": "Can't do that. Probably because a resource doesn't exist",

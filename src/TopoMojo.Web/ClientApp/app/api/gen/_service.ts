@@ -1,7 +1,13 @@
 
-export class UrlHelper {
+import { HttpClient } from "@angular/common/http";
 
-    public static queryStringify(obj : any) : string {
+export class GeneratedService {
+
+    constructor(
+        protected http : HttpClient
+    ){ }
+
+    protected queryStringify(obj : any) : string {
         var segments = [];
         for (let p in obj) {
             let prop = obj[p];
@@ -19,7 +25,7 @@ export class UrlHelper {
         return (qs) ? "?" + qs : "";
     }
 
-    private static encodeKVP(key : string, value: string) {
+    private encodeKVP(key : string, value: string) {
         return encodeURIComponent(key) + "=" + encodeURIComponent(value);
     }
 }

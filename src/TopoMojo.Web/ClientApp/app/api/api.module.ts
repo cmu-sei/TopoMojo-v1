@@ -7,11 +7,12 @@ import { ProfileService } from "./profile.service";
 import { TemplateService } from "./template.service";
 import { TopologyService } from "./topology.service";
 import { VmService } from "./vm.service";
-import { CustomService } from "./custom.service";
 
 import { NgModule } from '@angular/core';
+//import { HttpClientModule } from "@angular/common/http";
 
 @NgModule({
+	//imports: [ HttpClientModule ],
     providers: [
         AccountService,
 		ConsoleService,
@@ -21,8 +22,7 @@ import { NgModule } from '@angular/core';
 		ProfileService,
 		TemplateService,
 		TopologyService,
-		VmService,
-		CustomService
+		VmService
     ]
 })
 export class ApiModule { }

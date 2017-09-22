@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
-import { NewTopology } from "../api/api-models";
+import { NewTopology } from "../api/gen/models";
 
 @Component({
     selector: 'topo-creator',

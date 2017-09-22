@@ -4,7 +4,6 @@ import { AuthGuardService } from '../auth/auth-guard.service';
 import { ConnectionResolver } from '../shared/connection.resolver';
 import { GamespaceComponent } from './gamespace.component';
 import { PlayerComponent } from './player.component';
-import { ControlBarComponent } from './controlbar.component';
 import { ConsoleComponent } from './console.component';
 import { GamespaceEnlistComponent } from './enlist.component';
 
@@ -43,7 +42,6 @@ export class GamespaceRoutingModule {
     static components = [
         GamespaceComponent,
         PlayerComponent,
-        ControlBarComponent,
         ConsoleComponent,
         GamespaceEnlistComponent
      ]

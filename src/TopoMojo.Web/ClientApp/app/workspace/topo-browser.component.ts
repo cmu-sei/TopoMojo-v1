@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
-import { TopologySummary, Search, TopologySummarySearchResult } from "../api/api-models";
+import { TopologySummary, Search, TopologySummarySearchResult } from "../api/gen/models";
 
 @Component({
     selector: 'topo-browser',

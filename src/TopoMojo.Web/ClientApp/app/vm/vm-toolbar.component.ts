@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, Output, OnChanges, OnDestroy, SimpleChanges, EventEmitter } from '@angular/core';
 import { VmService } from "../api/vm.service";
-import { CustomService } from "../api/custom.service";
-import { Template, VirtualVm, VirtualVmAnswer, VirtualVmStateEnum } from "../api/api-models";
+import { Template, VirtualVm, VirtualVmAnswer, VirtualVmStateEnum } from "../api/gen/models";
 import { NotificationService } from '../shared/notification.service';
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
 
@@ -23,7 +22,6 @@ export class VmToolbarComponent implements OnChanges {
     subs: Subscription[] = [];
     constructor(
         private service: VmService,
-        private custom: CustomService,
         private notifier: NotificationService
     ) { }
 
@@ -178,7 +176,7 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     display() {
-        this.custom.openConsole(this.vm.id, this.vm.name);
+        this.service.openConsole(this.vm.id, this.vm.name);
     }
 
     errorCleared() {

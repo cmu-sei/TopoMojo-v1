@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, RequestOptions, Response } from '@angular/http';
 import { UserManager, UserManagerSettings, WebStorageStateStore, Log, MetadataService, User } from 'oidc-client';
 import { Observable, Subject } from 'rxjs/Rx';
 import { LocalUserService } from './localuser.service';
 import { SettingsService } from './settings.service';
+import { AccountService } from '../api/account.service';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,7 @@ export class AuthService {
     lastCall : number;
 
     constructor(
-        private http: Http,
+        private accountSvc : AccountService,
         private settings: SettingsService
     ) {
         // Log.level = Log.DEBUG;
@@ -97,13 +97,14 @@ export class AuthService {
         }, 10000);
     }
 
-    localLogin(type, creds) {
-        return this.http.post('/api/account/' + type, creds)
-        .toPromise().then(response => {
-            let user = response.json();
-            this.localmgr.addUser(user);
-            return response;
-        });
+    localLogin(method: string, creds: any) {
+        return this.accountSvc.submit(method, creds)
+        .map(
+            (token) => {
+                this.localmgr.addUser(token);
+                return token;
+            }
+        ).toPromise();
     }
 
     externalLogin(url) {
@@ -135,17 +136,15 @@ export class AuthService {
     }
 
     sendAuthCode(u : string) {
-        return this.http.post('/api/account/confirm', { username: u });
+        return this.accountSvc.confirmAccount({ username: u });
     }
 
     refreshToken() {
         if (this.localmgr.getToken()) {
-            let opts : RequestOptions = new RequestOptions();
-            opts.headers = new Headers();
-            opts.headers.set("Authorization", "Bearer " + this.currentUser.access_token);
-            this.http.get('/api/account/refresh', opts).subscribe(result => {
-                this.localmgr.addUser(result.json());
-            });
+            this.accountSvc.refreshAccount()
+                .subscribe(token => {
+                    this.localmgr.addUser(token);
+                });
         } else {
             this.mgr.signinSilent().then(() => {
 

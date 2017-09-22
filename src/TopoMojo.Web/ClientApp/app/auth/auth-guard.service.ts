@@ -18,8 +18,14 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
         return this.authService.isAuthenticated().then(a => {
             //console.log("isAuth'd: " + a);
             if (a) return a;
-            this.authService.redirectUrl = state.url;
-            this.router.navigate(["/auth/login"]);
+            let hint = state.url.split('?').pop().match(/auth-hint=([^&]+)/);
+            if (hint) {
+                this.authService.externalLogin(state.url);
+            }
+            else {
+                this.authService.redirectUrl = state.url;
+                this.router.navigate(["/auth/login"]);
+            }
             return false;
         });
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, NgZone } from '@angular/core';
 import { TemplateService } from '../api/template.service';
-import { Search, TemplateSummary, TemplateDetail } from "../api/api-models";
+import { Search, TemplateSummary, TemplateDetail } from "../api/gen/models";
 
 @Component({
     //moduleId: module.id,

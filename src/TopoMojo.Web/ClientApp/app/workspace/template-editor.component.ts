@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { TemplateService } from '../api/template.service';
 import { NotificationService } from '../shared/notification.service';
-import { Topology, Template, ChangedTemplate } from "../api/api-models";
+import { Topology, Template, ChangedTemplate } from "../api/gen/models";
 
 @Component({
     //moduleId: module.id,

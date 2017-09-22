@@ -12,9 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { CoreModule } from './core/core.module';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { GamespaceModule } from './gamespace/gamespace.module';
-import { ConsoleModule } from './console/console.module';
 import { AdminModule } from './admin/admin.module';
-import { ProfileModule } from './profile/profile.module';
 import { SharedModule } from './shared/shared.module';
 import { AppComponent } from './app.component'
 import { SignalRModule } from 'ng2-signalr';
@@ -55,10 +53,8 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
         BrowserModule,
         HttpClientModule,
         SharedModule,
-        AuthModule,
         ApiModule,
-        //ProfileModule,
-        //ConsoleModule,
+        AuthModule,
         WorkspaceModule,
         GamespaceModule,
         AdminModule,

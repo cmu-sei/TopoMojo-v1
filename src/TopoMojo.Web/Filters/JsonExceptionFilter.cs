@@ -25,6 +25,7 @@ namespace TopoMojo.Web
             public void OnException(ExceptionContext context)
             {
                 JsonResult result = null;
+
                 if (_hostingEnvironment.IsDevelopment() || _options.ShowExceptionDetail)
                 {
                     result = new JsonResult(context.Exception);

@@ -12,3 +12,14 @@ export class UntaggedStringPipe implements PipeTransform {
             return value;
   }
 }
+
+/*
+ * Return string truncated at '#'
+*/
+@Pipe({name: 'aserror'})
+export class FormatErrorPipe implements PipeTransform {
+    transform(value: string): string {
+        let key = value.match(/.*(EXCEPTION\.[A-Z]+)[^A-Z](.*)/);
+        return (!!key) ? key[1] : value;
+  }
+}

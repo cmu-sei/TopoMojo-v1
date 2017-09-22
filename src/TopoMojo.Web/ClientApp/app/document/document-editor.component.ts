@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Converter } from 'showdown/dist/showdown';
 import { DocumentService } from '../api/document.service';
-import { CustomService } from '../api/custom.service';
+//import { CustomService } from '../api/custom.service';
 import { SHOWDOWN_OPTS } from '../shared/constants/ui-params';
 
 @Component({
@@ -43,14 +43,14 @@ then paste in the MD text.
 `
 
     constructor(
-        private service: DocumentService,
-        private custom: CustomService
+        private service: DocumentService
+        //private custom: CustomService
     ) {
         this.converter = new Converter(SHOWDOWN_OPTS);
     }
 
     ngOnInit() {
-        this.custom.getDocument(this.id)
+        this.service.getDocument(this.id)
         .finally(() => this.render())
         .subscribe(
             (text : string) => {

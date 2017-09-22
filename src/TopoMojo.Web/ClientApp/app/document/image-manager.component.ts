@@ -2,11 +2,9 @@ import { Component, OnInit, Input, Inject } from '@angular/core';
 import { HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
 import { DOCUMENT } from '@angular/platform-browser';
 import { DocumentService } from '../api/document.service';
-import { CustomService } from '../api/custom.service';
-import { ImageFile } from "../api/api-models";
+import { ImageFile } from "../api/gen/models";
 
 @Component({
-    //moduleId: module.id,
     selector: 'image-manager',
     templateUrl: 'image-manager.component.html',
     styleUrls: ['image-manager.component.css']
@@ -20,7 +18,6 @@ export class ImageManagerComponent implements OnInit {
 
     constructor(
         private service : DocumentService,
-        private custom : CustomService,
         @Inject(DOCUMENT) private dom : Document
     ) { }
 
@@ -61,7 +58,7 @@ export class ImageManagerComponent implements OnInit {
     }
 
     uploadFile(qf) {
-        this.custom.uploadImage(this.id, qf.file)
+        this.service.uploadImage(this.id, qf.file)
         .finally(() => this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1))
         .subscribe(
             (event) => {
@@ -119,7 +116,7 @@ export class ImageManagerComponent implements OnInit {
     }
 
     delete(img : ImageFile) {
-        this.custom.deleteImage(this.id, img.filename)
+        this.service.deleteImage(this.id, img.filename)
         .subscribe((result : ImageFile) => {
             this.removeImage(result.filename);
         });

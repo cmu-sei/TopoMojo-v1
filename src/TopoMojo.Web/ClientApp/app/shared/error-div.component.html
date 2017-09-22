@@ -3,7 +3,5 @@
     <button (click)="errorCleared(e)" type="button" class="close" data-dismiss="alert">
         <span>&times;</span>
     </button>
-    <span translate>{{filter(e.message)}}</span>
-    <!-- <span *ngIf="isTranslatable(e.message)" translate>{{filter(e.message)}}</span>
-    <span *ngIf="!isTranslatable(e.message)">{{e.message}}</span> -->
+    <span translate>{{ e.message | aserror }}</span>
 </div>

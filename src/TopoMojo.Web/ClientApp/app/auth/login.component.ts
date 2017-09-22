@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router , ActivatedRoute} from '@angular/router';
 import { AuthService } from './auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     //moduleId: module.id,
@@ -53,10 +54,9 @@ export class LoginComponent implements OnInit {
         this.auth.localLogin(this.action, this.getCreds())
         .then(result => {
             this.router.navigate([this.url]);
-        }).catch((err) => {
-            let e = JSON.parse(err.text());
-            console.error(e);
-            this.errorMessage = e.message;
+        }).catch((response: HttpErrorResponse) => {
+            console.error(response.error.message);
+            this.errorMessage = response.error.message;
         });
     }
 

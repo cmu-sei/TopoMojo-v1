@@ -10,10 +10,12 @@ import { TooltipContent } from './tooltip.component';
 import { Collapser } from './collapser.component';
 import { InlineHelpComponent } from './inline-help.component';
 import { UntaggedStringPipe } from './pipes';
+import { FormatErrorPipe } from './pipes';
 import { ConfirmDeleteComponent } from './confirm-delete.component';
 import { ConnectionResolver } from './connection.resolver';
 import { NotificationService } from './notification.service';
 import { NotificationPanelComponent }  from './notification-panel.component';
+import { ExternalNavService } from './external-nav.service';
 import { ErrorDivComponent} from './error-div.component';
 export * from "./tooltip.directive";
 export * from "./tooltip.component";
@@ -34,6 +36,7 @@ export * from "./tooltip.component";
         TooltipContent,
         Collapser,
         UntaggedStringPipe,
+        FormatErrorPipe,
         ConfirmDeleteComponent,
         NotificationPanelComponent,
         ErrorDivComponent
@@ -50,13 +53,15 @@ export * from "./tooltip.component";
         TooltipContent,
         Collapser,
         UntaggedStringPipe,
+        FormatErrorPipe,
         ConfirmDeleteComponent,
         NotificationPanelComponent,
         ErrorDivComponent
     ],
     providers: [
         ConnectionResolver,
-        NotificationService
+        NotificationService,
+        ExternalNavService
     ],
     entryComponents: [
         TooltipContent

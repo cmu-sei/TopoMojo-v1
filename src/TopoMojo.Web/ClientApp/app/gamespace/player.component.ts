@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { GamespaceService } from '../api/gamespace.service';
-import { CustomService } from '../api/custom.service';
-import { GameState, VmState } from "../api/api-models";
+import { GameState, VmState } from "../api/gen/models";
 import { NotificationService } from '../shared/notification.service';
 import { Converter } from 'showdown/dist/showdown';
 import { SHOWDOWN_OPTS } from '../shared/constants/ui-params';
@@ -38,8 +37,7 @@ export class PlayerComponent implements OnInit {
         private service : GamespaceService,
         private vmService : VmService,
         private notifier: NotificationService,
-        private settings: SettingsService,
-        private custom: CustomService
+        private settings: SettingsService
     ) {
         this.converter = new Converter(SHOWDOWN_OPTS);
         this.settings.changeLayout({ embedded : true });
@@ -51,7 +49,7 @@ export class PlayerComponent implements OnInit {
         this.id = +this.route.snapshot.paramMap.get('id');
         this.service.getGamespace(this.id).subscribe(
             (result : GameState) => {
-                this.custom.getText(result.topologyDocument)
+                this.service.getText(result.topologyDocument)
                     .finally(() => this.render())
                     .subscribe(
                         (text) => {
@@ -165,7 +163,7 @@ export class PlayerComponent implements OnInit {
     //wmks : any;
     launchConsole(vm) {
         //console.log('launch console ' + vm.id);
-        this.custom.openConsole(vm.id, vm.name);
+        this.service.openConsole(vm.id, vm.name);
         //this.vmService.launchPage("/vm/display/" + id);
         // this.vmService.ticket(id).subscribe(
         //     (result) => {

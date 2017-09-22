@@ -1,18 +1,14 @@
 import { NgModule, Optional, SkipSelf  } from '@angular/core';
-import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TranslateModule} from '@ngx-translate/core';
+import { SharedModule } from '../shared/shared.module';
 import { AuthService } from './auth.service';
-import { AuthHttp } from './auth-http';
+import { AuthComponent } from './auth.component';
 import { AuthGuardService } from './auth-guard.service';
 import { AuthPendingComponent } from './auth-pending.component';
 import { AuthFailedComponent } from './auth-failed.component';
 import { AuthTestComponent } from './auth-test.component';
 import { LoginComponent } from './login.component';
 import { SettingsService } from './settings.service';
-import { AuthComponent } from './auth.component';
 
 @NgModule({
     declarations: [
@@ -25,17 +21,10 @@ import { AuthComponent } from './auth.component';
     providers: [
         AuthService,
         AuthGuardService,
-        AuthHttp,
         SettingsService
     ],
-    exports: [
-        HttpModule
-    ],
     imports: [
-        HttpModule,
-        CommonModule,
-        FormsModule,
-        TranslateModule,
+        SharedModule,
         RouterModule.forChild([
             {
                 path: 'auth',

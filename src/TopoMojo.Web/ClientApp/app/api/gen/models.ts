@@ -78,6 +78,7 @@ export interface Template {
 	networks?: string;
 	iso?: string;
 	isHidden?: boolean;
+	topologyId?: number;
 	topologyGlobalId?: string;
 }
 
@@ -96,6 +97,7 @@ export interface ChangedTemplate {
 	networks?: string;
 	iso?: string;
 	isHidden?: boolean;
+	topologyId?: number;
 }
 
 export interface TopologySummarySearchResult {

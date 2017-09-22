@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { TopologyService } from '../api/topology.service';
-import { Worker } from "../api/api-models";
+import { Worker } from "../api/gen/models";
 
 @Component({
     selector: 'topo-members',

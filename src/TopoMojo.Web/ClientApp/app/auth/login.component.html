@@ -80,7 +80,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <p *ngIf="errorMessage" class="text text-danger" translate>{{ errorMessage }}</p>
+                        <p *ngIf="errorMessage" class="text text-danger" translate>{{ errorMessage | aserror }}</p>
                         <p *ngIf="infoMessage" class="text text-info" translate>{{ infoMessage }}</p>
                         <button type="submit" class="btn btn-primary" [disabled]="!loginForm.form.valid">{{ title }}</button>
                     </div>

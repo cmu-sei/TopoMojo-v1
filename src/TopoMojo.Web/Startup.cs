@@ -191,7 +191,13 @@ namespace TopoMojo
                         }
                     }
                 }
+
                 await next.Invoke();
+
+                if (context.Request.Path.StartsWithSegments("/signalr"))
+                {
+                    Console.WriteLine("{0} {1}", context.Response.StatusCode, context.Request.Path);
+                }
             });
 
             app.UseSwagger(c =>

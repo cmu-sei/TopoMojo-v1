@@ -90,11 +90,15 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
          public async Task<IActionResult> Reset([FromBody] Credentials model)
         {
-            _logger.LogDebug($"Attempting reset for {model.Username}");
+            if (model == null)
+                throw new AuthenticationFailedException();
+
+            _logger.LogDebug($"Attempting reset for {model?.Username}");
 
             AccountSummary account = model.Password.HasValue()
                 ? await _accountManager.AuthenticateWithResetAsync(model, "")
                 : await _accountManager.AuthenticateWithCodeAsync(model, "");
+
 
             if (account == null)
                 throw new AuthenticationFailedException();

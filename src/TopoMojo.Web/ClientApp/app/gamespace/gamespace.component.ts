@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GamespaceService } from '../api/gamespace.service';
-import { Gamespace } from "../api/api-models";
+import { Gamespace } from "../api/gen/models";
 
 @Component({
     selector: 'gamespace',

@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopologyService } from '../api/topology.service';
 import { TemplateService } from '../api/template.service';
-import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from "../api/api-models";
+import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from "../api/gen/models";
 import { NotificationService } from '../shared/notification.service';
 import 'rxjs/add/operator/switchMap';
 import { DOCUMENT } from '@angular/platform-browser';
@@ -48,7 +48,6 @@ export class TopoDetailComponent {
             (result: Topology) => {
                 this.topo = result;
                 //console.log(this.topo);
-
                 this.subs.push(
                     this.notifier.topoEvents.subscribe(
                         (event) => {
@@ -251,9 +250,9 @@ export class TopoDetailComponent {
     }
 
     onError(err) {
-        let text = JSON.parse(err.text());
-        this.errors.push(text);
-        console.debug(text);
+        //let text = JSON.parse(err.text());
+        this.errors.push(err.error);
+        console.debug(err.error.message);
     }
 
     redirect() {

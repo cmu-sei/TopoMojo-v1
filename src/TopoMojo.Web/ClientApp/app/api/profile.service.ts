@@ -1,21 +1,14 @@
 
 import { Injectable } from "@angular/core";
-//import { HttpClient } from "@angular/common/http";
-import { AuthHttp } from "../auth/auth-http";
+import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
-import { UrlHelper } from "./url-helper";
-import { ProfileSearchResult,Search,Profile } from "./api-models";
+import { GeneratedProfileService } from "./gen/profile.service";
+import { ProfileSearchResult,Search,Profile } from "./gen/models";
 
 @Injectable()
-export class ProfileService {
+export class ProfileService extends GeneratedProfileService {
 
     constructor(
-        private http: AuthHttp
-        //private http: HttpClient
-    ) { }
-
-	public getProfiles(search : Search) : Observable<ProfileSearchResult> {
-		return this.http.get("/api/profiles" + UrlHelper.queryStringify(search));
-	}
-
+       protected http: HttpClient
+    ) { super(http); }
 }
