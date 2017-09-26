@@ -1,8 +1,8 @@
 import { OnInit, Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService, AuthTokenState } from './auth/auth.service';
+import { AuthService, AuthTokenState } from './svc/auth.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SettingsService, Layout } from './auth/settings.service';
+import { SettingsService, Layout } from './svc/settings.service';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -55,15 +55,6 @@ export class AppComponent {
         this.layout = this.settings.layout;
         //this.service.init();
     }
-
-    // login() {
-    //     this.service.externalLogin(null);
-    // }
-
-    // logout() {
-    //     this.service.logout();
-    //     this.router.navigate(['/home']);
-    // }
 
     continue() {
         this.service.refreshToken();

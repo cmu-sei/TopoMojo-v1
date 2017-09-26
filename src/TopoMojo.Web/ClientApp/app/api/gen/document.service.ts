@@ -19,7 +19,7 @@ export class GeneratedDocumentService extends GeneratedService {
 		return this.http.get<Array<ImageFile>>("/api/images/" + guid);
 	}
 	public deleteImage(guid: string, filename: string) : Observable<ImageFile> {
-		return this.http.delete<ImageFile>("/api/image/" + guid);
+		return this.http.delete<ImageFile>("/api/image/" + guid + this.paramify({filename: filename}));
 	}
 
 }

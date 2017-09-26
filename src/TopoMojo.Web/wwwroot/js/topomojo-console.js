@@ -7,7 +7,7 @@
  *
  */
 
-var _debug = true;
+var _debug = false;
 
 function debug(o) {
     if (_debug) {
@@ -132,9 +132,14 @@ function WebConsole(
 
     function initUi() {
 
+        $('#console-tools-btn').click(function() {
+            $(this).nextAll().toggleClass('hidden');
+        });
+
         $('#console-tools-div button[name="cad"]').click(function() {
             if (wmks) {
                 wmks.sendCAD();
+                $('#console-tools-btn').click();
             }
         });
 
@@ -166,14 +171,8 @@ function WebConsole(
         $uploadBtn = $('#iso-upload-btn').click(uploadIso);
         $progressBtn = $('#iso-progress-btn').click(uploadProgress);
 
-        $('#console-tools-btn').click(function() {
-            $(this).nextAll().toggleClass('hidden');
-        });
 
         service.addHandler(handleExpiration);
-        // service.registerHandler(function() {
-        //     console.log("Auth Token Expired!");
-        // });
     }
 
     function handleExpiration() {
@@ -275,6 +274,7 @@ function WebConsole(
         service.change({ key: $(this).data('key'), value: $(this).val()})
             .done(function(result) {
                 debug(result);
+                $('#console-tools-btn').click();
             })
     }
 
@@ -300,7 +300,7 @@ function WebConsole(
         .fail(function(jqXhr, textStatus, err)
         {
             //$this.next().next().text(jqXhr.responseJSON.message).addClass('label-danger');
-            debug(jqXhr.responseJSON);
+            console.log(jqXhr.responseJSON);
         })
         .done(function(result) {
             //debug(result.filename);
@@ -337,6 +337,7 @@ function WebConsole(
                 $progressBtn.text('').addClass('hidden');
                 $uploadBtn.prop('disabled', false);
                 $('#iso-upload-div').addClass('hidden');
+                $('#console-tools-btn').click();
             }
         })
         .always(function() {
@@ -509,7 +510,6 @@ function WebConsole(
  * UserManager
  */
 function UserManager() {
-    console.log(window.navigator.userAgent);
     const storageKey = 'sketch.auth.jwt.' + window.navigator.userAgent.split(' ').pop(); //.substring(window.navigator.userAgent.lastIndexOf(' '));
     const oidcKey = 'oidc.user:https://id.sketchdemo.us:topomojo';
     var token = null;
@@ -554,12 +554,11 @@ function VmService(
     }
 
     this.addHandler = function(cb) {
-        //console.log("adding callback");
         userManager.addHandler(cb);
     }
 
     this.ticket = function() {
-        console.log("requesting mks ticket");
+        debug("requesting mks ticket");
         return get("/api/vm/" + id + "/ticket");
     }
 
@@ -596,7 +595,6 @@ function VmService(
     }
 
     function get(url) {
-        //console.log("sending ajax get");
         return $.ajax({
             url: url,
             type: 'GET',

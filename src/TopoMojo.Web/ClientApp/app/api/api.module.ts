@@ -9,10 +9,10 @@ import { TopologyService } from "./topology.service";
 import { VmService } from "./vm.service";
 
 import { NgModule } from '@angular/core';
-//import { HttpClientModule } from "@angular/common/http";
+import { HttpClientModule } from "@angular/common/http";
 
 @NgModule({
-	//imports: [ HttpClientModule ],
+    imports: [ HttpClientModule ],
     providers: [
         AccountService,
 		ConsoleService,

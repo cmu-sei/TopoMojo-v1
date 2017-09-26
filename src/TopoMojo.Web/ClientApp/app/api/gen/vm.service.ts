@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { VirtualVm,VirtualVmStateEnum,VirtualVmQuestion,VirtualVmTask,KeyValuePair,VirtualVmAnswer } from "./models";
+import { KeyValuePair,VirtualVm,VirtualVmAnswer,VirtualVmQuestion,VirtualVmStateEnum,VirtualVmTask } from "./models";
 
 @Injectable()
 export class GeneratedVmService extends GeneratedService {

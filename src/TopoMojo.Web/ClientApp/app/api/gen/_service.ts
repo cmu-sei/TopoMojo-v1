@@ -7,7 +7,7 @@ export class GeneratedService {
         protected http : HttpClient
     ){ }
 
-    protected queryStringify(obj : any) : string {
+    protected paramify(obj : any) : string {
         var segments = [];
         for (let p in obj) {
             let prop = obj[p];

@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { ProfileSearchResult,Search,Profile } from "./models";
+import { Profile,ProfileSearchResult,Search } from "./models";
 
 @Injectable()
 export class GeneratedProfileService extends GeneratedService {
@@ -12,8 +12,8 @@ export class GeneratedProfileService extends GeneratedService {
        protected http: HttpClient
     ) { super(http); }
 
-	public getProfiles(search : Search) : Observable<ProfileSearchResult> {
-		return this.http.get<ProfileSearchResult>("/api/profiles" + this.queryStringify(search));
+	public getProfiles(search: Search) : Observable<ProfileSearchResult> {
+		return this.http.get<ProfileSearchResult>("/api/profiles" + this.paramify(search));
 	}
 
 }

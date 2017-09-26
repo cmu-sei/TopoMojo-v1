@@ -141,7 +141,7 @@ namespace TopoMojo.Core
 
             //delete associated vm
             TopoMojo.Models.Virtual.Template deployable = await GetDeployableTemplate(id);
-            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(deployable.Name))
+            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(deployable.Name+"#"+deployable.IsolationTag))
                 await _pod.Delete(vm.Id);
 
             // TODO: Enforce only topo disks here?  (vSphere Pod only deletes topo-isolated disks, not stock disks.)

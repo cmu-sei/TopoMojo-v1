@@ -1,11 +1,30 @@
 #!/usr/local/bin/node
-
 /*
- * Angular Api Module Generator
+ * Api Client Generator: Swagger-v2 to Angular Module
  * jmattson@sei.cmu.edu
  *
- * Usage: swagger-ng.js -u url -o outputPath [-h help]
- *    or: node swagger-ng.js -u url -o output [-h help]
+ * Usage: swagger-ng.js -u url -o output -m map -n ns -h help
+ *    or: node swagger-ng.js -u url -o output -m map -n ns -h help
+ * Options:
+ * -u, --url path to the swagger-v2 json file
+ * -o, --out path of the destination folder
+ * -m, --map DerivedType:AggregateType
+ * -n, --ns  a parent namespace to exlude (default: 'Models')
+ * -h, --help displays usage information
+ *
+ * Swagger v2 has no contruct for an Object querystring parameter.
+ * As such, Swashbuckle decomposes a [FromQuery] object into separate
+ * parameters for each property.  To reconstitute the object at the
+ * client, provide a type mapping on the command line.
+ *
+ * I.e. -m TermSkipTakeSortFilter:Search
+ *
+ * By default, a type is prefixed with its parent namespace segement; unless
+ * that happens to match `Models` or the value presented with the --ns argument.
+ *
+ * I.e. `Models.Item` produces `Item`
+ * I.e. `Different.Item` produces `DifferentItem`
+ *
 */
 var http = require('http');
 var https = require('https');
@@ -18,13 +37,15 @@ var fspath = require('path');
 
         //make folder
         fs.mkdir(output, function(err) {});
-        fs.mkdir(output, function(err) {});
         fs.mkdir(fspath.join(output, "gen"), function(err) {});
+
+        //generate metadata
+        let meta = GenerateMetadata(api);
 
         //write gen/models.ts
         fs.writeFile(
             fspath.join(output, "gen", "models.ts"),
-            GenerateModels(api.definitions),
+            GenerateModels(meta, api.definitions),
             (err) => {
                 if (err) console.log(err.message);
             }
@@ -39,11 +60,8 @@ var fspath = require('path');
             }
         );
 
-        //generate metadata
-        let meta = GenerateMetadata(api);
-
         //write gen/tag.service.ts files
-        for (var svc in meta) {
+        for (var svc in meta.types) {
             fs.writeFile(
                 fspath.join(output, "gen", svc.toLowerCase() + ".service.ts"),
                 GenerateServices(meta, svc, api.paths),
@@ -54,7 +72,7 @@ var fspath = require('path');
         }
 
         //add extended service, if it doesn't already exist
-        for (let svc in meta) {
+        for (let svc in meta.types) {
             let svcPath = fspath.join(output, svc.toLowerCase() + ".service.ts");
             fs.access(
                 svcPath,
@@ -65,7 +83,7 @@ var fspath = require('path');
                             ngService
                                 .replace(/##SVC##/g, svc)
                                 .replace(/##svc##/g, svc.toLowerCase())
-                                .replace(/##REFS##/, meta[svc]),
+                                .replace(/##REFS##/, meta.types[svc]),
                             (err) => { }
                         );
                     }
@@ -81,14 +99,12 @@ var fspath = require('path');
                 if (err) console.log(err.message);
             }
         );
-
-
     }
 
     function GenerateModule(meta) {
         let imports = "";
         let svcs = [];
-        for (let svc in meta) {
+        for (let svc in meta.types) {
             let sn = svc + "Service";
             svcs.push(sn);
             imports += "import { " + sn + " } from \"./" + svc.toLowerCase() + ".service\";" + crlf;
@@ -97,48 +113,58 @@ var fspath = require('path');
     }
 
     function GenerateMetadata(api) {
-        let meta = { };
+        let meta = { types: {}, derivatives: {} };
 
         //gather refs
         for (let path in api.paths) {
             for (let method in api.paths[path]) {
                 let operation = api.paths[path][method];
                 let tag = operation["tags"][0];
-                if (!meta[tag]) meta[tag] = [];
-                meta[tag].push(...FindReferenceTypes(api, operation.parameters));
-                meta[tag].push(...FindEnumTypes(path, operation.parameters));
-                meta[tag].push(...FindReferenceTypes(api, operation.responses));
+                if (!meta.types[tag]) meta.types[tag] = [];
+                meta.types[tag].push(...FindReferenceTypes(api, operation.parameters));
+                meta.types[tag].push(...FindEnumTypes(path, operation.parameters));
+                meta.types[tag].push(...FindReferenceTypes(api, operation.responses));
+                let qpt = FindMappedParamType(api, operation.parameters);
+                if (qpt) {
+                    meta.types[tag].push(qpt);
+                    if (!meta.derivatives[qpt])
+                    meta.derivatives[qpt] = operation.parameters;
+                }
             }
         }
 
         //distinct and transform
-        for (let t in meta) {
-            meta[t] = meta[t]
-                .filter(
-                    (e, i, a) => {
-                        return a.indexOf(e) == i;
-                    }
-                )
+        for (let t in meta.types) {
+            meta.types[t] = meta.types[t]
                 .map(
                     (e) => {
                         return TransformRef(e);
                     }
-                );
+                )
+                .filter(
+                    (e, i, a) => {
+                        return a.indexOf(e) == i;
+                    }
+                ).sort();
         }
         return meta;
     }
 
-    function GenerateModels(models) {
+    function GenerateModels(meta, models) {
         let text = '';
         let enums = {};
+        let types = [];
+
         for (var name in models) {
             let model = models[name];
-            text += "export interface " + TransformRef(name) + " {" + crlf;
+            let typeName = TransformRef(name);
+            types.push(typeName);
+            text += "export interface " + typeName + " {" + crlf;
             for (var p in model.properties) {
                 let prop = model.properties[p];
                 let type = TransformTypeItem(prop);
                 if (prop.enum) {
-                    type = TransformRef(name) + p.substring(0,1).toUpperCase() + p.substring(1) + "Enum";
+                    type = TransformRef(name) + PascalCase(p) + "Enum";
                     if (!enums[type]) enums[type] = prop.enum;
                 }
                 text += "\t" + p + "?: " + type + ";" + crlf;
@@ -146,19 +172,40 @@ var fspath = require('path');
             text += "}" + crlf + crlf;
         }
 
-        for (var e in enums) {
+        for (let e in enums) {
             text += "export enum " + e + " {" + crlf;
-            for (v in enums[e])
+            for (let v in enums[e])
                 text += "\t" + enums[e][v] + " = <any>'" + enums[e][v] + "'" + (((+v)<enums[e].length-1) ? "," : "") + crlf;
             text += "}" + crlf + crlf;
         }
+
+        //console.log(meta);
+        for (let d in meta.derivatives) {
+            if (types.indexOf(d) < 0) {
+                let params = meta["derivatives"][d];
+                text += "export interface " + d + " {" + crlf;
+                for (var p in params) {
+                    if (params[p].in == "query") {
+                        let prop = params[p];
+                        let type = TransformTypeItem(prop);
+                        if (prop.enum) {
+                            type = TransformRef(name) + PascalCase(p) + "Enum";
+                            if (!enums[type]) enums[type] = prop.enum;
+                        }
+                        text += "\t" + CamelCase(params[p].name) + "?: " + type + ";" + crlf;
+                    }
+                }
+                text += "}" + crlf + crlf;
+            }
+        }
+
         return text;
     }
 
     function GenerateServices(meta, svc, paths) {
         let text = ngGeneratedService
             .replace(/##SVC##/, svc)
-            .replace(/##REFS##/, meta[svc]);
+            .replace(/##REFS##/, meta.types[svc]);
         for (let path in paths) {
             for (let method in paths[path]) {
                 let operation = paths[path][method];
@@ -195,33 +242,20 @@ var fspath = require('path');
             action = p[1];
         }
         //console.log( action + object);
-        return action.substring(0,1).toLowerCase() + action.substring(1) + object;
+        return CamelCase(action) + object;
     }
 
     function OperationInput(params) {
-        var opi = "";
+        var opi = [];
         if (params) {
-            for (let i in params) {
-                opi += params[i].name + ": " + TransformTypeItem(params[i]);
-                if (i < params.length-1) opi += ", ";
-                if (params[i].name == "Skip" && params[i].in == "query") {
-                    opi = "search : Search";
-                    break;
-                }
-            }
+            let r = params
+                .filter((p) => { return p.in != "query"})
+                .map((p) => { return p.name + ": " + TransformTypeItem(p)})
+                .concat(...ParamsToInput(params));
+            if (r.length > 0) opi.push(...r);
         }
-        return opi;
+        return opi.join(', ');
     }
-
-    // function OperationInputType(param) {
-    //     var opit = TransformType(param.type);
-    //     if (param.schema && param.schema.$ref) opit = TransformRef(param.schema.$ref);
-    //     if (opit == "array") {
-    //         if (param.items.$ref) opit = "Array<" + TransformRef(param.items.$ref) + ">";
-    //         if (param.items.type) opit = "Array<" + TransformType(param.items.type) + ">";
-    //     }
-    //     return opit;
-    // }
 
     function OperationResponse(response) {
         var rt = "";
@@ -240,16 +274,91 @@ var fspath = require('path');
         path = path.replace(/\{(\w+)\}/g, '" + $1 + "');
         let bodyparam = "";
         if (params) {
-            for (let i in params) {
-                if (params[i].in == "body") bodyparam = ", " + params[i].name;
-                if (params[i].name == "Skip" && params[i].in == "query") {
-                    bodyparam = " + this.queryStringify(search)";
-                    break;
-                }
-            }
+            let qs = ParamsToUrl(params);
+            if (qs)
+                bodyparam = ` + ${qs}`;
+
+            qs = ParamsToBody(params);
+            if (qs)
+                bodyparam = `, ${qs}`;
+
+            // for (let i in params) {
+            //     if (params[i].in == "body") bodyparam = ", " + params[i].name;
+            //     if (params[i].name == "Skip" && params[i].in == "query") {
+            //         bodyparam = " + this.queryStringify(search)";
+            //         break;
+            //     }
+            // }
         }
         return `this.http.${op}<${opr}>("${path}"${bodyparam});`.replace(/ \+ \"\"/, "");
         //return ("this.http." + op + '("' + path + '"' + bodyparam + ');').replace(/ \+ \"\"/, "");
+    }
+
+    function ParamsToBody(params) {
+        return params.filter(
+            (p) => {
+                return p.in == "body";
+            }
+        ).map((p) => { return p.name; }).join();
+
+    }
+    function ParamsToInput(params) {
+        let result = [];
+        let ps = params
+            .filter((p) => {return p.in == "query";});
+
+        if (ps.length > 0) {
+            let type = ps.map((p) => { return p.name }).join('');
+            let i = derivedTypeMap.indexOf(type);
+            if (i != -1) {
+                result.push(`${CamelCase(derivedTypeMap[i+1])}: ${derivedTypeMap[i+1]}`);
+            } else {
+                result.push(ps.map((p)=> { return CamelCase(p.name) + ": " + TransformTypeItem(p)}));
+            }
+        }
+        return result;
+    }
+    function GenerateParamModels(paths) {
+        let result = "";
+        for (let path in paths) {
+            for (let method in paths[path]) {
+                let op = paths[path][method];
+
+            }
+        }
+        // if (ps.length > 0) {
+        //     let type = ps.map((p) => { return p.name }).join('');
+        //     let i = qsmap.indexOf(type);
+        //     if (i != -1) {
+        //         result.push(`${CamelCase(qsmap[i+1])}: ${qsmap[i+1]}`);
+        //     } else {
+        //         result.push(ps.map((p)=> { return CamelCase(p.name) + ": " + TransformTypeItem(p)}));
+        //     }
+        // }
+        return result;
+    }
+
+    function ParamsToUrl(params) {
+        let result = "";
+        let ps = params
+            .filter((p) => { return p.in == "query";})
+            .map((p) => { return p.name });
+
+        if (ps.length > 0) {
+            let i = derivedTypeMap.indexOf(ps.join(''));
+            if (i != -1) {
+                result = `this.paramify(${CamelCase(derivedTypeMap[i+1])})`;
+            } else {
+                let items = ps.map(
+                    (n) => {
+                        let i = CamelCase(n);
+                        return i + ": " + i;
+                    }
+                ).join(', ');
+                result = `this.paramify({${items}})`;
+            }
+        }
+        return result;
     }
 
     function FindEnumTypes(path, props) {
@@ -263,6 +372,15 @@ var fspath = require('path');
         return refs;
     }
 
+    function FindMappedParamType(api, params) {
+        let ref = "";
+        for (let p in params)
+            if (params[p].in == "query")
+                ref += params[p].name;
+        let i = derivedTypeMap.indexOf(ref);
+        return (i!=-1) ? derivedTypeMap[i+1] : "";
+    }
+
     function FindReferenceTypes(api, args) {
         let refs = [];
         if (args) {
@@ -274,7 +392,7 @@ var fspath = require('path');
                     let t = api.definitions[c];
                     for (let cp in t.properties) {
                         let cpr = t.properties[cp];
-                        if (cpr.enum) refs.push(TrimNamespace(c) + cp.substring(0,1).toUpperCase() + cp.substring(1) + "Enum");
+                        if (cpr.enum) refs.push(TrimNamespace(c) + PascalCase(cp) + "Enum");
                         let ref = FindRefItem(cpr);
                         if (ref) refs.push(ref);
                     }
@@ -338,7 +456,7 @@ var fspath = require('path');
     }
 
     function TrimNamespace(ns) {
-        ns = ns.replace(/.+Models\./, "").split(".");
+        ns = ns.replace(nsRegex, "").split(".");
         let r = ns[0];
         if (ns.length > 1) {
             r = (ns[ns.length-1].match(ns[ns.length-2]))
@@ -346,6 +464,14 @@ var fspath = require('path');
                 : ns[ns.length-2] + ns[ns.length-1];
         }
         return r;
+    }
+
+    function CamelCase(s) {
+        return s.substring(0,1).toLowerCase() + s.substring(1);
+    }
+
+    function PascalCase(s) {
+        return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 
     function showUsage() {
@@ -358,8 +484,8 @@ var fspath = require('path');
     }
 
     function processArgs(argv) {
-        let keys = [ "-u", "-o", "-h"];
-        let names = [ "url", "output", "help"];
+        let keys = [ "-u", "-o", "-m", "-n", "-h"];
+        let names = [ "url", "output", "map", "ns", "help"];
         let args = {};
         argv.forEach(
             (v, i, a) => {
@@ -387,6 +513,8 @@ var fspath = require('path');
 
     /* MAIN */
     let args = processArgs(argv);
+    let derivedTypeMap = (args.map) ? args.map.split(':') : []; //[ "TermSkipTakeSortFilters", "Search"];
+    let nsRegex = new RegExp(`.+${args.ns || 'Models'}\\.`);
 
     if (!args.help && args.url) {
         if (args.url.startsWith("http")) {
@@ -441,7 +569,7 @@ export class GeneratedService {
         protected http : HttpClient
     ){ }
 
-    protected queryStringify(obj : any) : string {
+    protected paramify(obj : any) : string {
         var segments = [];
         for (let p in obj) {
             let prop = obj[p];

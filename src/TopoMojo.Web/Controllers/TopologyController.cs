@@ -115,7 +115,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Unshare([FromRoute] int id)
         {
-            TopologyState state = await _mgr.Share(id, false);
+            TopologyState state = await _mgr.Share(id, true);
             return Ok(state);
         }
 

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using TopoMojo.Core.Models;
 using TopoMojo.Models.Virtual;
 
@@ -11,6 +12,13 @@ namespace TopoMojo.Controllers
     [Authorize]
     public class TopologyHub : Hub<ITopoEvent>
     {
+        public TopologyHub (
+            ILogger<TopologyHub> logger
+        ) {
+            _logger = logger;
+        }
+        private readonly ILogger<TopologyHub> _logger;
+
         public override Task OnConnected()
         {
             Console.WriteLine($"connected {Context.User?.Identity.Name} {Context.ConnectionId}");
@@ -30,15 +38,19 @@ namespace TopoMojo.Controllers
 
         public Task Listen(string channelId)
         {
-            //Console.WriteLine($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
+            _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Groups.Add(Context.ConnectionId, channelId);
-            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
+            var v= Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
+            _logger.LogDebug($"listen:broadcasted {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
+            return v;
         }
 
         public Task Leave(string channelId)
         {
             //Console.WriteLine($"leave {Context.ConnectionId} {channelId}");
+            _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
+            _logger.LogDebug($"leave:broadcasted {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             return Groups.Remove(Context.ConnectionId, channelId);
         }
 

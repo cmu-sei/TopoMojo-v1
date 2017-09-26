@@ -3,18 +3,19 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedVmService } from "./gen/vm.service";
-import { VirtualVm,VirtualVmStateEnum,VirtualVmQuestion,VirtualVmTask,KeyValuePair,VirtualVmAnswer } from "./gen/models";
-import { ExternalNavService } from "../shared/external-nav.service";
+import { KeyValuePair,VirtualVm,VirtualVmAnswer,VirtualVmQuestion,VirtualVmStateEnum,VirtualVmTask } from "./gen/models";
+import { SettingsService } from '../svc/settings.service';
 
 @Injectable()
 export class VmService extends GeneratedVmService {
 
     constructor(
        protected http: HttpClient,
-       private nav : ExternalNavService
+       private settings: SettingsService
     ) { super(http); }
 
-    openConsole(id: string, name: string) {
-        this.nav.showTab('/console/' + id + "/" + name.match(/[^#]*/)[0]);
+    public openConsole(id, name) {
+        this.settings.showTab('/console/' + id + "/" + name.match(/[^#]*/)[0]);
     }
+
 }

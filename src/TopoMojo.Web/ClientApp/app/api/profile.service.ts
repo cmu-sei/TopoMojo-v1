@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedProfileService } from "./gen/profile.service";
-import { ProfileSearchResult,Search,Profile } from "./gen/models";
+import { Profile,ProfileSearchResult,Search } from "./gen/models";
 
 @Injectable()
 export class ProfileService extends GeneratedProfileService {

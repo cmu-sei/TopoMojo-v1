@@ -1,6 +1,6 @@
 
 import { Injectable } from "@angular/core";
-import { HttpClient, HttpRequest, HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpEvent, HttpRequest } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedDocumentService } from "./gen/document.service";
 import { ImageFile } from "./gen/models";
@@ -23,9 +23,5 @@ export class DocumentService extends GeneratedDocumentService {
             new HttpRequest('POST', "/api/image/" + guid, payload, { reportProgress: true })
         );
     }
-
-    public deleteImage(guid: string, filename: string) : Observable<ImageFile> {
-		return this.http.delete("/api/image/" + guid + "?filename=" + filename);
-	}
 
 }

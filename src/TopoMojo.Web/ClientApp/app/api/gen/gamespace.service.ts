@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { Gamespace,GameState,VmState } from "./models";
+import { GameState,Gamespace,VmState } from "./models";
 
 @Injectable()
 export class GeneratedGamespaceService extends GeneratedService {

@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { TemplateSummarySearchResult,Search,TemplateSummary,Template,TemplateDetail,ChangedTemplate } from "./models";
+import { ChangedTemplate,Search,Template,TemplateDetail,TemplateSummary,TemplateSummarySearchResult } from "./models";
 
 @Injectable()
 export class GeneratedTemplateService extends GeneratedService {
@@ -12,8 +12,8 @@ export class GeneratedTemplateService extends GeneratedService {
        protected http: HttpClient
     ) { super(http); }
 
-	public getTemplates(search : Search) : Observable<TemplateSummarySearchResult> {
-		return this.http.get<TemplateSummarySearchResult>("/api/templates" + this.queryStringify(search));
+	public getTemplates(search: Search) : Observable<TemplateSummarySearchResult> {
+		return this.http.get<TemplateSummarySearchResult>("/api/templates" + this.paramify(search));
 	}
 	public getTemplate(id: number) : Observable<Template> {
 		return this.http.get<Template>("/api/template/" + id);

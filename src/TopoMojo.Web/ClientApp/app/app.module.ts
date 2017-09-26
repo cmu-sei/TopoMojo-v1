@@ -1,48 +1,32 @@
 import { NgModule } from '@angular/core';
-import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { APP_BASE_HREF } from '@angular/common';
+//import { APP_BASE_HREF } from '@angular/common';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@angular/router';
+import { SignalRModule } from 'ng2-signalr';
+//import { SignalRConfiguration } from 'ng2-signalr';
 import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
 import { TranslateHttpLoader} from '@ngx-translate/http-loader';
-import { ORIGIN_URL } from './shared/constants/baseurl.constants';
-import { AuthModule } from './auth/auth.module';
-import { CoreModule } from './core/core.module';
-import { WorkspaceModule } from './workspace/workspace.module';
-import { GamespaceModule } from './gamespace/gamespace.module';
-import { AdminModule } from './admin/admin.module';
-import { SharedModule } from './shared/shared.module';
-import { AppComponent } from './app.component'
-import { SignalRModule } from 'ng2-signalr';
-import { SignalRConfiguration } from 'ng2-signalr';
-import { ChatModule } from './chat/chat.module';
+
+// import { AuthService } from './svc/auth.service';
+// import { AuthInterceptor } from './svc/http-auth-interceptor';
+// import { AuthGuard } from './svc/auth-guard.service';
+// import { AdminGuard } from './svc/admin-guard.service';
+// import { NotificationService } from './svc/notification.service';
+import { createTranslateLoader, createSignalRConfig } from './svc/settings.service';
+import { SvcModule } from './svc/svc.module';
+import { AdminModule } from './ui/admin/admin.module';
 import { ApiModule } from './api/api.module';
-import { AuthInterceptor } from './auth/http-auth-interceptor';
+import { AuthModule } from './ui/auth/auth.module';
+import { ChatModule } from './ui/chat/chat.module';
+import { CoreModule } from './ui/core/core.module';
+import { GamespaceModule } from './ui/gamespace/gamespace.module';
+import { SharedModule } from './ui/shared/shared.module';
+import { WorkspaceModule } from './ui/workspace/workspace.module';
 
-export function getOriginUrl() {
-  return window.location.origin;
-}
-
-export function createConfig(): SignalRConfiguration {
-    const c = new SignalRConfiguration();
-    c.hubName = 'TopologyHub';
-    c.qs = { user: 'jam' };
-    c.url = getOriginUrl();
-    c.logging = false;
-    return c;
-}
-export function createTranslateLoader(http: HttpClient, baseHref) {
-
-    // Temporary Azure hack
-    if (baseHref === 'undefined' && typeof window !== 'undefined') {
-        baseHref = window.location.origin;
-    }
-
-    // i18n files are in `wwwroot/lang/`
-    return new TranslateHttpLoader(http, `/lang/`, '.json');
-}
+import { AppComponent } from './app.component'
 
 @NgModule({
     bootstrap: [ AppComponent ],
@@ -52,14 +36,6 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
     imports: [
         BrowserModule,
         HttpClientModule,
-        SharedModule,
-        ApiModule,
-        AuthModule,
-        WorkspaceModule,
-        GamespaceModule,
-        AdminModule,
-        CoreModule,
-        ChatModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,
@@ -67,27 +43,21 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
                 deps: [HttpClient]
             }
         }),
-        SignalRModule.forRoot(createConfig),
+        ApiModule,
+        SvcModule,
+        SharedModule,
+        AdminModule,
+        AuthModule,
+        ChatModule,
+        CoreModule,
+        GamespaceModule,
+        WorkspaceModule,
+        SignalRModule.forRoot(createSignalRConfig),
         RouterModule.forRoot([
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'home/notfound' }
         ])
-    ],
-    providers: [
-        {
-            provide: ORIGIN_URL,
-            useFactory: (getOriginUrl)
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: AuthInterceptor,
-            multi: true,
-        }
     ]
 })
 export class AppModule {
-    // Diagnostic only: inspect router configuration
-//   constructor(router: Router) {
-//     console.log('Routes: ', JSON.stringify(router.config, undefined, 2));
-//   }
 }
