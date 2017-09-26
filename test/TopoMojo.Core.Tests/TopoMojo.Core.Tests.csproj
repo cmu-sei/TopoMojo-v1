@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <DebugType>portable</DebugType>
@@ -9,24 +8,22 @@
     <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net451+win8</PackageTargetFallback>
     <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="../../src/TopoMojo.Abstractions/TopoMojo.Abstractions.csproj" />
-    <ProjectReference Include="../../src/TopoMojo.vMock/TopoMojo.vMock.csproj" />
     <ProjectReference Include="../../src/TopoMojo.Core/TopoMojo.Core.csproj" />
+    <ProjectReference Include="../../src/TopoMojo.Data/TopoMojo.Data.csproj" />
   </ItemGroup>
-
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.1.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170601-03" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-    <PackageReference Include="xunit" Version="2.2.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.*" />
+    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
   </ItemGroup>
-
 </Project>

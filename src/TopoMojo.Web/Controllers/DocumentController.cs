@@ -13,11 +13,11 @@ using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Models;
 using TopoMojo.Web;
+using TopoMojo.Web.Models;
 
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
     public class DocumentController : _Controller
     {
         public DocumentController(
@@ -33,8 +33,9 @@ namespace TopoMojo.Controllers
         private readonly TopologyManager _mgr;
         private readonly IHostingEnvironment _env;
 
-        [HttpPostAttribute("{guid}")]
-        [JsonExceptionFilterAttribute]
+        [HttpPut("api/document/{guid}")]
+        [ProducesResponseType(typeof(bool), 200)]
+        [JsonExceptionFilter]
         public async Task<bool> Save([FromRoute] string guid, [FromBody] string text)
         {
             if (await _mgr.CanEdit(guid))
@@ -47,27 +48,30 @@ namespace TopoMojo.Controllers
             return false;
         }
 
-
-        [HttpGetAttribute("{guid}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<object[]> Images([FromRoute] string guid)
+        [HttpGet("api/images/{guid}")]
+        [ProducesResponseType(typeof(ImageFile[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Images([FromRoute] string guid)
         {
             if (await _mgr.CanEdit(guid))
             {
                 string path = Path.Combine(_env.WebRootPath, "docs", guid);
                 if (Directory.Exists(path))
                 {
-                    return Directory.GetFiles(path)
-                        .Select(x => new { filename = Path.GetFileName(x)})
-                        .ToArray();
+                    return Ok(
+                        Directory.GetFiles(path)
+                        .Select(x => new ImageFile { Filename = Path.GetFileName(x)})
+                        .ToArray()
+                    );
                 }
             }
-            return null;
+            return Ok(new ImageFile[]{});
         }
 
-        [HttpDelete("{guid}/{filename}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<object> Delete([FromRoute] string guid, [FromRoute] string filename)
+        [HttpDelete("api/image/{guid}")]
+        [ProducesResponseType(typeof(ImageFile), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Delete([FromRoute] string guid, [FromQuery] string filename)
         {
             if (await _mgr.CanEdit(guid))
             {
@@ -75,15 +79,17 @@ namespace TopoMojo.Controllers
                 if (System.IO.File.Exists(path))
                 {
                     System.IO.File.Delete(path);
-                    return new { filename = filename };
+                    return Json(new ImageFile { Filename = filename });
                 }
             }
             throw new InvalidOperationException();
         }
 
-        [HttpPostAttribute("{guid}")]
-        [JsonExceptionFilterAttribute]
-        public async Task<object> Upload([FromRoute] string guid, IFormFile file)
+        [HttpPost("api/image/{guid}")]
+        [ProducesResponseType(typeof(ImageFile), 200)]
+        [JsonExceptionFilter]
+        [ApiExplorerSettings(IgnoreApi=true)]
+        public async Task<IActionResult> Upload([FromRoute] string guid, IFormFile file)
         {
             if (file.Length > 0)
             {
@@ -96,12 +102,11 @@ namespace TopoMojo.Controllers
                     {
                         await file.CopyToAsync(stream);
                     }
-                    return new { filename = filename};
+                    return Ok(new ImageFile { Filename = filename});
                 }
             }
             throw new InvalidOperationException();
         }
-
 
         private string GetPath(params string[] segments)
         {

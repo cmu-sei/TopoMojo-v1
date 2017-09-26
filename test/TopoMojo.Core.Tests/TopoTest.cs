@@ -1,6 +1,6 @@
 ﻿using System;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Core.Models;
 using Xunit;
 
 namespace Tests
@@ -8,18 +8,57 @@ namespace Tests
     public class TopologyTests : CoreTest
     {
         [Fact]
-        public void topology()
+        public void CanCreateAndEditWorkspace()
         {
             using (TestSession test = CreateSession())
             {
                 test.AddActor("jam@this.ws");
                 TopologyManager mgr = test.GetTopologyManager();
-                mgr.SaveAsync(new Topology {
-                    Name = "JamOn"
-                }).Wait();
+                Topology topo = mgr.Create(new NewTopology {
+                    Name = "JamOn",
+                    Description = "original"
+                }).Result;
 
-                SearchResult<TopoSummary> search = mgr.ListAsync(new Search()).Result;
-                Assert.True(search.Total > 0);
+                Assert.True(topo.Id > 0);
+                Assert.True(topo.CanManage);
+                Assert.True(topo.CanEdit);
+
+                topo = mgr.Update(new ChangedTopology {
+                    Id = topo.Id,
+                    Name = topo.Name + "Changed",
+                    Description = topo.Description}).Result;
+                Assert.True(topo.Name.Contains("Changed"));
+                Assert.True(topo.Description == "original");
+            }
+        }
+
+        [Fact]
+        public void ListReturnsList()
+        {
+            using (TestSession test = CreateSession())
+            {
+                test.AddActor("jam@this.ws");
+                TopologyManager mgr = test.GetTopologyManager();
+                for (int i = 0; i < 5; i++)
+                {
+                    Topology topo = mgr.Create(new NewTopology {
+                        Name = "JamOn" + i.ToString(),
+                        Description = i.ToString()
+                    }).Result;
+
+                    if (i > 2)
+                        mgr.Publish(topo.Id, false).Wait();
+                }
+
+                var list = mgr.List(new Search {
+                    Take = 50,
+                    //Term = "2",
+                    Filters = new string[] {
+                        "published",
+                        "mine"
+                    }
+                }).Result;
+                Assert.True(list.Total == 2);
             }
         }
     }

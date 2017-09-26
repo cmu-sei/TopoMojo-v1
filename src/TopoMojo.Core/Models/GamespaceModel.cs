@@ -1,23 +1,26 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Core.Models
 {
-    public class GamespaceSummary
+    public class Gamespace
     {
         public int Id { get; set; }
+        public string Name { get; set; }
         public string WhenCreated { get; set; }
-        public string Document { get; set; }
-        public Models.Vm[] Vms { get; set; }
-        public int VmCount { get; set; }
+        public string TopologyDocument { get; set; }
+        public int TopologyId { get; set; }
+        //public Models.Vm[] Vms { get; set; }
+        //public int VmCount { get; set; }
     }
 
     public class GameState
     {
         public int Id { get; set; }
+        public string Name { get; set; }
         public string GlobalId { get; set; }
         public string WhenCreated { get; set; }
-        public string Document { get; set; }
+        public string TopologyDocument { get; set; }
         public string ShareCode { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
 
@@ -30,6 +33,5 @@ namespace TopoMojo.Core
         public string Name { get; set; }
         public bool IsRunning { get; set; }
     }
-
 
 }

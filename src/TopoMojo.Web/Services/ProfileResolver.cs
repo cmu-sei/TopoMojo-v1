@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Http;
-using IdentityModel;
 using System;
-using TopoMojo.Abstractions;
-using TopoMojo.Core.Entities;
 using System.IdentityModel.Tokens.Jwt;
+using IdentityModel;
+using Microsoft.AspNetCore.Http;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models;
 
 namespace TopoMojo.Services
 {
-    //Transforms IdentityPrincipal to TopoMojo.Core.Entities.Profile
+    //Transforms IdentityPrincipal to TopoMojo.Core.Models.Profile
     //(Once per request, if AddScoped())
     public class ProfileResolver : IProfileResolver
     {

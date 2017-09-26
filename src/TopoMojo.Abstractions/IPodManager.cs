@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Abstractions
 {
@@ -19,7 +20,7 @@ namespace TopoMojo.Abstractions
         Task<int> VerifyDisks(Template template);
         Task<int> DeleteDisks(Template template);
         Task<DisplayInfo> Display(string id);
-        Task<Vm> Answer(string id, string question, string answer);
+        Task<Vm> Answer(string id, VmAnswer answer);
         Task<TemplateOptions> GetTemplateOptions(string key);
         Task<VmOptions> GetVmIsoOptions(string key);
         Task<VmOptions> GetVmNetOptions(string key);

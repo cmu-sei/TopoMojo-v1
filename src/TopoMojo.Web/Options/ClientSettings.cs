@@ -5,6 +5,7 @@ namespace TopoMojo
         public BrandingOptions branding {get; set;}
         public UserManagerSettings oidc { get; set; }
         public ClientUrlSettings urls { get; set; }
+        public string lang { get; set; }
     }
 
     public class BrandingOptions

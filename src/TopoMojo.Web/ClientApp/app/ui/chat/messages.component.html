@@ -1,0 +1,44 @@
+    <div class="presence-div">
+        <ul class="list-inline">
+            <li>
+                <button (click)="pasteUrl()"
+                    class="btn btn-default btn-sm"
+                    [tooltip]="'COPY' | translate | lowercase">
+                    <i class="fa fa-clipboard"></i>
+                </button>
+            </li>
+            <li *ngIf="notifier.actors.length == 0">
+                <span translate>PLAYER-LIST-EMPTY</span>
+            </li>
+            <li *ngFor="let actor of notifier.actors">
+                <span
+                    class="label label-default"
+                    [class.label-success]="actor.isConnected"
+                >{{actor.name || "Anonymous"}}</span>
+            </li>
+        </ul>
+    </div>
+
+     <div class="messages-div" #scrollMe (scroll)="onScroll()">
+        <chat-message
+            *ngFor="let message of messages"
+            [message]="message">
+        </chat-message>
+    </div>
+
+    <div class="footer">
+        <textarea
+        [(ngModel)]="newMessage"
+        (keyup)="typing()"
+        (keyup.enter)="submitMessage()"
+        class="form-control"
+        placeholder="Write a note..."
+        resize="none"></textarea>
+
+        <div *ngIf="typers">
+            <i class="fa fa-keyboard-o"></i>
+            <span *ngIf="typers">{{typers}} {{'IS-TYPING' | translate}}</span>
+        </div>
+    </div>
+
+    <textarea id="clipboardText" class="offscreen"></textarea>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.AspNetCore.SignalR.Hubs;
 using System;
+using System.Threading.Tasks;
 
 namespace TopoMojo.Controllers
 {
@@ -20,5 +21,11 @@ namespace TopoMojo.Controllers
             Clients = _hub.Clients;
             Groups = _hub.Groups;
         }
+
+        public Task Broadcast(string groupId, BroadcastEvent model)
+        {
+            return Clients.Group(groupId).TopoEvent(model);
+        }
     }
+
 }

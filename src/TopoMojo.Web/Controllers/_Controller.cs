@@ -6,8 +6,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Models;
-using TopoMojo.Core.Entities;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models;
 
 namespace TopoMojo.Controllers
 {
@@ -35,7 +35,7 @@ namespace TopoMojo.Controllers
         {
             string itemType = (item != null) ? item.GetType().Name : "null";
             string itemName = (item != null) ? item.Name : "null";
-            string itemId = (item != null) ? item.Id : "";
+            string itemId = (item != null) ? item.Id.ToString() : "";
             string entry = String.Format("{0} [{1}] {2} {3} {4} [{5}] {6}",
                 _profile.Name, _profile.GlobalId, action, itemType, itemName, itemId, msg);
             _logger.LogInformation(entry);

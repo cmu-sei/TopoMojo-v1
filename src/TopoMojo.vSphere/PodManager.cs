@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vSphere
 {
@@ -49,14 +50,15 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Refresh(Template template)
         {
-            Vm vm = (await Find(template.Name + "#" + template.IsolationTag)).FirstOrDefault();
+            string target = template.Name + "#" + template.IsolationTag;
+            Vm vm = (await Find(target)).FirstOrDefault();
             if (vm != null)
             {
                 vm.Status = "deployed";
             }
             else
             {
-                vm = new Vm() { Status = "created" };
+                vm = new Vm() { Name = target, Status = "created" };
                 int progress = await VerifyDisks(template);
                 if (progress == 100)
                     vm.Status = "initialized";
@@ -283,10 +285,10 @@ namespace TopoMojo.vSphere
             return di;
         }
 
-        public async Task<Vm> Answer(string id, string question, string answer)
+        public async Task<Vm> Answer(string id, VmAnswer answer)
         {
             VimHost host = FindHostByVm(id);
-            return await host.AnswerVmQuestion(id, question, answer);
+            return await host.AnswerVmQuestion(id, answer.QuestionId, answer.ChoiceKey);
         }
 
         public async Task<TemplateOptions> GetTemplateOptionsFromCache(string key)
@@ -332,7 +334,7 @@ namespace TopoMojo.vSphere
             //             .ToArray();
             //         to.Guest = to.Guest.Union(aggr[3]).ToArray();
             // }
-            return to;
+            return await Task.FromResult(to);
         }
 
         public async Task<VmOptions> GetVmIsoOptions(string id)

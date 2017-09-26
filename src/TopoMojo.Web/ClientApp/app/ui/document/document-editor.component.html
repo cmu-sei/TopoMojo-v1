@@ -1,0 +1,20 @@
+<!--<p><label>Markdown</label></p>-->
+<div class="row">
+    <div class="col-xs-5">
+        <textarea
+            name="markdown"
+            rows="25"
+            [(ngModel)]="markdown"
+            class="form-control"
+            (keyup)="reRender()">
+        </textarea>
+    </div>
+    <div class="col-xs-7" [innerHtml]="rendered">
+    </div>
+    <div class="col-xs-12" style="text-align:center;">
+        <hr/>
+        <button class="btn btn-primary" [disabled]="!dirty" (click)="save()">
+            <i class="fa fa-upload"></i> Save
+        </button>
+    </div>
+</div>

@@ -4,8 +4,11 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models;
+using TopoMojo.Data;
+using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.EntityFrameworkCore;
 
 namespace Tests
 {
@@ -20,13 +23,25 @@ namespace Tests
             _ctx = ctx;
             _coreOptions = new CoreOptions();
             _mill = mill;
+
+            _proman = new ProfileManager(
+                new ProfileRepository(_ctx),
+                _mill,
+                _coreOptions,
+                new ProfileResolver(new Profile
+                {
+                    Name = "admin@test",
+                    IsAdmin = true
+                })
+            );
+            AddUser("tester@test", true, true);
         }
 
         private readonly TopoMojoDbContext _ctx = null;
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
         private IProfileResolver _ur;
-
+        private readonly ProfileManager _proman;
         private Profile _actor;
         public Profile Actor
         {
@@ -45,23 +60,53 @@ namespace Tests
         private Dictionary<string, Profile> _actors = new Dictionary<string, Profile>();
         private Dictionary<Profile, Dictionary<string, object>> _mgrStore = new Dictionary<Profile, Dictionary<string, object>>();
 
-        public object GetManager(Type t)
+        private object FindManager(Type t)
         {
-            if (!_mgrStore.ContainsKey(_actor))
-                _mgrStore.Add(_actor, new Dictionary<string, object>());
-
-            if (!_mgrStore[_actor].ContainsKey(t.Name))
-            {
-                object mgr = Activator.CreateInstance(t, _ctx, _mill, _coreOptions, _ur);
-                _mgrStore[_actor].Add(t.Name, mgr);
-            }
-
-            return _mgrStore[_actor][t.Name];
+            if (_mgrStore[_actor].ContainsKey(t.Name))
+                return _mgrStore[_actor][t.Name];
+            return null;
         }
+
+        // public object GetManager(Type t)
+        // {
+        //     if (!_mgrStore.ContainsKey(_actor))
+        //         _mgrStore.Add(_actor, new Dictionary<string, object>());
+
+        //     if (!_mgrStore[_actor].ContainsKey(t.Name))
+        //     {
+        //         object mgr = Activator.CreateInstance(t, _mill, _coreOptions, _ur);
+        //         _mgrStore[_actor].Add(t.Name, mgr);
+        //     }
+
+        //     return _mgrStore[_actor][t.Name];
+        // }
 
         public TopologyManager GetTopologyManager()
         {
-            return GetManager(typeof(TopologyManager)) as TopologyManager;
+            Type t = typeof(TopologyManager);
+            object mgr = FindManager(t);
+            if (mgr == null)
+            {
+                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
+                    new TopologyRepository(_ctx),
+                    _mill, _coreOptions, _ur, null);
+                _mgrStore[_actor].Add(t.Name, mgr);
+            }
+            return mgr as TopologyManager;
+        }
+
+        public TemplateManager GetTemplateManager()
+        {
+            Type t = typeof(TemplateManager);
+            object mgr = FindManager(t);
+            if (mgr == null)
+            {
+                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
+                    new TemplateRepository(_ctx),
+                    _mill, _coreOptions, _ur);
+                _mgrStore[_actor].Add(t.Name, mgr);
+            }
+            return mgr as TemplateManager;
         }
 
         #endregion
@@ -70,29 +115,27 @@ namespace Tests
         {
             return AddUser(name, true);
         }
+
         public Profile AddUser(string name)
         {
             return AddUser(name, false);
         }
-        public Profile AddUser(string name, bool makeActor)
+
+        public Profile AddUser(string name, bool makeActor, bool isAdmin = false)
         {
             if (!_actors.ContainsKey(name))
             {
-                Profile target = _ctx.Profiles
-                    .Where(p => p.Name == name)
-                    .FirstOrDefault();
-
-                if (target == null)
+                Profile target = new Profile
                 {
-                    target = new Profile
-                    {
-                        Name = name,
-                        GlobalId = Guid.NewGuid().ToString()
-                    };
-                    _ctx.Profiles.Add(target);
-                    _ctx.SaveChanges();
-                }
+                    Name = name,
+                    IsAdmin = isAdmin,
+                    GlobalId = Guid.NewGuid().ToString()
+                };
+
+                target = _proman.Add(target).Result;
+
                 _actors.Add(name, target);
+                _mgrStore.Add(target, new Dictionary<string, object>());
             }
 
             Profile person = _actors[name];

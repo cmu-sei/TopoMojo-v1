@@ -1,0 +1,5 @@
+<div class="right-panel">
+    <div *ngFor="let e of events">
+        <div class="alert alert-info message">{{ "EVENT."+e.action | translate:e }}</div>
+    </div>
+</div>

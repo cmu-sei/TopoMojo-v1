@@ -8,13 +8,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Entities;
+using TopoMojo.Core.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
     public class ProfileController : _Controller
     {
         public ProfileController(
@@ -24,14 +23,16 @@ namespace TopoMojo.Controllers
             _mgr = profileManager;
         }
 
-        private readonly ProfileManager _mgr;        
+        private readonly ProfileManager _mgr;
 
-        [HttpPost]
+        [HttpGet("api/profiles")]
+        [ProducesResponseType(typeof(SearchResult<Profile>), 200)]
         [JsonExceptionFilter]
-        public async Task<SearchResult<Profile>> List([FromBody]Search search)
+        public async Task<IActionResult> List([FromQuery]Search search)
         {
-            return await _mgr.ListAsync(search);
-        }        
+            var result = await _mgr.List(search);
+            return Ok(result);
+        }
     }
 
 }

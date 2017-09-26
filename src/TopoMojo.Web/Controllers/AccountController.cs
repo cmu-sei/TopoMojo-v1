@@ -1,38 +1,34 @@
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityModel;
+using Jam.Accounts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Jam.Accounts;
+using TopoMojo.Extensions;
 using TopoMojo.Services;
 using TopoMojo.Web;
-using TopoMojo.Core.Data;
-using TopoMojo.Extensions;
-using System.Security.Claims;
-using IdentityModel;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TopoMojo.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    //[Route("api/[controller]/[action]")]
     public class AccountController : _Controller
     {
         private readonly IAccountManager _accountManager;
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
-        private readonly TopoMojoDbContext _db;
 
         public AccountController(
             IAccountManager accountManager,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            TopoMojoDbContext db,
             IServiceProvider sp
         ) : base(sp)
         {
             _accountManager = accountManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
-            _db = db;
         }
 
         // login(u,p), return token
@@ -41,42 +37,43 @@ namespace TopoMojo.Controllers
         // confirm(account), return bool
         // [Authorize] refresh(), return token
 
-        [HttpPost]
+        [HttpPost("api/account/login")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Login([FromBody] Credentials model)
         {
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCredentialAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
-        [HttpPost]
+
+        [HttpPost("api/account/otp")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Otp([FromBody] Credentials model)
         {
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCodeAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/tfa")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Tfa([FromBody] Credentials model)
         {
             _logger.LogDebug($"Attempting login for {model.Username}");
             AccountSummary account = await _accountManager.AuthenticateWithCredentialAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/register")]
         [JsonExceptionFilter]
         public async Task<IActionResult> Register([FromBody] Credentials model)
         {
@@ -84,28 +81,32 @@ namespace TopoMojo.Controllers
 
             AccountSummary account = await _accountManager.RegisterWithCredentialsAsync(model, "");
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/reset")]
         [JsonExceptionFilter]
          public async Task<IActionResult> Reset([FromBody] Credentials model)
         {
-            _logger.LogDebug($"Attempting reset for {model.Username}");
+            if (model == null)
+                throw new AuthenticationFailedException();
+
+            _logger.LogDebug($"Attempting reset for {model?.Username}");
 
             AccountSummary account = model.Password.HasValue()
                 ? await _accountManager.AuthenticateWithResetAsync(model, "")
                 : await _accountManager.AuthenticateWithCodeAsync(model, "");
 
-            if (account == null)
-                throw new InvalidOperationException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            if (account == null)
+                throw new AuthenticationFailedException();
+
+            return Json(GetJWT(account.GlobalId, model.Username));
         }
 
-        [HttpPost]
+        [HttpPost("api/account/confirm")]
         [JsonExceptionFilter]
         public async Task<bool> Confirm([FromBody] Credentials model)
         {
@@ -120,16 +121,22 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize]
-        [HttpGet]
+        [HttpGet("api/account/refresh")]
         public async Task<IActionResult> Refresh()
         {
             string subject = HttpContext.User.FindFirstValue(JwtClaimTypes.Subject);
+            string name = HttpContext.User.FindFirstValue(JwtClaimTypes.Name);
             _logger.LogDebug($"Attempting refresh for {subject}");
             AccountSummary account = await _accountManager.FindByGuidAsync(subject);
             if (account == null)
-                throw new InvalidOperationException();
+                throw new AuthenticationFailedException();
 
-            return Json(_accountManager.GenerateJwtToken(account.GlobalId));
+            return Json(GetJWT(account.GlobalId, name));
+        }
+
+        private object GetJWT(string guid, string name)
+        {
+            return (_accountManager.GenerateJwtToken(guid, name.ExtractBefore("@")));
         }
         // private async Task SignIn(Account account, string username)
         // {

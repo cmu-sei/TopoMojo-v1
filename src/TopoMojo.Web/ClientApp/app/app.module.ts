@@ -1,34 +1,32 @@
 import { NgModule } from '@angular/core';
-import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { APP_BASE_HREF } from '@angular/common';
-import { ORIGIN_URL } from './shared/constants/baseurl.constants';
-import { AuthModule } from './auth/auth.module';
-import { CoreModule } from './core/core.module';
-import { TopoModule } from './topo/topo.module';
-import { GamespaceModule } from './gamespace/gamespace.module';
-import { ConsoleModule } from './console/console.module';
-import { AdminModule } from './admin/admin.module';
-import { ProfileModule } from './profile/profile.module';
-import { SharedModule } from './shared/shared.module';
-import { AppComponent } from './app.component'
+//import { APP_BASE_HREF } from '@angular/common';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { RouterModule , Router, PreloadAllModules, PreloadingStrategy} from '@angular/router';
 import { SignalRModule } from 'ng2-signalr';
-import { SignalRConfiguration } from 'ng2-signalr';
-import { ChatModule } from './chat/chat.module';
+//import { SignalRConfiguration } from 'ng2-signalr';
+import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
+import { TranslateHttpLoader} from '@ngx-translate/http-loader';
 
-export function getOriginUrl() {
-  return window.location.origin;
-}
+// import { AuthService } from './svc/auth.service';
+// import { AuthInterceptor } from './svc/http-auth-interceptor';
+// import { AuthGuard } from './svc/auth-guard.service';
+// import { AdminGuard } from './svc/admin-guard.service';
+// import { NotificationService } from './svc/notification.service';
+import { createTranslateLoader, createSignalRConfig } from './svc/settings.service';
+import { SvcModule } from './svc/svc.module';
+import { AdminModule } from './ui/admin/admin.module';
+import { ApiModule } from './api/api.module';
+import { AuthModule } from './ui/auth/auth.module';
+import { ChatModule } from './ui/chat/chat.module';
+import { CoreModule } from './ui/core/core.module';
+import { GamespaceModule } from './ui/gamespace/gamespace.module';
+import { SharedModule } from './ui/shared/shared.module';
+import { WorkspaceModule } from './ui/workspace/workspace.module';
 
-export function createConfig(): SignalRConfiguration {
-    const c = new SignalRConfiguration();
-    c.hubName = 'TopologyHub';
-    c.qs = { user: 'jam' };
-    c.url = getOriginUrl();
-    c.logging = true;
-    return c;
-}
+import { AppComponent } from './app.component'
 
 @NgModule({
     bootstrap: [ AppComponent ],
@@ -37,31 +35,29 @@ export function createConfig(): SignalRConfiguration {
     ],
     imports: [
         BrowserModule,
+        HttpClientModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: (createTranslateLoader),
+                deps: [HttpClient]
+            }
+        }),
+        ApiModule,
+        SvcModule,
         SharedModule,
-        AuthModule,
-        //ProfileModule,
-        //ConsoleModule,
-        TopoModule,
-        GamespaceModule,
         AdminModule,
-        CoreModule,
+        AuthModule,
         ChatModule,
-        SignalRModule.forRoot(createConfig),
+        CoreModule,
+        GamespaceModule,
+        WorkspaceModule,
+        SignalRModule.forRoot(createSignalRConfig),
         RouterModule.forRoot([
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'home/notfound' }
         ])
-    ],
-    providers: [
-        {
-            provide: ORIGIN_URL,
-            useFactory: (getOriginUrl)
-        }
     ]
 })
 export class AppModule {
-    // Diagnostic only: inspect router configuration
-//   constructor(router: Router) {
-//     console.log('Routes: ', JSON.stringify(router.config, undefined, 2));
-//   }
 }

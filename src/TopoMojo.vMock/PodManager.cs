@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vMock
 {
@@ -48,7 +49,7 @@ namespace TopoMojo.vMock
             }
             else
             {
-                vm = new Vm() { Status = "created" };
+                vm = new Vm() { Name = template.Name, Status = "created" };
                 if (VerifyDisks(template).Result == 100)
                     vm.Status = "initialized";
             }
@@ -296,7 +297,7 @@ namespace TopoMojo.vMock
             return new DisplayInfo
             {
                 Id = id,
-                Method = _optPod.DisplayMethod,
+                // Method = _optPod.DisplayMethod,
                 Url = _optPod.DisplayUrl,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag()
@@ -376,7 +377,7 @@ namespace TopoMojo.vMock
             return opt;
         }
 
-        public async Task<Vm> Answer(string id, string question, string answer)
+        public async Task<Vm> Answer(string id, VmAnswer answer)
         {
             await Task.Delay(0);
             Vm vm = _vms[id];

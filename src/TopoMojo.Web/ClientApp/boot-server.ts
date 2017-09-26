@@ -4,7 +4,7 @@ import { INITIAL_CONFIG } from '@angular/platform-server';
 import { APP_BASE_HREF } from '@angular/common';
 import { createServerRenderer, RenderResult } from 'aspnet-prerendering';
 import { AppModule } from './app/app.module';
-import { ORIGIN_URL } from './app/shared/constants/baseurl.constants';
+import { ORIGIN_URL } from './app/svc/settings.service';
 import { ngAspnetCoreEngine } from './polyfills/temporary-aspnetcore-engine';
 
 enableProdMode();

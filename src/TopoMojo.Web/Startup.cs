@@ -17,14 +17,20 @@ using Newtonsoft.Json;
 using Jam.Accounts;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
+using TopoMojo.Data;
+using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.EntityFrameworkCore;
+using TopoMojo.Data.Entities;
 using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
 using TopoMojo.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.Tasks;
+using TopoMojo.Core.Abstractions;
+using ModelTransforms;
+using System.IO;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace TopoMojo
 {
@@ -87,6 +93,8 @@ namespace TopoMojo
 
             // services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
             services.AddDbContext<TopoMojoDbContext>(builder => builder.UseConfiguredDatabase(DbOptions));
+            services.AddRepositories();
+
             services.AddScoped<TopologyManager, TopologyManager>();
             services.AddScoped<TemplateManager, TemplateManager>();
             services.AddScoped<GamespaceManager, GamespaceManager>();
@@ -107,6 +115,43 @@ namespace TopoMojo
 
             services.AddSignalR(options =>
                 options.Hubs.EnableDetailedErrors = true);
+
+            services.AddSingleton(_ => new JsonSerializer
+                {
+                    ContractResolver = new SignalRContractResolver(),
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                }
+            );
+
+            services.InitializeMapper();
+
+            services.AddSwaggerGen(options =>
+            {
+                // if (System.IO.File.Exists(xmlFileName))
+                // {
+                //     options.IncludeXmlComments(xmlFileName);
+                // }
+
+                options.SwaggerDoc("v1", new Info
+                {
+                    Title = "TopoMojo",
+                    Version = "v1",
+                    Description = "API documentation and interaction for " + "TopoMojo"
+                });
+
+                // options.AddSecurityDefinition("oauth2", new OAuth2Scheme
+                // {
+                //     Type = "oauth2",
+                //     Flow = "implicit",
+                //     AuthorizationUrl = _authOptions.AuthorizationUrl,
+                //     Scopes = new Dictionary<string, string>
+                //     {
+                //         { _authOptions.AuthorizationScope, "public api access" }
+                //     }
+                // });
+                options.DescribeAllEnumsAsStrings();
+                options.CustomSchemaIds(x => x.FullName);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -117,9 +162,10 @@ namespace TopoMojo
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-                    HotModuleReplacement = true
-                });
+                if (!Configuration.GetValue<bool>("NoDevWebpack"))
+                    app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
+                        HotModuleReplacement = true
+                    });
             }
             else
             {
@@ -145,8 +191,27 @@ namespace TopoMojo
                         }
                     }
                 }
+
                 await next.Invoke();
+
+                if (context.Request.Path.StartsWithSegments("/signalr"))
+                {
+                    Console.WriteLine("{0} {1}", context.Response.StatusCode, context.Request.Path);
+                }
             });
+
+            app.UseSwagger(c =>
+            {
+                c.RouteTemplate = "docs/{documentName}/api.json";
+            });
+            // app.UseSwaggerUi(c =>
+            // {
+            //     c.RoutePrefix = "docs";
+            //     c.SwaggerEndpoint("/docs/v1/api.json", "TopoMojo" + " (v1)");
+            //     c.ConfigureOAuth2(_authOptions.ClientId, _authOptions.ClientSecret, _authOptions.ClientId, _authOptions.ClientName);
+            //     c.InjectStylesheet("/css/site.css");
+            //     c.InjectOnCompleteJavaScript("/js/custom-swag.js");
+            // });
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -210,6 +275,15 @@ namespace TopoMojo
                 DbOptions,
                 env.IsDevelopment()
             );
+
+            // if (env.IsDevelopment())
+            // {
+            //     using (TextWriter tw = File.CreateText(Path.Combine(env.ContentRootPath, "ClientApp", "app", "api-models.ts")))
+            //     {
+            //         var transformer = new TypeScriptTransformer(tw, false);
+            //         transformer.Transform("TopoMojo.Core.Models");
+            //     }
+            // }
 
         }
     }

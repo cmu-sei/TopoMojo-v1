@@ -10,16 +10,19 @@ namespace TopoMojo.Core
             return !String.IsNullOrWhiteSpace(s);
         }
 
-        public static string Before(this string s, char separator)
+        public static string ExtractBefore(this string s, string target)
         {
-            int x = s.IndexOf(separator);
-            return (x >= 0) ? s.Substring(0, x) : "";
+            int x = s.IndexOf(target);
+            return (x>-1)
+                ? s.Substring(0, x)
+                : s;
         }
-
-        public static string After(this string s, char separator)
+        public static string ExtractAfter(this string s, string target)
         {
-            int x = s.IndexOf(separator);
-            return (x >= 0) ? s.Substring(x + 1) : "";
+            int x = s.IndexOf(target);
+            return (x>-1)
+                ? s.Substring(x+1)
+                : s;
         }
 
         public static string ToDisplay(this Enum e)

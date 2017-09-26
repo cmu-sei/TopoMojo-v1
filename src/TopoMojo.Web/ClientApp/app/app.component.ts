@@ -1,8 +1,9 @@
 import { OnInit, Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from './auth/auth.service';
+import { AuthService, AuthTokenState } from './svc/auth.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SettingsService, Layout } from './auth/settings.service';
+import { SettingsService, Layout } from './svc/settings.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app',
@@ -14,6 +15,7 @@ export class AppComponent {
     profile$: Subscription;
     status$: Subscription;
     showExpiring: boolean;
+    showExpired: boolean;
     layout: Layout;
     layout$: Subscription;
     appName: string = "TopoMojo";
@@ -21,8 +23,13 @@ export class AppComponent {
     constructor (
         private service : AuthService,
         private router: Router,
-        private settings: SettingsService
-    ){ }
+        private settings: SettingsService,
+        private translator: TranslateService
+    ){
+        let lang = (settings.lang || "en").trim().split(' ').shift();
+        translator.setDefaultLang(lang);
+        translator.use(lang);
+    }
 
     ngOnInit() {
         this.appName = this.settings.branding.applicationName || "TopoMojo";
@@ -35,8 +42,10 @@ export class AppComponent {
 
         this.status$ = this.service.tokenStatus$
         .subscribe(status => {
-            this.showExpiring = (status == "expiring");
-            if (status == "expired")
+            console.log(status);
+            this.showExpiring = (status == AuthTokenState.expiring);
+            this.showExpired = (status == AuthTokenState.expired);
+            if (status == AuthTokenState.invalid)
                 this.router.navigate(['/home']);
         });
 
@@ -46,15 +55,6 @@ export class AppComponent {
         this.layout = this.settings.layout;
         //this.service.init();
     }
-
-    // login() {
-    //     this.service.externalLogin(null);
-    // }
-
-    // logout() {
-    //     this.service.logout();
-    //     this.router.navigate(['/home']);
-    // }
 
     continue() {
         this.service.refreshToken();

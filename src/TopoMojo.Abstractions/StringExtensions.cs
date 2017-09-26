@@ -94,6 +94,20 @@ namespace TopoMojo.Extensions
             return s;
         }
 
+        public static string ExtractBefore(this string s, string target)
+        {
+            int x = s.IndexOf(target);
+            return (x>-1)
+                ? s.Substring(0, x)
+                : s;
+        }
+        public static string ExtractAfter(this string s, string target)
+        {
+            int x = s.IndexOf(target);
+            return (x>-1)
+                ? s.Substring(x+1)
+                : s;
+        }
 
         //System.Reflection not fully baked in dotnet core 1.0.0
         // public static void ReplaceString(this object obj, string pattern, string val)

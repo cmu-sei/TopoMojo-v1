@@ -43,15 +43,18 @@ namespace TopoMojo.Controllers
 
         private readonly IFileUploadHandler _uploader;
 
-        [HttpGet("api/[controller]/[action]/{id}")]
+        [HttpGet("api/file/progress/{id}")]
+        [ProducesResponseType(typeof(int), 200)]
         public IActionResult Progress([FromRoute]string id)
         {
             return Json(_monitor.Check(id).Progress);
         }
 
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost("api/file/upload")]
+        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
         [DisableFormValueModelBinding]
+        [ApiExplorerSettings(IgnoreApi=true)]
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload()
         {
@@ -77,6 +80,8 @@ namespace TopoMojo.Controllers
                     // Log("uploading", null, filename);
                     string dest = BuildDestinationPath(filename, key, scope);
                     metadata.Add("destination-path", dest);
+                    Log("uploading", null, dest);
+
                     string path = Path.GetDirectoryName(dest);
                     if (!Directory.Exists(path))
                         Directory.CreateDirectory(path);

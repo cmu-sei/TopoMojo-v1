@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using TopoMojo.Models;
+using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
 {
@@ -12,11 +12,11 @@ namespace TopoMojo.Core
         {
             if (detail.HasValue())
             {
-                _template = (Models.Template)JObject.Parse(detail).ToObject(typeof(Models.Template));
+                _template = (Template)JObject.Parse(detail).ToObject(typeof(Template));
             }
             else
             {
-                _template = new Models.Template
+                _template = new Template
                 {
                     Ram = 4,
                     Cpu = "1x2",
@@ -32,7 +32,7 @@ namespace TopoMojo.Core
             }
         }
 
-        private Models.Template _template = null;
+        private Template _template = null;
 
         public string Id
         {
@@ -58,7 +58,7 @@ namespace TopoMojo.Core
             set
             {
                 List<Eth> nics = _template.Eth.ToList();
-                if (nics.Count == 0)
+                if (nics.Count == 0 || !value.HasValue())
                     return;
                 Eth proto = nics.First();
 
@@ -111,7 +111,7 @@ namespace TopoMojo.Core
             return JObject.FromObject(_template).ToString();
         }
 
-        public Models.Template AsTemplate()
+        public Template AsTemplate()
         {
             return _template;
         }

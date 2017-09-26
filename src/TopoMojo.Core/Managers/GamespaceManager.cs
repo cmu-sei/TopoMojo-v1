@@ -2,267 +2,348 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
-using TopoMojo.Core.Data;
-using TopoMojo.Core.Entities;
-using TopoMojo.Core.Entities.Extensions;
+using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models.Extensions;
+using TopoMojo.Data;
+using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Entities;
+using TopoMojo.Data.Entities.Extensions;
+//using TopoMojo.Core.Models;
+//using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Extensions;
-using TopoMojo.Models;
+//using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
 {
     public class GamespaceManager : EntityManager<Gamespace>
     {
         public GamespaceManager(
-            TopoMojoDbContext db,
+            IProfileRepository pr,
+            IGamespaceRepository repo,
+            ITopologyRepository topos,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
             IPodManager podManager
-        ) : base (db, mill, options, profileResolver)
+        ) : base (pr, mill, options, profileResolver)
         {
             _pod = podManager;
+            _repo = repo;
+            _topos = topos;
         }
 
         private readonly IPodManager _pod;
+        private readonly IGamespaceRepository _repo;
+        private readonly ITopologyRepository _topos;
 
-        public async Task<GameState> Launch(int topoId)
+        public async Task<Models.Gamespace[]> List()
         {
-            //check for active instance, return it
-            Player[] gamespaces = await _db.Players
-                .Include(m => m.Gamespace)
-                .Where(m => m.PersonId == _user.Id)
-                .ToArrayAsync();
+            var list = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
+            return Mapper.Map<Models.Gamespace[]>(list);
+        }
+
+        public async Task<Models.GameState> Launch(int topoId)
+        {
+            Gamespace[] gamespaces = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
 
             Gamespace game = gamespaces
-                .Where(m => m.Gamespace.TopologyId == topoId)
-                .Select(m => m.Gamespace)
+                .Where(m => m.TopologyId == topoId)
                 .SingleOrDefault();
-
-            //if none, and at threshold, throw error
-            if (game == null && gamespaces.Length >= _options.ConcurrentInstanceMaximum)
-                throw new MaximumInstancesDeployedException();
-
-            string gameId = Guid.NewGuid().ToString();
-            Task<Vm[]> deploy = Deploy(topoId, gameId);
 
             if (game == null)
             {
-                Player player = new Player {
-                    PersonId = _user.Id,
-                    Permission = Permission.Manager,
-                    Gamespace = new Gamespace {
-                        TopologyId = topoId,
-                        GlobalId = gameId,
-                        WhenCreated = DateTime.UtcNow,
-                        ShareCode = Guid.NewGuid().ToString()
-                    }
+                Topology topology = await _topos.Load(topoId);
+                if (topology == null)
+                    throw new InvalidOperationException();
+
+                if (gamespaces.Length >= _options.ConcurrentInstanceMaximum)
+                    throw new GamespaceLimitException();
+
+                game = new Gamespace
+                {
+                    Name = topology.Name,
+                    TopologyId = topoId,
+                    ShareCode = Guid.NewGuid().ToString("N")
                 };
-                _db.Players.Add(player);
-                await _db.SaveChangesAsync();
-                game = player.Gamespace;
+                game.Players.Add(
+                    new Player
+                    {
+                        PersonId = Profile.Id,
+                        Permission = Permission.Manager,
+                    }
+                );
+                await _repo.Add(game);
             }
-
-            GameState state = new GameState
-            {
-                Id = game.Id,
-                GlobalId = game.GlobalId,
-                Document = game.Topology.Document,
-                WhenCreated = game.WhenCreated.ToString(),
-                ShareCode = game.ShareCode
-            };
-
-            state.AddVms(game.Topology.Linkers);
-            Task.WaitAll(deploy);
-            state.AddVms(deploy.Result);
-
-            return state;
+            return await Deploy(await _repo.Load(game.Id));
         }
 
-        public async Task<GameState> Check(int topoId)
+        private async Task<Models.GameState> Deploy(Gamespace gamespace)
         {
-            Topology topo = await _db.Topologies
-                .Include(t => t.Linkers)
-                .Where(t => t.Id == topoId)
-                .SingleOrDefaultAsync();
+            // Gamespace gamespace = await _repo.Load(id);
+            // if (gamespace == null)
+            //     throw new InvalidOperationException();
 
-            if (topo == null)
-                throw new InvalidOperationException();
+            // if (! await _repo.CanEdit(id, Profile))
+            //     throw new InvalidOperationException();
 
-            GameState state = new GameState
+            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            foreach (Template template in gamespace.Topology.Templates)
             {
-                Document = topo.Document,
-            };
-            state.AddVms(topo.Linkers);
-
-            //check for active instance, return it
-            Gamespace game = await _db.Players
-                .Include(m => m.Gamespace)
-                .Where(m => m.PersonId == _user.Id && m.Gamespace.TopologyId == topoId)
-                .Select(m => m.Gamespace)
-                .SingleOrDefaultAsync();
-
-            if (game != null)
-            {
-                state.Id = game.Id;
-                state.GlobalId = game.GlobalId;
-                state.WhenCreated = game.WhenCreated.ToString();
-                state.ShareCode = game.ShareCode;
-                Vm[] vms = await _pod.Find(game.GlobalId);
-                state.AddVms(vms);
+                TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
+                tu.Name = template.Name;
+                tu.Networks = template.Networks;
+                tu.Iso = template.Iso;
+                tu.IsolationTag = gamespace.GlobalId;
+                tu.Id = template.Id.ToString();
+                tasks.Add(_pod.Deploy(tu.AsTemplate()));
             }
-
-            return state;
-        }
-
-
-        private async Task<Vm[]> Deploy(int topoId, string tag)
-        {
-            Models.Template[] templates = await GetDeployableTemplates(topoId, tag);
-            List<Task<Vm>> tasks = new List<Task<Vm>>();
-            foreach (Models.Template template in templates)
-                tasks.Add(_pod.Deploy(template));
             Task.WaitAll(tasks.ToArray());
 
-            return tasks.Select(t => t.Result).ToArray();
+            return await LoadState(gamespace, gamespace.TopologyId);
         }
 
-        private async Task<Models.Template[]> GetDeployableTemplates(int topoId, string tag)
+        // public async Task<GameState> Launch(int topoId)
+        // {
+        //     //check for active instance, return it
+        //     Gamespace[] gamespaces = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
+
+        //     Gamespace game = gamespaces
+        //         .Where(m => m.TopologyId == topoId)
+        //         .SingleOrDefault();
+
+        //     //if none, and at threshold, throw error
+        //     if (game == null && gamespaces.Length >= _options.ConcurrentInstanceMaximum)
+        //         throw new MaximumInstancesDeployedException();
+
+        //     string gameId = Guid.NewGuid().ToString();
+        //     Task<Vm[]> deploy = Deploy(topoId, gameId);
+
+        //     if (game == null)
+        //     {
+        //         Player player = new Player {
+        //             PersonId = Profile.Id,
+        //             Permission = Permission.Manager,
+        //             Gamespace = new Gamespace {
+        //                 TopologyId = topoId,
+        //                 GlobalId = gameId,
+        //                 WhenCreated = DateTime.UtcNow,
+        //                 ShareCode = Guid.NewGuid().ToString()
+        //             }
+        //         };
+        //         _db.Players.Add(player);
+        //         await _db.SaveChangesAsync();
+        //         game = player.Gamespace;
+        //     }
+
+        //     GameState state = new GameState
+        //     {
+        //         Id = game.Id,
+        //         GlobalId = game.GlobalId,
+        //         Document = game.Topology.Document,
+        //         WhenCreated = game.WhenCreated.ToString(),
+        //         ShareCode = game.ShareCode
+        //     };
+
+        //     state.AddVms(game.Topology.Linkers);
+        //     Task.WaitAll(deploy);
+        //     state.AddVms(deploy.Result);
+
+        //     return state;
+        // }
+
+        public async Task<Models.GameState> Load(int id)
         {
-            List<Models.Template> result = new List<Models.Template>();
-            Topology topology = await _db.Topologies
-                .Include(t => t.Linkers)
-                    .ThenInclude(tt => tt.Template)
-                .Where(t => t.Id == topoId)
-                .SingleOrDefaultAsync();
+            Gamespace gamespace = await _repo.Load(id);
+            return await LoadState(gamespace, gamespace.TopologyId);
+        }
 
-            if (topology == null)
-                throw new InvalidOperationException();
+        public async Task<Models.GameState> LoadFromTopo(int topoId)
+        {
+            Gamespace gamespace = await _repo.FindByContext(topoId, Profile.Id);
+            return await LoadState(gamespace, topoId);
+        }
 
-            foreach (Linker tref in topology.Linkers)
+        private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
+        {
+            Models.GameState state = null;
+
+            if (gamespace == null)
             {
-                TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
-                if (tref.Name.HasValue())
-                    tu.Name = tref.Name;
+                Data.Entities.Topology topo = await _topos.Load(topoId);
+                if (topo == null)
+                    throw new InvalidOperationException();
 
-                if (tref.Networks.HasValue())
-                    tu.Networks = tref.Networks;
-
-                if (tref.Iso.HasValue())
-                    tu.Iso = tref.Iso;
-
-                tu.IsolationTag = tag.HasValue() ? tag : topology.GlobalId;
-                tu.Id = tref.Id.ToString();
-                result.Add(tu.AsTemplate());
+                state = new Models.GameState();
+                state.TopologyDocument = topo.Document;
+                state.Vms = topo.Templates
+                    .Where(t => !t.IsHidden)
+                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
+                    .ToArray();
             }
-            return result.ToArray();
+            else
+            {
+                state = Mapper.Map<Models.GameState>(gamespace);
+                state.Vms = gamespace.Topology.Templates
+                    .Where(t => !t.IsHidden)
+                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
+                    .ToArray();
+                state.MergeVms(await _pod.Find(gamespace.GlobalId));
+            }
+
+            return state;
         }
 
-        public async Task<bool> Destroy(int id)
-        {
-            Player player = await _db.Players
-                .Include(m => m.Gamespace)
-                .Where(m => m.GamespaceId == id && m.PersonId == _user.Id)
-                .SingleOrDefaultAsync();
+        // private async Task<Vm[]> DeployMachines(Gamespace gamespace)
+        // {
+        //     List<Task<Vm>> tasks = new List<Task<Vm>>();
+        //     foreach (Entities.Template template in gamespace.Topology.Templates)
+        //     {
+        //         TemplateUtility tu = new TemplateUtility(template.Detail ?? template.BaseTemplate.Detail);
+        //         tu.Name = template.Name;
+        //         tu.Networks = template.Networks;
+        //         tu.Iso = template.Iso;
+        //         tu.IsolationTag = gamespace.GlobalId;
+        //         tu.Id = template.Id.ToString();
+        //         tasks.Add(_pod.Deploy(tu.AsTemplate()));
+        //     }
+        //     Task.WaitAll(tasks.ToArray());
+        //     return tasks.Select(t => t.Result).ToArray();
+        // }
 
-            if (player == null || player.PersonId != _user.Id || !player.Permission.CanManage())
+        // private async Task<Vm[]> Deploy(int topoId, string tag)
+        // {
+        //     TopoMojo.Models.Virtual.Template[] templates = await GetDeployableTemplates(topoId, tag);
+        //     List<Task<Vm>> tasks = new List<Task<Vm>>();
+        //     foreach (TopoMojo.Models.Virtual.Template template in templates)
+        //         tasks.Add(_pod.Deploy(template));
+        //     Task.WaitAll(tasks.ToArray());
+
+        //     return tasks.Select(t => t.Result).ToArray();
+        // }
+
+        // private async Task<TopoMojo.Models.Virtual.Template[]> GetDeployableTemplates(int topoId, string tag)
+        // {
+        //     List<Models.Template> result = new List<Models.Template>();
+        //     Topology topology = await _db.Topologies
+        //         .Include(t => t.Linkers)
+        //             .ThenInclude(tt => tt.Template)
+        //         .Where(t => t.Id == topoId)
+        //         .SingleOrDefaultAsync();
+
+        //     if (topology == null)
+        //         throw new InvalidOperationException();
+
+        //     foreach (Linker tref in topology.Linkers)
+        //     {
+        //         TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
+        //         if (tref.Name.HasValue())
+        //             tu.Name = tref.Name;
+
+        //         if (tref.Networks.HasValue())
+        //             tu.Networks = tref.Networks;
+
+        //         if (tref.Iso.HasValue())
+        //             tu.Iso = tref.Iso;
+
+        //         tu.IsolationTag = tag.HasValue() ? tag : topology.GlobalId;
+        //         tu.Id = tref.Id.ToString();
+        //         result.Add(tu.AsTemplate());
+        //     }
+        //     return result.ToArray();
+        // }
+
+        public async Task<Models.GameState> Destroy(int id)
+        {
+            Gamespace gamespace = await _repo.Load(id);
+            if (gamespace == null)
                 throw new InvalidOperationException();
 
-            List<Task<Vm>> tasks = new List<Task<Vm>>();
-            foreach (Vm vm in await _pod.Find(player.Gamespace.GlobalId))
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
+
+            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
                 tasks.Add(_pod.Delete(vm.Id));
             Task.WaitAll(tasks.ToArray());
-            //_pod.DeleteGroup(player.Gamespace.GlobalId);
+            //TODO: _pod.DeleteMatches(player.Gamespace.GlobalId);
 
-            _db.Gamespaces.Remove(player.Gamespace);
-            await _db.SaveChangesAsync();
-            return true;
+             await _repo.Remove(gamespace);
+            return Mapper.Map<Models.GameState>(gamespace);
         }
 
-        public async Task<Player[]> Gamespaces()
-        {
-            return await _db.Players
-                .Include(m => m.Gamespace).ThenInclude(i => i.Topology)
-                .Where(m => m.PersonId == _user.Id)
-                .ToArrayAsync();
-        }
+        // public async Task<Player[]> Players(int id)
+        // {
+        //     Player[] players = await _db.Players
+        //         .Where(p => p.GamespaceId == id)
+        //         .ToArrayAsync();
 
-        public async Task<Player[]> Players(int id)
-        {
-            Player[] players = await _db.Players
-                .Where(p => p.GamespaceId == id)
-                .ToArrayAsync();
+        //     Player player = players
+        //         .Where(p => p.PersonId == Profile.Id)
+        //         .SingleOrDefault();
 
-            Player player = players
-                .Where(p => p.PersonId == _user.Id)
-                .SingleOrDefault();
+        //     if (player == null)
+        //         throw new InvalidOperationException();
 
-            if (player == null)
-                throw new InvalidOperationException();
+        //     return players;
+        // }
 
-            return players;
-        }
+        // public async Task<string> Share(int id, bool revoke)
+        // {
+        //     Player member = await _db.Players
+        //         .Include(m => m.Gamespace)
+        //         .Where(m => m.GamespaceId == id)
+        //         .SingleOrDefaultAsync();
 
-        public async Task<string> Share(int id, bool revoke)
-        {
-            Player member = await _db.Players
-                .Include(m => m.Gamespace)
-                .Where(m => m.GamespaceId == id)
-                .SingleOrDefaultAsync();
+        //     if (member == null || member.PersonId != Profile.Id || !member.Permission.CanManage())
+        //         throw new InvalidOperationException();
 
-            if (member == null || member.PersonId != _user.Id || !member.Permission.CanManage())
-                throw new InvalidOperationException();
-
-            string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
-            member.Gamespace.ShareCode = code;
-            await _db.SaveChangesAsync();
-            return code;
-        }
+        //     string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
+        //     member.Gamespace.ShareCode = code;
+        //     await _db.SaveChangesAsync();
+        //     return code;
+        // }
 
         public async Task<bool> Enlist(string code)
         {
-            Gamespace gamespace = await _db.Gamespaces
-                .Include(i => i.Players)
-                .Where(i => i.ShareCode == code)
-                .SingleOrDefaultAsync();
+            Gamespace gamespace = await _repo.FindByShareCode(code);
+            if (gamespace == null)
+                throw new InvalidOperationException();
+
+            if (!gamespace.Players.Where(m => m.PersonId == Profile.Id).Any())
+            {
+                gamespace.Players.Add(new Player
+                {
+                    PersonId = Profile.Id,
+                });
+                await _repo.Update(gamespace);
+            }
+            return true;
+        }
+
+        public async Task<bool> Delist(int playerId)
+        {
+            Gamespace gamespace = await _repo.FindByPlayer(playerId);
 
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            if (!gamespace.Players.Where(m => m.PersonId == _user.Id).Any())
-            {
-                gamespace.Players.Add(new Player
-                {
-                    PersonId = _user.Id,
-                });
-                await _db.SaveChangesAsync();
-            }
-            return true;
-        }
-
-        public async Task<bool> Delist(int topoId, int memberId)
-        {
-            Gamespace gamespace = await _db.Gamespaces
-                .Include(t => t.Players)
-                .Where(t => t.Id == topoId)
-                .SingleOrDefaultAsync();
-
-            Player actor = gamespace.Players
-                .Where(p => p.PersonId == _user.Id)
-                .SingleOrDefault();
-
-            Player target = gamespace.Players
-                .Where(p => p.PersonId == memberId)
-                .SingleOrDefault();
-
-            if (actor == null || !actor.Permission.CanManage() || target == null)
+            if (! await _repo.CanManage(gamespace.Id, Profile))
                 throw new InvalidOperationException();
 
-            gamespace.Players.Remove(target);
-            await _db.SaveChangesAsync();
+            Player member = gamespace.Players
+                .Where(p => p.PersonId == playerId)
+                .SingleOrDefault();
+
+            if (member != null)
+            {
+                gamespace.Players.Remove(member);
+                await _repo.Update(gamespace);
+            }
             return true;
         }
     }

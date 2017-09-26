@@ -1,0 +1,40 @@
+<div class="toolbar">
+<ul *ngIf="working" class="list-inline">
+    <li><i class="fa fa-circle-o-notch fa-spin"></i></li>
+    <li>
+        <span *ngIf="vm && vm.task && vm.task.name">{{ vm.task.name }}...</span>
+        <span *ngIf="vm && vm.task && vm.task.progress > 0">{{vm.task.progress}}%</span>
+    </li>
+</ul>
+<div *ngIf="!working" [ngSwitch]="vm.status" class="list-inline">
+    <li><span class="label"
+        [class.label-default]="vm.status == 'created'"
+        [class.label-primary]="vm.status == 'initialized'"
+        [class.label-success]="vm.status == 'deployed'">{{vm.status}}</span></li>
+    <div class="btn-group">
+        <button class="btn btn-default" (click)="startRefresh()" [tooltip]="'REFRESH' | translate | lowercase"><i class="fa fa-refresh"></i></button>
+        <ng-template [ngSwitchCase]="'created'">
+            <button class="btn btn-default" (click)="initialize()" [tooltip]="'INITIALIZE' | translate | lowercase"><i class="fa fa-cog"></i></button>
+        </ng-template>
+        <ng-template [ngSwitchCase]="'initialized'">
+            <button class="btn btn-default" (click)="deploy()" [tooltip]="'DEPLOY' | translate | lowercase"><i class="fa fa-bolt"></i></button>
+        </ng-template>
+        <ng-template [ngSwitchCase]="'deployed'">
+            <button class="btn btn-default" (click)="start()" [tooltip]="'START' | translate | lowercase" *ngIf="!isRunning()"><i class="fa fa-play"></i></button>
+            <button class="btn btn-default" (click)="stop()" [tooltip]="'STOP' | translate | lowercase" *ngIf="isRunning()"><i class="fa fa-stop"></i></button>
+            <button class="btn btn-default" (click)="display()" [tooltip]="'CONSOLE' | translate | lowercase"><i class="fa fa-desktop"></i></button>
+            <button class="btn btn-default" (click)="revert()" [tooltip]="'REVERT' | translate | lowercase"><i class="fa fa-fast-backward"></i></button>
+            <button class="btn btn-default" (click)="save()" [tooltip]="'SAVE' | translate | lowercase" *ngIf="!hasParent()"><i class="fa fa-save"></i></button>
+            <button class="btn btn-default" (click)="delete()" [tooltip]="'DELETE' | translate | lowercase"><i class="fa fa-trash"></i></button>
+        </ng-template>
+    </div>
+</div>
+<error-div [errors]="errors" (onErrorCleared)="errorCleared"></error-div>
+<div *ngIf="!working && vm.question" class="alert alert-warning">
+    <p>{{ vm.question.prompt }}</p>
+    <button *ngFor="let c of vm.question.choices"
+        (click)="answer(c)"
+        [class.selected]="c.key === vm.question.defaultChoice"
+        class="btn btn-warning">{{c.label}}</button>
+</div>
+</div>
