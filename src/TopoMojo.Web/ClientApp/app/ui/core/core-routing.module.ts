@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes, ActivatedRouteSnapshot } from '@angular/router';
+import { RouterModule, Routes, ActivatedRoute } from '@angular/router';
 import { CoreComponent } from './core.component';
 import { HomeComponent } from './home.component';
 import { NavbarComponent } from './navbar.component';

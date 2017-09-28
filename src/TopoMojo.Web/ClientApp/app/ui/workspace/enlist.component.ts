@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRouteSnapshot, Params } from '@angular/router';
+import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TopologyService } from '../../api/topology.service';
 
 @Component({
@@ -11,12 +11,12 @@ export class TopoEnlistComponent implements OnInit {
 
     constructor(
         private service: TopologyService,
-        private route: ActivatedRouteSnapshot,
+        private route: ActivatedRoute,
         private router: Router
     ) { }
 
     ngOnInit(): void {
-        let code = this.route.paramMap.get('code');
+        let code = this.route.snapshot.paramMap.get('code');
         this.service.enlistWorker(code)
             .subscribe(result => {
                 this.router.navigate(['/topo']);
