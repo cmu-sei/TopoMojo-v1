@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../svc/auth.service';
 
 @Component({
@@ -12,13 +12,14 @@ export class AuthPendingComponent implements OnInit {
     errorMessage: string;
 
     constructor(
-        private route: ActivatedRouteSnapshot,
+        private route: ActivatedRoute,
         private router: Router,
         private service: AuthService
     ) { }
 
     ngOnInit() {
-        this.service.externalLoginCallback(this.route.fragment)
+        console.log(this.route.snapshot.fragment);
+        this.service.externalLoginCallback(this.route.snapshot.fragment)
         .then(
             (user) => {
                 // console.log(user);
