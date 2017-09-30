@@ -8,8 +8,8 @@
  * Options:
  * -u, --url path to the swagger-v2 json file
  * -o, --out path of the destination folder
- * -m, --map DerivedType:AggregateType
- * -n, --ns  a parent namespace to exlude (default: 'Models')
+ * -m, --map dt:at  map derived-type to aggregate-type
+ * -n, --ns marker clip namespace after marker (default: 'Models')
  * -h, --help displays usage information
  *
  * Swagger v2 has no contruct for an Object querystring parameter.
@@ -138,7 +138,7 @@ var fspath = require('path');
             meta.types[t] = meta.types[t]
                 .map(
                     (e) => {
-                        return TransformRef(e);
+                        return e.normalizeRef();
                     }
                 )
                 .filter(
@@ -157,14 +157,14 @@ var fspath = require('path');
 
         for (var name in models) {
             let model = models[name];
-            let typeName = TransformRef(name);
+            let typeName = name.normalizeRef();
             types.push(typeName);
             text += "export interface " + typeName + " {" + crlf;
             for (var p in model.properties) {
                 let prop = model.properties[p];
-                let type = TransformTypeItem(prop);
+                let type = findType(prop);
                 if (prop.enum) {
-                    type = TransformRef(name) + PascalCase(p) + "Enum";
+                    type = name.normalizeRef() + p.pascalCase() + "Enum";
                     if (!enums[type]) enums[type] = prop.enum;
                 }
                 text += "\t" + p + "?: " + type + ";" + crlf;
@@ -179,7 +179,6 @@ var fspath = require('path');
             text += "}" + crlf + crlf;
         }
 
-        //console.log(meta);
         for (let d in meta.derivatives) {
             if (types.indexOf(d) < 0) {
                 let params = meta["derivatives"][d];
@@ -187,12 +186,12 @@ var fspath = require('path');
                 for (var p in params) {
                     if (params[p].in == "query") {
                         let prop = params[p];
-                        let type = TransformTypeItem(prop);
+                        let type = findType(prop);
                         if (prop.enum) {
-                            type = TransformRef(name) + PascalCase(p) + "Enum";
+                            type = name.normalizeRef() + p.pascalCase() + "Enum";
                             if (!enums[type]) enums[type] = prop.enum;
                         }
-                        text += "\t" + CamelCase(params[p].name) + "?: " + type + ";" + crlf;
+                        text += "\t" + params[p].name.camelCase() + "?: " + type + ";" + crlf;
                     }
                 }
                 text += "}" + crlf + crlf;
@@ -231,18 +230,14 @@ var fspath = require('path');
             .trim()
             .split(" ");
         let object = "", action = "";
-        //console.log(p);
         if (p.length > 2) {
             object = p.splice(0,2).pop();
-            //console.log(p);
             action = p.shift();
-            //console.log(p);
         } else {
             object = p[0];
             action = p[1];
         }
-        //console.log( action + object);
-        return CamelCase(action) + object;
+        return action.camelCase() + object;
     }
 
     function OperationInput(params) {
@@ -250,7 +245,7 @@ var fspath = require('path');
         if (params) {
             let r = params
                 .filter((p) => { return p.in != "query"})
-                .map((p) => { return p.name + ": " + TransformTypeItem(p)})
+                .map((p) => { return p.name + ": " + findType(p)})
                 .concat(...ParamsToInput(params));
             if (r.length > 0) opi.push(...r);
         }
@@ -263,7 +258,7 @@ var fspath = require('path');
             var r = response[k];
             if (r.description == "Success") {
                 rt = (r.schema)
-                    ? TransformTypeItem(r.schema)
+                    ? findType(r.schema)
                     : "any";
             }
         }
@@ -281,17 +276,8 @@ var fspath = require('path');
             qs = ParamsToBody(params);
             if (qs)
                 bodyparam = `, ${qs}`;
-
-            // for (let i in params) {
-            //     if (params[i].in == "body") bodyparam = ", " + params[i].name;
-            //     if (params[i].name == "Skip" && params[i].in == "query") {
-            //         bodyparam = " + this.queryStringify(search)";
-            //         break;
-            //     }
-            // }
         }
         return `this.http.${op}<${opr}>("${path}"${bodyparam});`.replace(/ \+ \"\"/, "");
-        //return ("this.http." + op + '("' + path + '"' + bodyparam + ');').replace(/ \+ \"\"/, "");
     }
 
     function ParamsToBody(params) {
@@ -311,30 +297,11 @@ var fspath = require('path');
             let type = ps.map((p) => { return p.name }).join('');
             let i = derivedTypeMap.indexOf(type);
             if (i != -1) {
-                result.push(`${CamelCase(derivedTypeMap[i+1])}: ${derivedTypeMap[i+1]}`);
+                result.push(`${derivedTypeMap[i+1].camelCase()}: ${derivedTypeMap[i+1]}`);
             } else {
-                result.push(ps.map((p)=> { return CamelCase(p.name) + ": " + TransformTypeItem(p)}));
+                result.push(ps.map((p)=> { return p.name.camelCase() + ": " + findType(p)}));
             }
         }
-        return result;
-    }
-    function GenerateParamModels(paths) {
-        let result = "";
-        for (let path in paths) {
-            for (let method in paths[path]) {
-                let op = paths[path][method];
-
-            }
-        }
-        // if (ps.length > 0) {
-        //     let type = ps.map((p) => { return p.name }).join('');
-        //     let i = qsmap.indexOf(type);
-        //     if (i != -1) {
-        //         result.push(`${CamelCase(qsmap[i+1])}: ${qsmap[i+1]}`);
-        //     } else {
-        //         result.push(ps.map((p)=> { return CamelCase(p.name) + ": " + TransformTypeItem(p)}));
-        //     }
-        // }
         return result;
     }
 
@@ -347,11 +314,11 @@ var fspath = require('path');
         if (ps.length > 0) {
             let i = derivedTypeMap.indexOf(ps.join(''));
             if (i != -1) {
-                result = `this.paramify(${CamelCase(derivedTypeMap[i+1])})`;
+                result = `this.paramify(${derivedTypeMap[i+1].camelCase()})`;
             } else {
                 let items = ps.map(
                     (n) => {
-                        let i = CamelCase(n);
+                        let i = n.camelCase();
                         return i + ": " + i;
                     }
                 ).join(', ');
@@ -365,7 +332,6 @@ var fspath = require('path');
         let refs = [];
         path = path.substring(path.lastIndexOf('.'+1));
         for (let prop in props) {
-            //console.log(prop);
             if (props[prop].enum)
                 refs.push(path+prop+"Enum");
         }
@@ -392,7 +358,7 @@ var fspath = require('path');
                     let t = api.definitions[c];
                     for (let cp in t.properties) {
                         let cpr = t.properties[cp];
-                        if (cpr.enum) refs.push(TrimNamespace(c) + PascalCase(cp) + "Enum");
+                        if (cpr.enum) refs.push(c.trimNS() + cp.pascalCase() + "Enum");
                         let ref = FindRefItem(cpr);
                         if (ref) refs.push(ref);
                     }
@@ -418,45 +384,50 @@ var fspath = require('path');
         return "";
     }
 
-    function TransformTypeItem(item) {
-        //console.log(item);
+    function findType(item) {
         if (item.$ref)
-            return TransformRef(item.$ref);
+            return item.$ref.normalizeRef();
 
         if (item.schema)
-            return TransformTypeItem(item.schema);
+            return findType(item.schema);
 
         if (item.type) {
             if (item.type == "array")
-                return "Array<" + TransformTypeItem(item.items || item.schema) + ">";
+                return "Array<" + findType(item.items || item.schema) + ">";
 
-            return TransformType(item.type);
+            return item.type.normalizeType();
         }
         return "";
     }
 
-    function TransformType(type) {
+    String.prototype.normalizeType = function() {
+        let type = this+'';
         switch (type) {
             case "integer":
+            case "short":
+            case "long":
+            case "float":
+            case "single":
+            case "double":
                 type = "number";
                 break;
         }
         return type;
     }
 
-    function TransformRef(ref) {
-        var f = ref.split(',')[0]
-        .substring(ref.lastIndexOf('/') + 1)
+    String.prototype.normalizeRef = function() {
+        var f = this.split(',')[0]
+        .substring(this.lastIndexOf('/') + 1)
         .replace(/\`\d+\[\[/, "-")
         .split("-");
 
         return (f.length > 1)
-            ? TrimNamespace(f[1]) + TrimNamespace(f[0])
-            : TrimNamespace(f[0]);
+            ? f[1].trimNS() + f[0].trimNS()
+            : f[0].trimNS();
     }
 
-    function TrimNamespace(ns) {
-        ns = ns.replace(nsRegex, "").split(".");
+    String.prototype.trimNS = function() {
+        ns = this.replace(nsRegex, "").split(".");
         let r = ns[0];
         if (ns.length > 1) {
             r = (ns[ns.length-1].match(ns[ns.length-2]))
@@ -466,12 +437,12 @@ var fspath = require('path');
         return r;
     }
 
-    function CamelCase(s) {
-        return s.substring(0,1).toLowerCase() + s.substring(1);
+    String.prototype.pascalCase = function() {
+        return this.substring(0,1).toUpperCase() + this.substring(1);
     }
 
-    function PascalCase(s) {
-        return s.substring(0,1).toUpperCase() + s.substring(1);
+    String.prototype.camelCase = function() {
+        return this.substring(0,1).toLowerCase() + this.substring(1);
     }
 
     function showUsage() {
@@ -479,6 +450,8 @@ var fspath = require('path');
         console.log("  options:");
         console.log("    -u, --url url      Url or Filepath to url-to-swagger-v2-json");
         console.log("    -o, --output path  Saves api client files in path");
+        console.log("    -m, --map dt:at    map derived-type to aggregate-type");
+        console.log("    -n, --ns marker    clip namespace after marker (Default: 'Models')");
         console.log("    -h, --help         Shows this usage info");
         console.log();
     }
@@ -504,7 +477,7 @@ var fspath = require('path');
         return args;
     }
 
-    /* TESTS */
+     /* TESTS */
     // let r = "#/definitions/TopoMojo.Core.Models.SearchResult`1[[TopoMojo.Core.Models.Template.TemplateDetail, TopoMojo.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]";
     // console.log("TransformRef should yield: TemplateDetailSearchResult, and did yield: " + TransformRef(r));
     // console.log("TrimNamespace should yield: ChannelSummary, and did yield: " + TrimNamespace("Step.Core.Models.Channel.ChannelSummary"));
@@ -515,6 +488,11 @@ var fspath = require('path');
     let args = processArgs(argv);
     let derivedTypeMap = (args.map) ? args.map.split(':') : []; //[ "TermSkipTakeSortFilters", "Search"];
     let nsRegex = new RegExp(`.+${args.ns || 'Models'}\\.`);
+
+    /* TESTS */
+    // let r = "#/definitions/TopoMojo.Core.Models.SearchResult`1[[TopoMojo.Core.Models.Template.TemplateDetail, TopoMojo.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]";
+    // console.log(r.normalizeRef());
+    // return;
 
     if (!args.help && args.url) {
         if (args.url.startsWith("http")) {
