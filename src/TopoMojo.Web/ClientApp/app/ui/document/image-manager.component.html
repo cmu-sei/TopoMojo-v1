@@ -1,25 +1,24 @@
-<!--<div>-->
-    <h4>Image Manager</h4>
-    <div class="upload-ui">
-        <label class="btn btn-link">
-            <input id="fileSelector" multiple type="file" style="display:none;" (change)="fileSelectorChanged($event)">
-            Browse to upload
-        </label>
-        <div *ngIf="filesQueued()">
-            <div *ngFor="let qf of queuedFiles">
-                <span *ngIf="qf.progress >= 0" class="badge badge-warning"><i class="fa fa-circle-o-notch fa-spin"></i> {{ qf.progress }}%</span>
-                <i class="fa fa-image"></i> <span>{{ qf.name }}</span>
-                <button *ngIf="!uploading" class="btn btn-link" (click)="dequeueFile(qf)">&times;</button>
-            </div>
-            <button (click)="upload()" class="btn btn-primary">Upload</button>
+<div>
+    <h4 translate>IMAGE-MANAGER</h4>
+    <label class="btn btn-default btn-sm pull-right">
+        <input id="fileSelector" multiple type="file"
+            style="display:none;"
+            (change)="fileSelectorChanged($event)">
+        <span translate>SELECT-FILE</span>
+    </label>
+    <div *ngIf="filesQueued()">
+        <div *ngFor="let qf of queuedFiles">
+            <span *ngIf="qf.progress >= 0" class="badge badge-warning"><i class="fa fa-circle-o-notch fa-spin"></i> {{ qf.progress }}%</span>
+            <i class="fa fa-image"></i> <span>{{ qf.name }}</span>
+            <button *ngIf="!uploading" class="btn btn-link" (click)="dequeueFile(qf)">&times;</button>
         </div>
+        <button (click)="upload()" class="btn btn-primary">Upload</button>
     </div>
     <div *ngIf="images" class="row display-flex">
-        <div *ngFor="let img of images" class="col-md-4">
+        <div *ngFor="let img of images" class="col-xs-4">
             <div class="thumb">
-                <img [src]="imagePath(img)" (click)="imageClicked(img)" class="img-responsive"/>
+                <img [src]="imagePath(img)" (click)="imageClicked(img)" class="img-responsive" [title]="img.filename"/>
                 <div class="pic-overlay">
-                    <!-- <span>{{img.filename}}</span> -->
                     <button class="btn btn-default btn-sm" (click)="genMd(img)"
                         [tooltip]="'COPY'|translate|lowercase">
                         <i class="fa fa-clipboard"></i>
@@ -33,5 +32,5 @@
         </div>
         <textarea id="image-clipboard" class="offscreen"></textarea>
     </div>
-<!--</div>-->
+</div>
 

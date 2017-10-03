@@ -41,7 +41,7 @@ export class PlayerComponent implements OnInit {
     ) {
         this.converter = new Converter(showdown_opts);
         this.settings.changeLayout({ embedded : true });
-        this.appName = this.settings.branding.applicationName;
+        this.appName = this.settings.branding.applicationName || "TopoMojo";
     }
 
     ngOnInit() {
@@ -49,7 +49,7 @@ export class PlayerComponent implements OnInit {
         this.id = +this.route.snapshot.paramMap.get('id');
         this.service.getGamespace(this.id).subscribe(
             (result : GameState) => {
-                this.service.getText(result.topologyDocument)
+                this.service.getText(result.topologyDocument + "?ts=" + Date.now())
                     .finally(() => this.render())
                     .subscribe(
                         (text) => {

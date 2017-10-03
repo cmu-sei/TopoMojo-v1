@@ -44,56 +44,28 @@
         </ul>
     </div>
 
-    <div id="content" class="container">
-        <error-div [errors]="errors"></error-div>
-        <div *ngIf="docMissing" translate>EXCEPTION.NODOCUMENT</div>
-        <div *ngIf="renderedDoc"
-            class="col-xs-6"
-            [class.col-xs-offset-3]="!collaborationVisible"
-            [innerHtml]="renderedDoc"></div>
+    <div id="content">
 
-        <div [hidden]="!collaborationVisible" id="collab-div">
+        <div id="doc-div">
 
-            <!-- <div id="presence-div">
-                <p>{{shareUrl}}
-                    <button class="btn btn-default btn-sm">
-                        <i class="fa fa-clipboard"></i>
-                    </button>
-                </p>
-                <ul class="list-inline">
-                    <li *ngFor="let player of players"
-                        [class.text-success]="player.online"
-                        [class.text-muted]="!player.online">
-                        <span>{{player.name}}</span>
-                    </li>
-                </ul>
-            </div> -->
+            <error-div [errors]="errors"></error-div>
 
-            <chat-messages *ngIf="game" [space]="game"></chat-messages>
+            <div *ngIf="docMissing" translate>EXCEPTION.NODOCUMENT</div>
 
-            <!-- <div id="message-div">
-                <p *ngFor="let msg of messages">
-                    {{msg}}
-                </p>
-            </div> -->
-
-            <!-- <div id="send-div">
-                <form (ngSubmit)="sendMessage()"class="input-group">
-                    <textarea type="text" class="form-control" name="msg" [(ngModel)]="msg" (keyup.enter)="sendMessage()"></textarea>
-                    <span class="input-group-addon btn btn-default" (click)="sendMessage()">
-                        <i class="fa fa-send"></i>
-                    </span>
-                </form>
-            </div> -->
+            <div *ngIf="renderedDoc"
+            [innerHtml]="renderedDoc">
+        </div>
+        <!-- class="col-xs-6" -->
+        <!-- [class.col-xs-offset-3]="!collaborationVisible" -->
 
         </div>
-        <!-- <div class="console-viewer">
-             <div *ngFor="let vm of game.vms" class="console">
-                <p>{{vm.name}}</p>
-            </div>
-            <span>Connect</span>
-        </div> -->
+
+        <div [hidden]="!collaborationVisible" id="collab-div">
+            <chat-messages *ngIf="game" [space]="game"></chat-messages>
+        </div>
+
     </div>
+
 </div>
 
 <div *ngIf="showOverlay" class="overlay">

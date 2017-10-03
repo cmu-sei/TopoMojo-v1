@@ -1,0 +1,36 @@
+#fixed-header {
+    position: fixed;
+    top: 0;
+    left:0;
+    height: 50px;
+    width: 100%;
+    background-color: white;
+    margin: 0px;
+    padding: 4px;
+    z-index: 3;
+}
+#fixed-body {
+    position: fixed;
+    top: 0;
+    left:0;
+    bottom: 2;
+    width: 100%;
+    background-color: white;
+    margin: 0px;
+    padding: 50px 4px 2px 4px;
+    z-index: 1;
+}
+.fixed-right {
+    position: fixed;
+    top: 50;
+    right:0;
+    bottom: 2;
+    width: 480px;
+    height: 90%;
+    background-color: gray;
+    margin: 0px;
+    padding: 2px 12px 2px 12px;
+    z-index: 2;
+    overflow-y: scroll;
+    border-radius: 4px;
+}

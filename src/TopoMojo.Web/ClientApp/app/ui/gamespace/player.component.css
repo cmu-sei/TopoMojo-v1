@@ -15,13 +15,17 @@
 #content {
      margin: 50px;
 }
+#doc-div {
+    width: 480px;
+}
+
 #collab-div {
     position: fixed;
     top: 50px;
     right: 0;
     bottom: 0;
     /* height: 100%; */
-    width: 400px;
+    width: 480px;
     background-color: white;
     padding: 4px;
 }

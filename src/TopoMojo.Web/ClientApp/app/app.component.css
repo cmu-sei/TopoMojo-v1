@@ -1,11 +1,11 @@
-@media (max-width: 610px) {
+/* @media (max-width: 610px) {
   .main-container { width: 400px; }
 }
 
 .container {
   padding: 16px 0px 16px 0px;
   max-width: 600px;
-}
+} */
 
 .link-active {
   background-color: darkgray;

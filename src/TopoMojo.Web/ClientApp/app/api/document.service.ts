@@ -13,7 +13,7 @@ export class DocumentService extends GeneratedDocumentService {
     ) { super(http); }
 
     public getDocument(guid : string) : Observable<string> {
-		return this.http.get("/docs/" + guid + ".md", { responseType: "text"});
+		return this.http.get("/docs/" + guid + ".md?ts=" + Date.now(), { responseType: "text"});
 	}
 
     public uploadImage(guid: string, file: File) : Observable<HttpEvent<ImageFile>> {

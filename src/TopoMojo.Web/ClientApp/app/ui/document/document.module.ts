@@ -1,12 +1,9 @@
 import { NgModule } from '@angular/core';
 import { SharedModule } from '../shared/shared.module';
-import { DocumentEditorComponent } from './document-editor.component';
-import { ImageManagerComponent } from './image-manager.component';
+import { DocumentRoutingModule } from './document-routing.module';
 
 @NgModule({
-    imports: [ SharedModule ],
-    declarations: [ ImageManagerComponent, DocumentEditorComponent ],
-    exports: [ImageManagerComponent, DocumentEditorComponent],
-    providers: [  ]
+    imports: [ SharedModule, DocumentRoutingModule ],
+    declarations: [ DocumentRoutingModule.components ]
 })
 export class DocumentModule { }

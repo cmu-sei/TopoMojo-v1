@@ -1,6 +1,5 @@
 # TODO
 audit logging
-set/upload iso
 investigate console keepalive
 workspace messaging
 admin templates, order by topo,template
@@ -8,10 +7,14 @@ admin users, manage ui
 admin vm page, order by topo, instance
 profile page to change name
 topo deployment stats
-review blank.vmdk workflow
-cleanup structure
+display enlistment errors
+multi-page docs
 
 # DONE
+improve doc layout
+review blank.vmdk workflow
+cleanup structure
+set/upload iso
 better 'loading' indicator
 gamespace messaging
 handle external auth error if not present (maybe try handler local jwt first)
