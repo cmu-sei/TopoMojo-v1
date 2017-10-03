@@ -5,7 +5,8 @@ import { SHOWDOWN_OPTS } from '../../svc/settings.service';
 
 @Component({
     selector: 'document-editor',
-    templateUrl: 'document-editor.component.html'
+    templateUrl: 'document-editor.component.html',
+    styleUrls: [ 'document-editor.component.css']
 })
 export class DocumentEditorComponent implements OnInit {
 

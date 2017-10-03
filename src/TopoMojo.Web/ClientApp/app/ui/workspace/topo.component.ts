@@ -9,7 +9,7 @@ import { Component, OnInit } from '@angular/core';
     styles: [ `
         .container {
             padding: 16px 0px 16px 0px;
-            max-width: 600px;
+            width: 600px;
         }
     `]
 })

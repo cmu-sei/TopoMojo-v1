@@ -24,11 +24,12 @@
     <button class="btn btn-link" (click)="refresh()">
         <i class="fa fa-refresh" [class.fa-spin]="loading"></i> <span translate>REFRESH-LIST</span>
     </button>
-    <ul *ngIf="isos" class="list-unstyled">
-        <li *ngFor="let iso of isos">
-            <button class="btn btn-link" (click)="select(iso)">
-                <i class="glyphicon glyphicon-cd"></i> {{iso}}
+    <div *ngIf="isos" class="list-unstyled">
+        <div *ngFor="let iso of isos" class="ellipsis">
+            <button class="btn btn-link" (click)="select(iso)" [tooltip]="iso">
+                <i class="glyphicon glyphicon-cd"></i>
+                <span>{{trunc(iso)}}</span>
             </button>
-        </li>
-    </ul>
+        </div>
+    </div>
 </div>

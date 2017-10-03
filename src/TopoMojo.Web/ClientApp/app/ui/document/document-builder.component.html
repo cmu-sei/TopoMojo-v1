@@ -1,0 +1,35 @@
+<!-- <header></header> -->
+<div id="fixed-header">
+    <ul class="list-inline">
+        <li><h4>{{appName}}</h4></li>
+        <li *ngIf="loading" class="pull-right">
+            <button class="btn btn-warning">
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+            </button>
+        </li>
+        <li *ngIf="topo" class="pull-right">
+            <button (click)="toggleImageDiv()"
+                tooltip="images"
+                class="btn btn-default"
+                [class.btn-primary]="showImageDiv">
+                <i class="fa fa-image"></i>
+            </button>
+        </li>
+        <!-- <li *ngIf="game.id" class="pull-right">
+            <button (click)="collaborate()"
+                [tooltip]="'COLLABORATE' | translate | lowercase"
+                class="btn btn-default"
+                [class.btn-primary]="collaborationVisible || messageCount">
+                <i class="fa fa-users"></i>
+                <span *ngIf="messageCount" class="badge">{{messageCount}}</span>
+            </button>
+        </li> -->
+    </ul>
+</div>
+
+<error-div [errors]="errors"></error-div>
+
+<div *ngIf="topo" id="fixed-body">
+    <document-editor [id]="topo.globalId"></document-editor>
+    <image-manager *ngIf="showImageDiv" [id]="topo.globalId" class="fixed-right"></image-manager>
+</div>

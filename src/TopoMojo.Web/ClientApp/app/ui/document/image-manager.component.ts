@@ -98,7 +98,7 @@ export class ImageManagerComponent implements OnInit {
     }
 
     genMd(img : ImageFile) : void {
-        this.copyToClipboard(`![${img.filename}](${this.imagePath(img)})`);
+        this.copyToClipboard(`![${img.filename}](${this.imagePath(img)} =480x*)`);
     }
 
     delete(img : ImageFile) {

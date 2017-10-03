@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
-import { Router, ActivatedRoute, Params } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute, Params } from '@angular/router';
 import { TopologyService } from '../../api/topology.service';
 import { TemplateService } from '../../api/template.service';
 import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from '../../api/gen/models';

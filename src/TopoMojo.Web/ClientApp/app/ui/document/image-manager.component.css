@@ -6,8 +6,18 @@
     resize: none;
     border: 0px;
 }
+div {
+    vertical-align: top;
+}
 h4 {
     display: inline-block;
+    background-color: black;
+    color: white;
+    border-radius: 4px;
+    padding: 8px;
+}
+label {
+    margin: 8px;
 }
 .upload-ui {
     display: inline-block;

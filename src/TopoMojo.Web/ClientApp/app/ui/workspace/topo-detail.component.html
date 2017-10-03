@@ -1,5 +1,5 @@
-<div class="row">
-    <div *ngIf="topo" class="col-xs-12">
+<div>
+    <div *ngIf="topo">
         <div>
             <h4>{{ topo.name }}</h4>
             <div class="btn-group btn-group-justified">
@@ -13,7 +13,6 @@
                     <i class="fa fa-file-text-o"></i> <span translate>DOCUMENT</span>
                 </a>
             </div>
-            <p *ngIf="!topo.templates">Loading...</p>
         </div>
         <error-div [errors]="errors"></error-div>
         <div [class.hidden]="showing!='topo'" class="col-xs-12 well">
@@ -76,15 +75,17 @@
 
         </div>
         <div [class.hidden]="showing!='templates'"  class="col-xs-12 well">
-            <p *ngIf="!topo.templates || topo.templates.length == 0" translate>MACHINE-LIST-EMPTY</p>
-            <div *ngIf="topo.templates" >
-                <div *ngFor="let t of topo.templates" class="truncate">
-                    <template-editor [topo]="topo" [template]="t" (onRemoved)="remove($event)"></template-editor>
+            <div class="">
+                <p *ngIf="!topo.templates || topo.templates.length == 0" translate>MACHINE-LIST-EMPTY</p>
+                <div *ngIf="topo.templates" >
+                    <div *ngFor="let t of topo.templates" class="truncate">
+                        <template-editor [topo]="topo" [template]="t" (onRemoved)="remove($event)"></template-editor>
+                    </div>
                 </div>
             </div>
-            <div>
+            <div class="">
                 <hr/>
-                <div class="col-xs-12" style="text-align:center;">
+                <div style="text-align:center;">
                     <button (click)="toggleSelector()" class="btn btn-info">
                         <i class="fa fa-plus-circle"></i> <span translate>ADD-MACHINES</span>
                     </button>
@@ -114,14 +115,16 @@
             </div>
             <div *ngIf="!topo.documentUrl" class="col-xs-12 prop">
                 <span class="col-xs-2 prop-label" translate>INTERNAL-DOC</span>
-                <span class="col-xs-10"></span>
-                <div class="col-xs-12">
-                    <document-editor [id]="topo.globalId"></document-editor>
-                    <hr />
-                    <image-manager [id]="topo.globalId"></image-manager>
-                </div>
+                <span class="col-xs-10">
+                    <a [routerLink]="['/doc', topo.id]">Document Editor</a>
+                </span>
             </div>
         </div>
+        <!-- <div [class.hidden]="showing!='document'" class="">
+            <document-editor [id]="topo.globalId"></document-editor>
+            <hr />
+            <image-manager [id]="topo.globalId"></image-manager>
+        </div> -->
     </div>
 </div>
 

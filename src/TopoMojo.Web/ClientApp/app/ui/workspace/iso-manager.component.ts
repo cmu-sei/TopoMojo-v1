@@ -6,7 +6,15 @@ import { VmOptions } from '../../api/gen/models';
 
 @Component({
     selector: 'iso-manager',
-    templateUrl: 'iso-manager.component.html'
+    templateUrl: 'iso-manager.component.html',
+    styles: [`
+    .ellipsis {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 100%;
+    }
+    `
+    ]
 })
 
 export class IsoManagerComponent implements OnInit {
@@ -95,6 +103,12 @@ export class IsoManagerComponent implements OnInit {
 
                 }
             );
+    }
+
+    trunc(text: string) {
+        if (text.length > 40)
+            text = text.substring(0,40) + "...";
+        return text;
     }
     // private uploadFile(qf) {
     //     qf.progress = 0;
