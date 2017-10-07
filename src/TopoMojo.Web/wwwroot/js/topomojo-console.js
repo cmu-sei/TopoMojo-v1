@@ -294,7 +294,8 @@ function WebConsole(
             // data.append('file', file, 'fd='+dest+'&fn='+file.name + "&fs=" + file.size + '&fk=' + topoid + '&pk=' + key );
         });
         $this.prop('disabled', true);
-        setTimeout(checkProgress, 2500);
+        //setTimeout(checkProgress, 2500);
+        $progressBtn.removeClass('hidden');
 
         service.uploadFile(data)
         .fail(function(jqXhr, textStatus, err)
@@ -309,6 +310,10 @@ function WebConsole(
         .always(function() {
             //$this.next().text('');
             //$this.prop('disabled', false);
+            $progressBtn.text('').addClass('hidden');
+            $uploadBtn.prop('disabled', false);
+            $('#iso-upload-div').addClass('hidden');
+            $('#console-tools-btn').click();
         });
     }
 

@@ -3,9 +3,7 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 import { GamespaceService } from '../../api/gamespace.service';
 
 @Component({
-    template: `
-        <p>Validating enlistment code...</p>
-    `
+    templateUrl: 'enlist.component.html'
 })
 export class GamespaceEnlistComponent implements OnInit {
 
@@ -15,12 +13,20 @@ export class GamespaceEnlistComponent implements OnInit {
         private router: Router
     ) { }
 
+    complete: boolean;
+    errors: any[] = [];
+
     ngOnInit(): void {
         let code = this.route.snapshot.paramMap.get("code");
         this.service.enlistPlayer(code)
+            .finally(() => { this.complete = true;})
             .subscribe(result => {
                 this.router.navigate(['/mojo']);
-            }, (err) => { });
+            }, (err) => { this.onError(err); });
     }
 
+    onError(err) {
+        this.errors.push(err.error);
+        //console.debug(err.error.message);
+    }
 }

@@ -31,7 +31,7 @@ namespace TopoMojo.Core
                 if (_user == null)
                 {
                     _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
-                    if (_user.Id == 0)
+                    if (_user.GlobalId.HasValue() && _user.Id == 0)
                         _user = _profileRepo.LoadOrCreate(_user).Result;
                 }
                 return _user;

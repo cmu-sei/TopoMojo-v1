@@ -7,10 +7,10 @@ admin users, manage ui
 admin vm page, order by topo, instance
 profile page to change name
 topo deployment stats
-display enlistment errors
 multi-page docs
 
 # DONE
+display enlistment errors
 improve doc layout
 review blank.vmdk workflow
 cleanup structure

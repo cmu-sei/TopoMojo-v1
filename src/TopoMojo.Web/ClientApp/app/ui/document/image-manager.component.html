@@ -6,6 +6,7 @@
             (change)="fileSelectorChanged($event)">
         <span translate>SELECT-FILE</span>
     </label>
+    <p translate>DEFAULT-IMAGE-SIZE</p>
     <div *ngIf="filesQueued()">
         <div *ngFor="let qf of queuedFiles">
             <span *ngIf="qf.progress >= 0" class="badge badge-warning"><i class="fa fa-circle-o-notch fa-spin"></i> {{ qf.progress }}%</span>
