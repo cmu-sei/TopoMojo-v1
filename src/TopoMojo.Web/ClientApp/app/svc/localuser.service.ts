@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 export class LocalUserService {
 
     constructor() {
+        this.storageKey += window.navigator.userAgent.split(' ').pop();
     }
 
     storageKey: string = "sketch.auth.jwt.";
@@ -12,15 +13,19 @@ export class LocalUserService {
     events: LocalUserEvents = new LocalUserEvents();
     headsup: number = 20;
 
-    init() : void {
-        this.storageKey += window.navigator.userAgent.split(' ').pop(); //.substring(window.navigator.userAgent.lastIndexOf(' '));
+    getUser() : Promise<any> {
         //console.log("localtoken: loading token from storage");
         let token = localStorage.getItem(this.storageKey);
         if (!!token) {
             this.token = JSON.parse(token);
-            this.startTimer(this.ttn());
-            this.events.onTokenLoaded(this.token);
+            let ttn = this.ttn();
+            if (ttn > 0) {
+                this.startTimer(ttn);
+            } else {
+                this.removeUser();
+            }
         }
+        return Promise.resolve(this.token);
     }
 
     addUser(token) : void {
@@ -48,7 +53,7 @@ export class LocalUserService {
 
     private startTimer(duration) {
         this.killTimer();
-        console.log("localtoken: starting timer for " + duration + " seconds");
+        //console.log("localtoken: starting timer for " + duration + " seconds");
         this.timer = window.setTimeout(() => { this.onTimer(); }, duration * 1000);
         window["localUserManagerTimer"] = this.timer;
         //console.log('storing timer ' + window["localUserManagerTimer"]);

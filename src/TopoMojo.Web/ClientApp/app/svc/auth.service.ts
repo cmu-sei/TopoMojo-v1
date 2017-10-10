@@ -10,8 +10,7 @@ export class AuthService {
     mgr: UserManager;
     localmgr: LocalUserService;
     currentUser: User;
-    loggedIn: boolean = false;
-    apiUrl : string;
+    //loggedIn: boolean = false;
     allowExternalLogin: boolean;
     redirectUrl: string;
     private userSource: Subject<User> = new Subject<User>();
@@ -26,7 +25,6 @@ export class AuthService {
     ) {
         // Log.level = Log.DEBUG;
         // Log.logger = console;
-        this.apiUrl = this.settings.urls.apiUrl;
         this.allowExternalLogin = this.settings.oidc.authority != '';
 
         this.mgr = new UserManager(this.settings.oidc);
@@ -44,18 +42,51 @@ export class AuthService {
         this.init();
     }
 
+    // init() {
+    //     this.localmgr.init();
+    //     this.mgr.getUser().then(user => {
+    //         if (user) this.onTokenLoaded(user);
+    //     })
+    // }
+
+    // isAuthenticated() : Promise<boolean> {
+    //     return Promise.resolve(!!this.currentUser);
+    // }
+
     init() {
-        this.localmgr.init();
-        this.mgr.getUser().then(user => {
-            if (user) this.onTokenLoaded(user);
-        })
+        this.mgr.getUser().then((user) => {
+            if (user) {
+                this.onTokenLoaded(user);
+            } else {
+                this.localmgr.getUser().then((localuser) => {
+                    //console.log(localuser);
+                    if (localuser) this.onTokenLoaded(localuser);
+                });
+            }
+        });
     }
 
     isAuthenticated() : Promise<boolean> {
-        return Promise.resolve(!!this.currentUser);
+        if (!!this.currentUser)
+            return Promise.resolve(true);
+
+        return this.mgr.getUser().then(
+            (user) => {
+                if (!!user) {
+                    return Promise.resolve(true);
+                } else {
+                    return this.localmgr.getUser().then(
+                        (user) => {
+                            return Promise.resolve(!!user);
+                        }
+                    )
+                }
+            }
+        );
     }
 
     getAuthorizationHeader() : string {
+        this.markAction();
         return "Bearer " + ((this.currentUser)
             ? this.currentUser.access_token
             : "no_token");
@@ -67,7 +98,7 @@ export class AuthService {
 
     private onTokenLoaded(user) {
         this.currentUser = user;
-        this.loggedIn = (user !== null);
+        //this.loggedIn = (user !== null);
         this.userSource.next(user);
         this.tokenStatus.next(AuthTokenState.valid);
     }

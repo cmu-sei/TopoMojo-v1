@@ -243,7 +243,6 @@ export class TopoDetailComponent {
     }
 
     onError(err) {
-        //let text = JSON.parse(err.text());
         this.errors.push(err.error);
         console.debug(err.error.message);
     }
