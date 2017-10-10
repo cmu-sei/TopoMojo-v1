@@ -64,7 +64,7 @@
             <div class="col-xs-12 prop">
                 <span class="col-xs-2 prop-label" translate>Hidden</span>
                 <div class="col-xs-10">
-                    <input type="checkbox" (onChanged)="save()" [(ngModel)]="template.isHidden">
+                    <input type="checkbox" (change)="save()" [(ngModel)]="template.isHidden">
                     <inline-help>
                         <span translate>HELP.HIDDEN-TEMPLATE</span>
                     </inline-help>

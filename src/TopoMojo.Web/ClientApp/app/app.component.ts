@@ -34,15 +34,16 @@ export class AppComponent {
     ngOnInit() {
         this.appName = this.settings.branding.applicationName || "TopoMojo";
 
-        this.profile$ = this.service.user$
-        .subscribe(p =>  {
-            this.profile = (p) ? p.profile : p;
-        });
+        this.profile$ = this.service.user$.subscribe(
+            (p) =>  {
+                this.profile = (p) ? p.profile : p;
+            }
+        );
         this.profile = this.service.currentUser && this.service.currentUser.profile;
 
         this.status$ = this.service.tokenStatus$
         .subscribe(status => {
-            console.log(status);
+            //console.log(status);
             this.showExpiring = (status == AuthTokenState.expiring);
             this.showExpired = (status == AuthTokenState.expired);
             if (status == AuthTokenState.invalid)

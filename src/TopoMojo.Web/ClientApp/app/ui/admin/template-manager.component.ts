@@ -137,7 +137,7 @@ export class TemplateManagerComponent implements OnInit {
             this.template = null;
             this.termChanged(this.model.term);
         }, (err) => {
-            this.errorMessage = JSON.parse(err.text()).message;
+            this.errorMessage = err.error.message;
         })
     }
 

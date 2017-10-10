@@ -93,9 +93,8 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     onError(err) {
-        let text = JSON.parse(err.text());
-        this.errors.push(text);
-        console.debug(text);
+        this.errors.push(err.error);
+        console.debug(err.error.messsage);
     }
 
 }

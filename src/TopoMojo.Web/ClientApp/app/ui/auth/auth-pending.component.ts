@@ -18,7 +18,7 @@ export class AuthPendingComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        console.log(this.route.snapshot.fragment);
+        //console.log(this.route.snapshot.fragment);
         this.service.externalLoginCallback(this.route.snapshot.fragment)
         .then(
             (user) => {
