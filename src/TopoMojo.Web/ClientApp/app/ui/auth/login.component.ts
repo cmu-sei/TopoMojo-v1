@@ -31,7 +31,7 @@ export class LoginComponent implements OnInit {
         ) { }
 
     ngOnInit() {
-        this.url = this.auth.redirectUrl || this.route.snapshot.params['url'] || "/";
+        this.url = this.auth.cleanUrl(this.auth.redirectUrl || this.route.snapshot.params['url'] || "/");
         this.allowExternalLogin = this.auth.allowExternalLogin;
         this.showLocalLogin = !this.allowExternalLogin;
     }
@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
 
         this.auth.localLogin(this.action, this.getCreds())
         .then(result => {
-            this.router.navigate([this.url]);
+            this.router.navigateByUrl(this.url);
         }).catch((response: HttpErrorResponse) => {
             console.error(response.error.message);
             this.errorMessage = response.error.message;

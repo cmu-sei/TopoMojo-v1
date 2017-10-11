@@ -187,6 +187,13 @@ export class AuthService {
     isAdmin() {
         return (this.currentUser && this.currentUser.profile.isAdmin);
     }
+
+    cleanUrl(url) {
+        return url
+            .replace(/[?&]auth-hint=[^&]*/, '')
+            .replace(/[?&]contentId=[^&]*/, '')
+            .replace(/[?&]profileId=[^&]*/, '');
+    }
 }
 
 export enum AuthTokenState {

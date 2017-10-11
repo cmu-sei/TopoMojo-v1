@@ -22,8 +22,7 @@ export class AuthPendingComponent implements OnInit {
         this.service.externalLoginCallback(this.route.snapshot.fragment)
         .then(
             (user) => {
-                // console.log(user);
-                this.router.navigate([user.state || "/home"]);
+                this.router.navigateByUrl(this.service.cleanUrl(user.state) || "/home");
             },
             (err) => { this.errorMessage = err }
         );
