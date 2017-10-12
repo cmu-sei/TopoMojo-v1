@@ -11,12 +11,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="node_modules\**\*" />
-    <!-- <None Update="ClientApp\dist\**\*;Views\**\*;wwwroot\**\*"> -->
-    <!-- <None Update="Views\**\*;wwwroot\**\*">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None> -->
-    <Content Update="appsettings.json;wwwroot\lang\" CopyToPublishDirectory="Always" />
-    <Content Update="ClientApp\;wwwroot\dist\*.map;wwwroot\docs\*;appsettings-custom.json" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.json;wwwroot/lang/" CopyToPublishDirectory="Always" />
+    <Content Update="ClientApp/;**/*.map;wwwroot/docs/**/*;**/*.json;**/*.DS_Store" CopyToPublishDirectory="Never" />
+    <Content Update="wwwroot/lib/**/*" CopyToPublishDirectory="Never"></Content>
+    <Content Update="wwwroot/lib/**/*.min.js;wwwroot/lib/**/*.min.css" CopyToPublishDirectory="Always"></Content>
+    <Content Update="wwwroot/lib/bootstrap/dist/fonts/**/*" CopyToPublishDirectory="Always"></Content>
+    <Content Update="wwwroot/lib/jquery-ui/themes/**/*" CopyToPublishDirectory="Never"></Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TopoMojo.Core\TopoMojo.Core.csproj" />

@@ -115,7 +115,9 @@ export class PlayerComponent implements OnInit {
 
     private render() {
         this.docMissing = (!this.markdownDoc);
-        this.renderedDoc = this.converter.makeHtml(this.markdownDoc);
+        let html = this.converter.makeHtml(this.markdownDoc);
+
+        this.renderedDoc = html;
     }
 
     onVmUpdated(vm: VmState) {
