@@ -41,10 +41,19 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
+        [HttpGet("api/gamespaces/all")]
+        [ProducesResponseType(typeof(Gamespace[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> ListAll()
+        {
+            var result = await _mgr.ListAll();
+            return Ok(result);
+        }
+
         [HttpGet("api/gamespace/{id}")]
         [ProducesResponseType(typeof(GameState), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Load([FromRoute]int id)
+        public async Task<IActionResult> Load([FromRoute] int id)
         {
             var result = await _mgr.LoadFromTopo(id);
             return Ok(result);
@@ -53,7 +62,7 @@ namespace TopoMojo.Controllers
         [HttpGet("api/gamespace/{id}/launch")]
         [ProducesResponseType(typeof(GameState), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Launch([FromRoute]int id)
+        public async Task<IActionResult> Launch([FromRoute] int id)
         {
             var result = await _mgr.Launch(id);
             Log("launched", result);
@@ -63,7 +72,7 @@ namespace TopoMojo.Controllers
         [HttpGet("api/gamespace/{id}/state")]
         [ProducesResponseType(typeof(GameState), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> CheckState([FromRoute]int id)
+        public async Task<IActionResult> CheckState([FromRoute] int id)
         {
             var result = await _mgr.Load(id);
             return Ok(result);
@@ -76,7 +85,7 @@ namespace TopoMojo.Controllers
         {
             var result = await _mgr.Destroy(id);
             Log("destroyed", result);
-            Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
+            await Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
             return Ok(true);
         }
 
@@ -96,6 +105,13 @@ namespace TopoMojo.Controllers
             return Ok(await _mgr.Delist(playerId));
         }
 
+        [HttpGet("api/gamespace/{id}/players")]
+        [ProducesResponseType(typeof(Player[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Players([FromRoute] int id)
+        {
+            return Ok(await _mgr.Players(id));
+        }
 
     }
 }

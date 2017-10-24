@@ -1,0 +1,38 @@
+<div class="row">
+    <div class="col-xs-12">
+        <div class="spaced">
+            <search-bar (onSearch)="termChanged($event)"></search-bar>
+        </div>
+        <ul *ngIf="games" class="list-unstyled">
+            <li *ngFor="let game of games" class="">
+                <div class="">
+                    <!-- <i class="fa fa-map-marker"></i> -->
+                    <strong>{{ game.name }}</strong>
+                    <span class="text-muted">{{ game.whenCreated | ago }}</span>
+                    <button (click)="onSelect(game)" class="btn btn-default btn-sm">
+                        <i class="fa fa-group"></i>
+                    </button>
+                    <span *ngIf="selected && selected.id == game.id">{{playerlist()}}</span>
+                    <button (click)="vmlist(game)" class="btn btn-default btn-sm">
+                        <i class="fa fa-desktop"></i>
+                    </button>
+                    <button (click)="destroy(game)" class="btn btn-link">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <div *ngIf="selected && selected.id == game.id" class="well">
+                        <ul *ngIf="vms" class="list-unstyled">
+                            <li *ngFor="let vm of vms">
+                                <span>{{vm.name | untagged}}</span>
+                                <vm-toolbar [vm]="vm"></vm-toolbar>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
+            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+        </button>
+    </div>
+</div>

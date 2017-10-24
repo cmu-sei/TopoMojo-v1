@@ -15,6 +15,9 @@ export class GeneratedVmService extends GeneratedService {
 	public ticketVm(id: string) : Observable<any> {
 		return this.http.get<any>("/api/vm/" + id + "/ticket");
 	}
+	public findVms(tag: string) : Observable<Array<VirtualVm>> {
+		return this.http.get<Array<VirtualVm>>("/api/vms/find" + this.paramify({tag: tag}));
+	}
 	public loadVm(id: string) : Observable<VirtualVm> {
 		return this.http.get<VirtualVm>("/api/vm/" + id + "/load");
 	}

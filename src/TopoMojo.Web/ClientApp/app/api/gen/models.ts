@@ -10,6 +10,7 @@ export interface ImageFile {
 
 export interface Gamespace {
 	id?: number;
+	globalId?: string;
 	name?: string;
 	whenCreated?: string;
 	topologyDocument?: string;
@@ -31,6 +32,14 @@ export interface VmState {
 	templateId?: number;
 	name?: string;
 	isRunning?: boolean;
+}
+
+export interface Player {
+	id?: number;
+	personId?: number;
+	personName?: string;
+	canManage?: boolean;
+	canEdit?: boolean;
 }
 
 export interface ProfileSearchResult {
@@ -63,6 +72,7 @@ export interface TemplateSummarySearchResult {
 export interface TemplateSummary {
 	id?: number;
 	name?: string;
+	description?: string;
 	topologyId?: number;
 	topologyName?: string;
 	parentId?: string;
@@ -85,6 +95,7 @@ export interface Template {
 export interface TemplateDetail {
 	id?: number;
 	name?: string;
+	description?: string;
 	networks?: string;
 	detail?: string;
 	isPublished?: boolean;

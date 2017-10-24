@@ -47,6 +47,15 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Gamespace[]>(list);
         }
 
+        public async Task<Models.Gamespace[]> ListAll()
+        {
+            if (!Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            var list = await _repo.List().ToArrayAsync();
+            return Mapper.Map<Models.Gamespace[]>(list);
+        }
+
         public async Task<Models.GameState> Launch(int topoId)
         {
             Gamespace[] gamespaces = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
@@ -84,13 +93,6 @@ namespace TopoMojo.Core
 
         private async Task<Models.GameState> Deploy(Gamespace gamespace)
         {
-            // Gamespace gamespace = await _repo.Load(id);
-            // if (gamespace == null)
-            //     throw new InvalidOperationException();
-
-            // if (! await _repo.CanEdit(id, Profile))
-            //     throw new InvalidOperationException();
-
             List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
             foreach (Template template in gamespace.Topology.Templates)
             {
@@ -106,55 +108,6 @@ namespace TopoMojo.Core
 
             return await LoadState(gamespace, gamespace.TopologyId);
         }
-
-        // public async Task<GameState> Launch(int topoId)
-        // {
-        //     //check for active instance, return it
-        //     Gamespace[] gamespaces = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
-
-        //     Gamespace game = gamespaces
-        //         .Where(m => m.TopologyId == topoId)
-        //         .SingleOrDefault();
-
-        //     //if none, and at threshold, throw error
-        //     if (game == null && gamespaces.Length >= _options.ConcurrentInstanceMaximum)
-        //         throw new MaximumInstancesDeployedException();
-
-        //     string gameId = Guid.NewGuid().ToString();
-        //     Task<Vm[]> deploy = Deploy(topoId, gameId);
-
-        //     if (game == null)
-        //     {
-        //         Player player = new Player {
-        //             PersonId = Profile.Id,
-        //             Permission = Permission.Manager,
-        //             Gamespace = new Gamespace {
-        //                 TopologyId = topoId,
-        //                 GlobalId = gameId,
-        //                 WhenCreated = DateTime.UtcNow,
-        //                 ShareCode = Guid.NewGuid().ToString()
-        //             }
-        //         };
-        //         _db.Players.Add(player);
-        //         await _db.SaveChangesAsync();
-        //         game = player.Gamespace;
-        //     }
-
-        //     GameState state = new GameState
-        //     {
-        //         Id = game.Id,
-        //         GlobalId = game.GlobalId,
-        //         Document = game.Topology.Document,
-        //         WhenCreated = game.WhenCreated.ToString(),
-        //         ShareCode = game.ShareCode
-        //     };
-
-        //     state.AddVms(game.Topology.Linkers);
-        //     Task.WaitAll(deploy);
-        //     state.AddVms(deploy.Result);
-
-        //     return state;
-        // }
 
         public async Task<Models.GameState> Load(int id)
         {
@@ -198,65 +151,6 @@ namespace TopoMojo.Core
             return state;
         }
 
-        // private async Task<Vm[]> DeployMachines(Gamespace gamespace)
-        // {
-        //     List<Task<Vm>> tasks = new List<Task<Vm>>();
-        //     foreach (Entities.Template template in gamespace.Topology.Templates)
-        //     {
-        //         TemplateUtility tu = new TemplateUtility(template.Detail ?? template.BaseTemplate.Detail);
-        //         tu.Name = template.Name;
-        //         tu.Networks = template.Networks;
-        //         tu.Iso = template.Iso;
-        //         tu.IsolationTag = gamespace.GlobalId;
-        //         tu.Id = template.Id.ToString();
-        //         tasks.Add(_pod.Deploy(tu.AsTemplate()));
-        //     }
-        //     Task.WaitAll(tasks.ToArray());
-        //     return tasks.Select(t => t.Result).ToArray();
-        // }
-
-        // private async Task<Vm[]> Deploy(int topoId, string tag)
-        // {
-        //     TopoMojo.Models.Virtual.Template[] templates = await GetDeployableTemplates(topoId, tag);
-        //     List<Task<Vm>> tasks = new List<Task<Vm>>();
-        //     foreach (TopoMojo.Models.Virtual.Template template in templates)
-        //         tasks.Add(_pod.Deploy(template));
-        //     Task.WaitAll(tasks.ToArray());
-
-        //     return tasks.Select(t => t.Result).ToArray();
-        // }
-
-        // private async Task<TopoMojo.Models.Virtual.Template[]> GetDeployableTemplates(int topoId, string tag)
-        // {
-        //     List<Models.Template> result = new List<Models.Template>();
-        //     Topology topology = await _db.Topologies
-        //         .Include(t => t.Linkers)
-        //             .ThenInclude(tt => tt.Template)
-        //         .Where(t => t.Id == topoId)
-        //         .SingleOrDefaultAsync();
-
-        //     if (topology == null)
-        //         throw new InvalidOperationException();
-
-        //     foreach (Linker tref in topology.Linkers)
-        //     {
-        //         TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
-        //         if (tref.Name.HasValue())
-        //             tu.Name = tref.Name;
-
-        //         if (tref.Networks.HasValue())
-        //             tu.Networks = tref.Networks;
-
-        //         if (tref.Iso.HasValue())
-        //             tu.Iso = tref.Iso;
-
-        //         tu.IsolationTag = tag.HasValue() ? tag : topology.GlobalId;
-        //         tu.Id = tref.Id.ToString();
-        //         result.Add(tu.AsTemplate());
-        //     }
-        //     return result.ToArray();
-        // }
-
         public async Task<Models.GameState> Destroy(int id)
         {
             Gamespace gamespace = await _repo.Load(id);
@@ -276,37 +170,16 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.GameState>(gamespace);
         }
 
-        // public async Task<Player[]> Players(int id)
-        // {
-        //     Player[] players = await _db.Players
-        //         .Where(p => p.GamespaceId == id)
-        //         .ToArrayAsync();
+        public async Task<Models.Player[]> Players(int id)
+        {
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
 
-        //     Player player = players
-        //         .Where(p => p.PersonId == Profile.Id)
-        //         .SingleOrDefault();
+            Player[] players = await _repo.ListPlayers(id)
+                .ToArrayAsync();
 
-        //     if (player == null)
-        //         throw new InvalidOperationException();
-
-        //     return players;
-        // }
-
-        // public async Task<string> Share(int id, bool revoke)
-        // {
-        //     Player member = await _db.Players
-        //         .Include(m => m.Gamespace)
-        //         .Where(m => m.GamespaceId == id)
-        //         .SingleOrDefaultAsync();
-
-        //     if (member == null || member.PersonId != Profile.Id || !member.Permission.CanManage())
-        //         throw new InvalidOperationException();
-
-        //     string code = (revoke) ? "" : Guid.NewGuid().ToString("N");
-        //     member.Gamespace.ShareCode = code;
-        //     await _db.SaveChangesAsync();
-        //     return code;
-        // }
+            return Mapper.Map<Models.Player[]>(players);
+        }
 
         public async Task<bool> Enlist(string code)
         {

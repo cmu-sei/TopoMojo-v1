@@ -5,6 +5,7 @@ import { AdminGuard } from '../../svc/admin-guard.service';
 import { AdminComponent } from './admin.component';
 import { AdminHomeComponent } from './admin-home.component';
 import { UserManagerComponent } from './user-manager.component';
+import { GameManagerComponent } from './game-manager.component';
 import { TemplateManagerComponent } from './template-manager.component';
 
 const routes: Routes = [
@@ -19,6 +20,7 @@ const routes: Routes = [
                 children: [
                     { path: 'templates', component: TemplateManagerComponent },
                     { path: 'users', component: UserManagerComponent },
+                    { path: 'games', component: GameManagerComponent },
                     //{ path: '', component: AdminComponent }
                 ]
             }
@@ -35,6 +37,7 @@ export class AdminRoutingModule {
         AdminComponent,
         AdminHomeComponent,
         UserManagerComponent,
+        GameManagerComponent,
         TemplateManagerComponent
     ]
 }
