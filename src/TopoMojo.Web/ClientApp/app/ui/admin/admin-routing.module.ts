@@ -6,6 +6,7 @@ import { AdminComponent } from './admin.component';
 import { AdminHomeComponent } from './admin-home.component';
 import { UserManagerComponent } from './user-manager.component';
 import { GameManagerComponent } from './game-manager.component';
+import { TopoManagerComponent } from './topo-manager.component';
 import { TemplateManagerComponent } from './template-manager.component';
 
 const routes: Routes = [
@@ -21,7 +22,8 @@ const routes: Routes = [
                     { path: 'templates', component: TemplateManagerComponent },
                     { path: 'users', component: UserManagerComponent },
                     { path: 'games', component: GameManagerComponent },
-                    //{ path: '', component: AdminComponent }
+                    { path: 'topos', component: TopoManagerComponent }
+                    // { path: '', component: AdminComponent }
                 ]
             }
         ]
@@ -38,6 +40,7 @@ export class AdminRoutingModule {
         AdminHomeComponent,
         UserManagerComponent,
         GameManagerComponent,
+        TopoManagerComponent,
         TemplateManagerComponent
     ]
 }

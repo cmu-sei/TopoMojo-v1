@@ -35,7 +35,7 @@ export class DocumentBuilderComponent implements OnInit, OnDestroy {
             })
             .subscribe(
             (result: Topology) => {
-                console.log(result);
+                //console.log(result);
                 this.topo = result;
             },
             (err) => {

@@ -15,6 +15,15 @@ export interface Gamespace {
 	whenCreated?: string;
 	topologyDocument?: string;
 	topologyId?: number;
+	players?: Array<Player>;
+}
+
+export interface Player {
+	id?: number;
+	personId?: number;
+	personName?: string;
+	canManage?: boolean;
+	canEdit?: boolean;
 }
 
 export interface GameState {
@@ -32,14 +41,6 @@ export interface VmState {
 	templateId?: number;
 	name?: string;
 	isRunning?: boolean;
-}
-
-export interface Player {
-	id?: number;
-	personId?: number;
-	personName?: string;
-	canManage?: boolean;
-	canEdit?: boolean;
 }
 
 export interface ProfileSearchResult {
@@ -127,9 +128,10 @@ export interface TopologySummary {
 	author?: string;
 }
 
-export interface NewTopology {
-	name?: string;
-	description?: string;
+export interface TopologySearchResult {
+	search?: Search;
+	total?: number;
+	results?: Array<Topology>;
 }
 
 export interface Topology {
@@ -137,7 +139,7 @@ export interface Topology {
 	globalId?: string;
 	name?: string;
 	description?: string;
-	documentUrl?: string;
+	document?: string;
 	shareCode?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
@@ -152,6 +154,11 @@ export interface Worker {
 	personName?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
+}
+
+export interface NewTopology {
+	name?: string;
+	description?: string;
 }
 
 export interface ChangedTopology {

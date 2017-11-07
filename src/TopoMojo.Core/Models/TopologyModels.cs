@@ -8,7 +8,7 @@ namespace TopoMojo.Core.Models
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string DocumentUrl { get; set; }
+        public string Document { get; set; }
         public string ShareCode { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }

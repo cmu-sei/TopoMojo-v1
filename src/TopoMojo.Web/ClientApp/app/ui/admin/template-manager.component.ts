@@ -17,7 +17,7 @@ export class TemplateManagerComponent implements OnInit {
     //private term: string = '';
     errorMessage: string;
     hasMore: number;
-    model: Search = {};
+    model: Search = { filters: [ 'parents' ]};
     loading: boolean;
 
     constructor(

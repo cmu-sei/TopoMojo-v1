@@ -27,17 +27,8 @@ export class GameManagerComponent implements OnInit {
         )
     }
 
-    onSelect(game: Gamespace): void {
-        this.selected = game;
-        this.gameSvc.playersGamespace(game.id).subscribe(
-            (result: Array<Player>) => {
-                this.players = result;
-            }
-        )
-    }
-
-    playerlist() : string {
-        return this.players && this.players.map(p => {return p.personName}).join();
+    playerlist(game: Gamespace) : string {
+        return game.players.map(p => p.personName).join();
     }
 
     vmlist(game: Gamespace) : void {

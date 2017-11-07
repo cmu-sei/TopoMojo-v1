@@ -15,6 +15,7 @@ export class SettingsService {
         this.urls = all['urls'];
         this.branding = all['branding'];
         this.lang = all['lang'] || 'en';
+        this.maintMsg = all['maintenanceMessage'];
         this.hostUrl = window.location.origin;
     }
 
@@ -23,6 +24,7 @@ export class SettingsService {
     urls : any;
     branding : any;
     lang : string;
+    maintMsg: string;
 
     hostUrl: string;
     layout: Layout = new Layout();

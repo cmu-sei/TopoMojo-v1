@@ -52,7 +52,10 @@ namespace TopoMojo.Core
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            var list = await _repo.List().ToArrayAsync();
+            var list = await _repo.List()
+                .Include(g => g.Players)
+                .ThenInclude(p => p.Person)
+                .ToArrayAsync();
             return Mapper.Map<Models.Gamespace[]>(list);
         }
 
@@ -128,7 +131,7 @@ namespace TopoMojo.Core
             if (gamespace == null)
             {
                 Data.Entities.Topology topo = await _topos.Load(topoId);
-                if (topo == null)
+                if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
 
                 state = new Models.GameState();

@@ -13,6 +13,7 @@ import {Observable, Subscription, Subject} from 'rxjs/Rx';
 })
 export class VmToolbarComponent implements OnChanges {
     @Input() template: Template;
+    @Input() isPublished: boolean;
     @Input() vm: VirtualVm;
     @Output() onLoaded: EventEmitter<any> = new EventEmitter<any>();
     status: string;

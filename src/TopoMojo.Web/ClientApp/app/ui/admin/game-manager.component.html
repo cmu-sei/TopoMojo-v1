@@ -9,10 +9,7 @@
                     <!-- <i class="fa fa-map-marker"></i> -->
                     <strong>{{ game.name }}</strong>
                     <span class="text-muted">{{ game.whenCreated | ago }}</span>
-                    <button (click)="onSelect(game)" class="btn btn-default btn-sm">
-                        <i class="fa fa-group"></i>
-                    </button>
-                    <span *ngIf="selected && selected.id == game.id">{{playerlist()}}</span>
+                    <span> ({{playerlist(game)}}) </span>
                     <button (click)="vmlist(game)" class="btn btn-default btn-sm">
                         <i class="fa fa-desktop"></i>
                     </button>

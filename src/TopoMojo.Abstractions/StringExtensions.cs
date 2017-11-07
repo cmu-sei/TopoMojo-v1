@@ -109,6 +109,12 @@ namespace TopoMojo.Extensions
                 : s;
         }
 
+        //Note: this assumes a guid string (length > 16)
+        public static string ToSwitchName(this string s)
+        {
+            return String.Format("sw#{0}..{1}", s.Substring(0,8), s.Substring(s.Length-8));
+        }
+
         //System.Reflection not fully baked in dotnet core 1.0.0
         // public static void ReplaceString(this object obj, string pattern, string val)
         // {

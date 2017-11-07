@@ -13,7 +13,7 @@
             </button>
     </div>
     <div class="col-xs-9">
-        <vm-toolbar (onLoaded)="vmLoaded($event)" [template]="template" class="pull-right"></vm-toolbar>
+        <vm-toolbar (onLoaded)="vmLoaded($event)" [template]="template" [isPublished]="topo.isPublished" class="pull-right"></vm-toolbar>
     </div>
     <div *ngIf="editing" class="col-xs-10 col-xs-offset-1 well">
         <!--<div *ngIf="editing">-->

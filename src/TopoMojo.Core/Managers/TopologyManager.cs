@@ -37,10 +37,17 @@ namespace TopoMojo.Core
 
         public async Task<Models.SearchResult<Models.TopologySummary>> List(Models.Search search)
         {
+            string[] allowedFilters = new string[] { "mine", "published" };
+            if (!Profile.IsAdmin && !search.Filters.Intersect(allowedFilters).Any())
+                search.Filters = new string[] { "mine" };
+
             IQueryable<Topology> q = _repo.List();
             if (search.Term.HasValue())
             {
-                q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
+                q = q.Where(o =>
+                    o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                );
             }
 
             if (search.HasFilter("published"))
@@ -67,10 +74,41 @@ namespace TopoMojo.Core
 
         public async Task<Models.SearchResult<Models.TopologySummary>> ProcessQuery(Models.Search search, IQueryable<Topology> q)
         {
+            if (search.Take == 0) search.Take = 50;
             Models.SearchResult<Models.TopologySummary> result = new Models.SearchResult<Models.TopologySummary>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.TopologySummary[]>(q
+                .OrderBy(t => t.Name)
+                .Skip(search.Skip)
+                .Take(search.Take)
+                .ToArray(), WithActor());
+            return result;
+        }
+
+        public async Task<Models.SearchResult<Models.Topology>> ListAll(Models.Search search)
+        {
+            if (!Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            IQueryable<Topology> q = _repo.List()
+                .Include(t => t.Templates)
+                .Include(t => t.Workers)
+                .ThenInclude(w => w.Person);
+
+            if (search.Term.HasValue())
+            {
+                q = q.Where(o =>
+                    o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                );
+            }
+
+            if (search.Take == 0) search.Take = 50;
+            Models.SearchResult<Models.Topology> result = new Models.SearchResult<Models.Topology>();
+            result.Search = search;
+            result.Total = await q.CountAsync();
+            result.Results =  Mapper.Map<Models.Topology[]>(q
                 .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)

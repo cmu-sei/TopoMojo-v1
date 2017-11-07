@@ -1,3 +1,8 @@
+<div *ngIf="!game" class="player">
+        <error-div [errors]="errors"></error-div>
+        <a class="btn btn-link" [routerLink]="['/home']"><i class="fa fa-home"></i> Home</a>
+</div>
+
 <div *ngIf="game" class="player">
     <div id="controlbar">
         <ul class="list-inline">
@@ -45,6 +50,9 @@
     </div>
 
     <div id="content">
+        <div *ngIf="settings.maintMsg" class="alert alert-warning">
+            {{ settings.maintMsg }}
+        </div>
 
         <div id="doc-div">
 

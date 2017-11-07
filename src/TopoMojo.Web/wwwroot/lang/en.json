@@ -126,11 +126,12 @@
         "HOME-WORK": "Want to build your own topology?  Or continue work on something you've started?  Head to your workspace to access your stuff.",
         "HOME-PLAY": "Already have one running?  Head here to pick up where you left off.",
         "NETWORKS": "Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)",
-        "PUBLISH": "When published, this topology is discoverable in the browser.",
+        "PUBLISH": "When published, this topology is discoverable in the browser. (And saving machines in this workspace is disabled.)",
         "SHARE": "Distribute this link to people you want to help build this topology."
     },
     "EXCEPTION": {
         "AUTHENTICATIONFAILURE": "Authentication failed.",
+        "DUPLICATENAME": "You have more than 1 item with the same name. Please rename to avoid duplicates.",
         "GAMESPACELIMIT": "The gamespace limit for individuals prevented your action.",
         "GENERAL": "Sorry for this generic error message. We'll get to the bottom of it.",
         "INVALIDOPERATION": "Can't do that. Probably because a resource doesn't exist",

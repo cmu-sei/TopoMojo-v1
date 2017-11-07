@@ -11,6 +11,7 @@ namespace TopoMojo.Core.Models
         public string WhenCreated { get; set; }
         public string TopologyDocument { get; set; }
         public int TopologyId { get; set; }
+        public Player[] Players { get; set; }
         //public Models.Vm[] Vms { get; set; }
         //public int VmCount { get; set; }
     }

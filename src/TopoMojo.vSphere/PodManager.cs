@@ -578,23 +578,36 @@ namespace TopoMojo.vSphere
                     }
                     else
                     {
-                        //get available vlan
                         int id = 0;
-                        while (id < _vlanMap.Length && _vlanMap[id])
+                        if (template.UseUplinkSwitch)
                         {
-                            id += 1;
-                        }
+                            //get available uplink vlan
+                            while (id < _vlanMap.Length && _vlanMap[id])
+                            {
+                                id += 1;
+                            }
 
-                        if (id > 0 && id < _vlanMap.Length)
-                        {
+                            if (id > 0 && id < _vlanMap.Length)
+                            {
+                                eth.Vlan = id;
+                                _vlanMap[id] = true;
+                                _vlans.Add(eth.Net, id);
+                            }
+                            else
+                            {
+                                throw new Exception("Unable to reserve a vlan for " + eth.Net);
+                            }
+                        }
+                        else {
+                            //get highest vlan in this isolation group
+                            id = 100;
+                            foreach (string key in _vlans.Keys.Where(k => k.EndsWith(template.IsolationTag)))
+                                id = Math.Max(id, _vlans[key]);
+                            id += 1;
                             eth.Vlan = id;
-                            _vlanMap[id] = true;
                             _vlans.Add(eth.Net, id);
                         }
-                        else
-                        {
-                            throw new Exception("Unable to reserve a vlan for " + eth.Net);
-                        }
+
                     }
                 }
             }
