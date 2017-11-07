@@ -8,8 +8,7 @@ import { InlineEditorComponent} from './inline-editor.component';
 import { Tooltip } from './tooltip.directive';
 import { TooltipContent } from './tooltip.component';
 import { InlineHelpComponent } from './inline-help.component';
-import { UntaggedStringPipe } from './pipes';
-import { FormatErrorPipe } from './pipes';
+import { UntaggedStringPipe, FormatErrorPipe, AgedDatePipe } from './pipes';
 import { ConfirmDeleteComponent } from './confirm-delete.component';
 import { NotificationPanelComponent }  from './notification-panel.component';
 import { ErrorDivComponent} from './error-div.component';
@@ -32,6 +31,7 @@ export * from "./tooltip.component";
         TooltipContent,
         UntaggedStringPipe,
         FormatErrorPipe,
+        AgedDatePipe,
         ConfirmDeleteComponent,
         NotificationPanelComponent,
         ErrorDivComponent
@@ -48,6 +48,7 @@ export * from "./tooltip.component";
         TooltipContent,
         UntaggedStringPipe,
         FormatErrorPipe,
+        AgedDatePipe,
         ConfirmDeleteComponent,
         NotificationPanelComponent,
         ErrorDivComponent

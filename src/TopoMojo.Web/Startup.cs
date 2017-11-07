@@ -220,7 +220,7 @@ namespace TopoMojo
             authOptions.JwtBearerEvents = new JwtBearerEvents
             {
                 OnAuthenticationFailed = (context) => {
-                    Console.WriteLine(context.Exception.Message);
+                    //Console.WriteLine(context.Exception.Message);
                     context.SkipToNextMiddleware();
                     return Task.FromResult(0);
                 }
@@ -234,7 +234,6 @@ namespace TopoMojo
             //handle local login bearer tokens
             AccountOptions accountOptions = app.ApplicationServices.GetService<AccountOptions>();
             TokenOptions tokenOptions = accountOptions.Token;
-            //TokenOptions tokenOptions = Configuration.GetSection("Account:Token").Get<TokenOptions>();
             var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key));
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {

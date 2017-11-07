@@ -274,6 +274,7 @@ var fspath = require('path');
                 bodyparam = ` + ${qs}`;
 
             qs = ParamsToBody(params);
+            if (!qs && (op=="post" || op=="put")) qs = "{}";
             if (qs)
                 bodyparam = `, ${qs}`;
         }

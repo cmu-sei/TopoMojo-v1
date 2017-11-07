@@ -44,6 +44,15 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
+        [HttpGet("api/topologies/all")]
+        [ProducesResponseType(typeof(SearchResult<Topology>), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> ListAll([FromQuery]Search search)
+        {
+            var result = await _mgr.ListAll(search);
+            return Ok(result);
+        }
+
         [HttpPost("api/topology")]
         [ProducesResponseType(typeof(Topology), 200)]
         [JsonExceptionFilter]

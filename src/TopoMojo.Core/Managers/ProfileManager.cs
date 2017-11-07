@@ -62,11 +62,11 @@ namespace TopoMojo.Core
             result.Search = search;
             result.Total = await q.CountAsync();
 
+            q = q.OrderBy(p => p.Name);
             if (search.Skip > 0)
                 q = q.Skip(search.Skip);
             if (search.Take > 0)
                 q = q.Take(search.Take);
-            q = q.OrderBy(p => p.Name);
             var list = await q.ToArrayAsync();
             result.Results = Mapper.Map<Models.Profile[]>(list);
             return result;

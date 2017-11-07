@@ -6,6 +6,7 @@ namespace TopoMojo
         public UserManagerSettings oidc { get; set; }
         public ClientUrlSettings urls { get; set; }
         public string lang { get; set; }
+        public string maintenanceMessage { get; set; }
     }
 
     public class BrandingOptions

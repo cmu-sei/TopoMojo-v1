@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
+//using TopoMojo.Core;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
@@ -19,9 +19,9 @@ namespace TopoMojo.Controllers
     public class VmController : HubController<TopologyHub>
     {
         public VmController(
-            TemplateManager templateManager,
+            Core.TemplateManager templateManager,
             // TopologyManager topoManager,
-            ProfileManager profileManager,
+            Core.ProfileManager profileManager,
             IPodManager podManager,
             IServiceProvider sp,
             IConnectionManager sigr
@@ -35,9 +35,9 @@ namespace TopoMojo.Controllers
         }
 
         private readonly IPodManager _pod;
-        private readonly TemplateManager _mgr;
+        private readonly Core.TemplateManager _mgr;
         // private readonly TopologyManager _topoManager;
-        private readonly ProfileManager _profileManager;
+        private readonly Core.ProfileManager _profileManager;
 
         // [AllowAnonymous]
         // [HttpGet("/[controller]/[action]/{id}")]
@@ -56,14 +56,16 @@ namespace TopoMojo.Controllers
             return Ok(info);
         }
 
-        // [HttpGet("api/vm/{id}")]
-        // [JsonExceptionFilter]
-        // public async Task<IActionResult> Refresh(int id)
-        // {
-        //     Template template  = await _mgr.GetDeployableTemplate(id, null);
-        //     Vm vm = await _pod.Refresh(template);
-        //     return Ok(vm);
-        // }
+        [HttpGet("api/vms/find")]
+        [ProducesResponseType(typeof(Vm[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Find([FromQuery] string tag)
+        {
+            Vm[] vms = new Vm[]{};
+            if (_profile.IsAdmin && tag.HasValue())
+                vms = await _pod.Find(tag);
+            return Ok(vms);
+        }
 
         [HttpGet("api/vm/{id}/load")]
         [ProducesResponseType(typeof(Vm), 200)]

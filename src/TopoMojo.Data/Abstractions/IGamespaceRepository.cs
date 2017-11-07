@@ -10,5 +10,6 @@ namespace TopoMojo.Data.Abstractions
         Task<Gamespace> FindByContext(int topoId, int profileId);
         Task<Gamespace> FindByPlayer(int playerId);
         Task<Gamespace> FindByShareCode(string code);
+        IQueryable<Player> ListPlayers(int gamespaceId);
     }
 }

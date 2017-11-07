@@ -6,6 +6,7 @@ import { VmModule } from '../vm/vm.module';
 import { DocumentModule } from '../document/document.module';
 import { ApiModule } from '../../api/api.module';
 import { ChatModule } from '../chat/chat.module';
+import { TemplateEditorComponent } from './template-editor.component';
 
 @NgModule({
     imports: [
@@ -17,6 +18,7 @@ import { ChatModule } from '../chat/chat.module';
         ChatModule
     ],
     declarations: [ TopoRoutingModule.components ],
+    exports: [ TemplateEditorComponent ],
     providers: [  ]
 })
 export class WorkspaceModule { }

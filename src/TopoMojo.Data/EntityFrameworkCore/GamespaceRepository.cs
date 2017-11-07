@@ -91,5 +91,13 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .AnyAsync();
 
         }
+
+        public IQueryable<Player> ListPlayers(int id)
+        {
+            return DbContext.Players
+                .Include(p => p.Person)
+                .Where(p => p.GamespaceId == id);
+        }
+
     }
 }

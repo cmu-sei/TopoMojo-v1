@@ -184,7 +184,7 @@ namespace TopoMojo.Core
                 || (t.Description!=null && t.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1));
 
             if (search.HasFilter("parents"))
-                q = q.Where(t => t.ParentId == 0);
+                q = q.Where(t => t.ParentId == null || t.ParentId == 0);
 
             if (search.HasFilter("published"))
                 q = q.Where(t => t.IsPublished);
@@ -220,7 +220,9 @@ namespace TopoMojo.Core
             tu.Iso = template.Iso;
             tu.IsolationTag = tag.HasValue() ? tag : template.Topology.GlobalId;
             tu.Id = template.Id.ToString();
-            return tu.AsTemplate();
+            TopoMojo.Models.Virtual.Template result =  tu.AsTemplate();
+            result.UseUplinkSwitch = template.Topology.UseUplinkSwitch;
+            return result;
         }
 
     }

@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { GameState,Gamespace,VmState } from "./models";
+import { GameState,Gamespace,Player,VmState } from "./models";
 
 @Injectable()
 export class GeneratedGamespaceService extends GeneratedService {
@@ -14,6 +14,9 @@ export class GeneratedGamespaceService extends GeneratedService {
 
 	public getGamespaces() : Observable<Array<Gamespace>> {
 		return this.http.get<Array<Gamespace>>("/api/gamespaces");
+	}
+	public allGamespaces() : Observable<Array<Gamespace>> {
+		return this.http.get<Array<Gamespace>>("/api/gamespaces/all");
 	}
 	public getGamespace(id: number) : Observable<GameState> {
 		return this.http.get<GameState>("/api/gamespace/" + id);
@@ -32,6 +35,9 @@ export class GeneratedGamespaceService extends GeneratedService {
 	}
 	public delistPlayer(playerId: number) : Observable<boolean> {
 		return this.http.delete<boolean>("/api/player/delist/" + playerId);
+	}
+	public playersGamespace(id: number) : Observable<Array<Player>> {
+		return this.http.get<Array<Player>>("/api/gamespace/" + id + "/players");
 	}
 
 }

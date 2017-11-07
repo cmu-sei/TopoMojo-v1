@@ -1,9 +1,12 @@
 namespace TopoMojo.Core.Models
 {
-    public class PlayerModel
+    public class Player
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public bool Online { get; set; }
+        public int PersonId { get; set; }
+        public string PersonName { get; set; }
+        public bool CanManage { get; set; }
+        public bool CanEdit { get; set; }
+        //public bool Online { get; set; }
     }
 }

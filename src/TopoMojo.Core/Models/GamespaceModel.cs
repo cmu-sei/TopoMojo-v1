@@ -6,10 +6,12 @@ namespace TopoMojo.Core.Models
     public class Gamespace
     {
         public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
         public string WhenCreated { get; set; }
         public string TopologyDocument { get; set; }
         public int TopologyId { get; set; }
+        public Player[] Players { get; set; }
         //public Models.Vm[] Vms { get; set; }
         //public int VmCount { get; set; }
     }

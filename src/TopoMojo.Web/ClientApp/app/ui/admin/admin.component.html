@@ -2,13 +2,16 @@
     <div class="row col-xs-12">
         <!--<h4>Admin Center</h4>-->
         <div class="btn-group btn-group-justified">
-            <a class="btn btn-default btn-lg" [routerLink]="['templates']">
-                <i class="fa fa-desktop"></i> Templates
+            <a class="btn btn-default btn-lg" [routerLink]="['templates']" routerLinkActive="btn-primary">
+                <i class="fa fa-list"></i> Templates
             </a>
-            <a class="btn btn-default btn-lg" [routerLink]="['vms']">
-                <i class="fa fa-desktop"></i> Vms
+            <a class="btn btn-default btn-lg" [routerLink]="['topos']" routerLinkActive="btn-primary">
+                <i class="fa fa-wrench"></i> Topos
             </a>
-            <a class="btn btn-default btn-lg" [routerLink]="['users']">
+            <a class="btn btn-default btn-lg" [routerLink]="['games']" routerLinkActive="btn-primary">
+                <i class="fa fa-flash"></i> Games
+            </a>
+            <a class="btn btn-default btn-lg" [routerLink]="['users']" routerLinkActive="btn-primary">
                 <i class="fa fa-user"></i> Users
             </a>
         </div>

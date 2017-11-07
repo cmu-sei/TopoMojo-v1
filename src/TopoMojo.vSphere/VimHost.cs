@@ -28,7 +28,8 @@ namespace TopoMojo.vSphere
             _logger.LogDebug($"Instantiated vSphereHost { _config.Host }");
             _pgCache = new Dictionary<string,int>();
             _pgAllocation = new Dictionary<string, PortGroupAllocation>();
-            _gcPortGroups = new List<string>();
+            _swAllocation = new Dictionary<string, int>();
+            //_gcPortGroups = new List<string>();
             //_vlanMap = new BitArray(4096).Or(master);
 
             ResolveConfigMacros();
@@ -37,9 +38,10 @@ namespace TopoMojo.vSphere
 
         private readonly ILogger<VimHost> _logger;
         private ConcurrentDictionary<string, Vm> _vmCache;
-        List<string> _gcPortGroups;
+        //List<string> _gcPortGroups;
         Dictionary<string,int> _pgCache;
         Dictionary<string,PortGroupAllocation> _pgAllocation;
+        Dictionary<string, int> _swAllocation;
         //private BitArray _vlanMap;
 
         PodConfiguration _config = null;
@@ -199,6 +201,7 @@ namespace TopoMojo.vSphere
             _vmCache.TryRemove(vm.Id, out vm);
             //remove vm nets
             await RemoveVmPortGroups(vmnets);
+            await RemoveVirtualSwitch(new string[] { vm.Name.Tag().ToSwitchName() });
             vm.Status = "initialized";
             return vm;
         }
@@ -527,6 +530,22 @@ namespace TopoMojo.vSphere
             await Task.Delay(0);
             lock(_pgAllocation)
             {
+                string switchName = _config.Uplink;
+                if (!template.UseUplinkSwitch)
+                {
+                    switchName = template.IsolationTag.ToSwitchName();
+                    if (!_swAllocation.ContainsKey(switchName))
+                    {
+                        HostVirtualSwitchSpec swspec = new HostVirtualSwitchSpec();
+                        swspec.numPorts = 48;
+                        // swspec.policy = new HostNetworkPolicy();
+                        // swspec.policy.security = new HostNetworkSecurityPolicy();
+
+                        _vim.AddVirtualSwitchAsync(_net, switchName, swspec).Wait();
+                        _swAllocation.Add(switchName, 0);
+                    }
+                }
+
                 foreach (Eth eth in template.Eth)
                 {
                     if (!_pgAllocation.ContainsKey(eth.Net))
@@ -536,7 +555,7 @@ namespace TopoMojo.vSphere
                             _logger.LogDebug($"Adding portgroup {eth.Net} ({eth.Vlan})");
 
                             HostPortGroupSpec spec = new HostPortGroupSpec();
-                            spec.vswitchName = _config.Uplink;
+                            spec.vswitchName = switchName;
                             spec.vlanId = eth.Vlan;
                             spec.name = eth.Net;
                             spec.policy = new HostNetworkPolicy();
@@ -546,7 +565,9 @@ namespace TopoMojo.vSphere
 
                             _vim.AddPortGroupAsync(_net, spec).Wait();
                             _pgAllocation.Add(spec.name, new PortGroupAllocation { Net = spec.name, Counter = 1, VlanId = spec.vlanId });
-                            //_vlanMap[spec.vlanId] = true;
+                            if (_swAllocation.ContainsKey(switchName))
+                                _swAllocation[switchName] += 1;
+
                         } catch {
 
                         }
@@ -558,72 +579,37 @@ namespace TopoMojo.vSphere
                 }
             }
         }
-        private async Task<HostPortGroup[]> LoadPortGroups()
+        private async Task<ObjectContent[]> LoadNetObject()
         {
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
                 _props,
                 FilterFactory.NetworkFilter(_net));
-            ObjectContent[] oc = response.returnval;
-            return (HostPortGroup[])oc[0].propSet[0].val;
+            return response.returnval;
+            // ObjectContent[] oc = response.returnval;
+            // return (HostPortGroup[])oc[0].propSet[0].val;
         }
-
-        // private async Task ReloadPgCache()
-        // {
-        //     string[] vmPgs = await LoadVmPortGroups(null);
-        //     HostPortGroup[] pgs = await LoadPortGroups();
-
-        //     lock (_pgCache)
-        //     {
-        //         foreach(HostPortGroup pg in pgs)
-        //         {
-        //             string name = pg.spec.name;
-        //             if (name.Contains("#"))
-        //             {
-        //                 if (!_pgCache.ContainsKey(name))
-        //                     _pgCache.Add(name, pg.spec.vlanId);
-
-        //                 if (!vmPgs.Contains(name))
-        //                 {
-        //                     if (_gcPortGroups.Contains(name))
-        //                     {
-        //                         _logger.LogDebug("Removing empty portgroup " + name);
-        //                         _vim.RemovePortGroupAsync(_net, name);
-        //                         _gcPortGroups.Remove(name);
-        //                         if (_pgCache.ContainsKey(name))
-        //                             _pgCache.Remove(name);
-        //                     }
-        //                     else
-        //                     {
-        //                         _gcPortGroups.Add(name);
-        //                     }
-        //                 }
-        //                 else
-        //                 {
-        //                     _gcPortGroups.Remove(name);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
 
         private async Task ReloadPgCache()
         {
             string[] vmPgs = await LoadVmPortGroups(null);
-            HostPortGroup[] pgs = await LoadPortGroups();
+            ObjectContent[] oc = await LoadNetObject();
+            HostPortGroup[] pgs = (HostPortGroup[])oc[0].propSet[0].val;
+            HostVirtualSwitch[] sws = (HostVirtualSwitch[])oc[0].propSet[1].val;
 
             lock (_pgAllocation)
             {
+                _swAllocation.Clear();
+                foreach (HostVirtualSwitch sw in sws)
+                    if (sw.name.StartsWith("sw#") && !_swAllocation.ContainsKey(sw.name))
+                        _swAllocation.Add(sw.name, 0);
+
                 foreach(HostPortGroup pg in pgs)
                 {
-                    string name = pg.spec.name;
-                    if (name.Contains("#"))
-                    {
-                        if (!_pgAllocation.ContainsKey(name))
-                        {
-                            _pgAllocation.Add(name, new PortGroupAllocation { Net = name, VlanId = pg.spec.vlanId });
-                            //_vlanMap[pg.spec.vlanId] = true;
-                        }
-                    }
+                    if (pg.spec.name.Contains("#") && !_pgAllocation.ContainsKey(pg.spec.name))
+                        _pgAllocation.Add(pg.spec.name, new PortGroupAllocation { Net = pg.spec.name, VlanId = pg.spec.vlanId });
+
+                    if (_swAllocation.ContainsKey(pg.vswitch))
+                        _swAllocation[pg.vswitch] += 1;
                 }
 
                 foreach (string net in vmPgs)
@@ -635,6 +621,14 @@ namespace TopoMojo.vSphere
                 //cleanup any empties
                 string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
                 RemoveVmPortGroups(empties).Wait();
+
+                //remove empty switches
+                List<string> emptySwitches = new List<string>();
+                foreach (string key in _swAllocation.Keys)
+                    if (_swAllocation[key]==0)
+                        emptySwitches.Add(key);
+                RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
+
             }
         }
 
@@ -672,12 +666,34 @@ namespace TopoMojo.vSphere
                             //_vlanMap[_pgAllocation[net].VlanId] = false;
                             _pgAllocation.Remove(net);
                             _vim.RemovePortGroupAsync(_net, net);
+
+                            //decrement _swAllocation[key]
+                            string key = net.Tag().ToSwitchName();
+                            if (_swAllocation.ContainsKey(key))
+                                _swAllocation[key] -= 1;
                         }
                     }
                 }
             }
 
         }
+
+        private async Task RemoveVirtualSwitch(string[] keys)
+        {
+            await Task.Delay(0);
+            lock (_swAllocation)
+            {
+                foreach (string key in keys)
+                {
+                    if (_swAllocation.ContainsKey(key) && _swAllocation[key]==0)
+                    {
+                        _vim.RemoveVirtualSwitchAsync(_net, key).Wait();
+                        _swAllocation.Remove(key);
+                    }
+                }
+            }
+        }
+
         private async Task<TaskInfo> WaitForVimTask(ManagedObjectReference task)
         {
             int i = 0;

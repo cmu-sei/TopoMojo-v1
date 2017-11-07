@@ -24,7 +24,7 @@
             <button class="btn btn-default" (click)="stop()" [tooltip]="'STOP' | translate | lowercase" *ngIf="isRunning()"><i class="fa fa-stop"></i></button>
             <button class="btn btn-default" (click)="display()" [tooltip]="'CONSOLE' | translate | lowercase"><i class="fa fa-desktop"></i></button>
             <button class="btn btn-default" (click)="revert()" [tooltip]="'REVERT' | translate | lowercase"><i class="fa fa-fast-backward"></i></button>
-            <button class="btn btn-default" (click)="save()" [tooltip]="'SAVE' | translate | lowercase" *ngIf="!hasParent()"><i class="fa fa-save"></i></button>
+            <button class="btn btn-default" (click)="save()" [tooltip]="'SAVE' | translate | lowercase" *ngIf="!hasParent() && !isPublished"><i class="fa fa-save"></i></button>
             <button class="btn btn-default" (click)="delete()" [tooltip]="'DELETE' | translate | lowercase"><i class="fa fa-trash"></i></button>
         </ng-template>
     </div>

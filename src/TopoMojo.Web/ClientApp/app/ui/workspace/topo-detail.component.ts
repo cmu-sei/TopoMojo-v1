@@ -146,6 +146,14 @@ export class TopoDetailComponent {
         .subscribe(
             (result: Template) => {
                 this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
+                let existing = this.topo.templates.filter(
+                    (v) => {
+                        return v.name == result.name;
+                    }
+                );
+                if (existing && existing.length > 0)
+                    this.onError({error: { message: 'EXCEPTION.DUPLICATENAME'}});
+
                 this.topo.templates.push(result);
             },
             (err) => {  this.onError(err); }

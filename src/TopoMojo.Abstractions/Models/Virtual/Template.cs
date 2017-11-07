@@ -13,6 +13,7 @@ namespace TopoMojo.Models.Virtual
         public KeyValuePair[] GuestSettings { get; set; }
         public string Version { get; set; }
         public string IsolationTag { get; set; }
+        public bool UseUplinkSwitch {get; set; }
         public int Ram { get; set; }
         public int VideoRam { get; set; }
         public int Adapters { get; set; }

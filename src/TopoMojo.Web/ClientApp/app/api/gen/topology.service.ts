@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Rx';
 import { GeneratedService } from "./_service";
-import { ChangedTopology,NewTopology,Search,Template,Topology,TopologyState,TopologySummary,TopologySummarySearchResult,VmOptions,Worker } from "./models";
+import { ChangedTopology,NewTopology,Search,Template,Topology,TopologySearchResult,TopologyState,TopologySummary,TopologySummarySearchResult,VmOptions,Worker } from "./models";
 
 @Injectable()
 export class GeneratedTopologyService extends GeneratedService {
@@ -14,6 +14,9 @@ export class GeneratedTopologyService extends GeneratedService {
 
 	public getTopologies(search: Search) : Observable<TopologySummarySearchResult> {
 		return this.http.get<TopologySummarySearchResult>("/api/topologies" + this.paramify(search));
+	}
+	public allTopologies(search: Search) : Observable<TopologySearchResult> {
+		return this.http.get<TopologySearchResult>("/api/topologies/all" + this.paramify(search));
 	}
 	public putTopology(model: ChangedTopology) : Observable<Topology> {
 		return this.http.put<Topology>("/api/topology", model);

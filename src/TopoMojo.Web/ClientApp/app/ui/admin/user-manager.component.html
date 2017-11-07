@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-xs-12">
-        <div class="spaced">
+        <div>
             <search-bar (onSearch)="termChanged($event)"></search-bar>
         </div>
         <ul *ngIf="roster" class="list-unstyled">
@@ -8,7 +8,7 @@
                 <div class="">
                     <i class="fa fa-user"></i>
                     <span>{{ person.name }}</span>
-                    <span class="subdued">{{ person.globalId }}</span>
+                    <span class="text-muted">{{ person.globalId }}</span>
                     <!--<button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
                     <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>-->
                 </div>
@@ -17,7 +17,7 @@
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>
-        <hr>
+        <!-- <hr>
         <div class="">
             <button (click)="toggleUpload()" class="btn btn-link">
                 <h4>
@@ -29,6 +29,6 @@
                 <textarea rows="10" class="form-control" placeholder="Add or paste email list" [(ngModel)]="plist"></textarea>
                 <button (click)="upload()" class="btn btn-primary pull-right">Save</button>
             </div>
-        </div>
+        </div> -->
     </div>
 </div>

@@ -1,0 +1,40 @@
+<div class="row">
+    <div class="col-xs-12">
+        <div class="spaced">
+            <search-bar (onSearch)="termChanged($event)"></search-bar>
+        </div>
+        <ul *ngIf="topos" class="list-unstyled">
+            <li *ngFor="let topo of topos" class="">
+                <div class="">
+                    <!-- <i class="fa fa-map-marker"></i> -->
+                    <strong [class.text-primary]="topo.isPublished">{{ topo.name }}</strong>
+                    <!-- <span class="text-muted">{{ topo.whenCreated | ago }}</span> -->
+                    <span> ({{workerlist(topo)}}) </span>
+                    <button (click)="toggleSelected(topo)" class="btn btn-default btn-sm">
+                        <i class="fa fa-desktop"></i>
+                    </button>
+                    <button (click)="destroy(topo)" class="btn btn-link">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <div *ngIf="isSelected(topo.id)" class="well">
+                        <ul class="list-unstyled">
+                            <li *ngFor="let t of topo.templates">
+                                <!-- <span>{{t.name | untagged}}</span> -->
+                                <!-- <vm-toolbar [template]="t"></vm-toolbar> -->
+                                <template-editor [topo]="topo" [template]="t"></template-editor>
+                            </li>
+                        </ul>
+                        <button class="btn btn-link" (click)="showDoc(topo)">
+                            <i class="fa fa-file"></i>
+                            <span>View Document</span>
+                        </button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
+            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+        </button>
+    </div>
+</div>

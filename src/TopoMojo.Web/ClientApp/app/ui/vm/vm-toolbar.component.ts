@@ -13,8 +13,9 @@ import {Observable, Subscription, Subject} from 'rxjs/Rx';
 })
 export class VmToolbarComponent implements OnChanges {
     @Input() template: Template;
+    @Input() isPublished: boolean;
+    @Input() vm: VirtualVm;
     @Output() onLoaded: EventEmitter<any> = new EventEmitter<any>();
-    vm: VirtualVm;
     status: string;
     timer: any;
     working: boolean = true;
@@ -25,10 +26,10 @@ export class VmToolbarComponent implements OnChanges {
         private notifier: NotificationService
     ) { }
 
-    // ngOnInit() {
-    //     //setInterval(()=> {this.refresh()}, 4000);
-    //     //this.refresh();
-    // }
+    ngOnInit() {
+        this.startRefresh();
+    }
+
     ngOnChanges(changes: SimpleChanges) {
         if (changes['template']) {
             this.status = "created";
@@ -56,8 +57,8 @@ export class VmToolbarComponent implements OnChanges {
             );
         }
     }
-    ngOnDestroy() {
 
+    ngOnDestroy() {
         this.subs.forEach(
             (sub) => {
                 sub.unsubscribe();
@@ -172,7 +173,7 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     hasParent() {
-        return (this.template.parentId);
+        return (!this.template || this.template.parentId);
     }
 
     display() {

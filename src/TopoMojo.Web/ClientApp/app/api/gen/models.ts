@@ -10,10 +10,20 @@ export interface ImageFile {
 
 export interface Gamespace {
 	id?: number;
+	globalId?: string;
 	name?: string;
 	whenCreated?: string;
 	topologyDocument?: string;
 	topologyId?: number;
+	players?: Array<Player>;
+}
+
+export interface Player {
+	id?: number;
+	personId?: number;
+	personName?: string;
+	canManage?: boolean;
+	canEdit?: boolean;
 }
 
 export interface GameState {
@@ -63,6 +73,7 @@ export interface TemplateSummarySearchResult {
 export interface TemplateSummary {
 	id?: number;
 	name?: string;
+	description?: string;
 	topologyId?: number;
 	topologyName?: string;
 	parentId?: string;
@@ -85,6 +96,7 @@ export interface Template {
 export interface TemplateDetail {
 	id?: number;
 	name?: string;
+	description?: string;
 	networks?: string;
 	detail?: string;
 	isPublished?: boolean;
@@ -116,9 +128,10 @@ export interface TopologySummary {
 	author?: string;
 }
 
-export interface NewTopology {
-	name?: string;
-	description?: string;
+export interface TopologySearchResult {
+	search?: Search;
+	total?: number;
+	results?: Array<Topology>;
 }
 
 export interface Topology {
@@ -126,7 +139,7 @@ export interface Topology {
 	globalId?: string;
 	name?: string;
 	description?: string;
-	documentUrl?: string;
+	document?: string;
 	shareCode?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
@@ -141,6 +154,11 @@ export interface Worker {
 	personName?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
+}
+
+export interface NewTopology {
+	name?: string;
+	description?: string;
 }
 
 export interface ChangedTopology {
