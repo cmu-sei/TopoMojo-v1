@@ -57,6 +57,8 @@ export class GeneratedVmService extends GeneratedService {
 	public netsVm(id: string) : Observable<VirtualVm> {
 		return this.http.get<VirtualVm>("/api/vm/" + id + "/nets");
 	}
-
+	public reloadHost(host: string) {
+		return this.http.get(`api/host/${host}/reload`);
+	}
 }
 

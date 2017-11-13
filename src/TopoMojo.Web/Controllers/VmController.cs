@@ -215,6 +215,17 @@ namespace TopoMojo.Controllers
             return Ok(await _pod.GetVmNetOptions(tag));
         }
 
+        [HttpGet("api/host/{host}/reload")]
+        public async Task<IActionResult> ReloadHost([FromRoute]string host)
+        {
+            if (_profile.IsAdmin)
+            {
+                await _pod.ReloadHost(host);
+                return Ok();
+            }
+            return BadRequest();
+        }
+
         private async Task<bool> AuthorizeAction(string id, string method)
         {
             if (_profile.IsAdmin)
@@ -234,13 +245,11 @@ namespace TopoMojo.Controllers
                 throw new InvalidOperationException();
 
             bool result = await _profileManager.CanEditSpace(instanceId);
-            _logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
 
-            // if (!result && "ticket load".Contains(method))
-            //     result = await _topoManager.AllowedInstanceAccess(instanceId);
-
-            if (!result)
+            if (!result) {
                 throw new InvalidOperationException();
+                _logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
+            }
 
             if (!"load resolve".Contains(method))
             {

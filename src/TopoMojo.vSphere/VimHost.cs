@@ -29,11 +29,13 @@ namespace TopoMojo.vSphere
             _pgCache = new Dictionary<string,int>();
             _pgAllocation = new Dictionary<string, PortGroupAllocation>();
             _swAllocation = new Dictionary<string, int>();
+            _tasks = new Dictionary<string, VimHostTask>();
             //_gcPortGroups = new List<string>();
             //_vlanMap = new BitArray(4096).Or(master);
 
             ResolveConfigMacros();
-            Task monitorTask = MonitorSession();
+            Task sessionMonitorTask = MonitorSession();
+            Task taskMonitorTask = MonitorTasks();
         }
 
         private readonly ILogger<VimHost> _logger;
@@ -42,6 +44,7 @@ namespace TopoMojo.vSphere
         Dictionary<string,int> _pgCache;
         Dictionary<string,PortGroupAllocation> _pgAllocation;
         Dictionary<string, int> _swAllocation;
+        Dictionary<string, VimHostTask> _tasks;
         //private BitArray _vlanMap;
 
         PodConfiguration _config = null;
@@ -54,6 +57,8 @@ namespace TopoMojo.vSphere
         ManagedObjectReference _net, _opt, _svc, _dt, _dsb, _hauth, _ds;
         int _pollInterval = 1000;
         int _syncInterval = 30000;
+        int _taskMonitorInterval = 3000;
+        bool _disposing;
 
         public string Name
         {
@@ -159,9 +164,15 @@ namespace TopoMojo.vSphere
             {
                 _logger.LogDebug($"Save: remove previous snap for vm {vm.Name}");
                 task = await _vim.RemoveSnapshot_TaskAsync(mor, false, true);
-                info = await WaitForVimTask(task);
+                info = await GetVimTaskInfo(task);
                 if (info.state == TaskInfoState.error)
                     throw new Exception(info.error.localizedMessage);
+
+                if (info.progress < 100) {
+                    var t = new VimHostTask { Task = task, Action = "saving", WhenCreated = DateTime.UtcNow };
+                    vm.Task = new VmTask { Name= t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
+                    _tasks.Add(vm.Id, t);
+                }
             }
             _vmCache.TryUpdate(vm.Id, vm, vm);
             return vm;
@@ -608,8 +619,8 @@ namespace TopoMojo.vSphere
                     if (pg.spec.name.Contains("#") && !_pgAllocation.ContainsKey(pg.spec.name))
                         _pgAllocation.Add(pg.spec.name, new PortGroupAllocation { Net = pg.spec.name, VlanId = pg.spec.vlanId });
 
-                    if (_swAllocation.ContainsKey(pg.vswitch))
-                        _swAllocation[pg.vswitch] += 1;
+                    if (_swAllocation.ContainsKey(pg.spec.vswitchName))
+                        _swAllocation[pg.spec.vswitchName] += 1;
                 }
 
                 foreach (string net in vmPgs)
@@ -618,16 +629,21 @@ namespace TopoMojo.vSphere
                         _pgAllocation[net].Counter += 1;
                 }
 
-                //cleanup any empties
-                string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
-                RemoveVmPortGroups(empties).Wait();
+                // TODO: Revisit this cleanup upon start if things start getting messy.
+                // TODO: Need to change it to preserve pg/vs if any vm exists in the isolation group, regardless
+                // of where its nics are attached.  This should prevent garbage collection of a network when the
+                // vm nic is temporarily on bridge-net.
 
-                //remove empty switches
-                List<string> emptySwitches = new List<string>();
-                foreach (string key in _swAllocation.Keys)
-                    if (_swAllocation[key]==0)
-                        emptySwitches.Add(key);
-                RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
+                // //cleanup any empties
+                // string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
+                // RemoveVmPortGroups(empties).Wait();
+
+                // //remove empty switches
+                // List<string> emptySwitches = new List<string>();
+                // foreach (string key in _swAllocation.Keys)
+                //     if (_swAllocation[key]==0)
+                //         emptySwitches.Add(key);
+                // RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
 
             }
         }
@@ -776,6 +792,7 @@ namespace TopoMojo.vSphere
                         _logger.LogDebug($"Initialized {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
 
                         _vim = client;
+                        _disposing = false;
                     }
                     catch (Exception ex)
                     {
@@ -788,11 +805,12 @@ namespace TopoMojo.vSphere
         public async Task Disconnect()
         {
             _logger.LogDebug($"Disconnecting from {this.Name}");
+            _disposing = true;
+            await Task.Delay(500);
             _vim.Dispose();
             _vim = null;
             _sic = null;
             _session = null;
-            await Task.Delay(0);
         }
 
         private async Task InitManagedObjectReferences(VimPortTypeClient client)
@@ -974,6 +992,11 @@ namespace TopoMojo.vSphere
                         //vm.HasGuestAgent = (vm.Annotations.FindOne("guestagent").Value() == "true");
                         vm.Question = GetQuestion(summary.runtime.question);
                         vm.Status = "deployed";
+                        if (_tasks.ContainsKey(vm.Id))
+                        {
+                            var t = _tasks[vm.Id];
+                            vm.Task = new VmTask { Name= t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1046,7 +1069,7 @@ namespace TopoMojo.vSphere
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");
             await Task.Delay(0);
-            while (true)
+            while (!_disposing)
             {
                 try
                 {
@@ -1069,6 +1092,57 @@ namespace TopoMojo.vSphere
                     await Task.Delay(_syncInterval);
                 }
             }
+            _logger.LogDebug("sessionMonitor ended.");
+        }
+
+        private async Task MonitorTasks()
+        {
+            _logger.LogDebug($"{_config.Host}: starting task monitor");
+            while (!_disposing)
+            {
+                try
+                {
+                    foreach (string key in _tasks.Keys.ToArray())
+                    {
+                        var t = _tasks[key];
+                        var info = await GetVimTaskInfo(t.Task);
+                        Console.WriteLine("task progress: {0}", info.progress);
+                        switch (info.state)
+                        {
+                            case TaskInfoState.error:
+                                t.Progress = -1;
+                                t.Action = info.description.message + " - " +
+                                    info.error.localizedMessage;
+                                _tasks.Remove(key);
+                                break;
+
+                            case TaskInfoState.success:
+                                t.Progress = 100;
+                                _tasks.Remove(key);
+                                break;
+
+                            default:
+                                t.Progress = info.progress;
+                                break;
+                        }
+                        Vm vm = _vmCache[key];
+                        if (vm.Task == null)
+                            vm.Task = new VmTask();
+                        vm.Task.Progress = t.Progress;
+                        vm.Task.Name = t.Action;
+                        _vmCache.TryUpdate(key, vm, vm);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(0, ex, $"Error in task monitor of {_config.Host}");
+                }
+                finally
+                {
+                    await Task.Delay(_taskMonitorInterval);
+                }
+            }
+            _logger.LogDebug("taskMonitor ended.");
         }
     }
 
@@ -1079,4 +1153,11 @@ namespace TopoMojo.vSphere
         public int VlanId { get; set; }
     }
 
+    internal class VimHostTask
+    {
+        public ManagedObjectReference Task { get; set; }
+        public string Action { get; set; }
+        public int Progress { get; set; }
+        public DateTime WhenCreated { get; set; }
+    }
 }

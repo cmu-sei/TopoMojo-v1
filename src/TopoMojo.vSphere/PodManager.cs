@@ -48,15 +48,18 @@ namespace TopoMojo.vSphere
         private Dictionary<string, VimHost> _affinityMap;
         private ConcurrentDictionary<string, Vm> _vmCache;
 
+        public async Task ReloadHost(string hostname)
+        {
+            string host = "https://" + hostname + "/sdk";
+            await AddHost(host);
+        }
+
+        //TODO: refactor this as InitializationProgress
         public async Task<Vm> Refresh(Template template)
         {
             string target = template.Name + "#" + template.IsolationTag;
             Vm vm = (await Find(target)).FirstOrDefault();
-            if (vm != null)
-            {
-                vm.Status = "deployed";
-            }
-            else
+            if (vm == null)
             {
                 vm = new Vm() { Name = target, Status = "created" };
                 int progress = await VerifyDisks(template);
@@ -102,7 +105,26 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Load(string id)
         {
             await Task.Delay(0);
-            return _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
+            Vm vm = _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
+            CheckProgress(vm.Id);
+            return vm;
+        }
+
+        private void CheckProgress(string id)
+        {
+            Vm vm = _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
+            if (vm.Task != null && (vm.Task.Progress < 0 || vm.Task.Progress > 99))
+            {
+                vm.Task = null;
+                _vmCache.TryUpdate(vm.Id, vm, vm);
+            }
+        }
+
+        private Vm[] CheckProgress(Vm[] vms)
+        {
+            foreach (Vm vm in vms)
+                CheckProgress(vm.Id);
+            return vms;
         }
 
         public async Task<Vm> Start(string id)
@@ -183,14 +205,10 @@ namespace TopoMojo.vSphere
         public async Task<Vm[]> Find(string term)
         {
             await Task.Delay(0);
+            IEnumerable<Vm> q = _vmCache.Values;
             if (term.HasValue())
-            {
-                return _vmCache.Values.Where(o=>o.Id.Contains(term) || o.Name.Contains(term)).ToArray();
-            }
-            else
-            {
-                return _vmCache.Values.ToArray();
-            }
+                q =  q.Where(o=>o.Id.Contains(term) || o.Name.Contains(term));
+            return CheckProgress(q.ToArray());
         }
 
         public async Task<int> VerifyDisks(Template template)
@@ -531,18 +549,42 @@ namespace TopoMojo.vSphere
 
             foreach (string url in hosts)
             {
-                string hostname = new Uri(url).Host;
-                PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
-                hostOptions.Url = url;
-                hostOptions.Host = hostname;
-                VimHost vHost = new VimHost(
-                    hostOptions,
-                    _vmCache,
-                    _vlanMap,
-                    _mill.CreateLogger<VimHost>()
-                );
-                _hostCache.Add(hostname, vHost);
+                AddHost(url);
+                //string hostname = new Uri(url).Host;
+                // PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
+                // hostOptions.Url = url;
+                // hostOptions.Host = hostname;
+                // VimHost vHost = new VimHost(
+                //     hostOptions,
+                //     _vmCache,
+                //     _vlanMap,
+                //     _mill.CreateLogger<VimHost>()
+                // );
+                // _hostCache.Add(hostname, vHost);
             }
+        }
+
+        private async Task AddHost(string url)
+        {
+            string hostname = new Uri(url).Host;
+
+            if (_hostCache.ContainsKey(hostname))
+            {
+                _hostCache[hostname].Disconnect();
+                _hostCache.Remove(hostname);
+                Task.Delay(100);
+            }
+
+            PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
+            hostOptions.Url = url;
+            hostOptions.Host = hostname;
+            VimHost vHost = new VimHost(
+                hostOptions,
+                _vmCache,
+                _vlanMap,
+                _mill.CreateLogger<VimHost>()
+            );
+            _hostCache.Add(hostname, vHost);
         }
 
         private void InitVlans()

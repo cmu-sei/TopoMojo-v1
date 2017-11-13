@@ -10,6 +10,7 @@
                     <strong>{{ game.name }}</strong>
                     <span class="text-muted">{{ game.whenCreated | ago }}</span>
                     <span> ({{playerlist(game)}}) </span>
+                    <span class="text-muted"> {{ game.globalId.substring(0,8)}} </span>
                     <button (click)="vmlist(game)" class="btn btn-default btn-sm">
                         <i class="fa fa-desktop"></i>
                     </button>

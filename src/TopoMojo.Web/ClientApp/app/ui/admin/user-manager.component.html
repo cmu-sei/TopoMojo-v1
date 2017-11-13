@@ -8,7 +8,7 @@
                 <div class="">
                     <i class="fa fa-user"></i>
                     <span>{{ person.name }}</span>
-                    <span class="text-muted">{{ person.globalId }}</span>
+                    <span class="text-muted"> {{ person.globalId.substring(0,8)}} </span>
                     <!--<button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
                     <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>-->
                 </div>

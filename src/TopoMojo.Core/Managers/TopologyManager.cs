@@ -47,6 +47,7 @@ namespace TopoMojo.Core
                 q = q.Where(o =>
                     o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                     || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                 );
             }
 
@@ -101,6 +102,7 @@ namespace TopoMojo.Core
                 q = q.Where(o =>
                     o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                     || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                 );
             }
 
