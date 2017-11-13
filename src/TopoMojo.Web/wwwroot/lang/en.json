@@ -58,6 +58,7 @@
     "PUBLISH": "Publish",
     "REFRESH": "Refresh",
     "REFRESH-LIST": "Refresh list",
+    "REMOVE": "Remove deployed machine",
     "REVERT": "Revert",
     "SEARCH": "Search",
     "SELECT-FILE": "Browse for file",

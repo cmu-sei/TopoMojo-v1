@@ -384,6 +384,11 @@ namespace TopoMojo.vMock
             vm.Question = null;
             return vm;
         }
+
+        public async Task ReloadHost(string host)
+        {
+
+        }
     }
 
     public class MockDisk
