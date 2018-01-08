@@ -9,9 +9,10 @@ using TopoMojo.Data.Entities;
 namespace TopoMojo.Web.Data.Migrations.TopoMojo
 {
     [DbContext(typeof(TopoMojoDbContext))]
-    partial class TopoMojoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20171121015842_TopologyLock")]
+    partial class TopologyLock
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2");

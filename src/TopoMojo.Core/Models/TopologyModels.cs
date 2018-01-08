@@ -14,6 +14,7 @@ namespace TopoMojo.Core.Models
         public bool CanEdit { get; set; }
         public int TemplateLimit { get; set; }
         public bool IsPublished { get; set; }
+        public bool IsLocked { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
     }
@@ -26,6 +27,7 @@ namespace TopoMojo.Core.Models
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
         public bool IsPublished { get; set; }
+        public bool IsLocked { get; set; }
         public string Author { get; set; }
     }
 
@@ -47,6 +49,7 @@ namespace TopoMojo.Core.Models
         public int Id { get; set; }
         public string ShareCode { get; set; }
         public bool IsPublished { get; set; }
+        public bool IsLocked { get; set; }
     }
 
     public class Worker

@@ -58,7 +58,8 @@ namespace TopoMojo.Data.EntityFrameworkCore
                     result = await DbContext.Workers
                     .Where(p => p.TopologyId == topology.Id
                         && p.PersonId == profile.Id
-                        && p.Permission.HasFlag(Permission.Editor))
+                        && p.Permission.HasFlag(Permission.Editor)
+                        && !p.Topology.IsLocked)
                     .AnyAsync();
                 }
             }

@@ -125,6 +125,7 @@ export interface TopologySummary {
 	canManage?: boolean;
 	canEdit?: boolean;
 	isPublished?: boolean;
+	isLocked?: boolean;
 	author?: string;
 }
 
@@ -145,6 +146,7 @@ export interface Topology {
 	canEdit?: boolean;
 	templateLimit?: number;
 	isPublished?: boolean;
+	isLocked?: boolean;
 	workers?: Array<Worker>;
 	templates?: Array<Template>;
 }
@@ -171,6 +173,7 @@ export interface TopologyState {
 	id?: number;
 	shareCode?: string;
 	isPublished?: boolean;
+	isLocked?: boolean;
 }
 
 export interface VmOptions {

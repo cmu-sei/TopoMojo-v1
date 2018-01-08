@@ -275,6 +275,7 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
     // Method to display the editable value as text and emit save event to host
     onSubmit(value) {
+        value = value.trim();
         const rExp = new RegExp(this.pattern);
         if (!rExp.test(value)) {
             return this.fnErrorPattern();

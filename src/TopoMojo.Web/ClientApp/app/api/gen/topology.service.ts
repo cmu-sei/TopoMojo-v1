@@ -36,6 +36,12 @@ export class GeneratedTopologyService extends GeneratedService {
 	public unpublishTopology(id: number) : Observable<TopologyState> {
 		return this.http.get<TopologyState>("/api/topology/" + id + "/unpublish");
 	}
+	public lockTopology(id: number) : Observable<TopologyState> {
+		return this.http.get<TopologyState>("/api/topology/" + id + "/lock");
+	}
+	public unlockTopology(id: number) : Observable<TopologyState> {
+		return this.http.get<TopologyState>("/api/topology/" + id + "/unlock");
+	}
 	public shareTopology(id: number) : Observable<TopologyState> {
 		return this.http.get<TopologyState>("/api/topology/" + id + "/share");
 	}

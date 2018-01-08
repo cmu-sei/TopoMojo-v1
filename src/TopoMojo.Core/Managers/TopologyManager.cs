@@ -309,7 +309,7 @@ namespace TopoMojo.Core
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
-                throw new InvalidTimeZoneException();
+                throw new InvalidOperationException();
 
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
@@ -323,12 +323,26 @@ namespace TopoMojo.Core
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
-                throw new InvalidTimeZoneException();
+                throw new InvalidOperationException();
 
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
             topology.IsPublished = !revoke;
+            await _repo.Update(topology);
+            return Mapper.Map<Models.TopologyState>(topology);
+        }
+
+        public async Task<Models.TopologyState> Lock(int id, bool revoke)
+        {
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidOperationException();
+
+            if (! Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            topology.IsLocked = !revoke;
             await _repo.Update(topology);
             return Mapper.Map<Models.TopologyState>(topology);
         }

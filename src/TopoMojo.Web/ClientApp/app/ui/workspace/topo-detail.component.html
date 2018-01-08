@@ -1,7 +1,7 @@
 <div>
     <div *ngIf="topo">
         <div>
-            <h4>{{ topo.name }}</h4>
+            <h4>{{ topo.name }} <i *ngIf="topo.isLocked" class="fa fa-lock fa-2x"></i></h4>
             <div class="btn-group btn-group-justified">
                 <a class="btn btn-default btn-lg" [class.link-active]="showing=='topo'" (click)="show('topo')">
                     <i class="fa fa-sitemap"></i> <span translate>TOPOLOGY</span>

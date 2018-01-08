@@ -110,6 +110,24 @@ namespace TopoMojo.Controllers
             return Ok(state);
         }
 
+        [HttpGet("api/topology/{id}/lock")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Lock([FromRoute] int id)
+        {
+            TopologyState state = await _mgr.Lock(id, false);
+            return Ok(state);
+        }
+
+        [HttpGet("api/topology/{id}/unlock")]
+        [ProducesResponseType(typeof(TopologyState), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Unlock([FromRoute] int id)
+        {
+            TopologyState state = await _mgr.Lock(id, true);
+            return Ok(state);
+        }
+
         [HttpGet("api/topology/{id}/share")]
         [ProducesResponseType(typeof(TopologyState), 200)]
         [JsonExceptionFilter]

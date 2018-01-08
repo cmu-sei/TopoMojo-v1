@@ -80,7 +80,7 @@ export class VmToolbarComponent implements OnChanges {
                 this.working = false;
                 //setTimeout(() => { this.startRefresh(); }, 10000);
             }
-        }, (err) => { this.onError(err) });
+        }, (err) => { this.onError(err); });
     }
 
     startRefresh() {
@@ -102,6 +102,7 @@ export class VmToolbarComponent implements OnChanges {
         this.working = true;
         this.vm.task = { name: "deploying" };
         this.service.deployVm(this.template.id)
+        .finally(() => {this.working == false;})
         .subscribe(data => {
             this.vm = data;
             this.onLoaded.emit(this.vm);

@@ -15,6 +15,7 @@ namespace TopoMojo.Data.Entities
         public string DocumentUrl { get; set; }
         public string ShareCode { get; set; }
         public bool IsPublished { get; set; }
+        public bool IsLocked { get; set; }
         public int TemplateLimit { get; set; }
         public bool UseUplinkSwitch { get; set; }
         public virtual ICollection<Worker> Workers { get; set; } = new List<Worker>();

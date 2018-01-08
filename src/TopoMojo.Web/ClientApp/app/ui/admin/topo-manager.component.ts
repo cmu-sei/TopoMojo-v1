@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { TopologyService } from '../../api/topology.service';
-import { Topology, TopologySummary, TemplateSummary, Worker, VmState, VirtualVm, Search } from '../../api/gen/models';
+import { Topology, TopologySummary, TopologyState, TemplateSummary, Worker, VmState, VirtualVm, Search } from '../../api/gen/models';
 import { VmService } from '../../api/vm.service';
 import { SettingsService } from '../../svc/settings.service';
 
@@ -70,6 +70,18 @@ export class TopoManagerComponent implements OnInit {
                 }
             )
         }
+    }
+
+    toggleLocked(topo: Topology) : void {
+        let q = (topo.isLocked )
+            ? this.topoSvc.unlockTopology(topo.id)
+            : this.topoSvc.lockTopology(topo.id);
+
+        q.subscribe(
+            (result : TopologyState) => {
+                topo.isLocked = result.isLocked;
+            }
+        )
     }
 
     isSelected(id: number) : boolean {
