@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
@@ -15,14 +10,13 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    public class GamespaceController : HubController<TopologyHub>
+    public class GamespaceController : _Controller
     {
         public GamespaceController(
             GamespaceManager instanceManager,
             IPodManager podManager,
-            IServiceProvider sp,
-            IConnectionManager sigr
-        ) : base(sigr, sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _pod = podManager;
             _mgr = instanceManager;
@@ -85,7 +79,7 @@ namespace TopoMojo.Controllers
         {
             var result = await _mgr.Destroy(id);
             Log("destroyed", result);
-            await Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
+            // await Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
             return Ok(true);
         }
 

@@ -1,6 +1,7 @@
 namespace TopoMojo.Models
 {
     public class PodConfiguration {
+        public string Type { get; set; }
         public string Url { get; set;}  //accepts range expansion
         public string Host { get; set;}
         public string User { get; set; }

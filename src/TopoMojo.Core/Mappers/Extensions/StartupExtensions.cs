@@ -7,7 +7,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class StartupMapperExtensions
     {
-        public static IServiceCollection InitializeMapper(this IServiceCollection services)
+        public static IServiceCollection AddMappers(this IServiceCollection services)
         {
             Mapper.Initialize(cfg => {
                 cfg.AddProfile<ActorProfile>();

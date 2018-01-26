@@ -1,10 +1,14 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Jam.Accounts;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.EntityFrameworkCore;
 
@@ -12,37 +16,73 @@ namespace TopoMojo.Extensions
 {
     public static class DatabaseStartupExtensions
     {
-        public static DbContextOptionsBuilder UseConfiguredDatabase(
-            this DbContextOptionsBuilder builder,
-            DatabaseOptions dbOptions
-        )
-        {
-            switch (dbOptions.Provider)
+
+        public static IServiceCollection AddDbProvider(
+            this IServiceCollection services,
+            IConfiguration config
+        ) {
+            string dbProvider = config.GetValue<string>("Database:Provider", "Sqlite").Trim();
+            switch (dbProvider)
             {
                 case "Sqlite":
-                builder.UseSqlite(
-                    dbOptions.ConnectionString,
-                    options => options.MigrationsAssembly(dbOptions.MigrationsAssembly)
-                );
+                services.AddEntityFrameworkSqlite();
                 break;
 
                 case "SqlServer":
-                builder.UseSqlServer(
-                    dbOptions.ConnectionString,
-                    options => options.MigrationsAssembly(dbOptions.MigrationsAssembly)
-                );
+                //services.AddEntityFrameworkSqlServer();
                 break;
+
+                case "PostgreSQL":
+                //services.AddEntityFrameworkNpgsql();
+                break;
+
+            }
+
+            return services
+                .AddOptions()
+                .Configure<DatabaseOptions>(config.GetSection("Database"))
+                .AddScoped(sp => sp.GetService<IOptionsMonitor<DatabaseOptions>>().CurrentValue);
+        }
+
+        public static DbContextOptionsBuilder UseConfiguredDatabase(
+            this DbContextOptionsBuilder builder,
+            IConfiguration config
+        )
+        {
+            string dbProvider = config.GetValue<string>("Database:Provider", "Sqlite").Trim();
+            //var migrationsAssembly = String.Format("{0}.Migrations.{1}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name, dbProvider);
+            var migrationsAssembly = String.Format("{0}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+            var connectionString = config.GetConnectionString(dbProvider);
+
+            switch (dbProvider)
+            {
+                case "Sqlite":
+                builder.UseSqlite(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
+                break;
+
+                case "SqlServer":
+                //builder.UseSqlServer(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
+                break;
+
+                case "PostgreSQL":
+                //builder.UseNpgsql(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
+                break;
+
             }
             return builder;
         }
 
-        public static IApplicationBuilder InitializeDatabase(this IApplicationBuilder app, DatabaseOptions dbOptions, bool isDevelopment)
+        public static IWebHost InitializeDatabase(
+            this IWebHost webHost
+        )
         {
-            using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            using (var scope = webHost.Services.CreateScope())
             {
-                TopoMojoDbContext topoDb = scope.ServiceProvider.GetRequiredService<TopoMojoDbContext>();
-                AccountDbContext accountDb = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
-                if (isDevelopment && dbOptions.DevModeRecreate)
+                var services = scope.ServiceProvider;
+                DatabaseOptions options = services.GetService<DatabaseOptions>();
+                TopoMojoDbContext topoDb = services.GetService<TopoMojoDbContext>();
+                AccountDbContext accountDb = services.GetService<AccountDbContext>();
+                if (options.DevModeRecreate)
                 {
                     topoDb.Database.EnsureDeleted();
                     accountDb.Database.EnsureDeleted();
@@ -55,11 +95,11 @@ namespace TopoMojo.Extensions
                 if (!accountDb.Accounts.Any())
                 {
                     //IAccountManager mgr = scope.ServiceProvider.GetRequiredService<IAccountManager>();
-                    IAccountRepository datarepo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+                    IAccountRepository datarepo = services.GetRequiredService<IAccountRepository>();
                     IAccountManager mgr = new AccountManager(
                         datarepo,
                         new AccountOptions(),
-                        scope.ServiceProvider.GetRequiredService<ILoggerFactory>(),
+                        services.GetRequiredService<ILoggerFactory>(),
                         null, null, null);
                         mgr.RegisterWithCredentialsAsync(
                             new Credentials {
@@ -78,10 +118,10 @@ namespace TopoMojo.Extensions
                     });
                     topoDb.SaveChanges();
                 }
+
+                return webHost;
             }
-
-            return app;
-
         }
+
     }
 }

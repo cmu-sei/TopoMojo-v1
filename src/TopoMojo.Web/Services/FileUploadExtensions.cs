@@ -18,7 +18,7 @@ namespace TopoMojo.Services
         public static string GetBoundary(this string header)
         {
             var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(header).Boundary);
-            if (string.IsNullOrWhiteSpace(boundary))
+            if (string.IsNullOrWhiteSpace(boundary.Value))
             {
                 throw new InvalidDataException("Missing content-type boundary.");
             }
@@ -29,7 +29,7 @@ namespace TopoMojo.Services
             //         $"Multipart boundary length limit {lengthLimit} exceeded.");
             // }
 
-            return boundary;
+            return boundary.Value;
         }
 
         public static bool IsMultipartContentType(this string header)
@@ -43,8 +43,8 @@ namespace TopoMojo.Services
             // Content-Disposition: form-data; name="key";
             return contentDisposition != null
                    && contentDisposition.DispositionType.Equals("form-data")
-                   && string.IsNullOrEmpty(contentDisposition.FileName)
-                   && string.IsNullOrEmpty(contentDisposition.FileNameStar);
+                   && string.IsNullOrEmpty(contentDisposition.FileName.Value)
+                   && string.IsNullOrEmpty(contentDisposition.FileNameStar.Value);
         }
 
         public static bool HasFileContentDisposition(this ContentDispositionHeaderValue contentDisposition)
@@ -52,13 +52,13 @@ namespace TopoMojo.Services
             // Content-Disposition: form-data; name="myfile1"; filename="Misc 002.jpg"
             return contentDisposition != null
                    && contentDisposition.DispositionType.Equals("form-data")
-                   && (!string.IsNullOrEmpty(contentDisposition.FileName)
-                       || !string.IsNullOrEmpty(contentDisposition.FileNameStar));
+                   && (!string.IsNullOrEmpty(contentDisposition.FileName.Value)
+                       || !string.IsNullOrEmpty(contentDisposition.FileNameStar.Value));
         }
 
         public static NameValueCollection ParseFormValues(this string querystring)
         {
-            string input = HeaderUtilities.RemoveQuotes(querystring);
+            string input = HeaderUtilities.RemoveQuotes(querystring).Value;
             NameValueCollection props = new NameValueCollection();
             foreach (string field in input.Split('&'))
             {

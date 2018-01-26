@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "build",
+            "label": "build",
             "command": "dotnet build",
             "type": "shell",
             "group": {
@@ -17,14 +17,14 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "taskName": "webpack",
+            "label": "webpack",
             "command": "dotnet msbuild src/TopoMojo.Web/TopoMojo.Web.csproj /t:WebpackDev",
             "type": "shell",
             "group": "build",
             "problemMatcher": "$msCompile"
         },
         {
-            "taskName": "api-gen",
+            "label": "api-gen",
             "command": "node src/TopoMojo.Web/swagger-ng.js -u http://localhost:5004/docs/v1/api.json -o src/TopoMojo.Web/ClientApp/app/api -m TermSkipTakeSortFilters:Search",           "type": "shell",
             "group": "build",
             "problemMatcher": "$tsc"

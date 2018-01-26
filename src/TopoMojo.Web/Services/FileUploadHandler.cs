@@ -83,7 +83,7 @@ namespace TopoMojo.Services
 
                     if (contentDisposition.HasFileContentDisposition())
                     {
-                        metadata.Add("original-name", HeaderUtilities.RemoveQuotes(contentDisposition.FileName));
+                        metadata.Add("original-name", HeaderUtilities.RemoveQuotes(contentDisposition.FileName).Value);
 
                         try
                         {

@@ -3,9 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 //using TopoMojo.Core;
 using TopoMojo.Extensions;
@@ -16,27 +14,24 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    public class VmController : HubController<TopologyHub>
+    public class VmController : _Controller
     {
         public VmController(
             Core.TemplateManager templateManager,
             // TopologyManager topoManager,
             Core.ProfileManager profileManager,
             IPodManager podManager,
-            IServiceProvider sp,
-            IConnectionManager sigr
+            IServiceProvider sp
             )
-        :base(sigr, sp)
+        :base(sp)
         {
             _mgr = templateManager;
-            // _topoManager = topoManager;
             _profileManager = profileManager;
             _pod = podManager;
         }
 
         private readonly IPodManager _pod;
         private readonly Core.TemplateManager _mgr;
-        // private readonly TopologyManager _topoManager;
         private readonly Core.ProfileManager _profileManager;
 
         // [AllowAnonymous]
@@ -248,7 +243,7 @@ namespace TopoMojo.Controllers
 
             if (!result) {
                 throw new InvalidOperationException();
-                _logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
+                //_logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
             }
 
             if (!"load resolve".Contains(method))
@@ -260,18 +255,13 @@ namespace TopoMojo.Controllers
         }
         private void SendBroadcast(Vm vm, string action)
         {
-            Core.Models.VmState state = new Core.Models.VmState
-            {
-                Id = vm.Id,
-                Name = vm.Name.Untagged(),
-                IsRunning = vm.State == VmPowerState.running
-            };
-            Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
-            // Clients.Group(vm.Name.Tag()).VmUpdated(new {
-            //     id = vm.Id,
-            //     name = vm.Name.Untagged(),
-            //     isRunning = vm.State == VmPowerState.running
-            // });
+            // Core.Models.VmState state = new Core.Models.VmState
+            // {
+            //     Id = vm.Id,
+            //     Name = vm.Name.Untagged(),
+            //     IsRunning = vm.State == VmPowerState.running
+            // };
+            // Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
 
         }
     }

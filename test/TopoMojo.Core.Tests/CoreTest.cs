@@ -45,8 +45,6 @@ namespace Tests
         {
             _options = new CoreOptions();
             _mill = new LoggerFactory();
-            _mill.AddConsole();
-            _mill.AddDebug();
 
             _dbOptions = new DbContextOptionsBuilder<TopoMojoDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())

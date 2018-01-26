@@ -1,13 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
@@ -17,18 +11,16 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    public class TopologyController : HubController<TopologyHub>
+    public class TopologyController : _Controller
     {
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
-            IServiceProvider sp,
-            IConnectionManager sigr
-        ) : base(sigr, sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _pod = podManager;
             _mgr = topologyManager;
-            //_env = env;
         }
 
         private readonly IPodManager _pod;
@@ -68,7 +60,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Update([FromBody]ChangedTopology model)
         {
             Topology topo = await _mgr.Update(model);
-            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
+            //Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
             return Ok(topo);
         }
 
@@ -88,7 +80,7 @@ namespace TopoMojo.Controllers
         {
             Topology topo = await _mgr.Delete(id);
             Log("deleted", topo);
-            Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
+            //Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
             return Ok(true);
         }
 
