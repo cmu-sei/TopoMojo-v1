@@ -3,6 +3,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
+using IdentityModel;
+using IdentityServer4.AccessTokenValidation;
+using Jam.Accounts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -13,20 +18,16 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Jam.Accounts;
+using Swashbuckle.AspNetCore.Swagger;
 using TopoMojo.Abstractions;
+using TopoMojo.Controllers;
 using TopoMojo.Core;
+using TopoMojo.Core.Abstractions;
 using TopoMojo.Data.EntityFrameworkCore;
+using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
-using TopoMojo.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Threading.Tasks;
-using TopoMojo.Core.Abstractions;
-using Swashbuckle.AspNetCore.Swagger;
-using TopoMojo.Controllers;
-using IdentityServer4.AccessTokenValidation;
 
 namespace TopoMojo
 {
@@ -154,16 +155,8 @@ namespace TopoMojo
             services.AddAuthentication(
                 options =>
                 {
-                    options.DefaultScheme = "local-jwt";
-                    options.DefaultChallengeScheme = "local-jwt";
-                }
-            )
-            .AddIdentityServerAuthentication(
-                IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                options => {
-                    options.Authority = _authOptions.Authority;
-                    options.RequireHttpsMetadata = _authOptions.RequireHttpsMetadata;
-                    options.ApiName = _authOptions.AuthorizationScope;
+                    options.DefaultScheme = tokenOptions.Scheme;
+                    options.DefaultChallengeScheme = tokenOptions.Scheme;
                 }
             )
             .AddJwtBearer(
@@ -175,29 +168,38 @@ namespace TopoMojo
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key)),
                         ValidIssuer = tokenOptions.Issuer,
                         ValidAudience = tokenOptions.Audience,
-                        NameClaimType = "name",
-                        RoleClaimType = "role"
+                        NameClaimType = JwtClaimTypes.Name,
+                        RoleClaimType = JwtClaimTypes.Role
                     };
+                }
+            )
+            .AddIdentityServerAuthentication(
+                "IdSrv", //IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                options => {
+                    options.Authority = _authOptions.Authority;
+                    options.RequireHttpsMetadata = _authOptions.RequireHttpsMetadata;
+                    options.ApiName = _authOptions.AuthorizationScope;
                 }
             );
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
 
-            if (env.IsDevelopment())
+            if (env.IsDevelopment() || Configuration.GetValue<bool>("ShowDeveloperExceptions"))
             {
                 app.UseDeveloperExceptionPage();
-                if (!Configuration.GetValue<bool>("NoDevWebpack"))
-                    app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-                        HotModuleReplacement = true
-                    });
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
+            }
+
+            if (env.IsDevelopment())
+            {
+                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
+                    HotModuleReplacement = true
+                });
             }
 
             app.UseStaticFiles();
@@ -205,18 +207,17 @@ namespace TopoMojo
             //move any querystring jwt to Auth bearer header
             app.Use(async (context, next) =>
             {
-                if (string.IsNullOrWhiteSpace(context.Request.Headers["Authorization"]))
+                if (string.IsNullOrWhiteSpace(context.Request.Headers["Authorization"])
+                    && context.Request.QueryString.HasValue)
                 {
-                    if (context.Request.QueryString.HasValue)
-                    {
-                        string token = context.Request.QueryString.Value.Substring(1)
-                            .Split('&')
-                            .SingleOrDefault(x => x.Contains("bearer"))?.Split('=')[1];
-                        if (!String.IsNullOrWhiteSpace(token))
-                        {
-                            context.Request.Headers.Add("Authorization", new[] {$"Bearer {token}"});
-                        }
-                    }
+                    string token = context.Request.QueryString.Value
+                        .Substring(1)
+                        .ToLowerInvariant()
+                        .Split('&')
+                        .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
+
+                    if (!String.IsNullOrWhiteSpace(token))
+                        context.Request.Headers.Add("Authorization", new[] {$"Bearer {token}"});
                 }
 
                 await next.Invoke();

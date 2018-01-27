@@ -5,6 +5,7 @@ namespace TopoMojo
         public BrandingOptions branding {get; set;}
         public UserManagerSettings oidc { get; set; }
         public ClientUrlSettings urls { get; set; }
+        public string auth { get; set; }
         public string lang { get; set; }
         public string maintenanceMessage { get; set; }
     }
@@ -17,6 +18,7 @@ namespace TopoMojo
 
     public class UserManagerSettings
     {
+        public string name { get; set; }
         public string authority { get; set; }
         public string client_id { get; set; }
         public string redirect_uri { get; set; }

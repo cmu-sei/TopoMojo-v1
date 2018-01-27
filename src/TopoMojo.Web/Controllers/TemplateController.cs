@@ -13,7 +13,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class TemplateController : _Controller
     {
         public TemplateController(

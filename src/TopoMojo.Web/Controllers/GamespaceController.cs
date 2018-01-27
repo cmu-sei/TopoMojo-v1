@@ -9,7 +9,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class GamespaceController : _Controller
     {
         public GamespaceController(

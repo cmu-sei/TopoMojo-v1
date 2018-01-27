@@ -14,7 +14,7 @@
 
 // namespace TopoMojo.Controllers
 // {
-//     [Authorize]
+//     [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
 //     public class ManageController : _Controller
 //     {
 //         //private readonly UserManager<ApplicationUser> _userManager;

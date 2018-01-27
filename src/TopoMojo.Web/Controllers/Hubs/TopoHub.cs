@@ -10,7 +10,7 @@ using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (

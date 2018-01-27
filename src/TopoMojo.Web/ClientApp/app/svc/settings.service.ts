@@ -17,6 +17,10 @@ export class SettingsService {
         this.lang = all['lang'] || 'en';
         this.maintMsg = all['maintenanceMessage'];
         this.hostUrl = window.location.origin;
+        this.login = {
+            local: (all['auth']+"").match(/local/),
+            oidc: (all['auth']+"").match(/oidc/)
+        }
     }
 
     all : any;
@@ -25,6 +29,7 @@ export class SettingsService {
     branding : any;
     lang : string;
     maintMsg: string;
+    login : any;
 
     hostUrl: string;
     layout: Layout = new Layout();

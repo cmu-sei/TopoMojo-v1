@@ -17,7 +17,7 @@ using TopoMojo.Web.Models;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class DocumentController : _Controller
     {
         public DocumentController(
