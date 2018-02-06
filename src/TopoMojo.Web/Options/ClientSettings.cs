@@ -2,18 +2,26 @@ namespace TopoMojo
 {
     public class ClientSettings
     {
-        public BrandingOptions branding {get; set;}
-        public UserManagerSettings oidc { get; set; }
-        public ClientUrlSettings urls { get; set; }
-        public string auth { get; set; }
-        public string lang { get; set; }
-        public string maintenanceMessage { get; set; }
+        public BrandingOptions Branding {get; set;}
+        public UserManagerSettings Oidc { get; set; }
+        public ClientUrlSettings Urls { get; set; }
+        public LoginOptions Login { get; set; }
+        public string Lang { get; set; }
+        public string MaintenanceMessage { get; set; }
     }
 
     public class BrandingOptions
     {
-        public string applicationName { get; set; }
-        public string logoUrl { get; set; }
+        public string ApplicationName { get; set; }
+        public string LogoUrl { get; set; }
+    }
+
+    public class LoginOptions
+    {
+        public bool AllowLocalLogin { get; set; } = true;
+        public bool AllowExternalLogin { get; set; } = true;
+        public string AllowedDomains { get; set; }
+        public string PasswordComplexity { get; set; }
     }
 
     public class UserManagerSettings

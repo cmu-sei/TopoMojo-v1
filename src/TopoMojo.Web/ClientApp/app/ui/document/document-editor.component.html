@@ -1,16 +1,28 @@
-<div id="editor-div">
-    <textarea
-        id="editor"
-        name="markdown"
-        [(ngModel)]="markdown"
-        class="form-control"
-        (keyup)="reRender()">
-    </textarea>
-    <button class="btn btn-primary" [disabled]="!dirty" (click)="save()">
-        <i class="fa fa-upload"></i> Save
-    </button>
-    <a class="pull-right" href="https://guides.github.com/features/mastering-markdown/" target="_blank">[markdown guide]</a>
-</div>
-<div id="render-div" [innerHtml]="rendered">
+<div class="col-xs-12 fixed-height">
+    <div id="editor-div"  class="col-xs-6">
+        <textarea
+            id="editor"
+            name="markdown"
+            [(ngModel)]="markdown"
+            class="form-control"
+            (keyup)="reRender()">
+        </textarea>
+        <button class="btn btn-primary" [disabled]="!dirty" (click)="save()">
+            <i class="fa fa-upload"></i> Save
+        </button>
+        <a class="pull-right" href="https://guides.github.com/features/mastering-markdown/" target="_blank">[markdown guide]</a>
+    </div>
+    <div id="preview-div"  class="col-xs-6">
+        <div>
+            <button (click)="showImageDiv=!showImageDiv"
+                tooltip="images"
+                class="btn btn-default pull-right"
+                [class.btn-primary]="showImageDiv">
+                <i class="fa fa-image"></i>
+            </button>
+        </div>
+        <div *ngIf="!showImageDiv" id="render-div" [innerHtml]="rendered"></div>
+        <image-manager *ngIf="showImageDiv" [id]="id" class="fixed-right"></image-manager>
+    </div>
 </div>
 

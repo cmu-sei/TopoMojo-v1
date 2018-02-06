@@ -1,7 +1,7 @@
 import { Component, OnChanges, Input, Inject } from '@angular/core';
-import { MessageModel } from '../../svc/chat.service';
 import { Converter } from 'showdown/dist/showdown';
 import { SHOWDOWN_OPTS } from '../../svc/settings.service';
+import { Message } from '../../api/gen/models';
 
 @Component({
     selector: 'chat-message',
@@ -17,7 +17,7 @@ import { SHOWDOWN_OPTS } from '../../svc/settings.service';
 })
 export class MessageComponent implements OnChanges {
 
-    @Input() message: MessageModel;
+    @Input() message: Message;
     private converter: Converter;
     private renderedHtml: string;
 

@@ -72,6 +72,16 @@ namespace TopoMojo.Core
             return result;
         }
 
+        public async Task<bool> UpdateProfile(Models.ChangedProfile profile)
+        {
+            if (!Profile.IsAdmin || Profile.GlobalId != profile.GlobalId)
+                throw new InvalidOperationException();
+
+            var p = await _profileRepo.FindByGlobalId(profile.GlobalId);
+            p.Name = profile.Name;
+            await _profileRepo.Update(p);
+            return true;
+        }
 
 
     }

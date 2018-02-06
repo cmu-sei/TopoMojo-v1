@@ -17,8 +17,6 @@ export class LoginComponent implements OnInit {
     url: string;
     errorMessage : string;
     infoMessage : string;
-    allowExternalLogin: boolean;
-    showLocalLogin: boolean;
     mode: number = 0;
     title: string = "Login";
     action: string = "login";
@@ -32,8 +30,6 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
         this.url = this.auth.cleanUrl(this.auth.redirectUrl || this.route.snapshot.params['url'] || "/");
-        this.allowExternalLogin = this.auth.allowExternalLogin;
-        this.showLocalLogin = !this.allowExternalLogin;
     }
 
     oidcLogin() {
@@ -55,7 +51,8 @@ export class LoginComponent implements OnInit {
         .then(result => {
             this.router.navigateByUrl(this.url);
         }).catch((response: HttpErrorResponse) => {
-            console.error(response.error.message);
+
+            console.error(response);
             this.errorMessage = response.error.message;
         });
     }

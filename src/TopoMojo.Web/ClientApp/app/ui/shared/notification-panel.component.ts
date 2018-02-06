@@ -38,8 +38,18 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
                 (event) => {
                     this.push(event);
                 }
+            ),
+            this.svc.globalEvents.subscribe(
+                (event) => {
+                    console.log(event);
+                    this.addStatic(event);
+                }
             )
         );
+    }
+
+    addStatic(event : any) : void {
+        this.events.push(event);
     }
 
     push(event : any) : void {

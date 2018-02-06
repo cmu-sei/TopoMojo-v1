@@ -11,4 +11,10 @@ namespace TopoMojo.Core.Models
         public bool IsAdmin { get; set; }
     }
 
+    public class ChangedProfile
+    {
+        public string GlobalId { get; set; }
+        public string Name { get; set; }
+    }
+
 }

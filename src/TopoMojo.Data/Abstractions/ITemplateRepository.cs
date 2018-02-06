@@ -8,5 +8,6 @@ namespace TopoMojo.Data.Abstractions
         Task<bool> IsParentTemplate(int id);
         Task<bool> AtTemplateLimit(int topoId);
         Task<Template[]> ListLinkedTemplates(int parentId);
+        Task<string> ResolveKey(string key);
     }
 }

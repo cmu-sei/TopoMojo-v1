@@ -43,7 +43,11 @@ export class TopoMembersComponent implements OnInit {
     delist(workerId) {
         this.service.delistWorker(workerId)
         .subscribe(data => {
-            //todo: remove worker from list
+            let w = this.workers.find((worker) => worker.id == workerId);
+            if (w) {
+                let index = this.workers.indexOf(w);
+                this.workers.splice(index, 1);
+            }
         }, (err) => { });
     }
 

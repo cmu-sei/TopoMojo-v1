@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 //using TopoMojo.Core;
@@ -18,7 +19,7 @@ namespace TopoMojo.Controllers
     {
         public VmController(
             Core.TemplateManager templateManager,
-            // TopologyManager topoManager,
+            IHubContext<TopologyHub, ITopoEvent> hub,
             Core.ProfileManager profileManager,
             IPodManager podManager,
             IServiceProvider sp
@@ -28,11 +29,13 @@ namespace TopoMojo.Controllers
             _mgr = templateManager;
             _profileManager = profileManager;
             _pod = podManager;
+            _hub = hub;
         }
 
         private readonly IPodManager _pod;
         private readonly Core.TemplateManager _mgr;
         private readonly Core.ProfileManager _profileManager;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         // [AllowAnonymous]
         // [HttpGet("/[controller]/[action]/{id}")]
@@ -57,8 +60,14 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Find([FromQuery] string tag)
         {
             Vm[] vms = new Vm[]{};
-            if (_profile.IsAdmin && tag.HasValue())
+            if (_profile.IsAdmin) //)
+            {
                 vms = await _pod.Find(tag);
+                var keys = vms.Select(v => v.Name.Tag()).Distinct().ToArray();
+                var map = await _mgr.ResolveKeys(keys);
+                foreach (Vm vm in vms)
+                    vm.GroupName = map[vm.Name.Tag()];
+            }
             return Ok(vms);
         }
 
@@ -255,14 +264,14 @@ namespace TopoMojo.Controllers
         }
         private void SendBroadcast(Vm vm, string action)
         {
-            // Core.Models.VmState state = new Core.Models.VmState
-            // {
-            //     Id = vm.Id,
-            //     Name = vm.Name.Untagged(),
-            //     IsRunning = vm.State == VmPowerState.running
-            // };
-            // Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
-
+            Core.Models.VmState state = new Core.Models.VmState
+            {
+                Id = vm.Id,
+                Name = vm.Name.Untagged(),
+                IsRunning = vm.State == VmPowerState.running
+            };
+            //Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
+            _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
         }
     }
 

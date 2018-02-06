@@ -11,6 +11,7 @@ import { TemplateEditorComponent} from './template-editor.component';
 import { TopoEnlistComponent } from './enlist.component';
 import { ConnectionResolver } from '../../svc/connection.resolver';
 import { IsoManagerComponent } from './iso-manager.component';
+import { WorkspaceComponent } from './workspace.component';
 
 const routes: Routes = [
     {
@@ -33,8 +34,7 @@ const routes: Routes = [
                 children: [
                     {
                         path: ':id',
-                        component: TopoDetailComponent
-                        //resolve: { connection: ConnectionResolver }
+                        component: WorkspaceComponent //TopoDetailComponent
                     },
                     {
                         path: 'enlist',
@@ -63,6 +63,7 @@ export class TopoRoutingModule {
         TemplateEditorComponent,
         WorkBrowserComponent,
         TopoEnlistComponent,
-        IsoManagerComponent
+        IsoManagerComponent,
+        WorkspaceComponent
      ]
 }

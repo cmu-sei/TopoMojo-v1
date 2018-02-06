@@ -12,6 +12,7 @@ namespace TopoMojo.Models.Virtual
         public string DiskPath { get; set; }
         public string Stats { get; set; }
         public string Status { get; set; }
+        public string GroupName { get; set; }
         public VmPowerState State { get; set; }
         public VmQuestion Question { get; set; }
         public VmTask Task { get; set; }

@@ -14,6 +14,7 @@ export class DocumentEditorComponent implements OnInit {
     @Input() id : string;
     rendered : string;
     dirty : boolean;
+    showImageDiv: boolean;
     markdown: string = `
 # Title
 #### Subtitle

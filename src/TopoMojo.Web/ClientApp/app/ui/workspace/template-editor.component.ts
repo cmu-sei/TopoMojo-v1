@@ -41,8 +41,8 @@ export class TemplateEditorComponent implements OnInit {
         .subscribe(
             (result) => {
                 if (result) {
-                    this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.template);
-                    this.topo.templates.splice(this.topo.templates.indexOf(this.template), 1);
+                    //this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.template);
+                    //this.topo.templates.splice(this.topo.templates.indexOf(this.template), 1);
                 }
             },
             (err) => { this.onError(err);}
@@ -52,7 +52,7 @@ export class TemplateEditorComponent implements OnInit {
     save() {
         this.service.putTemplate(this.template as ChangedTemplate).subscribe(
             (result : Template) => {
-                this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", result);
+                //this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", result);
             },
             (err) => { this.onError(err);}
         );
@@ -66,8 +66,8 @@ export class TemplateEditorComponent implements OnInit {
         this.service.unlinkTemplate(this.template.id)
         .subscribe(
             (result) => {
-                let i = this.topo.templates.indexOf(this.template);
-                this.topo.templates.splice(i, 1, result);
+                //let i = this.topo.templates.indexOf(this.template);
+                //this.topo.templates.splice(i, 1, result);
             },
             (err) => { this.onError(err);}
         );

@@ -62,5 +62,24 @@ namespace TopoMojo.Data.EntityFrameworkCore
             int count = await DbContext.Templates.Where(t => t.TopologyId == topoId).CountAsync();
             return count >= topo.TemplateLimit;
         }
+
+        public async Task<string> ResolveKey(string key)
+        {
+            var topoResult = await DbContext.Topologies.Where(t => t.GlobalId == key)
+                .Select(t => t.Name)
+                .SingleOrDefaultAsync();
+
+            if (topoResult != null)
+                return "workspace: " + topoResult;
+
+            var gameResult = await DbContext.Gamespaces.Where(g => g.GlobalId == key)
+                .Select(g => g.Name)
+                .SingleOrDefaultAsync();
+
+            if (gameResult != null)
+                return "gamespace: " + gameResult;
+
+            return null;
+        }
     }
 }

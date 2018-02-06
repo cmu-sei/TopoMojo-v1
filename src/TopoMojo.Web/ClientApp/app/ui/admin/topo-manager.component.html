@@ -6,9 +6,12 @@
         <ul *ngIf="topos" class="list-unstyled">
             <li *ngFor="let topo of topos" class="">
                 <div class="">
-                    <!-- <i class="fa fa-map-marker"></i> -->
-                    <strong [class.text-primary]="topo.isPublished">{{ topo.name }}</strong>
-                    <!-- <span class="text-muted">{{ topo.whenCreated | ago }}</span> -->
+                    <i class="fa fa-site-map"></i>
+                    <a [routerLink]="['/topo', topo.id]">
+                        <strong [class.text-primary]="topo.isPublished">{{ topo.name }}</strong>
+                    </a>
+                    <i *ngIf="topo.isPublished" class="fa fa-check"></i>
+                    <span class="text-muted">{{ topo.whenCreated | ago }}</span>
                     <span> ({{workerlist(topo)}}) </span>
                     <span class="text-muted"> {{ topo.globalId.substring(0,8)}} </span>
                     <button (click)="toggleSelected(topo)" class="btn btn-default btn-sm">
@@ -30,10 +33,10 @@
                                 <template-editor [topo]="topo" [template]="t"></template-editor>
                             </li>
                         </ul>
-                        <button class="btn btn-link" (click)="showDoc(topo)">
+                        <!-- <button class="btn btn-link" (click)="showDoc(topo)">
                             <i class="fa fa-file"></i>
                             <span>View Document</span>
-                        </button>
+                        </button> -->
                     </div>
                 </div>
             </li>
@@ -41,9 +44,5 @@
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>
-    </div>
-    <div class="form-input">
-        <input type="text" [(ngModel)]="hostField" class="form-control">
-        <button class="btn btn-default" (click)="reloadHost()">ReloadHost</button>
     </div>
 </div>

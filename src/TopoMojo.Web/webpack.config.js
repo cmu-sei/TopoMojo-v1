@@ -34,7 +34,10 @@ module.exports = (env) => {
                 { test: /\.(png|jpg|jpeg|gif|svg)$/, use: 'url-loader?limit=25000' }
             ]
         },
-        plugins: [new CheckerPlugin()]
+        plugins: [
+            new CheckerPlugin(),
+            new webpack.optimize.ModuleConcatenationPlugin()
+        ]
     };
 
     // Configuration for client-side bundle suitable for running in browsers

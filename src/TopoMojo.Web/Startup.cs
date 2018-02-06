@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
@@ -36,14 +37,11 @@ namespace TopoMojo
          public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
-            _authOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
-            _rootPath = env.ContentRootPath;
+            Env = env;
         }
 
         public IConfiguration Configuration { get; }
-        public string _rootPath { get; set; }
-        public AuthorizationOptions _authOptions = new AuthorizationOptions();
-
+        public IHostingEnvironment Env { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -66,7 +64,7 @@ namespace TopoMojo
 
             // add Account services
             services.AddJamAccounts()
-                .WithConfiguration(() => Configuration.GetSection("Account"), opt => opt.RootPath = _rootPath)
+                .WithConfiguration(() => Configuration.GetSection("Account"), opt => opt.RootPath = Env.ContentRootPath)
                 .WithDefaultRepository(builder => builder.UseConfiguredDatabase(Configuration))
                 .WithProfileService(builder => builder.AddScoped<IProfileService, ProfileService>());
 
@@ -82,10 +80,11 @@ namespace TopoMojo
             });
             // .AddJsonOptions(options =>
             // {
+            //     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             //     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             // });
 
-            // services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
+            services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
 
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
@@ -102,13 +101,8 @@ namespace TopoMojo
                     : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
             });
 
-            // string podManager = Configuration.GetSection("Pod:Type").Value ?? "";
-            // if (podManager.ToLowerInvariant().Contains("vmock"))
-            //     services.AddSingleton<IPodManager, TopoMojo.vMock.PodManager>();
-            // else
-            //     services.AddSingleton<IPodManager, TopoMojo.vSphere.PodManager>();
+            #region Configure Signalr
 
-            // add signalr
             services.AddSignalR(options =>{});
 
             // services.AddSingleton(_ => new JsonSerializer
@@ -117,7 +111,9 @@ namespace TopoMojo
             //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             //     }
             // );
+            #endregion
 
+            #region Configure Swagger
             //add swagger
             services.AddSwaggerGen(options =>
             {
@@ -146,13 +142,14 @@ namespace TopoMojo
                 options.DescribeAllEnumsAsStrings();
                 options.CustomSchemaIds(x => x.FullName);
             });
+            #endregion
 
-
+            #region Configure Authentication
             // add authentication
             AccountOptions accountOptions = Configuration.GetSection("Account").Get<AccountOptions>();
             TokenOptions tokenOptions = accountOptions.Token;
 
-            services.AddAuthentication(
+            var authBuilder = services.AddAuthentication(
                 options =>
                 {
                     options.DefaultScheme = tokenOptions.Scheme;
@@ -162,7 +159,7 @@ namespace TopoMojo
             .AddJwtBearer(
                 tokenOptions.Scheme,
                 options => {
-                    options.RequireHttpsMetadata = _authOptions.RequireHttpsMetadata;
+                    options.RequireHttpsMetadata = false; //tokenOptions.RequireHttpsMetadata;
                     options.TokenValidationParameters =  new TokenValidationParameters
                     {
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key)),
@@ -172,15 +169,25 @@ namespace TopoMojo
                         RoleClaimType = JwtClaimTypes.Role
                     };
                 }
-            )
-            .AddIdentityServerAuthentication(
-                "IdSrv", //IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                options => {
-                    options.Authority = _authOptions.Authority;
-                    options.RequireHttpsMetadata = _authOptions.RequireHttpsMetadata;
-                    options.ApiName = _authOptions.AuthorizationScope;
-                }
             );
+
+            var oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
+            if (oidcOptions.Enabled)
+            {
+                authBuilder.AddIdentityServerAuthentication(
+                    "IdSrv", //IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                    options => {
+                        options.Authority = oidcOptions.Authority;
+                        options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                        options.ApiName = oidcOptions.AuthorizationScope;
+                    }
+                );
+            }
+            else
+            {
+                authBuilder.AddJwtBearer("IdSrv", options => {});
+            }
+            #endregion
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -202,6 +209,7 @@ namespace TopoMojo
                 });
             }
 
+            app.UseCors("default");
             app.UseStaticFiles();
 
             //move any querystring jwt to Auth bearer header
@@ -212,7 +220,6 @@ namespace TopoMojo
                 {
                     string token = context.Request.QueryString.Value
                         .Substring(1)
-                        .ToLowerInvariant()
                         .Split('&')
                         .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
 
@@ -237,10 +244,11 @@ namespace TopoMojo
             //     c.InjectOnCompleteJavaScript("/js/custom-swag.js");
             // });
 
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             app.UseAuthentication();
 
             app.UseSignalR(routes => {
-                routes.MapHub<TopologyHub>("rem");
+                routes.MapHub<TopologyHub>("hub");
             });
 
             app.UseMvc(routes =>

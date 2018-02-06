@@ -10,6 +10,8 @@ namespace TopoMojo.Core.Models
         public string Description { get; set; }
         public string Document { get; set; }
         public string ShareCode { get; set; }
+        public string Author { get; set; }
+        public string WhenCreated { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
         public int TemplateLimit { get; set; }
@@ -42,6 +44,7 @@ namespace TopoMojo.Core.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string Author { get; set; }
     }
 
     public class TopologyState
@@ -56,6 +59,7 @@ namespace TopoMojo.Core.Models
     {
         public int Id { get; set; }
         public string PersonName { get; set; }
+        public string PersonGlobalId { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
     }

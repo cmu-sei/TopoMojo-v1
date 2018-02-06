@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace TopoMojo.Data.EntityFrameworkCore
 {
     public abstract class Repository<TEntity> : IRepository<TEntity>
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntityPrimary
     {
         protected TopoMojoDbContext DbContext { get; private set; }
 

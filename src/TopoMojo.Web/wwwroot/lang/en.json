@@ -65,6 +65,7 @@
     "SHARE": "Share",
     "START": "Start",
     "STOP": "Stop",
+    "TEAM": "Team",
     "TOPOLOGY": "Topo",
     "TYPE": "Type",
     "UPLOAD": "Upload",
@@ -82,6 +83,9 @@
         "REGISTER": "Register New Account"
     },
     "EVENT": {
+        "GLOBAL": {
+            "ANNOUNCE": "Announcement: {{model}}"
+        },
         "GAME": {
             "OVER": "GAME OVER"
         },
@@ -128,7 +132,7 @@
         "HOME-PLAY": "Already have one running?  Head here to pick up where you left off.",
         "NETWORKS": "Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)",
         "PUBLISH": "When published, this topology is discoverable in the browser. (And saving machines in this workspace is disabled.)",
-        "SHARE": "Distribute this link to people you want to help build this topology."
+        "SHARE": "Distribute this link to add your colleagues. (Refresh to generate a new share url.)"
     },
     "EXCEPTION": {
         "AUTHENTICATIONFAILURE": "Authentication failed.",

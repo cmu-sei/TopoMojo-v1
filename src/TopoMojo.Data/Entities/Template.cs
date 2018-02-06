@@ -1,6 +1,8 @@
+using TopoMojo.Data.Abstractions;
+
 namespace TopoMojo.Data.Entities
 {
-    public class Template : Data.Abstractions.IEntity
+    public class Template : IEntityPrimary
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }

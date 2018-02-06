@@ -40,20 +40,25 @@ namespace TopoMojo.Controllers
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
         }
 
-        public Task Post(string channelId, string text)
+        // public Task Post(string channelId, string text)
+        // {
+        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.ADDED", text));
+        // }
+
+        public Task Typing(string channelId, bool val)
         {
-            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.MESSAGE", text));
+            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
         }
 
-        public Task Typing(string channelId)
-        {
-            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", ""));
-        }
+        // public Task Typed(string channelId)
+        // {
+        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPED", ""));
+        // }
 
-        public Task Destroying(string channelId)
-        {
-            return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
-        }
+        // public Task Destroying(string channelId)
+        // {
+        //     return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
+        // }
 
         public Task TemplateMessage(string action, Core.Models.Template model){
             return Clients.Group(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
@@ -63,11 +68,13 @@ namespace TopoMojo.Controllers
 
     public interface ITopoEvent
     {
-        Task TopoEvent(BroadcastEvent<Topology> be);
-        Task TemplateEvent(BroadcastEvent<Core.Models.Template> be);
-        Task ChatEvent(BroadcastEvent<string> be);
-        Task VmEvent(BroadcastEvent<Vm> be);
-        Task PresenceEvent(BroadcastEvent be);
+        Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
+        Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
+        Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
+        Task ChatEvent(BroadcastEvent<string> broadcastEvent);
+        Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
+        Task PresenceEvent(BroadcastEvent broadcastEvent);
+        Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
     }
 
     public class BroadcastEvent

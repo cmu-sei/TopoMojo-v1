@@ -1,5 +1,10 @@
 <div class="right-panel">
     <div *ngFor="let e of events">
-        <div class="alert alert-info message">{{ "EVENT."+e.action | translate:e }}</div>
+        <div class="alert alert-info alert-dismissable message" role="alert">
+            {{ "EVENT."+e.action | translate:e }}
+            <button (click)="pop(e)" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+        </div>
     </div>
 </div>

@@ -12,9 +12,7 @@ export class AuthService {
     currentUser: User;
     //loggedIn: boolean = false;
     externalLoginName: string;
-    allowExternalLogin: boolean;
-    allowLocalLogin: boolean;
-
+    loginSettings: any;
     redirectUrl: string;
     private userSource: Subject<User> = new Subject<User>();
     public user$: Observable<User> = this.userSource.asObservable();
@@ -28,8 +26,7 @@ export class AuthService {
     ) {
         // Log.level = Log.DEBUG;
         // Log.logger = console;
-        this.allowExternalLogin = !!this.settings.login.oidc;
-        this.allowLocalLogin = !!this.settings.login.local;
+        this.loginSettings = this.settings.login;
         this.externalLoginName = this.settings.oidc.name || "External";
 
         this.mgr = new UserManager(this.settings.oidc);

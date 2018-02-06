@@ -8,7 +8,7 @@ using TopoMojo.Data.Entities;
 namespace TopoMojo.Data.Abstractions
 {
     public interface IRepository<TEntity>
-        where TEntity : class, IEntity
+        where TEntity : class, IEntityPrimary
     {
         Task<TEntity> Add(TEntity entity);
         Task<bool> CanEdit(int id, Profile profile);

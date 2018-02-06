@@ -1,3 +1,5 @@
+using TopoMojo.Data.Abstractions;
+
 namespace TopoMojo.Data.Entities
 {
     public class Player

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Web;
@@ -15,18 +16,23 @@ namespace TopoMojo.Controllers
     {
         public HomeController
         (
-            ClientSettings settings
+            ClientSettings settings,
+            Jam.Accounts.AccountOptions accountOptions
         )
         {
             _settings = settings;
+            _accountOptions = accountOptions;
         }
 
         private readonly ClientSettings _settings;
+        private readonly Jam.Accounts.AccountOptions _accountOptions;
 
         public IActionResult Index()
         {
-            ViewBag.Title = _settings.branding.applicationName;
-            ViewBag.ClientSettings = JsonConvert.SerializeObject(_settings, Formatting.None);
+            ViewBag.Title = _settings.Branding.ApplicationName;
+            _settings.Login.AllowedDomains = _accountOptions.Registration.AllowedDomains;
+            _settings.Login.PasswordComplexity = _accountOptions.Password.ComplexityText;
+            ViewBag.ClientSettings = _settings.ToUglyJson();
             return View();
         }
 

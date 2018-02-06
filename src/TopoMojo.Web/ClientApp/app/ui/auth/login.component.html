@@ -1,13 +1,7 @@
 <div class="row">
     <div class="col-xs-8 col-xs-offset-2" id="login-well">
         <section class="well">
-            <!-- <button *ngIf="!showLocalLogin"
-                (click)="showLocalLogin=true"
-                class="btn btn-primary btn-lg">
-                <i class="fa fa-login fa-3x"></i> Local Login
-            </button> -->
-            <div *ngIf="auth.allowLocalLogin">
-            <!-- <div> -->
+            <div *ngIf="auth.loginSettings.allowLocalLogin">
                 <div class="form-group">
                     <div class="btn-group btn-group-justified">
                         <div class="btn-group" *ngIf="mode!=0"><button type="button" (click)="setMode(0)" class="btn btn-default">Login</button></div>
@@ -19,6 +13,7 @@
                 </div>
                 <h4>{{ title }}</h4>
                 <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+                    <div *ngIf="mode==4">{{ auth.loginSettings.allowedDomains }}</div>
                     <div class="form-group">
                         <label class="sr-only" for="username">Username</label>
                         <div class="input-group">
@@ -32,6 +27,7 @@
                                 required>
                         </div>
                     </div>
+                    <div *ngIf="mode > 2">{{ auth.loginSettings.passwordComplexity }}</div>
                     <div *ngIf="mode != 1" class="form-group">
                         <label for="pass1" class="sr-only">Password</label>
                         <div class="input-group">
@@ -86,9 +82,9 @@
                     </div>
                 </form>
             </div>
-            <hr *ngIf="auth.allowLocalLogin && auth.allowExternalLogin" />
-            <div *ngIf="auth.allowExternalLogin" class="text-center">
-                <button (click)="oidcLogin()" class="btn btn-default">
+            <hr *ngIf="auth.loginSettings.allowLocalLogin && auth.loginSettings.allowExternalLogin" />
+            <div *ngIf="auth.loginSettings.allowExternalLogin" class="text-center">
+                <button (click)="oidcLogin()" class="btn btn-default btn-lg">
                     <i class="fa fa-login"></i> Login with {{ auth.externalLoginName }}
                 </button>
             </div>

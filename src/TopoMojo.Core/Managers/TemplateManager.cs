@@ -225,5 +225,15 @@ namespace TopoMojo.Core
             return result;
         }
 
+        public async Task<Dictionary<string, string>> ResolveKeys(string[] keys)
+        {
+            var map = new Dictionary<string, string>();
+            foreach (string key in keys)
+            {
+                var val = await _repo.ResolveKey(key);
+                map.Add(key, val ?? "orphaned");
+            }
+            return map;
+        }
     }
 }

@@ -51,6 +51,7 @@ namespace TopoMojo.Services
             if (profile != null)
             {
                 return new {
+                    Id = globalId,
                     Name = profile.Name,
                     IsAdmin = profile.IsAdmin
                 };

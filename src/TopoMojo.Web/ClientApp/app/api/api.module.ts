@@ -1,4 +1,6 @@
 import { AccountService } from "./account.service";
+import { AdminService } from "./admin.service";
+import { ChatService } from "./chat.service";
 import { ConsoleService } from "./console.service";
 import { DocumentService } from "./document.service";
 import { FileService } from "./file.service";
@@ -15,6 +17,8 @@ import { HttpClientModule } from "@angular/common/http";
     imports: [ HttpClientModule ],
     providers: [
         AccountService,
+		AdminService,
+		ChatService,
 		ConsoleService,
 		DocumentService,
 		FileService,

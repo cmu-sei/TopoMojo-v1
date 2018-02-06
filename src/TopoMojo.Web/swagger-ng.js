@@ -505,7 +505,7 @@ var fspath = require('path');
                         body += data;
                     })
                     .on('end', function() {
-                        CreateClient(JSON.parse(body), args.output);
+                        CreateClient(JSON.parse(body.trim()), args.output);
                     });
             });
         } else {

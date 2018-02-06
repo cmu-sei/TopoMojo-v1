@@ -24,6 +24,7 @@ module.exports = (env) => {
         // },
         module: {
             rules: [
+                // { test: /\.woff2$/, use: 'file-loader' }
                 { test: /\.(png|eot|[ot]tf|woff|woff2|svg)(\?|$)/, use: 'file-loader' }
 
             ],
@@ -36,11 +37,12 @@ module.exports = (env) => {
                 '@angular/common',
                 '@angular/compiler',
                 '@angular/core',
-                '@angular/http',
+                // '@angular/http',
                 '@angular/platform-browser',
                 '@angular/platform-browser-dynamic',
                 '@angular/router',
                 '@angular/platform-server',
+                '@aspnet/signalr-client',
                 'bootstrap',
                 'bootstrap/dist/css/bootstrap.css',
                 'font-awesome-webpack2',
@@ -49,10 +51,10 @@ module.exports = (env) => {
                 'event-source-polyfill',
                 'jquery',
                 //'jquery-ui-bundle',
-                'ng2-signalr',
+                // 'ng2-signalr',
                 'oidc-client',
                 'showdown',
-                'signalr',
+                // 'signalr',
                 //'vmware-wmks',
                 'zone.js',
             ]
@@ -64,10 +66,15 @@ module.exports = (env) => {
         },
         plugins: [
             new webpack.ProvidePlugin({ jQuery: 'jquery', $: 'jquery', "jquery.js": 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
+            new webpack.optimize.ModuleConcatenationPlugin(),
+            // new webpack.ContextReplacementPlugin(
+            //     /angular(\\|\/)core(\\|\/)@angular/,
+            //     path.resolve('./src'),
+            //     {}
+            // ),
             new webpack.ContextReplacementPlugin(
-                /angular(\\|\/)core(\\|\/)@angular/,
-                path.resolve('./src'),
-                {}
+                /\@angular(\\|\/)core(\\|\/)esm5/,
+                path.join(__dirname, './client')
             ),
         ]
     };

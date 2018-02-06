@@ -99,5 +99,12 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .Where(p => p.GamespaceId == id);
         }
 
+        public override async Task Remove(Gamespace gamespace)
+        {
+            //var result = await DbContext.Messages.FromSql($"DELETE FROM Messages WHERE RoomId = '{gamespace.GlobalId}'").FirstOrDefaultAsync();
+            var list = await DbContext.Messages.Where(m => m.RoomId == gamespace.GlobalId).ToArrayAsync();
+            DbContext.Messages.RemoveRange(list);
+            await base.Remove(gamespace);
+        }
     }
 }

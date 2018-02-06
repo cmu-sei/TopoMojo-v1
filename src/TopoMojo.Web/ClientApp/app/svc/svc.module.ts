@@ -6,8 +6,9 @@ import { AuthInterceptor } from './http-auth-interceptor';
 import { AuthGuard } from './auth-guard.service';
 import { AdminGuard } from './admin-guard.service';
 import { NotificationService } from './notification.service';
+import { ClipboardService } from './clipboard.service';
 import { SettingsService, ORIGIN_URL, getOriginUrl, createTranslateLoader,
-    SIGNALR_CONFIG, createSignalRConfig,
+    // SIGNALR_CONFIG, createSignalRConfig,
     SHOWDOWN_OPTS, getShowdownOpts } from './settings.service';
 
 @NgModule({
@@ -15,6 +16,7 @@ import { SettingsService, ORIGIN_URL, getOriginUrl, createTranslateLoader,
         AuthService,
         AuthGuard,
         AdminGuard,
+        ClipboardService,
         NotificationService,
         SettingsService,
         {

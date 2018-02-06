@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
@@ -19,14 +20,17 @@ namespace TopoMojo.Controllers
         public TemplateController(
             TemplateManager templateManager,
             IPodManager podManager,
+            IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp) : base(sp)
         {
             _mgr = templateManager;
             _pod = podManager;
+            _hub = hub;
         }
 
         private readonly TemplateManager _mgr;
         private readonly IPodManager _pod;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/templates")]
         [ProducesResponseType(typeof(SearchResult<TemplateSummary>), 200)]
@@ -36,15 +40,6 @@ namespace TopoMojo.Controllers
             var result = await _mgr.List(search);
             return Ok(result);
         }
-
-        // [HttpGet("api/templates/detail")]
-        // [ProducesResponseType(typeof(SearchResult<TemplateDetail>), 200)]
-        // [JsonExceptionFilter]
-        // public async Task<IActionResult> ListDetail([FromQuery]Search search)
-        // {
-        //     var result = await _mgr.ListDetail(search);
-        //     return Ok(result);
-        // }
 
         [HttpGet("api/template/{id}")]
         [ProducesResponseType(typeof(Template), 200)]
@@ -88,7 +83,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Link([FromRoute]int id, [FromRoute]int topoId)
         {
             var result = await _mgr.Link(id, topoId);
-            //TODO: Broadcast
+            SendBroadcast(result, "added");
             return Ok(result);
         }
 
@@ -98,7 +93,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> UnLink([FromRoute]int id)
         {
             var result = await _mgr.Unlink(id);
-            //TODO: Broadcast
+            SendBroadcast(result, "updated");
             return Ok(result);
         }
 
@@ -108,7 +103,7 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Update([FromBody]ChangedTemplate template)
         {
             var result = await _mgr.Update(template);
-            //TODO: Broadcast
+            SendBroadcast(result, "updated");
             return Ok(result);
         }
 
@@ -117,10 +112,22 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> Delete([FromRoute]int id)
         {
-            await _mgr.Delete(id);
-            //TODO: Broadcast
+            var result = await _mgr.Delete(id);
+            SendBroadcast(result, "removed");
             return Ok(true);
         }
 
+        private void SendBroadcast(Template template, string action)
+        {
+            _hub.Clients
+                .Group(template.TopologyGlobalId)
+                .TemplateEvent(
+                    new BroadcastEvent<Core.Models.Template>(
+                        User,
+                        "TEMPLATE." + action.ToUpper(),
+                        template
+                    )
+                );
+        }
     }
 }

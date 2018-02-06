@@ -14,6 +14,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 cfg.AddProfile<TopologyProfile>();
                 cfg.AddProfile<TemplateProfile>();
                 cfg.AddProfile<GamespaceProfile>();
+                cfg.AddProfile<MessageProfile>();
             });
             return services;
 

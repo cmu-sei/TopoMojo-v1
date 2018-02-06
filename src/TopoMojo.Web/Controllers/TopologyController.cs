@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
@@ -16,15 +17,18 @@ namespace TopoMojo.Controllers
         public TopologyController(
             TopologyManager topologyManager,
             IPodManager podManager,
+            IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp
         ) : base(sp)
         {
             _pod = podManager;
             _mgr = topologyManager;
+            _hub = hub;
         }
 
         private readonly IPodManager _pod;
         private readonly TopologyManager _mgr;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [AllowAnonymous]
         [HttpGet("api/topologies")]
@@ -60,7 +64,8 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Update([FromBody]ChangedTopology model)
         {
             Topology topo = await _mgr.Update(model);
-            //Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
+            // Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
+            _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
             return Ok(topo);
         }
 
