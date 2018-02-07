@@ -7,16 +7,18 @@
             <li *ngFor="let game of games" class="">
                 <div class="">
                     <!-- <i class="fa fa-map-marker"></i> -->
-                    <strong>{{ game.name }}</strong>
+                    <span><strong>{{ game.name }}</strong></span>
                     <span class="text-muted">{{ game.whenCreated | ago }}</span>
                     <span> ({{playerlist(game)}}) </span>
                     <span class="text-muted"> {{ game.globalId.substring(0,8)}} </span>
-                    <button (click)="vmlist(game)" class="btn btn-default btn-sm">
-                        <i class="fa fa-desktop"></i>
-                    </button>
-                    <button (click)="destroy(game)" class="btn btn-link">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                    <span>
+                        <button (click)="vmlist(game)" class="btn btn-default btn-sm">
+                            <i class="fa fa-desktop"></i>
+                        </button>
+                        <button (click)="destroy(game)" class="btn btn-link">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </span>
 
                     <div *ngIf="selected && selected.id == game.id" class="well">
                         <ul *ngIf="vms" class="list-unstyled">

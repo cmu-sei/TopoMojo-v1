@@ -10,20 +10,22 @@
                     <a [routerLink]="['/topo', topo.id]">
                         <strong [class.text-primary]="topo.isPublished">{{ topo.name }}</strong>
                     </a>
-                    <i *ngIf="topo.isPublished" class="fa fa-check"></i>
+                    <span *ngIf="topo.isPublished" class="fa fa-check"></span>
                     <span class="text-muted">{{ topo.whenCreated | ago }}</span>
                     <span> ({{workerlist(topo)}}) </span>
                     <span class="text-muted"> {{ topo.globalId.substring(0,8)}} </span>
-                    <button (click)="toggleSelected(topo)" class="btn btn-default btn-sm">
-                        <i class="fa fa-desktop"></i>
-                    </button>
-                    <button (click)="toggleLocked(topo)" class="btn btn-default btn-sm">
-                        <i *ngIf="topo.isLocked" class="fa fa-lock"></i>
-                        <i *ngIf="!topo.isLocked" class="fa fa-unlock"></i>
-                    </button>
-                    <button (click)="destroy(topo)" class="btn btn-link">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                    <span>
+                        <button (click)="toggleSelected(topo)" class="btn btn-default btn-sm">
+                            <i class="fa fa-desktop"></i>
+                        </button>
+                        <button (click)="toggleLocked(topo)" class="btn btn-default btn-sm">
+                            <i *ngIf="topo.isLocked" class="fa fa-lock"></i>
+                            <i *ngIf="!topo.isLocked" class="fa fa-unlock"></i>
+                        </button>
+                        <button (click)="destroy(topo)" class="btn btn-link">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </span>
 
                     <div *ngIf="isSelected(topo.id)" class="well">
                         <ul class="list-unstyled">

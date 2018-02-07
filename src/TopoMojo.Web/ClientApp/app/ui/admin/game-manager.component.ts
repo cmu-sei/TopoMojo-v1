@@ -5,7 +5,8 @@ import { VmService } from '../../api/vm.service';
 
 @Component({
     selector: 'game-manager',
-    templateUrl: 'game-manager.component.html'
+    templateUrl: 'game-manager.component.html',
+    styleUrls: [ 'game-manager.component.css' ]
 })
 export class GameManagerComponent implements OnInit {
 

@@ -68,7 +68,7 @@ namespace TopoMojo.Controllers
                 foreach (Vm vm in vms)
                     vm.GroupName = map[vm.Name.Tag()];
             }
-            return Ok(vms);
+            return Ok(vms.OrderBy(v => v.GroupName).ThenBy(v => v.Name).ToArray());
         }
 
         [HttpGet("api/vm/{id}/load")]

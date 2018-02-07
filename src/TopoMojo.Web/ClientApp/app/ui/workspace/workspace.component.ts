@@ -89,16 +89,23 @@ export class WorkspaceComponent {
                         }
                     )
                 );
-                this.notifier.actors.push(...this.topo.workers.map(
-                    (worker) => {
-                        return {
-                            id: worker.personGlobalId,
-                            name: worker.personName,
-                            online: false
+
+                let loadWorkers = new Promise((resolve) => {
+                    this.notifier.actors = this.topo.workers.map(
+                        (worker) => {
+                            return {
+                                id: worker.personGlobalId,
+                                name: worker.personName,
+                                online: false
+                            }
                         }
-                    }
-                ));
-                this.notifier.start(this.topo.globalId);
+                    );
+                    resolve(true);
+                });
+
+                loadWorkers.then((r) => {
+                    this.notifier.start(this.topo.globalId);
+                });
 
             },
             (err) => {

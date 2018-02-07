@@ -168,6 +168,7 @@ export interface Topology {
 	document?: string;
 	shareCode?: string;
 	author?: string;
+	whenCreated?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
 	templateLimit?: number;
@@ -218,6 +219,7 @@ export interface VirtualVm {
 	diskPath?: string;
 	stats?: string;
 	status?: string;
+	groupName?: string;
 	state?: VirtualVmStateEnum;
 	question?: VirtualVmQuestion;
 	task?: VirtualVmTask;

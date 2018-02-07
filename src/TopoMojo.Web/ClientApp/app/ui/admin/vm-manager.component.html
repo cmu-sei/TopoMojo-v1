@@ -1,0 +1,20 @@
+<div>
+    <button (click)="load()" class="btn btn-default">
+        <i class="fa fa-refresh"></i>
+    </button>
+    <div *ngFor="let m of machines">
+        <span>{{m.groupName | untagged }}</span>
+        <span class="text text-muted">{{m.groupName.split('#').pop().substring(0, 8)}}</span>
+        <span>
+            <button (click)="launch(m)" class="btn btn-link">
+                <i class="fa fa-tv"></i>
+            </button>
+        </span>
+        <span class="vm" [class.on]="m.state">{{m.name | untagged}}</span>
+        <span>
+            <button (click)="destroy(m)" class="btn btn-link">
+                <i class="fa fa-trash red"></i>
+            </button>
+        </span>
+    </div>
+</div>

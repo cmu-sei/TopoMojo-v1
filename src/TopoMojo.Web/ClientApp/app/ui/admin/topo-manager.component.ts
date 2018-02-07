@@ -6,7 +6,8 @@ import { SettingsService } from '../../svc/settings.service';
 
 @Component({
     selector: 'topo-manager',
-    templateUrl: 'topo-manager.component.html'
+    templateUrl: 'topo-manager.component.html',
+    styleUrls: [ 'topo-manager.component.css' ]
 })
 export class TopoManagerComponent implements OnInit {
 

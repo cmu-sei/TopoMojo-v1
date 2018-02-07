@@ -231,7 +231,7 @@ namespace TopoMojo.Core
             foreach (string key in keys)
             {
                 var val = await _repo.ResolveKey(key);
-                map.Add(key, val ?? "orphaned");
+                map.Add(key, $"{val ?? "__orphaned"}#{key})");
             }
             return map;
         }

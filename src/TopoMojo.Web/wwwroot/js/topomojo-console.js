@@ -204,7 +204,9 @@ function WebConsole(
     function uiDisconnected() {
         _disconnected = true;
         $('#feedback-div').children('p:first').text('Session disconnected.');
-        $('#feedback-div').children('button:first').hide();
+        let btn = $('#feedback-div').find('button:first');
+        btn.find('i').addClass('glyphicon-repeat');
+        btn.show();
         $('#feedback-div').show();
         $('#console-tools-btn').addClass('hidden');
         $('#console-tools-div').addClass('hidden');
@@ -255,6 +257,9 @@ function WebConsole(
     }
 
     function vmStart() {
+        if (_disconnected)
+            window.location = "";
+
         $(this).hide();
         service.start()
             .done(function(vm) {
@@ -452,7 +457,7 @@ function WebConsole(
     }
 
     function loadVm(info) {
-        if (info) settings = info
+        if (info) settings = info;
 
         if (_disconnected)
             return;

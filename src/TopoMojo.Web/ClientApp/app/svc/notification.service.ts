@@ -7,7 +7,7 @@ import {Observable, Subscription, Subject} from 'rxjs/Rx';
 // let connection = new signalR.HubConnection('/chat');
 
 // connection.on('send', data => {
-//     console.log(data);
+//     //console.log(data);
 // });
 
 // connection.start()
@@ -21,7 +21,7 @@ export class NotificationService {
     ) {
         this.initTokenRefresh();
     }
-    private debug: boolean = true;
+    private debug: boolean = false;
     private online: boolean = false;
     private connection: HubConnection;
     private subs: Subscription[] = [];
@@ -53,7 +53,7 @@ export class NotificationService {
     private initTokenRefresh() : void {
         this.auth.tokenStatus$.subscribe(
             (state : AuthTokenState) => {
-                console.log("notificationService tokenState subscription: " + state);
+                //console.log("notificationService tokenState subscription: " + state);
                 switch (state) {
                     case AuthTokenState.valid:
                     this.restart();
@@ -97,7 +97,7 @@ export class NotificationService {
 
             this.connection.on("presenceEvent",
                 (event : TopoEvent) => {
-                    if (event.actor.id == this.auth.currentUser.profile.id)
+                    if (event.actor.id == this.getMyId())
                         return;
 
                     if (event.action == "PRESENCE.ARRIVED") {
@@ -134,6 +134,10 @@ export class NotificationService {
                 (result) => this.log("sigr: invoked Listen"));
             return true;
         });
+    }
+
+    getMyId() : string {
+        return this.auth.currentUser.profile.id;
     }
 
     stop() : Promise<boolean> {
@@ -189,7 +193,7 @@ export class NotificationService {
         let actor = this.actors.find(a => { return a.id == event.actor.id });
         if (actor) {
             actor.typing = event.action == "CHAT.TYPING" && !!event.model;
-            console.log(actor);
+            //console.log(actor);
         }
     }
 
