@@ -13,6 +13,8 @@ namespace TopoMojo.Data.EntityFrameworkCore
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Message>().HasIndex(m => m.RoomId);
         }
 
         public DbSet<Topology> Topologies { get; set; }
@@ -21,5 +23,6 @@ namespace TopoMojo.Data.EntityFrameworkCore
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Player> Players { get; set; }
+        public DbSet<Message> Messages { get; set; }
     }
 }

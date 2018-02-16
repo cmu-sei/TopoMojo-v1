@@ -13,7 +13,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class ProfileController : _Controller
     {
         public ProfileController(
@@ -32,6 +32,15 @@ namespace TopoMojo.Controllers
         {
             var result = await _mgr.List(search);
             return Ok(result);
+        }
+
+        [HttpPost("api/profile")]
+        [ProducesResponseType(typeof(ChangedProfile), 200)]
+        [JsonExceptionFilter]
+        public async Task<ChangedProfile> UpdateProfile([FromBody]ChangedProfile profile)
+        {
+            await _mgr.UpdateProfile(profile);
+            return profile;
         }
     }
 

@@ -35,7 +35,7 @@ namespace TopoMojo.Controllers
         // register(u, code), return token
         // reset(p, code)
         // confirm(account), return bool
-        // [Authorize] refresh(), return token
+        // [Authorize(AuthenticationSchemes = "IdSrv,Bearer")] refresh(), return token
 
         [HttpPost("api/account/login")]
         [JsonExceptionFilter]
@@ -120,7 +120,7 @@ namespace TopoMojo.Controllers
             return true;
         }
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
         [HttpGet("api/account/refresh")]
         public async Task<IActionResult> Refresh()
         {

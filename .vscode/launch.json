@@ -6,18 +6,22 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/src/TopoMojo.Web/bin/Debug/netcoreapp1.1/TopoMojo.Web.dll",
+            "program": "${workspaceRoot}/src/TopoMojo.Web/bin/Debug/netcoreapp2.0/TopoMojo.Web.dll",
             "args": [],
             "cwd": "${workspaceRoot}/src/TopoMojo.Web",
             "stopAtEntry": false,
-            "console": "internalConsole"
+            "console": "internalConsole",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5004"
+            }
         },
         {
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/src/TopoMojo.Web/bin/Debug/netcoreapp1.1/TopoMojo.Web.dll",
+            "program": "${workspaceRoot}/src/TopoMojo.Web/bin/Debug/netcoreapp2.0/TopoMojo.Web.dll",
             "args": [],
             "cwd": "${workspaceRoot}/src/TopoMojo.Web",
             "stopAtEntry": false,
@@ -36,7 +40,8 @@
                 }
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5004"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceRoot}/src/TopoMojo.Web/Views"

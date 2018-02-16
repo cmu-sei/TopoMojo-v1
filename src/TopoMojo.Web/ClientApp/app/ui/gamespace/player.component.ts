@@ -84,7 +84,7 @@ export class PlayerComponent implements OnInit {
 
         this.game.shareCode = this.settings.hostUrl + "/mojo/enlist/" + this.game.shareCode;
         this.subs.push(
-            this.notifier.topoEvents.subscribe(
+            this.notifier.gameEvents.subscribe(
                 (event) => {
                     switch (event.action) {
                         case "GAME.OVER":

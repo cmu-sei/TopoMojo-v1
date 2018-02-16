@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using IdentityModel;
 using Jam.Accounts;
+using Microsoft.Extensions.Logging;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
 
@@ -33,12 +34,12 @@ namespace TopoMojo.Services
             if (profile != null)
             {
                 claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
-                claims.Add(new Claim("name", profile.Name));
+                claims.Add(new Claim(JwtClaimTypes.Name, profile.Name));
                 if (profile.IsAdmin)
-                    claims.Add(new Claim("role", "admin"));
+                    claims.Add(new Claim(JwtClaimTypes.Role, "admin"));
             }
             else {
-                claims.Add(new Claim("name", name));
+                claims.Add(new Claim(JwtClaimTypes.Name, name));
             }
 
             return claims.ToArray();
@@ -50,6 +51,7 @@ namespace TopoMojo.Services
             if (profile != null)
             {
                 return new {
+                    Id = globalId,
                     Name = profile.Name,
                     IsAdmin = profile.IsAdmin
                 };

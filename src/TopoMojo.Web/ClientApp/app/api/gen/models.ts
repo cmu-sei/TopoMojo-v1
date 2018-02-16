@@ -4,6 +4,25 @@ export interface AccountsCredentials {
 	code?: number;
 }
 
+export interface Message {
+	id?: number;
+	roomId?: string;
+	authorName?: string;
+	text?: string;
+	whenCreated?: string;
+	edited?: boolean;
+}
+
+export interface NewMessage {
+	roomId?: string;
+	text?: string;
+}
+
+export interface ChangedMessage {
+	id?: number;
+	text?: string;
+}
+
 export interface ImageFile {
 	filename?: string;
 }
@@ -22,6 +41,7 @@ export interface Player {
 	id?: number;
 	personId?: number;
 	personName?: string;
+	personGlobalId?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
 }
@@ -62,6 +82,11 @@ export interface Profile {
 	globalId?: string;
 	name?: string;
 	isAdmin?: boolean;
+}
+
+export interface ChangedProfile {
+	globalId?: string;
+	name?: string;
 }
 
 export interface TemplateSummarySearchResult {
@@ -142,6 +167,8 @@ export interface Topology {
 	description?: string;
 	document?: string;
 	shareCode?: string;
+	author?: string;
+	whenCreated?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
 	templateLimit?: number;
@@ -154,6 +181,7 @@ export interface Topology {
 export interface Worker {
 	id?: number;
 	personName?: string;
+	personGlobalId?: string;
 	canManage?: boolean;
 	canEdit?: boolean;
 }
@@ -167,6 +195,7 @@ export interface ChangedTopology {
 	id?: number;
 	name?: string;
 	description?: string;
+	author?: string;
 }
 
 export interface TopologyState {
@@ -190,6 +219,7 @@ export interface VirtualVm {
 	diskPath?: string;
 	stats?: string;
 	status?: string;
+	groupName?: string;
 	state?: VirtualVmStateEnum;
 	question?: VirtualVmQuestion;
 	task?: VirtualVmTask;

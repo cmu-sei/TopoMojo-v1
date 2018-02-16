@@ -2,7 +2,7 @@ import { Injectable, InjectionToken } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
 import { HttpClient } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { SignalRConfiguration } from 'ng2-signalr';
+// import { SignalRConfiguration } from 'ng2-signalr';
 
 @Injectable()
 export class SettingsService {
@@ -16,6 +16,7 @@ export class SettingsService {
         this.branding = all['branding'];
         this.lang = all['lang'] || 'en';
         this.maintMsg = all['maintenanceMessage'];
+        this.login = all['login'];
         this.hostUrl = window.location.origin;
     }
 
@@ -25,6 +26,7 @@ export class SettingsService {
     branding : any;
     lang : string;
     maintMsg: string;
+    login : any;
 
     hostUrl: string;
     layout: Layout = new Layout();
@@ -78,11 +80,11 @@ export function createTranslateLoader(http: HttpClient, baseHref) {
     return new TranslateHttpLoader(http, `/lang/`, '.json');
 }
 
-export const SIGNALR_CONFIG = new InjectionToken<string>('SIGNALR_CONFIG');
-export function createSignalRConfig(): SignalRConfiguration {
-    const c = new SignalRConfiguration();
-    c.hubName = 'TopologyHub';
-    c.url = getOriginUrl();
-    c.logging = false;
-    return c;
-}
+// export const SIGNALR_CONFIG = new InjectionToken<string>('SIGNALR_CONFIG');
+// export function createSignalRConfig(): SignalRConfiguration {
+//     const c = new SignalRConfiguration();
+//     c.hubName = 'TopologyHub';
+//     c.url = getOriginUrl();
+//     c.logging = false;
+//     return c;
+// }

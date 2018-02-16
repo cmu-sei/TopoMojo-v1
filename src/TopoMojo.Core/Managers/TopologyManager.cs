@@ -131,6 +131,7 @@ namespace TopoMojo.Core
         {
             Data.Entities.Topology topo = Mapper.Map<Data.Entities.Topology>(model);
             topo.TemplateLimit = _options.WorkspaceTemplateLimit;
+            topo.ShareCode = Guid.NewGuid().ToString("N");
             topo = await _repo.Add(topo);
             topo.Workers.Add(new Worker
             {
@@ -314,7 +315,8 @@ namespace TopoMojo.Core
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
-            topology.ShareCode = (revoke) ? "" : Guid.NewGuid().ToString("N");
+            // topology.ShareCode = (revoke) ? "" : Guid.NewGuid().ToString("N");
+            topology.ShareCode = Guid.NewGuid().ToString("N");
             await _repo.Update(topology);
             return Mapper.Map<Models.TopologyState>(topology);
         }
@@ -377,8 +379,12 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             Worker member = topology.Workers
-                .Where(p => p.PersonId == workerId)
+                .Where(p => p.Id == workerId)
                 .SingleOrDefault();
+
+            if (member.Permission.CanManage()
+                && topology.Workers.Count(w => w.Permission.HasFlag(Permission.Manager)) == 1)
+                throw new InvalidOperationException();
 
             if (member != null)
             {

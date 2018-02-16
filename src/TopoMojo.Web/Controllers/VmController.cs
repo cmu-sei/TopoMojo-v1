@@ -3,9 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 //using TopoMojo.Core;
 using TopoMojo.Extensions;
@@ -15,29 +14,28 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
-    public class VmController : HubController<TopologyHub>
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    public class VmController : _Controller
     {
         public VmController(
             Core.TemplateManager templateManager,
-            // TopologyManager topoManager,
+            IHubContext<TopologyHub, ITopoEvent> hub,
             Core.ProfileManager profileManager,
             IPodManager podManager,
-            IServiceProvider sp,
-            IConnectionManager sigr
+            IServiceProvider sp
             )
-        :base(sigr, sp)
+        :base(sp)
         {
             _mgr = templateManager;
-            // _topoManager = topoManager;
             _profileManager = profileManager;
             _pod = podManager;
+            _hub = hub;
         }
 
         private readonly IPodManager _pod;
         private readonly Core.TemplateManager _mgr;
-        // private readonly TopologyManager _topoManager;
         private readonly Core.ProfileManager _profileManager;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         // [AllowAnonymous]
         // [HttpGet("/[controller]/[action]/{id}")]
@@ -62,9 +60,15 @@ namespace TopoMojo.Controllers
         public async Task<IActionResult> Find([FromQuery] string tag)
         {
             Vm[] vms = new Vm[]{};
-            if (_profile.IsAdmin && tag.HasValue())
+            if (_profile.IsAdmin) //)
+            {
                 vms = await _pod.Find(tag);
-            return Ok(vms);
+                var keys = vms.Select(v => v.Name.Tag()).Distinct().ToArray();
+                var map = await _mgr.ResolveKeys(keys);
+                foreach (Vm vm in vms)
+                    vm.GroupName = map[vm.Name.Tag()];
+            }
+            return Ok(vms.OrderBy(v => v.GroupName).ThenBy(v => v.Name).ToArray());
         }
 
         [HttpGet("api/vm/{id}/load")]
@@ -248,7 +252,7 @@ namespace TopoMojo.Controllers
 
             if (!result) {
                 throw new InvalidOperationException();
-                _logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
+                //_logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
             }
 
             if (!"load resolve".Contains(method))
@@ -266,13 +270,8 @@ namespace TopoMojo.Controllers
                 Name = vm.Name.Untagged(),
                 IsRunning = vm.State == VmPowerState.running
             };
-            Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
-            // Clients.Group(vm.Name.Tag()).VmUpdated(new {
-            //     id = vm.Id,
-            //     name = vm.Name.Untagged(),
-            //     isRunning = vm.State == VmPowerState.running
-            // });
-
+            //Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
+            _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
         }
     }
 

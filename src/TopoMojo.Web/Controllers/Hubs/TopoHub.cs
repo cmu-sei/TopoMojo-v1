@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core.Models;
@@ -9,7 +10,7 @@ using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (
@@ -19,86 +20,61 @@ namespace TopoMojo.Controllers
         }
         private readonly ILogger<TopologyHub> _logger;
 
-        public override Task OnConnected()
-        {
-            Console.WriteLine($"connected {Context.User?.Identity.Name} {Context.ConnectionId}");
-            return null;
-        }
-        public override Task OnReconnected()
-        {
-            Console.WriteLine($"reconnected  {Context.User?.Identity.Name} {Context.ConnectionId}");
-            return null;
-        }
-
-        public override Task OnDisconnected(bool stopCalled)
-        {
-            Console.WriteLine($"disconnected {Context.ConnectionId} {stopCalled}");
-            return null;
-        }
 
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Groups.Add(Context.ConnectionId, channelId);
-            var v= Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
-            _logger.LogDebug($"listen:broadcasted {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            return v;
+            Groups.AddAsync(Context.ConnectionId, channelId);
+            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
         public Task Leave(string channelId)
         {
-            //Console.WriteLine($"leave {Context.ConnectionId} {channelId}");
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
-            _logger.LogDebug($"leave:broadcasted {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            return Groups.Remove(Context.ConnectionId, channelId);
+            Groups.RemoveAsync(Context.ConnectionId, channelId);
+            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 
         public Task Greet(string channelId)
         {
-            //Console.WriteLine($"welcome {Context.ConnectionId} {channelId} {Context.User.AsActor().Name}");
-            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
+            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
         }
 
-        public Task Post(string channelId, string text)
+        // public Task Post(string channelId, string text)
+        // {
+        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.ADDED", text));
+        // }
+
+        public Task Typing(string channelId, bool val)
         {
-            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.MESSAGE", text));
+            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
         }
 
-        public Task Typing(string channelId)
-        {
-            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", ""));
-        }
+        // public Task Typed(string channelId)
+        // {
+        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPED", ""));
+        // }
 
-        public Task Destroying(string channelId)
-        {
-            return Clients.OthersInGroup(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
-        }
+        // public Task Destroying(string channelId)
+        // {
+        //     return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
+        // }
 
         public Task TemplateMessage(string action, Core.Models.Template model){
-            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
+            return Clients.Group(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
         }
-
-        // private Actor Actor
-        // {
-        //     get {
-        //         return Context.User.AsActor();
-        //     }
-        // }
 
     }
 
     public interface ITopoEvent
     {
-        // Task Typing(BroadcastEvent be);
-        // Task Posted(BroadcastEvent<string> be);
-        //Task Destroying(Actor actor);
-        Task TopoEvent(BroadcastEvent<Topology> be);
-        Task TemplateEvent(BroadcastEvent<Core.Models.Template> be);
-        Task ChatEvent(BroadcastEvent<string> be);
-        Task VmEvent(BroadcastEvent<Vm> be);
-        Task PresenceEvent(BroadcastEvent be);
-
+        Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
+        Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
+        Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
+        Task ChatEvent(BroadcastEvent<string> broadcastEvent);
+        Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
+        Task PresenceEvent(BroadcastEvent broadcastEvent);
+        Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
     }
 
     public class BroadcastEvent
@@ -135,55 +111,8 @@ namespace TopoMojo.Controllers
         public string Name { get; set; }
     }
 
-    // public class Message
-    // {
-    //     public Actor Actor { get; set; }
-    //     public string Text { get; set; }
-    // }
-
-    // public class ActionModel
-    // {
-    //     public string Action { get; set; }
-    //     public Actor Actor { get; set; }
-    // }
-
-    // public class ChatActionModel : ActionModel
-    // {
-    //     public string Text { get; set; }
-    // }
-
-    // public class TopoActionModel : ActionModel
-    // {
-    //     public Topology Topology { get; set; }
-    // }
-
-    // public enum TopoAction
-    // {
-    //     updated,
-    //     shared,
-    //     published,
-    //     destroyed
-    // }
     public static class HubExtensions
     {
-        // public static ActionModel WithAction(this Actor actor, string action)
-        // {
-        //     return new ActionModel
-        //     {
-        //         Action = action,
-        //         Actor = actor
-        //     };
-        // }
-
-        // public static Message WithMessage(this Actor actor, string text)
-        // {
-        //     return new Message
-        //     {
-        //         Actor = actor,
-        //         Text = text
-        //     };
-        // }
-
         public static Actor AsActor(this System.Security.Principal.IPrincipal user)
         {
             return new Actor
@@ -192,6 +121,5 @@ namespace TopoMojo.Controllers
                 Name = user.Identity.Name
             };
         }
-
     }
 }

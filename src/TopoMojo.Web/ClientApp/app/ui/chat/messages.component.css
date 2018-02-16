@@ -7,36 +7,41 @@ label {
 }
 
 .presence-div {
+    position: absolute;
+    top: 0;
     width: 100%;
     padding: 4px;
-    height: 50px;
+    height: 65px;
 }
+
 .messages-div {
     position: absolute;
     width: 100%;
-    top: 55px;
+    top: 65px;
     right: 0;
-    bottom: 75px;
+    bottom: 110px;
     overflow-y: auto;
-    background-color: whitesmoke;
+    background-color: white;
     border-radius: 4px;
 }
 
 .footer {
     position: absolute;
     width: 100%;
-    height: 75px;
+    height: 110px;
     bottom: 0;
     right: 0;
-    margin: 4px 0px;
+    margin: 4px 0px 0px 0px;
     padding: 0;
 }
 
-.offscreen {
+.footer > hr {
+    margin: 4px 20px;
+}
+.editor {
     position: absolute;
-    left: -1000px;
-    height: 0px;
-    width: 0px;
-    resize: none;
-    border: 0px;
+    top: 75;
+    bottom: 0;
+    width: 96%;
+    margin: 4px;
 }

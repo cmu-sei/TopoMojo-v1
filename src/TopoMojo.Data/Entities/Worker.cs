@@ -1,4 +1,5 @@
 using System;
+using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data.Entities
 {

@@ -8,8 +8,8 @@ import { Component, OnInit } from '@angular/core';
         `,
     styles: [ `
         .container {
-            padding: 16px 0px 16px 0px;
-            width: 600px;
+            /*padding: 16px 0px 16px 0px;*/
+            /*width: 600px;*/
         }
     `]
 })

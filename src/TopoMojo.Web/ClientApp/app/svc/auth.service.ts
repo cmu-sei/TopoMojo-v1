@@ -11,7 +11,8 @@ export class AuthService {
     localmgr: LocalUserService;
     currentUser: User;
     //loggedIn: boolean = false;
-    allowExternalLogin: boolean;
+    externalLoginName: string;
+    loginSettings: any;
     redirectUrl: string;
     private userSource: Subject<User> = new Subject<User>();
     public user$: Observable<User> = this.userSource.asObservable();
@@ -25,7 +26,8 @@ export class AuthService {
     ) {
         // Log.level = Log.DEBUG;
         // Log.logger = console;
-        this.allowExternalLogin = this.settings.oidc.authority != '';
+        this.loginSettings = this.settings.login;
+        this.externalLoginName = this.settings.oidc.name || "External";
 
         this.mgr = new UserManager(this.settings.oidc);
         this.mgr.events.addUserLoaded(user => { this.onTokenLoaded(user); });
@@ -87,8 +89,8 @@ export class AuthService {
 
     getAuthorizationHeader() : string {
         this.markAction();
-        return "Bearer " + ((this.currentUser)
-            ? this.currentUser.access_token
+        return ((this.currentUser)
+            ? this.currentUser.token_type + " " + this.currentUser.access_token
             : "no_token");
     }
 

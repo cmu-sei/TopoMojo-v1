@@ -6,7 +6,8 @@ import { SettingsService } from '../../svc/settings.service';
 
 @Component({
     selector: 'topo-manager',
-    templateUrl: 'topo-manager.component.html'
+    templateUrl: 'topo-manager.component.html',
+    styleUrls: [ 'topo-manager.component.css' ]
 })
 export class TopoManagerComponent implements OnInit {
 
@@ -22,7 +23,6 @@ export class TopoManagerComponent implements OnInit {
     vms: Array<VmState>;
     seachParams: Search = { skip: 0, take: 0 };
     hasMore: number = 0;
-    hostField: string;
 
     ngOnInit() {
         this.search();
@@ -100,11 +100,4 @@ export class TopoManagerComponent implements OnInit {
         this.settingSvc.showTab(topo.document); //Url || `/docs/${topo.globalId}.md`);
     }
 
-    reloadHost() : void {
-        this.vmSvc.reloadHost(this.hostField).subscribe(
-            () => {
-
-            }
-        );
-    }
 }

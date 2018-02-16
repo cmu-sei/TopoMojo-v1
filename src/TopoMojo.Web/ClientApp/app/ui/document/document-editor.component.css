@@ -1,19 +1,23 @@
 #editor {
-    width: 100%;
-    height: 80vh;
+    /* width: 100%; */
+    height: 90vh;
     resize: none;
 }
 #editor-div {
-    display: inline-block;
-    padding: 8px;
-    margin: 2px;
-    width: 480px;
+    /* display: inline-block; */
+    /* padding: 8px; */
+    /* margin: 2px; */
+    /* width: 480px; */
     vertical-align: top;
 }
-#render-div {
-    width: 480px;
-    height: 80vh;
-    display: inline-block;
+#preview-div {
+    /* width: 480px; */
+    height: 100vh;
+    /* display: inline-block; */
     vertical-align: top;
     overflow-y: scroll;
+}
+
+.fixed-height {
+    height: 90vh;
 }

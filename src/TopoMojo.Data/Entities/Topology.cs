@@ -5,7 +5,7 @@ using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data.Entities
 {
-    public class Topology : IEntity
+    public class Topology : IEntityPrimary
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }
@@ -14,6 +14,7 @@ namespace TopoMojo.Data.Entities
         public string Description { get; set; }
         public string DocumentUrl { get; set; }
         public string ShareCode { get; set; }
+        public string Author { get; set; }
         public bool IsPublished { get; set; }
         public bool IsLocked { get; set; }
         public int TemplateLimit { get; set; }

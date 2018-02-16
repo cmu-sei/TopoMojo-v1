@@ -1,0 +1,282 @@
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
+import { Router, RouterLink, ActivatedRoute, Params } from '@angular/router';
+import { TopologyService } from '../../api/topology.service';
+import { TemplateService } from '../../api/template.service';
+import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from '../../api/gen/models';
+import { NotificationService } from '../../svc/notification.service';
+import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { ORIGIN_URL } from '../../svc/settings.service';
+import { ClipboardService } from '../../svc/clipboard.service';
+
+@Component({
+    selector: 'workspace',
+    templateUrl: './workspace.component.html',
+    styleUrls: [ './workspace.component.css' ]
+})
+export class WorkspaceComponent {
+    topo: Topology;
+    publishedTemplates: TemplateSummary[];
+    selectorVisible: boolean;
+    //documentVisible: boolean;
+    //documentText: string = "# Title";
+    deleteMsgVisible: boolean;
+    //ttIcon: string = 'fa fa-clipboard';
+    addIcon: string = 'fa fa-plus-circle';
+    showing: string = "topo";
+    errors: any[] = [];
+    showOverlay: boolean;
+    private subs: Subscription[] = [];
+    private id: number;
+    private collaborationVisible: boolean;
+    private messageCount: number;
+
+    constructor(
+        private service: TopologyService,
+        private templateSvc: TemplateService,
+        private notifier: NotificationService,
+        private route: ActivatedRoute,
+        private router: Router,
+        private clipboard: ClipboardService,
+        @Inject(ORIGIN_URL) private origin
+    ) {
+    }
+
+    ngOnInit(): void {
+
+        this.id = +this.route.snapshot.paramMap.get('id');
+        this.service.getTopology(this.id).subscribe(
+            (result: Topology) => {
+                this.topo = result;
+                this.topo.shareCode = this.origin + "/topo/enlist/" + this.topo.shareCode;
+
+                //console.log(this.topo);
+                this.subs.push(
+                    this.notifier.topoEvents.subscribe(
+                        (event) => {
+                            switch (event.action) {
+                                case "TOPO.UPDATED":
+                                this.topo = event.model;
+                                break;
+
+                                case "TOPO.DELETED":
+                                this.showOverlay = true;
+                                break;
+                            }
+                        }
+                    ),
+                    this.notifier.templateEvents.subscribe(
+                        (event) => {
+                            switch (event.action) {
+                                case "TEMPLATE.ADDED":
+                                console.log(event.model);
+                                this.topo.templates.push(event.model);
+                                break;
+
+                                case "TEMPLATE.UPDATED":
+                                this.merge(event.model);
+                                break;
+
+                                case "TEMPLATE.REMOVED":
+                                this.remove(event.model);
+                                break;
+                            }
+                        }
+                    ),
+                    this.notifier.chatEvents.subscribe(
+                        (event) => {
+                            if (event.action == "CHAT.MESSAGE" && !this.collaborationVisible)
+                                this.messageCount += 1;
+                        }
+                    )
+                );
+
+                let loadWorkers = new Promise((resolve) => {
+                    this.notifier.actors = this.topo.workers.map(
+                        (worker) => {
+                            return {
+                                id: worker.personGlobalId,
+                                name: worker.personName,
+                                online: false
+                            }
+                        }
+                    );
+                    resolve(true);
+                });
+
+                loadWorkers.then((r) => {
+                    this.notifier.start(this.topo.globalId);
+                });
+
+            },
+            (err) => {
+                this.onError(err);
+            }
+        );
+
+    }
+
+    ngOnDestroy() {
+        this.notifier.stop();
+
+        this.subs.forEach(
+            (sub) => {
+                sub.unsubscribe();
+            }
+        );
+    }
+
+    clipShareUrl() {
+        this.clipboard.copyToClipboard(this.topo.shareCode);
+    }
+
+    clipPublishUrl() {
+        this.clipboard.copyToClipboard(this.origin + "/mojo/" + this.topo.id);
+    }
+
+    toggleSelector() {
+        this.selectorVisible = !this.selectorVisible;
+        if (this.selectorVisible) {
+            this.search('');
+        }
+    }
+
+    // toggleDocument() {
+    //     this.documentVisible = !this.documentVisible;
+    // }
+
+    search(term) {
+        this.templateSvc.getTemplates({
+            term: term,
+            take: 100,
+            filters: ["published"]
+        })
+        .subscribe(
+            (data) => {
+                this.publishedTemplates = data.results;
+            },
+            (err) => { this.onError(err);  }
+        );
+    }
+
+    onAdded(template : TemplateSummary) {
+        this.templateSvc.linkTemplate(template.id, this.topo.id)
+        .subscribe(
+            // (result: Template) => {
+            //     this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
+            //     let existing = this.topo.templates.filter(
+            //         (v) => {
+            //             return v.name == result.name;
+            //         }
+            //     );
+            //     if (existing && existing.length > 0)
+            //         this.onError({error: { message: 'EXCEPTION.DUPLICATENAME'}});
+
+            //     this.topo.templates.push(result);
+            // }
+            (result: Template) => {},
+            (err) => {  this.onError(err); }
+        );
+    }
+
+    merge(tref) {
+        this.topo.templates.forEach(
+            (v, i, a) => {
+                if (v.id == tref.id)
+                    a[i] = tref;
+            }
+        )
+    }
+
+    //remove tref from list
+    remove(template: Template) {
+        let target = this.topo.templates.find((t) => { return t.id == template.id; });
+        if (target) {
+            this.topo.templates.splice(
+                this.topo.templates.indexOf(target),
+                1
+            );
+        }
+    }
+
+    confirmDelete() {
+        this.deleteMsgVisible = true;
+    }
+
+    cancelDelete() {
+        this.deleteMsgVisible = false;
+    }
+
+    delete() {
+        this.service.deleteTopology(this.topo.id)
+        .subscribe(data => {
+            this.router.navigate(['/topo']);
+        }, (err) => {  this.onError(err); });
+    }
+
+    update() {
+        this.service.putTopology(this.topo)
+        .subscribe(data => {
+
+        }, (err) => {  this.onError(err); });
+    }
+
+    show(section: string) : void {
+        this.showing = section;
+    }
+
+    publish() {
+        this.service.publishTopology(this.topo.id)
+        .subscribe(
+            (data) => {
+                this.topo.isPublished = true;
+            },
+            (err) => { this.onError(err); }
+        );
+    }
+
+    unpublish() {
+        this.service.unpublishTopology(this.topo.id)
+        .subscribe(
+            (data) => {
+                this.topo.isPublished = false;
+            },
+            (err) => { this.onError(err); }
+        );
+    }
+
+    share() {
+        this.service.shareTopology(this.topo.id)
+        .subscribe(
+            (data) => {
+                this.topo.shareCode = this.origin + "/topo/enlist/" + data.shareCode;
+            },
+            (err) => { this.onError(err); }
+        );
+    }
+
+    // unshare() {
+    //     this.service.unshareTopology(this.topo.id)
+    //     .subscribe(
+    //         (data) => {
+    //             this.topo.shareCode = data.shareCode;
+    //         },
+    //         (err) => { this.onError(err); }
+    //     );
+    // }
+
+    onError(err) {
+        this.errors.push(err.error);
+        console.debug(err.error.message);
+    }
+
+    collaborate() {
+        this.collaborationVisible = !this.collaborationVisible;
+        this.messageCount = 0;
+    }
+
+    redirect() {
+        this.router.navigate(['/topo']);
+    }
+}
+
+

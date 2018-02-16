@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
@@ -14,23 +10,24 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
-    public class GamespaceController : HubController<TopologyHub>
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    public class GamespaceController : _Controller
     {
         public GamespaceController(
             GamespaceManager instanceManager,
             IPodManager podManager,
-            IServiceProvider sp,
-            IConnectionManager sigr
-        ) : base(sigr, sp)
+            IHubContext<TopologyHub, ITopoEvent> hub,
+            IServiceProvider sp
+        ) : base(sp)
         {
             _pod = podManager;
             _mgr = instanceManager;
+            _hub = hub;
         }
 
         private readonly IPodManager _pod;
         private readonly GamespaceManager _mgr;
-
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/gamespaces")]
         [ProducesResponseType(typeof(Gamespace[]), 200)]
@@ -85,7 +82,7 @@ namespace TopoMojo.Controllers
         {
             var result = await _mgr.Destroy(id);
             Log("destroyed", result);
-            await Broadcast(result.GlobalId, new BroadcastEvent<GameState>(User, "GAME.OVER", result));
+            SendBroadcast(result, "OVER");
             return Ok(true);
         }
 
@@ -113,5 +110,14 @@ namespace TopoMojo.Controllers
             return Ok(await _mgr.Players(id));
         }
 
+        private void SendBroadcast(GameState gameState, string action)
+        {
+            _hub.Clients.Group(gameState.GlobalId)
+                .GameEvent(new BroadcastEvent<Core.Models.GameState>(
+                    User,
+                    "GAME." + action.ToUpper(),
+                    gameState
+                ));
+        }
     }
 }

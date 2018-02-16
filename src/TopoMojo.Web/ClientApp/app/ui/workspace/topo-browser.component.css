@@ -1,9 +1,15 @@
-i {
-    font-size: 1.3em;
-}
 h4 {
     display: inline-block;
 }
 .hang {
     margin: 20px 20px;
+}
+.card {
+    margin: 20px;
+    padding: 4px;
+    border: 1px solid #888888;
+    box-shadow: 2px 2px 2px #888888, -2px -2px 2px #cccccc;
+    min-height: 180px;
+    text-align: left;
+    border-radius: 4px;
 }

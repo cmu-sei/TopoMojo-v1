@@ -4,11 +4,11 @@
  *   import { ngAspnetCoreEngine } from `@ng-universal/ng-aspnetcore-engine`;
  */
 
-import { Type, NgModuleFactory, NgModuleRef, ApplicationRef, Provider } from '@angular/core';
+import { Type, NgModuleFactory, NgModuleRef, ApplicationRef, StaticProvider } from '@angular/core';
 import { platformServer, platformDynamicServer, PlatformState } from '@angular/platform-server';
 
 export function ngAspnetCoreEngine(
-    providers: Provider[],
+    providers: StaticProvider[],
     ngModule: Type<{}>
 ): Promise<{ html: string, globals: { styles: string, title: string, meta: string, [key: string]: any } }> {
 
@@ -115,7 +115,7 @@ export function ngAspnetCoreEngine(
 // Temporary - these will be combined in what will be the official npm version in `angular/universal` repo
 
 export function ngAspnetCoreEngineAoT(
-    providers: Provider[],
+    providers: StaticProvider[],
     ngModule: NgModuleFactory<{}>
 ): Promise<{ html: string, globals: { styles: string, title: string, meta: string, [key: string]: any } }> {
 

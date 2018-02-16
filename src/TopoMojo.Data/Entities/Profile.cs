@@ -4,7 +4,7 @@ using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data.Entities
 {
-    public class Profile: IEntity
+    public class Profile: IEntityPrimary
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }

@@ -82,6 +82,8 @@ namespace TopoMojo.Data.EntityFrameworkCore
         {
             DbContext.Templates.RemoveRange(topology.Templates);
             DbContext.Remove(topology);
+            var messages = await DbContext.Messages.Where(m => m.RoomId == topology.GlobalId).ToArrayAsync();
+            DbContext.Messages.RemoveRange(messages);
             await DbContext.SaveChangesAsync();
         }
     }
