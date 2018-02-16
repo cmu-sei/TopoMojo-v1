@@ -51,6 +51,24 @@ namespace TopoMojo.Controllers
         {
             await AuthorizeAction(id, "ticket");
             DisplayInfo info = await _pod.Display(id);
+            var src = new Uri(info.Url);
+            string internalHost = src.Host.Split('.').First();
+
+            switch (_pod.Options.TicketUrlHandler.ToLower())
+            {
+                case "local-app":
+                    info.Url = info.Url.Replace(src.Host, $"{Request.Host.Value}/{src.Host}");
+                break;
+
+                case "external-domain":
+                    string external = $"{internalHost}{Request.Host.Value.Substring(Request.Host.Value.IndexOf("."))}";
+                    info.Url = info.Url.Replace(src.Host, external);
+                break;
+
+                case "host-map":
+                //TODO: translate internal to external via map.
+                break;
+            }
             return Ok(info);
         }
 

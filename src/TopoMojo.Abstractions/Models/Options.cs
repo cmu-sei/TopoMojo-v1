@@ -14,6 +14,7 @@ namespace TopoMojo.Models
         public string StockStore { get; set; }
         public string DisplayMethod { get; set; }
         public string DisplayUrl { get; set; }
+        public string TicketUrlHandler { get; set; } //"local-app", "external-domain", "host-map", "none"
         public VlanOptions Vlan { get; set; }
     }
 

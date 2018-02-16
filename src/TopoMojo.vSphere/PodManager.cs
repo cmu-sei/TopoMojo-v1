@@ -48,6 +48,7 @@ namespace TopoMojo.vSphere
         private Dictionary<string, VimHost> _affinityMap;
         private ConcurrentDictionary<string, Vm> _vmCache;
 
+        public PodConfiguration Options { get {return _options;}}
         public async Task ReloadHost(string hostname)
         {
             string host = "https://" + hostname + "/sdk";
@@ -279,7 +280,9 @@ namespace TopoMojo.vSphere
             if (vm !=  null)
             {
                 VimHost host = _hostCache[vm.Host];
-                string ticket = "", conditions = "";
+                string ticket = "",
+                    conditions = "";
+
                 try
                 {
                     ticket = await host.GetTicket(id);
@@ -289,14 +292,15 @@ namespace TopoMojo.vSphere
                     conditions = "needs-vm-connected";
                 }
 
-                string[] h = host.Name.Split('.');
+                //string[] h = host.Name.Split('.');
                 di = new DisplayInfo
                 {
                     Id = id,
                     Name = vm.Name.Untagged(),
                     TopoId = vm.Name.Tag(),
                     Method = _options.DisplayMethod,
-                    Url = _options.DisplayUrl.Replace("{host}", h[0]) + ticket,
+                    // Url = _options.DisplayUrl.Replace("{host}", targetHost) + ticket,
+                    Url = ticket,
                     Conditions = conditions
                 };
             }
@@ -570,9 +574,9 @@ namespace TopoMojo.vSphere
 
             if (_hostCache.ContainsKey(hostname))
             {
-                _hostCache[hostname].Disconnect();
+                await _hostCache[hostname].Disconnect();
                 _hostCache.Remove(hostname);
-                Task.Delay(100);
+                await Task.Delay(100);
             }
 
             PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);

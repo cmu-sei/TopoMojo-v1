@@ -26,6 +26,8 @@ namespace TopoMojo.Abstractions
         Task<VmOptions> GetVmNetOptions(string key);
         string Version { get; }
         Task ReloadHost(string host);
+
+        PodConfiguration Options { get; }
     }
 
 }

@@ -222,7 +222,9 @@ namespace TopoMojo.vSphere
             await Connect();
             Vm vm = _vmCache[id];
             _logger.LogDebug($"Aquiring mks ticket for vm {vm.Name}");
-            return (await _vim.AcquireTicketAsync(vm.AsVim(), "webmks")).ticket;
+            var ticket = await _vim.AcquireTicketAsync(vm.AsVim(), "webmks");
+            string port = (ticket.portSpecified && ticket.port != 443) ? $":{ticket.port}" : "";
+            return $"wss://{ticket.host??_config.Host}{port}/ticket/{ticket.ticket}";
         }
 
         public async Task<Vm> Deploy(Template template)
@@ -630,20 +632,28 @@ namespace TopoMojo.vSphere
                 }
 
                 // TODO: Revisit this cleanup upon start if things start getting messy.
-                // TODO: Need to change it to preserve pg/vs if any vm exists in the isolation group, regardless
+                // Need to preserve pg/vs if any vm exists in the isolation group, regardless
                 // of where its nics are attached.  This should prevent garbage collection of a network when the
                 // vm nic is temporarily on bridge-net.
 
-                // //cleanup any empties
-                // string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
-                // RemoveVmPortGroups(empties).Wait();
+                //cleanup any empties, that don't have any associated vm's existing
+                List<string> empties = new List<string>();
+                foreach (var pg in _pgAllocation.Values.Where(p => p.Counter ==0))
+                {
+                    if (!this.Find(pg.Net.Tag()).Result.Any())
+                    {
+                        empties.Add(pg.Net);
+                        _swAllocation[$"sw#{pg.Net.Tag()}"] -= 1;
+                    }
+                }
+                RemoveVmPortGroups(empties.ToArray()).Wait();
 
-                // //remove empty switches
-                // List<string> emptySwitches = new List<string>();
-                // foreach (string key in _swAllocation.Keys)
-                //     if (_swAllocation[key]==0)
-                //         emptySwitches.Add(key);
-                // RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
+                //remove empty switches
+                List<string> emptySwitches = new List<string>();
+                foreach (string key in _swAllocation.Keys)
+                    if (_swAllocation[key]==0)
+                        emptySwitches.Add(key);
+                RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
 
             }
         }
