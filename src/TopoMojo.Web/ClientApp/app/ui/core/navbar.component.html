@@ -32,10 +32,10 @@
                 <!--Gamespace-->
             </a>
         </li>
-        <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
+        <li [routerLinkActive]="['link-active']">
             <a [routerLink]="['/auth/profile']" [routerLinkActive]="['link-active']" [tooltip]="'PROFILE' | translate | lowercase">
                 <span class='fa fa-user fa-2x'></span>
-                <!--Admin-->
+                <!--Profile-->
             </a>
         </li>
         <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
