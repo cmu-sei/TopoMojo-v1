@@ -9,7 +9,6 @@
     "@angular/forms": "^5.2.2",
     "@angular/platform-browser": "^5.2.2",
     "@angular/platform-browser-dynamic": "^5.2.2",
-    "@angular/platform-server": "^5.2.2",
     "@angular/router": "^5.2.2",
     "@aspnet/signalr-client": "1.0.0-alpha2-final",
     "@ngx-translate/core": "^9.0.0",

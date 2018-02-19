@@ -10,27 +10,11 @@ module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
     const sharedConfig = {
         stats: { modules: true },
-        // resolve: {
-        //     extensions: [ '.js' ],
-        //     alias: {
-        //         "vmware-wmks$": path.resolve(
-        //             __dirname, 'node_modules/vmware-wmks/wmks.min.js'
-        //         )
-        //     }
-        //     // alias: {
-        //     //     "oidc-client$": path.resolve(
-        //     //         __dirname, 'node_modules/oidc-client/index.js'
-        //     //     )
-        //     // }
-        // },
         module: {
             rules: [
                 // { test: /\.woff2$/, use: 'file-loader' }
                 { test: /\.(png|eot|[ot]tf|woff|woff2|svg)(\?|$)/, use: 'file-loader' }
 
-            ],
-            loaders: [ //** THIS DOESN'T WORK :( -- using import in boot-client.ts */
-                //{ test: require.resolve("jquery"), loader: "expose-loader?jQuery!expose-loader?$" }
             ]
         },
         entry: {
@@ -38,11 +22,9 @@ module.exports = (env) => {
                 '@angular/common',
                 '@angular/compiler',
                 '@angular/core',
-                // '@angular/http',
                 '@angular/platform-browser',
                 '@angular/platform-browser-dynamic',
                 '@angular/router',
-                '@angular/platform-server',
                 '@aspnet/signalr-client',
                 'bootstrap',
                 'bootstrap/dist/css/bootstrap.css',
@@ -51,12 +33,8 @@ module.exports = (env) => {
                 'es6-shim',
                 'event-source-polyfill',
                 'jquery',
-                //'jquery-ui-bundle',
-                // 'ng2-signalr',
                 'oidc-client',
                 'showdown',
-                // 'signalr',
-                //'vmware-wmks',
                 'zone.js',
             ]
         },
@@ -68,11 +46,6 @@ module.exports = (env) => {
         plugins: [
             new webpack.ProvidePlugin({ jQuery: 'jquery', $: 'jquery', "jquery.js": 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
             new webpack.optimize.ModuleConcatenationPlugin(),
-            // new webpack.ContextReplacementPlugin(
-            //     /angular(\\|\/)core(\\|\/)@angular/,
-            //     path.resolve('./src'),
-            //     {}
-            // ),
             new webpack.ContextReplacementPlugin(
                 /\@angular(\\|\/)core(\\|\/)esm5/,
                 path.join(__dirname, './client')
@@ -97,36 +70,8 @@ module.exports = (env) => {
             new UglifyJSPlugin({
                 parallel: true,
             })
-            // new webpack.optimize.UglifyJSPlugin({
-            //     compress: { warnings: false },
-            //     include: /\.js$/
-            // })//,
-            // new OptimizeCssAssetsPlugin({
-            //     assetNameRegExp: /\.css$/,
-            //     cssProcessorOptions: { discardComments: { removeAll: true } }
-            // })
         ])
     });
 
-    // const serverBundleConfig = merge(sharedConfig, {
-    //     target: 'node',
-    //     resolve: { mainFields: ['main'] },
-    //     output: {
-    //         path: path.join(__dirname, 'ClientApp', 'dist'),
-    //         libraryTarget: 'commonjs2',
-    //     },
-    //     module: {
-    //         rules: [ { test: /\.css(\?|$)/, use: ['to-string-loader', 'css-loader'] } ]
-    //     },
-    //     entry: { vendor: ['aspnet-prerendering'] },
-    //     plugins: [
-    //         new webpack.DllPlugin({
-    //             path: path.join(__dirname, 'ClientApp', 'dist', '[name]-manifest.json'),
-    //             name: '[name]_[hash]'
-    //         })
-    //     ]
-    // });
-
     return [clientBundleConfig];
-    // return [clientBundleConfig, serverBundleConfig];
 }
