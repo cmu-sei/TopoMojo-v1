@@ -6,15 +6,12 @@ namespace TopoMojo.vSphere
     public static class FilterFactory
     {
 
-        public static PropertyFilterSpec[] VmFilter(ManagedObjectReference mor)
+        public static PropertyFilterSpec[] VmFilter(ManagedObjectReference mor, string props = "summary layout resourcePool")
         {
-            return VmFilter(mor, "summary layout");
-        }
-        public static PropertyFilterSpec[] VmFilter(ManagedObjectReference mor, string props)
-        {
+            props += " resourcePool";
             PropertySpec prop = new PropertySpec {
                 type = "VirtualMachine",
-                pathSet = props.Split(new char[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries)
+                pathSet = props.Split(new char[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray()
             };
 
             ObjectSpec objectspec = new ObjectSpec {
@@ -145,5 +142,6 @@ namespace TopoMojo.vSphere
                 }
             };
         }
+
     }
 }

@@ -280,8 +280,16 @@ namespace TopoMojo.vSphere
 
             VirtualMachineVideoCard card = new VirtualMachineVideoCard();
             card.key = key--;
-            card.videoRamSizeInKB = ramKB * 1024;
-            card.videoRamSizeInKBSpecified = true;
+            if (ramKB > 0)
+            {
+                card.videoRamSizeInKB = ramKB * 1024;
+                card.videoRamSizeInKBSpecified = true;
+            }
+            else
+            {
+                card.useAutoDetect = true;
+                card.useAutoDetectSpecified = true;
+            }
 
             devicespec = new VirtualDeviceConfigSpec();
             devicespec.device = card;

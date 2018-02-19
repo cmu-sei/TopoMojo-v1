@@ -34,6 +34,8 @@ namespace TopoMojo.vMock
         private Dictionary<string, Vm> _vms;
         private Dictionary<string, VmTask> _tasks;
 
+        public PodConfiguration Options { get { return _optPod; } }
+
         public async Task<Vm> Refresh(Template template)
         {
             Vm vm = null;
