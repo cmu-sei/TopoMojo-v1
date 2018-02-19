@@ -9,7 +9,6 @@ import { TopoCreatorComponent } from './topo-creator.component';
 import { TopoMembersComponent } from './topo-members.component';
 import { TemplateEditorComponent} from './template-editor.component';
 import { TopoEnlistComponent } from './enlist.component';
-import { ConnectionResolver } from '../../svc/connection.resolver';
 import { IsoManagerComponent } from './iso-manager.component';
 import { WorkspaceComponent } from './workspace.component';
 

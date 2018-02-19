@@ -2,9 +2,6 @@ import './polyfills/browser.polyfills';
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
-import 'expose-loader?$!jquery';
-import 'expose-loader?jQuery!jquery';
-import 'signalr/jquery.signalR.js';
 
 const rootElemTagName = 'app';
 
