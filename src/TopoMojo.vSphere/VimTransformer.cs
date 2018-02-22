@@ -8,10 +8,10 @@ using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.vSphere
 {
-    public static class Transform
+    public class Transformer
     {
 
-        public static VirtualMachineConfigSpec TemplateToVmSpec(Template template, string datastore)
+        public virtual VirtualMachineConfigSpec TemplateToVmSpec(Template template, string datastore)
         {
             int key = -101, idekey = 200;
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
@@ -20,7 +20,7 @@ namespace TopoMojo.vSphere
             vmcs.name = template.Name;
             vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other") + "Guest";
             if (datastore.HasValue())
-                vmcs.files = new VirtualMachineFileInfo { vmPathName = datastore };
+                vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
             vmcs.extraConfig = GetExtraConfig();
             vmcs.annotation = (template.GuestSettings.IsNotEmpty())
                 ? String.Join("\n", template.GuestSettings
@@ -73,7 +73,6 @@ namespace TopoMojo.vSphere
                 devices.Add(GetDisk(ref key, disk.Path, controllerKey, count++));
             }
 
-
             //iso
             devices.Add(GetCdrom(ref key, idekey, (template.Iso.HasValue() ? template.Iso : "[iso] null.iso")));
 
@@ -83,7 +82,7 @@ namespace TopoMojo.vSphere
             return vmcs;
         }
 
-        private static VirtualDeviceConfigSpec GetCdrom(ref int key, int controllerkey, string iso)
+        protected virtual VirtualDeviceConfigSpec GetCdrom(ref int key, int controllerkey, string iso)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
 
@@ -106,10 +105,9 @@ namespace TopoMojo.vSphere
             devicespec.operationSpecified = true;
 
             return devicespec;
-
         }
 
-        private static VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, Eth nic)
+        protected virtual VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, Eth nic)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
             VirtualEthernetCard eth = new VirtualE1000();
@@ -134,7 +132,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        private static VirtualDeviceConfigSpec GetDisk(ref int key, string path, int controllerKey, int unitnumber)
+        protected virtual VirtualDeviceConfigSpec GetDisk(ref int key, string path, int controllerKey, int unitnumber)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
 
@@ -161,7 +159,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        // private static VirtualDeviceConfigSpec GetIDEController(int key)
+        // protected virtual VirtualDeviceConfigSpec GetIDEController(int key)
         // {
         //     VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
         //     devicespec.device = new VirtualIDEController();
@@ -171,7 +169,7 @@ namespace TopoMojo.vSphere
         //     return devicespec;
         // }
 
-        private static VirtualDeviceConfigSpec GetSCSIController(ref int key, string type)
+        protected virtual VirtualDeviceConfigSpec GetSCSIController(ref int key, string type)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
             VirtualDevice device = null;
@@ -211,7 +209,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        private static VirtualDeviceConfigSpec GetFloppy(ref int key, string name)
+        protected virtual VirtualDeviceConfigSpec GetFloppy(ref int key, string name)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
 
@@ -236,7 +234,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        public static OptionValue[] GetExtraConfig()
+        public virtual OptionValue[] GetExtraConfig()
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
@@ -247,7 +245,7 @@ namespace TopoMojo.vSphere
             return options.ToArray();
         }
 
-        // private static VirtualDeviceConfigSpec GetNetworkSerialPort(ref int key, string name)
+        // protected virtual VirtualDeviceConfigSpec GetNetworkSerialPort(ref int key, string name)
         // {
         //     VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
 
@@ -274,7 +272,7 @@ namespace TopoMojo.vSphere
         //     return devicespec;
         // }
 
-        private static VirtualDeviceConfigSpec GetVideoController(ref int key, int ramKB)
+        protected virtual VirtualDeviceConfigSpec GetVideoController(ref int key, int ramKB)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
 
@@ -299,7 +297,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        // private static VirtualDeviceConfigSpec GetVMCIAdapter(ref int key, int cid)
+        // protected virtual VirtualDeviceConfigSpec GetVMCIAdapter(ref int key, int cid)
         // {
         //     VirtualMachineVMCIDevice vmci = new VirtualMachineVMCIDevice();
         //     vmci.key = 12000;
@@ -317,7 +315,7 @@ namespace TopoMojo.vSphere
         // }
 
 
-        // public static VirtualSwitch VimSwitchtoXnetSwitch(HostVirtualSwitch s)
+        // public virtual VirtualSwitch VimSwitchtoXnetSwitch(HostVirtualSwitch s)
         // {
         //     VirtualSwitch t = new VirtualSwitch();
         //     t.name = s.name;
@@ -338,7 +336,7 @@ namespace TopoMojo.vSphere
         //     }
         //     return t;
         // }
-        // public static VirtualLan VimPortGrouptoXnetLan(HostPortGroup pg)
+        // public virtual VirtualLan VimPortGrouptoXnetLan(HostPortGroup pg)
         // {
         //     VirtualLan p = new VirtualLan();
         //     p.name = pg.spec.name;
@@ -351,7 +349,7 @@ namespace TopoMojo.vSphere
         //     return p;
         // }
 
-        public static HostNetworkPolicy GetDefaultHostNetworkPolicy()
+        public virtual HostNetworkPolicy GetDefaultHostNetworkPolicy()
         {
             HostNetworkPolicy policy = new HostNetworkPolicy();
             policy = new HostNetworkPolicy();
@@ -404,7 +402,7 @@ namespace TopoMojo.vSphere
         }
 
 
-        public static string[] OsMap = new string[] {
+        public string[] OsMap = new string[] {
             "rhel6_64",
             "rhel6",
             "rhel7_64",

@@ -107,10 +107,10 @@ namespace TopoMojo.vSphere
             };
 
             ObjectSpec objectspec = new ObjectSpec {
-                obj = mor, //_hcm.datastoreSystem
+                obj = mor, //_res
                 selectSet = new SelectionSpec[] {
                     new TraversalSpec {
-                        type = "HostDatastoreSystem",
+                        type = "ComputeResource",
                         path = "datastore"
                     }
                 }

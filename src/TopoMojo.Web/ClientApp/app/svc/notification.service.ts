@@ -62,6 +62,7 @@ export class NotificationService {
                     case AuthTokenState.invalid:
                     case AuthTokenState.expired:
                     this.stop();
+                    this.key = null;
                     break;
                 }
             }
@@ -73,7 +74,8 @@ export class NotificationService {
             this.stop().then(
                 () => {
                     this.log("sigr: leave/stop complete. starting");
-                    this.start(this.key);
+                    if (this.key)
+                        this.start(this.key);
                 }
             );
         }

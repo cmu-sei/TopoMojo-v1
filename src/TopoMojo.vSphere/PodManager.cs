@@ -554,17 +554,6 @@ namespace TopoMojo.vSphere
             foreach (string url in hosts)
             {
                 AddHost(url);
-                //string hostname = new Uri(url).Host;
-                // PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
-                // hostOptions.Url = url;
-                // hostOptions.Host = hostname;
-                // VimHost vHost = new VimHost(
-                //     hostOptions,
-                //     _vmCache,
-                //     _vlanMap,
-                //     _mill.CreateLogger<VimHost>()
-                // );
-                // _hostCache.Add(hostname, vHost);
             }
         }
 
@@ -585,7 +574,6 @@ namespace TopoMojo.vSphere
             VimHost vHost = new VimHost(
                 hostOptions,
                 _vmCache,
-                _vlanMap,
                 _mill.CreateLogger<VimHost>()
             );
             _hostCache.Add(hostname, vHost);

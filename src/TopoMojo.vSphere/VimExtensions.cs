@@ -15,6 +15,16 @@ namespace TopoMojo.vSphere
             return $"{mor.type}|{mor.Value}";
         }
 
+        public static ManagedObjectReference AsReference(this string mor)
+        {
+            var a = mor.Split('|');
+            return new ManagedObjectReference
+            {
+                type = a.First(),
+                Value = a.Last()
+            };
+        }
+
         public static ManagedObjectReference AsVim(this Vm vm)
         {
             string[] mor = vm.Reference.Split('|');
@@ -111,6 +121,11 @@ namespace TopoMojo.vSphere
                 }
             }
             return null;
+        }
+
+        public static ObjectContent[] FindType(this ObjectContent[] tree, string type)
+        {
+            return tree.Where(o => o.obj.type.EndsWith(type)).ToArray();
         }
 
         public static ObjectContent FindTypeByReference(this ObjectContent[] tree, ManagedObjectReference mor)
