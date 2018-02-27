@@ -66,7 +66,9 @@ namespace TopoMojo.Controllers
                 break;
 
                 case "host-map":
-                //TODO: translate internal to external via map.
+                    var map = _pod.Options.TicketUrlHostMap;
+                    if (map.ContainsKey(src.Host))
+                        info.Url = info.Url.Replace(src.Host, map[src.Host]);
                 break;
             }
             return Ok(info);

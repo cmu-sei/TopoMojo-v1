@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace TopoMojo.Models
 {
     public class PodConfiguration {
@@ -15,6 +17,7 @@ namespace TopoMojo.Models
         public string DisplayMethod { get; set; }
         public string DisplayUrl { get; set; }
         public string TicketUrlHandler { get; set; }  = "none"; //"local-app", "external-domain", "host-map", "none"
+        public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
         public VlanOptions Vlan { get; set; }
     }
 
