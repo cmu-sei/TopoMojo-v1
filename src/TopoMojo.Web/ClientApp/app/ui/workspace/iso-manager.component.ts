@@ -106,6 +106,9 @@ export class IsoManagerComponent implements OnInit {
     }
 
     trunc(text: string) {
+        if (!text.startsWith("public"))
+            text = text.split('/').pop();
+
         if (text.length > 40)
             text = text.substring(0,40) + "...";
         return text;

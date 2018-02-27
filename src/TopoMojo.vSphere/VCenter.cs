@@ -330,7 +330,8 @@ namespace TopoMojo.vSphere
                 .Select(x => "public/" + System.IO.Path.GetFileName(x)).ToArray());
             isos.AddRange(
                 (await _host.GetFiles(_options.DiskStore + id + "/*.iso", false))
-                .Select(x => System.IO.Path.GetFileName(x)));
+                .Select(x => x.Replace(_options.DiskStore, "")));
+                //.Select(x => System.IO.Path.GetFileName(x)));
             isos.Sort();
             return new VmOptions {
                 Iso = isos.ToArray()
@@ -364,7 +365,8 @@ namespace TopoMojo.vSphere
             {
                 template.Iso = (template.Iso.StartsWith("public"))
                     ? template.Iso = option.IsoStore + System.IO.Path.GetFileName(template.Iso)
-                    : template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
+                    : template.Iso = option.DiskStore + template.Iso;
+                    //: template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
             }
 
             // if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
