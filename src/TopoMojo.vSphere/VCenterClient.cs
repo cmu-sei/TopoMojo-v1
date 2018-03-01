@@ -271,9 +271,9 @@ namespace TopoMojo.vSphere
                 _props,
                 FilterFactory.VmFilter(vm.AsVim(), "config"));
             ObjectContent[] oc = response.returnval;
-            var content = oc.FindTypeByName("VirtualMachine", vm.Name);
+            //var content = oc.FindTypeByName("VirtualMachine", vm.Name);
 
-            VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)content.GetProperty("config");
+            VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)oc[0].GetProperty("config");
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
 
             switch (feature)
@@ -926,11 +926,20 @@ namespace TopoMojo.vSphere
 
         private async Task InitPortgroups()
         {
+            var map = new Dictionary<string, PortGroupAllocation>();
+            foreach (var pga in _pgAllocation.Values)
+            {
+                string key = pga.Key.AsReference().Value;
+                if (!map.ContainsKey(key))
+                    map.Add(key, pga);
+            }
             foreach (string net in await LoadVmPortGroups(_vms))
             {
-                if (!_pgAllocation.ContainsKey(net))
-                    _pgAllocation.Add(net, new PortGroupAllocation { Net = net });
-                _pgAllocation[net].Counter += 1;
+                if (map.ContainsKey(net))
+                    map[net].Counter += 1;
+                // if (!_pgAllocation.ContainsKey(net))
+                //     _pgAllocation.Add(net, new PortGroupAllocation { Net = net });
+                // _pgAllocation[net].Counter += 1;
             }
 
             //find empties with no associated vm's
@@ -940,7 +949,7 @@ namespace TopoMojo.vSphere
             {
                 if (pg.Counter < 1 && !vms.Any(v => v.Name.EndsWith(pg.Net.Tag())))
                 {
-                    empties.Add(pg.Net);
+                    empties.Add(pg.Key);
                 }
             }
 

@@ -143,7 +143,7 @@ export class NotificationService {
     }
 
     stop() : Promise<boolean> {
-        if (!this.online)
+        if (!this.online || !this.key)
             return Promise.resolve<boolean>(true);
 
         this.log("sigr: invoking Leave");
