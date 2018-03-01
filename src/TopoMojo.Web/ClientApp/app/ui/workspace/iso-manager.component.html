@@ -24,11 +24,14 @@
     <button class="btn btn-link" (click)="refresh()">
         <i class="fa fa-refresh" [class.fa-spin]="loading"></i> <span translate>REFRESH-LIST</span>
     </button>
+    <div *ngIf="isos && isos.length > 2">
+        <search-bar (onSearch)="search($event)"></search-bar>
+    </div>
     <div *ngIf="isos" class="list-unstyled">
-        <div *ngFor="let iso of isos" class="ellipsis">
-            <button class="btn btn-link" (click)="select(iso)" [tooltip]="iso">
+        <div *ngFor="let iso of visible" class="ellipsis">
+            <button class="btn btn-link" (click)="select(iso)" [tooltip]="display(iso)">
                 <i class="glyphicon glyphicon-cd"></i>
-                <span>{{trunc(iso)}}</span>
+                <span>{{trunc(display(iso))}}</span>
             </button>
         </div>
     </div>

@@ -27,6 +27,7 @@ export class IsoManagerComponent implements OnInit {
     @Input() id: string;
     @Output() onSelected: EventEmitter<string> = new EventEmitter<string>();
     isos: Array<string> = [];
+    visible: Array<string> = [];
     queuedFiles : any[] = [];
     pendingFiles : any[] = [];
     loading: boolean;
@@ -42,6 +43,7 @@ export class IsoManagerComponent implements OnInit {
         .subscribe(
             (result) => {
                 this.isos = result.iso;
+                this.visible = this.isos.slice(0);
             },
             (err) => {
             },
@@ -56,7 +58,7 @@ export class IsoManagerComponent implements OnInit {
     }
 
     private fileSelectorChanged(e) {
-        console.log(e.srcElement.files);
+        // console.log(e.srcElement.files);
         this.queuedFiles = [];
         for (let i = 0; i < e.srcElement.files.length; i++) {
             let file = e.srcElement.files[i];
@@ -67,8 +69,8 @@ export class IsoManagerComponent implements OnInit {
                 progress: -1
             });
         }
-        //this.queuedFiles = [ e.srcElement.files[0] ];
     }
+
     dequeueFile(qf) {
         this.queuedFiles.splice(this.queuedFiles.indexOf(qf),1);
     }
@@ -106,28 +108,25 @@ export class IsoManagerComponent implements OnInit {
     }
 
     trunc(text: string) {
-        if (!text.startsWith("public"))
-            text = text.split('/').pop();
-
         if (text.length > 40)
             text = text.substring(0,40) + "...";
         return text;
     }
-    // private uploadFile(qf) {
-    //     qf.progress = 0;
-    //     // this.service.uploadIso(this.id, qf.key, qf.file).subscribe(
-    //     //     (result) => {
-    //     //         this.select(qf.name);
-    //     //     },
-    //     //     (err) => {
-    //     //         console.log(err.json());
-    //     //         this.errorMessage = err.json().message;
-    //     //     },
-    //     //     () => {
-    //     //         this.queuedFiles = [];
-    //     //         this.uploading = false;
-    //     //     }
-    //     // );
-    // }
+
+    display(v: string) : string {
+        let t = v.split('/').pop();
+        return t;
+    }
+
+    search(term: string) : void {
+        if (term)
+            this.visible = this.isos.filter(
+                (item : string) => {
+                    return item.indexOf(term) > -1;
+                }
+            );
+        else
+            this.visible = this.isos.slice(0);
+    }
 
 }

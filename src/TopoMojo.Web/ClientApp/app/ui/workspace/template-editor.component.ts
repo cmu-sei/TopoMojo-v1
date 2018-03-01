@@ -88,6 +88,17 @@ export class TemplateEditorComponent implements OnInit {
         // todo: if vm, change iso
     }
 
+    clearIso() : void {
+        this.isoChanged("");
+    }
+
+    displayIso(v: string) : string {
+        let t = v.split('/').pop();
+        return (t.length > 40)
+            ? t.substring(0, 40) + "..."
+            : t;
+    }
+
     hasParent() : boolean {
         return !!this.template.parentId;
     }
