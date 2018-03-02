@@ -36,6 +36,7 @@ import { AppComponent } from './app.component'
     ],
     imports: [
         BrowserModule,
+        BrowserAnimationsModule,
         HttpClientModule,
         TranslateModule.forRoot({
             loader: {

@@ -7,11 +7,30 @@ import { NotificationService } from '../../svc/notification.service';
 import {Observable, Subscription, Subject} from 'rxjs/Rx';
 import { ORIGIN_URL } from '../../svc/settings.service';
 import { ClipboardService } from '../../svc/clipboard.service';
+import { trigger, state, style, animate, transition } from '@angular/animations';
+
+export class EventState {
+    type: string;
+    state: string;
+}
 
 @Component({
     selector: 'workspace',
     templateUrl: './workspace.component.html',
-    styleUrls: [ './workspace.component.css' ]
+    styleUrls: [ './workspace.component.css' ],
+    animations:  [
+        trigger('eventState', [
+            state('normal', style({
+                color: "inherit"
+            })),
+            state('success', style({
+                color: "green"
+            })),
+            state('failure', style({
+                color: "crimson"
+            }))
+        ])
+    ]
 })
 export class WorkspaceComponent {
     topo: Topology;
@@ -29,6 +48,7 @@ export class WorkspaceComponent {
     private id: number;
     private collaborationVisible: boolean;
     private messageCount: number;
+    private state: Array<EventState> = new Array<EventState>();
 
     constructor(
         private service: TopologyService,
@@ -127,10 +147,12 @@ export class WorkspaceComponent {
 
     clipShareUrl() {
         this.clipboard.copyToClipboard(this.topo.shareCode);
+        this.animateSuccess("clipShareUrl");
     }
 
     clipPublishUrl() {
         this.clipboard.copyToClipboard(this.origin + "/mojo/" + this.topo.id);
+        this.animateSuccess("clipPublishUrl");
     }
 
     toggleSelector() {
@@ -229,8 +251,12 @@ export class WorkspaceComponent {
         .subscribe(
             (data) => {
                 this.topo.isPublished = true;
+                this.animateSuccess("publish");
             },
-            (err) => { this.onError(err); }
+            (err) => {
+                this.animateFailure("publish");
+                this.onError(err);
+            }
         );
     }
 
@@ -239,8 +265,12 @@ export class WorkspaceComponent {
         .subscribe(
             (data) => {
                 this.topo.isPublished = false;
+                this.animateSuccess("publish");
             },
-            (err) => { this.onError(err); }
+            (err) => {
+                this.animateFailure("publish");
+                this.onError(err);
+            }
         );
     }
 
@@ -249,8 +279,12 @@ export class WorkspaceComponent {
         .subscribe(
             (data) => {
                 this.topo.shareCode = this.origin + "/topo/enlist/" + data.shareCode;
+                this.animateSuccess("share");
             },
-            (err) => { this.onError(err); }
+            (err) => {
+                this.animateFailure("share");
+                this.onError(err);
+            }
         );
     }
 
@@ -277,6 +311,27 @@ export class WorkspaceComponent {
     redirect() {
         this.router.navigate(['/topo']);
     }
+
+    getEvent(type: string) {
+        let ev = this.state.find((item)=>{ return item.type == type});
+        if (!ev) {
+            ev = { type: type, state: "normal"};
+            this.state.push(ev);
+        }
+        return ev;
+    }
+
+    animateSuccess(type : string) : void {
+        let ev = this.getEvent(type);
+        ev.state = "success";
+        setTimeout(()=>{ ev.state = "normal"}, 2000);
+    }
+
+    animateFailure(type : string) : void {
+        let ev = this.getEvent(type);
+        ev.state = "failure";
+        setTimeout(()=>{ ev.state = "normal"}, 2000);
+    }
+
+
 }
-
-
