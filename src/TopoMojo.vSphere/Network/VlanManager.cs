@@ -7,12 +7,12 @@ using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
 
-namespace TopoMojo.vSphere
+namespace TopoMojo.vSphere.Network
 {
-    public class NetworkManager
+    public class VlanManager
     {
 
-        public NetworkManager (
+        public VlanManager (
             VlanOptions options
         ) {
             _options = options;
@@ -22,8 +22,6 @@ namespace TopoMojo.vSphere
         protected VlanOptions _options;
         protected Dictionary<string, int> _vlans;
         protected BitArray _vlanMap;
-        protected Dictionary<string, PortGroupAllocation> _pgAllocation;
-
 
         private void InitVlans()
         {

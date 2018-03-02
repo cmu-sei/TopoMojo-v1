@@ -11,6 +11,7 @@ using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
+using TopoMojo.vSphere.Network;
 
 namespace TopoMojo.vSphere
 {
@@ -33,11 +34,11 @@ namespace TopoMojo.vSphere
             // _vlans = new Dictionary<string,int>();
             // foreach (Vlan vlan in _options.Vlan.Reservations)
             //     _vlans.Add(vlan.Name, vlan.Id);
-            _netmgr = new NetworkManager(_options.Vlan);
+            _netmgr = new VlanManager(_options.Vlan);
             InitHost();
         }
 
-        private readonly NetworkManager _netmgr;
+        private readonly VlanManager _netmgr;
         private readonly PodConfiguration _options;
         //private readonly TemplateOptions _optTemplate;
         private readonly ILogger<VCenter> _logger;

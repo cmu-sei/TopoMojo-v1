@@ -8,6 +8,13 @@ namespace TopoMojo.vSphere.Helpers
         public string Key { get; set; }
         public int Counter { get; set; }
         public int VlanId { get; set; }
+        public string Switch { get; set; }
+    }
+
+    public class VmNetwork
+    {
+        public string VmName { get; set; }
+        public string NetworkMOR { get; set; }
     }
 
     internal class VimHostTask

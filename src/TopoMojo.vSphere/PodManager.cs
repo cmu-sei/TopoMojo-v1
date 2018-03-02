@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
@@ -570,7 +571,8 @@ namespace TopoMojo.vSphere
                 await Task.Delay(100);
             }
 
-            PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
+
+            PodConfiguration hostOptions = JsonConvert.DeserializeObject<PodConfiguration>(JsonConvert.SerializeObject(_options)); //(PodConfiguration)Helper.Clone(_options);
             hostOptions.Url = url;
             hostOptions.Host = hostname;
             VimHost vHost = new VimHost(

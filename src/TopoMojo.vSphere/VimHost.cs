@@ -23,7 +23,7 @@ namespace TopoMojo.vSphere
         )
         {
             _logger = logger;
-            _config = (PodConfiguration)Helper.Clone(options);
+            _config = options; //(PodConfiguration)Helper.Clone(options);
             _vmCache = vmCache;
             _logger.LogDebug($"Instantiated vSphereHost { _config.Host }");
             _pgAllocation = new Dictionary<string, PortGroupAllocation>();

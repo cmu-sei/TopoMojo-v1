@@ -11,6 +11,7 @@ using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
+using TopoMojo.vSphere.Network;
 
 namespace TopoMojo.vSphere
 {
@@ -19,7 +20,7 @@ namespace TopoMojo.vSphere
         public Client(
             PodConfiguration options,
             ConcurrentDictionary<string, Vm> vmCache,
-            NetworkManager networkManager,
+            VlanManager networkManager,
             ILogger logger
         )
         {
@@ -34,7 +35,7 @@ namespace TopoMojo.vSphere
             Task taskMonitorTask = MonitorTasks();
         }
 
-        private readonly NetworkManager _netMgr;
+        private readonly VlanManager _netMgr;
         private readonly ILogger _logger;
         Dictionary<string, VimHostTask> _tasks;
         private ConcurrentDictionary<string, Vm> _vmCache;
@@ -658,7 +659,7 @@ namespace TopoMojo.vSphere
                             RemoveDVPortgroup(dvpg.Key.AsReference()).Wait();
                             _pgAllocation.Remove(dvpg.Net);
                             _netMgr.Deactivate(dvpg.Net);
-                        }
+                            }
                     }
                 }
             }
