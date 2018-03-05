@@ -20,7 +20,7 @@ namespace TopoMojo.vSphere.Network
         }
 
         protected VlanOptions _options;
-        protected Dictionary<string, int> _vlans;
+        protected Dictionary<string, Vlan> _vlans;
         protected BitArray _vlanMap;
 
         private void InitVlans()
@@ -33,10 +33,10 @@ namespace TopoMojo.vSphere.Network
             }
 
             //set admin reservations
-            _vlans = new Dictionary<string,int>();
+            _vlans = new Dictionary<string,Vlan>();
             foreach (Vlan vlan in _options.Reservations)
             {
-                _vlans.Add(vlan.Name, vlan.Id);
+                _vlans.Add(vlan.Name, vlan);
                 _vlanMap[vlan.Id] = true;
             }
         }
@@ -52,9 +52,10 @@ namespace TopoMojo.vSphere.Network
             {
                 foreach (Vlan vlan in vlans)
                 {
-                    _vlanMap[vlan.Id] = true;
+                    if (vlan.OnUplink)
+                        _vlanMap[vlan.Id] = true;
                     if (!_vlans.ContainsKey(vlan.Name))
-                        _vlans.Add(vlan.Name, vlan.Id);
+                        _vlans.Add(vlan.Name, vlan);
                 }
             }
         }
@@ -69,7 +70,8 @@ namespace TopoMojo.vSphere.Network
             {
                 if (_vlans.ContainsKey(net))
                 {
-                    _vlanMap[_vlans[net]] = false;
+                    if (_vlans[net].OnUplink)
+                        _vlanMap[_vlans[net].Id] = false;
                     _vlans.Remove(net);
                 }
             }
@@ -84,7 +86,7 @@ namespace TopoMojo.vSphere.Network
                     //if net already reserved, use reserved vlan
                     if (_vlans.ContainsKey(eth.Net))
                     {
-                        eth.Vlan = _vlans[eth.Net];
+                        eth.Vlan = _vlans[eth.Net].Id;
                     }
                     else
                     {
@@ -101,7 +103,7 @@ namespace TopoMojo.vSphere.Network
                             {
                                 eth.Vlan = id;
                                 _vlanMap[id] = true;
-                                _vlans.Add(eth.Net, id);
+                                _vlans.Add(eth.Net, new Vlan { Name  = eth.Net, Id = id, OnUplink = true });
                             }
                             else
                             {
@@ -112,10 +114,10 @@ namespace TopoMojo.vSphere.Network
                             //get highest vlan in this isolation group
                             id = 100;
                             foreach (string key in _vlans.Keys.Where(k => k.EndsWith(template.IsolationTag)))
-                                id = Math.Max(id, _vlans[key]);
+                                id = Math.Max(id, _vlans[key].Id);
                             id += 1;
                             eth.Vlan = id;
-                            _vlans.Add(eth.Net, id);
+                            _vlans.Add(eth.Net, new Vlan { Name = eth.Net, Id = id });
                         }
 
                     }

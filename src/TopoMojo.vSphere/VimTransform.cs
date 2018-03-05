@@ -11,7 +11,7 @@ namespace TopoMojo.vSphere
     public static class Transform
     {
 
-        public static VirtualMachineConfigSpec TemplateToVmSpec(Template template, string datastore)
+        public static VirtualMachineConfigSpec TemplateToVmSpec(Template template, string datastore, string dvsuuid)
         {
             int key = -101, idekey = 200;
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
@@ -20,7 +20,7 @@ namespace TopoMojo.vSphere
             vmcs.name = template.Name;
             vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other") + "Guest";
             if (datastore.HasValue())
-                vmcs.files = new VirtualMachineFileInfo { vmPathName = datastore };
+                vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
             vmcs.extraConfig = GetExtraConfig();
             vmcs.annotation = (template.GuestSettings.IsNotEmpty())
                 ? String.Join("\n", template.GuestSettings
@@ -47,7 +47,7 @@ namespace TopoMojo.vSphere
 
             //nics
             foreach (Eth nic in template.Eth)
-                devices.Add(GetEthernetAdapter(ref key, nic));
+                devices.Add(GetEthernetAdapter(ref key, nic, dvsuuid));
 
             // //network serial port
             // if (!String.IsNullOrEmpty(template.FindOne("nsp").Value()))
@@ -109,7 +109,7 @@ namespace TopoMojo.vSphere
 
         }
 
-        private static VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, Eth nic)
+        private static VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, Eth nic, string dvsuuid)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
             VirtualEthernetCard eth = new VirtualE1000();
@@ -124,7 +124,16 @@ namespace TopoMojo.vSphere
             ethbacking.deviceName = nic.Net;
 
             eth.key = key--;
-            eth.backing = ethbacking;
+            if (dvsuuid.HasValue())
+                eth.backing = new VirtualEthernetCardDistributedVirtualPortBackingInfo {
+                    port = new DistributedVirtualSwitchPortConnection
+                    {
+                        switchUuid = dvsuuid,
+                        portgroupKey = nic.Net
+                    }
+                };
+            else
+                eth.backing = new VirtualEthernetCardNetworkBackingInfo { deviceName = nic.Net };
 
             devicespec = new VirtualDeviceConfigSpec();
             devicespec.device = eth;

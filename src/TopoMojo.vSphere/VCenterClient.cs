@@ -30,17 +30,18 @@ namespace TopoMojo.vSphere
             _tasks = new Dictionary<string, VimHostTask>();
             _vmCache = vmCache;
             _pgAllocation = new Dictionary<string, PortGroupAllocation>();
-            _netMgr = networkManager;
+            _vlanman = networkManager;
             Task sessionMonitorTask = MonitorSession();
             Task taskMonitorTask = MonitorTasks();
         }
 
-        private readonly VlanManager _netMgr;
+        private readonly VlanManager _vlanman;
         private readonly ILogger _logger;
         Dictionary<string, VimHostTask> _tasks;
         private ConcurrentDictionary<string, Vm> _vmCache;
         private Dictionary<string, PortGroupAllocation> _pgAllocation;
 
+        private INetworkManager _netman;
         PodConfiguration _config = null;
         VimPortTypeClient _vim = null;
         ServiceContent _sic = null;
@@ -189,18 +190,23 @@ namespace TopoMojo.vSphere
             //delete the vm.
             await Connect();
             Vm vm = _vmCache[id];
+
             _logger.LogDebug($"Delete: stopping vm {vm.Name}");
             await Stop(id);
             vm.State = VmPowerState.off;
+
             _logger.LogDebug($"Delete: unregistering vm {vm.Name}");
-            string[] vmnets = await LoadVmPortGroups(vm.AsVim());
+            await _netman.Unprovision(vm.AsVim());
             await _vim.UnregisterVMAsync(vm.AsVim());
+
             string folder = vm.Path.Substring(0, vm.Path.LastIndexOf('/'));
             _logger.LogDebug($"Delete: deleting vm folder {folder}");
             await _vim.DeleteDatastoreFile_TaskAsync(_sic.fileManager, folder, _datacenter);
+
             _vmCache.TryRemove(vm.Id, out vm);
-            //remove vm nets
-            await RemoveVmPortGroups(vmnets);
+
+            await _netman.Clean();
+
             vm.Status = "initialized";
             return vm;
         }
@@ -221,13 +227,14 @@ namespace TopoMojo.vSphere
             await Connect();
 
             _logger.LogDebug("deploy: validate portgroups...");
-            await ProvisionPortGroups(template);
+            await _netman.Provision(template);
 
             _logger.LogDebug("deploy: transform template...");
-            var transformer = new VCenterTransformer { DVSuuid = _dvsuuid };
-            VirtualMachineConfigSpec vmcs = transformer.TemplateToVmSpec(
+            //var transformer = new VCenterTransformer { DVSuuid = _dvsuuid };
+            VirtualMachineConfigSpec vmcs = Transform.TemplateToVmSpec(
                 template,
-                _config.VmStore
+                _config.VmStore,
+                _dvsuuid
             );
 
             _logger.LogDebug("deploy: create vm...");
@@ -314,9 +321,12 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        VirtualEthernetCardDistributedVirtualPortBackingInfo backing = (VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing;
-                        //cacheNet(backing.deviceName);
-                        backing.port.portgroupKey = newvalue;
+                        if (card.backing is VirtualEthernetCardNetworkBackingInfo)
+                            ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
+
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = newvalue;
+
                         card.connectable = new VirtualDeviceConnectInfo()
                         {
                             connected = true,
@@ -560,7 +570,7 @@ namespace TopoMojo.vSphere
                             VlanId = eth.Vlan,
                             Key = dvpg.AsString()
                         });
-                        _netMgr.Activate(new Vlan[] { new Vlan { Id = eth.Vlan, Name = eth.Net }});
+                        _vlanman.Activate(new Vlan[] { new Vlan { Id = eth.Vlan, Name = eth.Net }});
                     }
                     else
                     {
@@ -658,7 +668,7 @@ namespace TopoMojo.vSphere
                         {
                             RemoveDVPortgroup(dvpg.Key.AsReference()).Wait();
                             _pgAllocation.Remove(dvpg.Net);
-                            _netMgr.Deactivate(dvpg.Net);
+                            _vlanman.Deactivate(dvpg.Net);
                             }
                     }
                 }
@@ -748,8 +758,6 @@ namespace TopoMojo.vSphere
 
                         _vim = client;
                         _disposing = false;
-
-                        InitPortgroups().Wait();
                     }
                     catch (Exception ex)
                     {
@@ -813,6 +821,12 @@ namespace TopoMojo.vSphere
                                 path="resourcePool"
                             }
                         }
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "ComputeResource",
+                        path = "host"
                     }
                 }
             };
@@ -828,7 +842,13 @@ namespace TopoMojo.vSphere
                 new PropertySpec
                 {
                     type = "ComputeResource",
-                    pathSet = new string[] { "name", "parent", "resourcePool" }
+                    pathSet = new string[] { "name", "parent", "resourcePool", "host" }
+                },
+
+                new PropertySpec
+                {
+                    type = "HostSystem",
+                    pathSet = new string[] { "configManager" }
                 },
 
                 new PropertySpec
@@ -848,7 +868,6 @@ namespace TopoMojo.vSphere
                     type = "DistributedVirtualPortgroup",
                     pathSet = new string[] { "name", "parent", "config" }
                 }
-
 
             };
 
@@ -893,70 +912,109 @@ namespace TopoMojo.vSphere
             if (subpools != null && subpools.Length > 0)
                 _pool = subpools.First();
 
+            ManagedObjectReference netSystem = null;
+            var hostContent = clunkyTree.FindType("HostSystem").FirstOrDefault();
+            if (hostContent != null)
+            {
+                var hostConfig = hostContent.GetProperty("configManager") as HostConfigManager;
+                netSystem = hostConfig?.networkSystem;
+            }
+
             //Initialize portgroup tracking
             var dvs = clunkyTree.FindTypeByName("DistributedVirtualSwitch", _config.Uplink.ToLower()) ?? clunkyTree.First("DistributedVirtualSwitch");
             _dvs = dvs?.obj;
             _dvsuuid = dvs?.GetProperty("uuid").ToString();
 
-            foreach (var dvpg in clunkyTree.FindType("DistributedVirtualPortgroup"))
+            var netSettings = new Settings
             {
-                var config = (DVPortgroupConfigInfo)dvpg.GetProperty("config");
-                if (config.distributedVirtualSwitch.Value == _dvs.Value)
-                {
-                    string net = dvpg.GetProperty("name") as string;
-                    if (config.defaultPortConfig is VMwareDVSPortSetting
-                        && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec)
-                    {
-                        _pgAllocation.Add(
-                            net,
-                            new PortGroupAllocation
-                            {
-                                Net = net,
-                                Key = dvpg.obj.AsString(),
-                                VlanId = ((VmwareDistributedVirtualSwitchVlanIdSpec)((VMwareDVSPortSetting)config.defaultPortConfig).vlan).vlanId
-                            }
-                        );
-                    }
-                }
-            }
+                vim = client,
+                props = _props,
+                pool = _pool,
+                vmFolder = _vms,
+                net = netSystem,
+                dvs = _dvs,
+                DvsUuid = _dvsuuid,
+                UplinkSwitch = _config.Uplink
+            };
 
-            _netMgr.Activate(
-                _pgAllocation.Values.Select(p => new Vlan { Id = p.VlanId, Name = p.Net }).ToArray()
-            );
+            if (dvs != null)
+            {
+
+                _netman = new DistributedNetworkManager(
+                    netSettings,
+                    _vmCache,
+                    _vlanman
+                );
+            }
+            else
+            {
+                _netman = new HostNetworkManager(
+                  netSettings,
+                  _vmCache,
+                  _vlanman
+                );
+            }
+            await _netman.Initialize();
+
+            // foreach (var dvpg in clunkyTree.FindType("DistributedVirtualPortgroup"))
+            // {
+            //     var config = (DVPortgroupConfigInfo)dvpg.GetProperty("config");
+            //     if (config.distributedVirtualSwitch.Value == _dvs.Value)
+            //     {
+            //         string net = dvpg.GetProperty("name") as string;
+            //         if (config.defaultPortConfig is VMwareDVSPortSetting
+            //             && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec)
+            //         {
+            //             _pgAllocation.Add(
+            //                 net,
+            //                 new PortGroupAllocation
+            //                 {
+            //                     Net = net,
+            //                     Key = dvpg.obj.AsString(),
+            //                     VlanId = ((VmwareDistributedVirtualSwitchVlanIdSpec)((VMwareDVSPortSetting)config.defaultPortConfig).vlan).vlanId
+            //                 }
+            //             );
+            //         }
+            //     }
+            // }
+
+            // _netMgr.Activate(
+            //     _pgAllocation.Values.Select(p => new Vlan { Id = p.VlanId, Name = p.Net }).ToArray()
+            // );
         }
 
-        private async Task InitPortgroups()
-        {
-            var map = new Dictionary<string, PortGroupAllocation>();
-            foreach (var pga in _pgAllocation.Values)
-            {
-                string key = pga.Key.AsReference().Value;
-                if (!map.ContainsKey(key))
-                    map.Add(key, pga);
-            }
-            foreach (string net in await LoadVmPortGroups(_vms))
-            {
-                if (map.ContainsKey(net))
-                    map[net].Counter += 1;
-                // if (!_pgAllocation.ContainsKey(net))
-                //     _pgAllocation.Add(net, new PortGroupAllocation { Net = net });
-                // _pgAllocation[net].Counter += 1;
-            }
+        // private async Task InitPortgroups()
+        // {
+        //     var map = new Dictionary<string, PortGroupAllocation>();
+        //     foreach (var pga in _pgAllocation.Values)
+        //     {
+        //         string key = pga.Key.AsReference().Value;
+        //         if (!map.ContainsKey(key))
+        //             map.Add(key, pga);
+        //     }
+        //     foreach (string net in await LoadVmPortGroups(_vms))
+        //     {
+        //         if (map.ContainsKey(net))
+        //             map[net].Counter += 1;
+        //         // if (!_pgAllocation.ContainsKey(net))
+        //         //     _pgAllocation.Add(net, new PortGroupAllocation { Net = net });
+        //         // _pgAllocation[net].Counter += 1;
+        //     }
 
-            //find empties with no associated vm's
-            var empties = new List<string>();
-            var vms = await ReloadVmCache();
-            foreach (var pg in _pgAllocation.Values)
-            {
-                if (pg.Counter < 1 && !vms.Any(v => v.Name.EndsWith(pg.Net.Tag())))
-                {
-                    empties.Add(pg.Key);
-                }
-            }
+        //     //find empties with no associated vm's
+        //     var empties = new List<string>();
+        //     var vms = await ReloadVmCache();
+        //     foreach (var pg in _pgAllocation.Values)
+        //     {
+        //         if (pg.Counter < 1 && !vms.Any(v => v.Name.EndsWith(pg.Net.Tag())))
+        //         {
+        //             empties.Add(pg.Key);
+        //         }
+        //     }
 
-            if (empties.Count > 0)
-                await RemoveVmPortGroups(empties.ToArray());
-        }
+        //     if (empties.Count > 0)
+        //         await RemoveVmPortGroups(empties.ToArray());
+        // }
 
         private async Task<Vm[]> ReloadVmCache()
         {
@@ -1117,7 +1175,7 @@ namespace TopoMojo.vSphere
         }
 
 
-        private bool _portgroupsInitialized = false;
+        //private bool _portgroupsInitialized = false;
         private async Task MonitorSession()
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");

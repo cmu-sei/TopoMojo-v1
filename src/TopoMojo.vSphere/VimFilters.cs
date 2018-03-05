@@ -143,5 +143,24 @@ namespace TopoMojo.vSphere
             };
         }
 
+        // public static PropertyFilterSpec[] DistributedPortgroupFilter(ManagedObjectReference mor)
+        // {
+        //     PropertySpec prop = new PropertySpec {
+        //         type = "ComputeResource",
+        //         pathSet = new string[] { "network" }
+        //     };
+
+        //     ObjectSpec objectspec = new ObjectSpec {
+        //         obj = mor, //_pool
+        //     };
+
+        //     return new PropertyFilterSpec[] {
+        //         new PropertyFilterSpec {
+        //             propSet = new PropertySpec[] { prop },
+        //             objectSet = new ObjectSpec[] { objectspec }
+        //         }
+        //     };
+        // }
+
     }
 }

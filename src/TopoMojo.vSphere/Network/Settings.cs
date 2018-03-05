@@ -2,7 +2,8 @@ namespace TopoMojo.vSphere.Network
 {
     public class Settings
     {
-        public ManagedObjectReference vim { get; set; }
+        public VimPortTypeClient vim { get; set; }
+        public ManagedObjectReference props { get; set; }
         public ManagedObjectReference pool { get; set; }
         public ManagedObjectReference vmFolder { get; set; }
         public ManagedObjectReference dvs { get; set; }

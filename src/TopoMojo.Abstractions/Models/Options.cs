@@ -46,6 +46,7 @@ namespace TopoMojo.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public bool OnUplink { get; set; }
     }
 
     public class TaskStatus

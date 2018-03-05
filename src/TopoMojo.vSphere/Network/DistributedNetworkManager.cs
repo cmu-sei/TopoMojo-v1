@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TopoMojo.Models.Virtual;
@@ -9,7 +10,7 @@ namespace TopoMojo.vSphere.Network
     {
         public DistributedNetworkManager(
             Settings settings,
-            Dictionary<string, Vm> vmCache,
+            ConcurrentDictionary<string, Vm> vmCache,
             VlanManager vlanManager
         ) : base(settings, vmCache, vlanManager)
         {
@@ -33,6 +34,27 @@ namespace TopoMojo.vSphere.Network
 
         public override Task<PortGroupAllocation[]> LoadPortGroups()
         {
+            // foreach (var dvpg in clunkyTree.FindType("DistributedVirtualPortgroup"))
+            // {
+            //     var config = (DVPortgroupConfigInfo)dvpg.GetProperty("config");
+            //     if (config.distributedVirtualSwitch.Value == _dvs.Value)
+            //     {
+            //         string net = dvpg.GetProperty("name") as string;
+            //         if (config.defaultPortConfig is VMwareDVSPortSetting
+            //             && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec)
+            //         {
+            //             _pgAllocation.Add(
+            //                 net,
+            //                 new PortGroupAllocation
+            //                 {
+            //                     Net = net,
+            //                     Key = dvpg.obj.AsString(),
+            //                     VlanId = ((VmwareDistributedVirtualSwitchVlanIdSpec)((VMwareDVSPortSetting)config.defaultPortConfig).vlan).vlanId
+            //                 }
+            //             );
+            //         }
+            //     }
+            // }
             throw new System.NotImplementedException();
         }
 

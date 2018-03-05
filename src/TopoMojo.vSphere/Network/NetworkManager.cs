@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace TopoMojo.vSphere.Network
     {
         public NetworkManager(
             Settings settings,
-            Dictionary<string, Vm> vmCache,
+            ConcurrentDictionary<string, Vm> vmCache,
             VlanManager vlanManager
         ){
             _client = settings;
@@ -26,11 +27,21 @@ namespace TopoMojo.vSphere.Network
         protected readonly VlanManager _vlanManager;
         protected Dictionary<string, PortGroupAllocation> _pgAllocation;
         protected Dictionary<string, int> _swAllocation;
-        protected Dictionary<string, Vm> _vmCache;
+        protected ConcurrentDictionary<string, Vm> _vmCache;
 
         public async Task Initialize()
         {
             _pgAllocation = (await LoadPortGroups()).ToDictionary(p => p.Net);
+
+            _vlanManager.Activate(
+                _pgAllocation.Values.Select(p => new Vlan
+                {
+                    Id = p.VlanId,
+                    Name = p.Net,
+                    OnUplink = p.Switch == _client.UplinkSwitch
+                })
+                .ToArray()
+            );
 
             //process switch counts
             foreach (var pg in _pgAllocation.Values)
@@ -50,6 +61,7 @@ namespace TopoMojo.vSphere.Network
                 if (map.ContainsKey(vmnet.NetworkMOR))
                     map[vmnet.NetworkMOR].Counter += 1;
 
+            //remove empties
             await Clean();
         }
 
@@ -59,7 +71,7 @@ namespace TopoMojo.vSphere.Network
             lock (_pgAllocation)
             {
                 string sw = _client.UplinkSwitch;
-                if (_client.net != null && !template.UseUplinkSwitch)
+                if (_client.dvs == null && _client.net != null && !template.UseUplinkSwitch)
                 {
                     sw = template.IsolationTag.ToSwitchName();
                     if (!_swAllocation.ContainsKey(sw))
@@ -75,8 +87,9 @@ namespace TopoMojo.vSphere.Network
                     {
                         var pg = AddPortGroup(sw, eth).Result;
                         _pgAllocation.Add(pg.Net, pg);
-                        _vlanManager.Activate(new Vlan[] { new Vlan { Id = pg.VlanId, Name = pg.Net }});
-                        _swAllocation[sw] += 1;
+                        _vlanManager.Activate(new Vlan[] { new Vlan { Id = pg.VlanId, Name = pg.Net, OnUplink = sw == _client.UplinkSwitch }});
+                        if (_swAllocation.ContainsKey(sw))
+                            _swAllocation[sw] += 1;
                     }
                     else
                     {
@@ -106,20 +119,26 @@ namespace TopoMojo.vSphere.Network
             lock(_pgAllocation)
             {
                 //find empties with no associated vm's
-                foreach (var pg in _pgAllocation.Values)
+                foreach (var pg in _pgAllocation.Values.ToArray())
                 {
                     if (pg.Counter < 1 && !_vmCache.Values.Any(v => v.Name.EndsWith(pg.Net.Tag())))
                     {
                         RemovePortgroup(pg.Key).Wait();
                         _pgAllocation.Remove(pg.Net);
                         _vlanManager.Deactivate(pg.Net);
-                        _swAllocation[pg.Switch] -= 1;
+                        if (_swAllocation.ContainsKey(pg.Switch))
+                            _swAllocation[pg.Switch] -= 1;
                     }
                 }
 
-                foreach (var sw in _swAllocation.Keys)
+                foreach (var sw in _swAllocation.Keys.ToArray())
+                {
                     if (_swAllocation[sw] < 1)
+                    {
                         RemoveSwitch(sw).Wait();
+                        _swAllocation.Remove(sw);
+                    }
+                }
             }
         }
 

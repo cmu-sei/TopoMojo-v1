@@ -34,11 +34,11 @@ namespace TopoMojo.vSphere
             // _vlans = new Dictionary<string,int>();
             // foreach (Vlan vlan in _options.Vlan.Reservations)
             //     _vlans.Add(vlan.Name, vlan.Id);
-            _netmgr = new VlanManager(_options.Vlan);
+            _vlanman = new VlanManager(_options.Vlan);
             InitHost();
         }
 
-        private readonly VlanManager _netmgr;
+        private readonly VlanManager _vlanman;
         private readonly PodConfiguration _options;
         //private readonly TemplateOptions _optTemplate;
         private readonly ILogger<VCenter> _logger;
@@ -102,7 +102,7 @@ namespace TopoMojo.vSphere
             }
 
             _logger.LogDebug("deploy: reserve vlans ");
-            _netmgr.ReserveVlans(template);
+            _vlanman.ReserveVlans(template);
 
             _logger.LogDebug("deploy: " + template.Name + " " + _host.Name);
             return await _host.Deploy(template);
@@ -343,7 +343,7 @@ namespace TopoMojo.vSphere
         {
             await Task.Delay(0);
             return new VmOptions {
-                Net = _netmgr.FindNetworks(id)
+                Net = _vlanman.FindNetworks(id)
             };
         }
         public string Version
@@ -356,7 +356,7 @@ namespace TopoMojo.vSphere
 
         private void NormalizeTemplate(Template template, PodConfiguration option)
         {
-            template.UseUplinkSwitch = true;
+            // template.UseUplinkSwitch = true;
 
             if (!template.Iso.HasValue())
             {
@@ -408,7 +408,7 @@ namespace TopoMojo.vSphere
                 foreach (Eth eth in template.Eth)
                 {
                     //don't add tag if referencing a global vlan
-                    if (!_netmgr.Contains(eth.Net))
+                    if (!_vlanman.Contains(eth.Net))
                     {
                         eth.Net = rgx.Replace(eth.Net, "") + tag;
                     }
@@ -423,7 +423,7 @@ namespace TopoMojo.vSphere
 
             _options.Host = new Uri(_options.Url).Host;
 
-            _host = new Client(_options, _vmCache, _netmgr, _logger);
+            _host = new Client(_options, _vmCache, _vlanman, _logger);
         }
 
         // private void InitVlans()
