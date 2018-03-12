@@ -21,6 +21,8 @@ export class TopoCreatorComponent {
     ) {
     }
 
+    errors: Array<Error> = new Array<Error>();
+
     ngOnInit(): void {
     };
 
@@ -28,7 +30,7 @@ export class TopoCreatorComponent {
         this.service.postTopology(this.topo)
         .subscribe(result => {
             this.router.navigate(['topo', result.id]);
-        }, (err) => { });
+        }, (err) => { this.errors.push(err.error) });
     }
 }
 

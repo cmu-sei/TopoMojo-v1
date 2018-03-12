@@ -82,6 +82,7 @@ export interface Profile {
 	globalId?: string;
 	name?: string;
 	isAdmin?: boolean;
+	workspaceLimit?: number;
 }
 
 export interface ChangedProfile {

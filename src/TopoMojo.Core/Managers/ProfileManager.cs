@@ -35,6 +35,17 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Profile>(entity);
         }
 
+        public async Task<bool> PrivilegedUpdate(Models.Profile profile)
+        {
+            if (!Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            var entity = await _profileRepo.Load(profile.Id);
+            Mapper.Map(profile, entity);
+            await _profileRepo.Update(entity);
+            return true;
+        }
+
         public async Task<Models.Profile> FindByGlobalId(string globalId)
         {
             Data.Entities.Profile profile = await _profileRepo.FindByGlobalId(globalId);
@@ -78,7 +89,7 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             var p = await _profileRepo.FindByGlobalId(profile.GlobalId);
-            p.Name = profile.Name;
+            Mapper.Map(profile, p);
             await _profileRepo.Update(p);
             return true;
         }

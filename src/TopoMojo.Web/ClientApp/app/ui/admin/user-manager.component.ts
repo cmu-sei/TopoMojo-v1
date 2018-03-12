@@ -13,7 +13,6 @@ export class UserManagerComponent implements OnInit {
     plist: string;
     activeTopoId: number;
     userUploadVisible: boolean;
-    //person: any;
     roster: Profile[] = [];
     icon: string = 'fa fa-user';
     hasMore: number;
@@ -58,6 +57,12 @@ export class UserManagerComponent implements OnInit {
         //this.person = person;
     }
 
+    update(person: Profile) : void {
+        this.service.privProfile(person).subscribe(
+            (r) => { },
+            (e) => { }
+        );
+    }
     // grant(person) {
     //     this.service.grant(person)
     //     .subscribe(result => {
