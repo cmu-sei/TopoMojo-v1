@@ -129,6 +129,13 @@ namespace TopoMojo.Core
 
         public async Task<Models.Topology> Create(Models.NewTopology model)
         {
+            if (!Profile.IsAdmin)
+            {
+                var profile = await _profileRepo.LoadDetail(Profile.Id);
+                if (profile.Workspaces.Count() >= profile.WorkspaceLimit)
+                    throw new WorkspaceLimitException();
+            }
+
             Data.Entities.Topology topo = Mapper.Map<Data.Entities.Topology>(model);
             topo.TemplateLimit = _options.WorkspaceTemplateLimit;
             topo.ShareCode = Guid.NewGuid().ToString("N");
@@ -167,7 +174,7 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             foreach (Vm vm in await _pod.Find(topology.GlobalId))
-                _pod.Delete(vm.Id);
+                await _pod.Delete(vm.Id);
 
             await _repo.Remove(topology);
             return Mapper.Map<Models.Topology>(topology);
@@ -186,125 +193,6 @@ namespace TopoMojo.Core
         {
             return await _repo.CanEdit(topoId, Profile);
         }
-
-        // public async Task<Worker[]> Members(int id)
-        // {
-        //     if (! await CanEdit(id))
-        //         throw new InvalidOperationException();
-
-        //     return await _db.Workers
-        //         .Where(m => m.TopologyId == id)
-        //         .Include(m => m.Person)
-        //         .ToArrayAsync();
-        // }
-
-        // public async Task<Linker[]> ListTemplates(int id)
-        // {
-        //     return await _db.Linkers
-        //         .Include(tt => tt.Template)
-        //         .Include(tt => tt.Topology)
-        //         .Where(tt => tt.TopologyId == id)
-        //         .ToArrayAsync();
-        // }
-
-        // public async Task<Linker> AddTemplate(Linker tref)
-        // {
-        //     if (! await CanEdit(tref.TopologyId))
-        //         throw new InvalidOperationException();
-
-        //     _db.Linkers.Add(tref);
-        //     await _db.SaveChangesAsync();
-        //     await _db.Entry(tref).Reference(t => t.Topology).LoadAsync();
-        //     await _db.Entry(tref).Reference(t => t.Template).LoadAsync();
-        //     tref.Name = tref.Template.Name.ToLower().Replace(" ", "-");
-        //     await _db.SaveChangesAsync();
-        //     return tref;
-        // }
-
-        // public async Task<Linker> UpdateTemplate(Linker tref)
-        // {
-        //     if (! await CanEdit(tref.TopologyId))
-        //         throw new InvalidOperationException();
-
-        //     _db.Attach(tref);
-        //     tref.Name = tref.Name.Replace(" ", "-");
-        //     if (tref.Owned)
-        //     {
-        //         tref.Template.Name = tref.Name;
-        //         tref.Template.Description = tref.Description;
-
-        //         TemplateUtility tu = new TemplateUtility(tref.Template.Detail);
-        //         tu.Name = tref.Name;
-        //         tu.Networks = tref.Networks;
-        //         tu.Iso = tref.Iso;
-        //         tref.Template.Detail = tu.ToString();
-
-        //         //tref.Name = null;
-        //         tref.Networks = null;
-        //         tref.Iso = null;
-        //         tref.Description = null;
-        //     }
-        //     _db.Update(tref);
-        //     await _db.SaveChangesAsync();
-        //     return tref;
-        // }
-
-        // public async Task<bool> RemoveTemplate(int id)
-        // {
-        //     Linker tref = await _db.Linkers
-        //         .Include(t => t.Template)
-        //         .Include(t => t.Topology)
-        //         .Where(t => t.Id == id)
-        //         .SingleOrDefaultAsync();
-
-        //     if (tref == null)
-        //         throw new InvalidOperationException();
-
-        //     if (! await CanEdit(tref.TopologyId))
-        //         throw new InvalidOperationException();
-
-        //     if (tref.Template.OwnerId == tref.TopologyId)
-        //     {
-        //         _db.Remove(tref.Template);
-        //     }
-        //     _db.Remove(tref);
-        //     await _db.SaveChangesAsync();
-        //     return true;
-        // }
-
-        // public async Task<Linker> CloneTemplate(int id)
-        // {
-        //     Linker tref = await _db.Linkers
-        //         .Include(t => t.Template)
-        //         .Include(t => t.Topology)
-        //         .Where(t => t.Id == id)
-        //         .SingleOrDefaultAsync();
-
-        //     if (tref == null)
-        //         throw new InvalidOperationException();
-
-        //     if (! await CanEdit(tref.TopologyId))
-        //         throw new InvalidOperationException();
-
-        //     Template template = new Template {
-        //         Name = tref.Name ?? tref.Template.Name,
-        //         Description = tref.Description ?? tref.Template.Description,
-        //         GlobalId = Guid.NewGuid().ToString(),
-        //         WhenCreated = DateTime.UtcNow,
-        //         Detail = tref.Template.Detail,
-        //         OwnerId = tref.TopologyId
-        //     };
-        //     TemplateUtility tu = new TemplateUtility(template.Detail);
-        //     tu.Name = template.Name;
-        //     tu.LocalizeDiskPaths(tref.Topology.GlobalId, template.GlobalId);
-        //     template.Detail = tu.ToString();
-        //     //_db.Templates.Add(template);
-        //     tref.Template = template;
-        //     await _db.SaveChangesAsync();
-        //     //tref.TemplateId = template.Id);
-        //     //await _db.SaveChanges();
-        //     return tref;
-        // }
 
         public async Task<Models.TopologyState> Share(int id, bool revoke)
         {
@@ -382,7 +270,8 @@ namespace TopoMojo.Core
                 .Where(p => p.Id == workerId)
                 .SingleOrDefault();
 
-            if (member.Permission.CanManage()
+            if (!Profile.IsAdmin //if you aren't admin, you can remove the last remaining workspace manager
+                && member.Permission.CanManage()
                 && topology.Workers.Count(w => w.Permission.HasFlag(Permission.Manager)) == 1)
                 throw new InvalidOperationException();
 

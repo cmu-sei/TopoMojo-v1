@@ -7,8 +7,17 @@
             <li *ngFor="let person of roster" class="">
                 <div class="">
                     <i class="fa fa-user"></i>
-                    <span>{{ person.name }}</span>
+                    <!-- <span>{{ person.name }}</span> -->
+                    <inline-editor type="text" size="30" (onSave)="update(person)" [(ngModel)]="person.name"></inline-editor>
                     <span class="text-muted"> {{ person.globalId.substring(0,8)}} </span>
+                    <span class="text-muted">
+                        admin:
+                        <input type="checkbox" (change)="update(person)" [(ngModel)]="person.isAdmin">
+                    </span>
+                    <span class="text-muted">
+                        ws-max:
+                    </span>
+                    <inline-editor type="text" size="10" (onSave)="update(person)" empty="0" [(ngModel)]="person.workspaceLimit"></inline-editor>
                     <!--<button *ngIf="!person.isAdmin"class="btn btn-link" (click)="grant(person)">Grant Admin</button>
                     <button *ngIf="person.isAdmin"class="btn btn-link" (click)="deny(person)">Revoke Admin</button>-->
                 </div>

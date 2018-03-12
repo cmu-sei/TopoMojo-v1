@@ -18,6 +18,9 @@ export class GeneratedProfileService extends GeneratedService {
 	public postProfile(profile: ChangedProfile) : Observable<ChangedProfile> {
 		return this.http.post<ChangedProfile>("/api/profile", profile);
 	}
+	public privProfile(profile: Profile) : Observable<Profile> {
+		return this.http.post<Profile>("/api/profile/priv", profile);
+	}
 
 }
 

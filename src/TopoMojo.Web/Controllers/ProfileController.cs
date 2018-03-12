@@ -42,6 +42,16 @@ namespace TopoMojo.Controllers
             await _mgr.UpdateProfile(profile);
             return profile;
         }
+
+        [HttpPost("api/profile/priv")]
+        [ProducesResponseType(typeof(Profile), 200)]
+        [JsonExceptionFilter]
+        public async Task<Profile> PrivilegedUpdate([FromBody]Profile profile)
+        {
+            await _mgr.PrivilegedUpdate(profile);
+            return profile;
+
+        }
     }
 
 }

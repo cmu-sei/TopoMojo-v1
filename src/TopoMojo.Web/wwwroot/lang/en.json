@@ -142,6 +142,7 @@
         "INVALIDOPERATION": "Can't do that. Probably because a resource doesn't exist",
         "NODOCUMENT": "No instruction document available.",
         "PARENTTEMPLATE": "This template is linked by other templates, so your action cannot be completed.",
-        "WORKSPACETEMPLATELIMIT": "The template limit for this workspace prevented your action."
+        "WORKSPACETEMPLATELIMIT": "The template limit for this workspace prevented your action.",
+        "WORKSPACELIMIT": "The workspace limit for your profile prevented your action."
     }
 }

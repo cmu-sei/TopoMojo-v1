@@ -13,20 +13,13 @@ namespace TopoMojo.Data.EntityFrameworkCore
             TopoMojoDbContext db
         ) : base(db) { }
 
-        public async Task<Profile> LoadOrCreate(Profile profile)
+        public async Task<Profile> LoadDetail(int id)
         {
-            Profile result = null;
-
-            if (profile.Id > 0)
-                result = await Load(profile.Id);
-
-            if (result == null)
-                result = await FindByGlobalId(profile.GlobalId);
-
-            if (result == null)
-                result = await Add(profile);
-
-            return result;
+            return await DbContext.Profiles
+                .Include(p => p.Workspaces)
+                .Include(p => p.Gamespaces)
+                .Where(p => p.Id == id)
+                .FirstAsync();
         }
 
         public override async Task<Profile> Add(Profile profile)

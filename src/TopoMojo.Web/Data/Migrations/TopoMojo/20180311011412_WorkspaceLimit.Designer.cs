@@ -12,9 +12,10 @@ using TopoMojo.Data.EntityFrameworkCore;
 namespace TopoMojo.Web.Data.Migrations.TopoMojo
 {
     [DbContext(typeof(TopoMojoDbContext))]
-    partial class TopoMojoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180311011412_WorkspaceLimit")]
+    partial class WorkspaceLimit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
