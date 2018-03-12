@@ -20,6 +20,10 @@ namespace TopoMojo.vSphere
                     new TraversalSpec {
                         type = "Folder",
                         path = "childEntity"
+                    },
+                    new TraversalSpec {
+                        type = "ResourcePool",
+                        path = "vm"
                     }
                 }
             };
@@ -41,31 +45,6 @@ namespace TopoMojo.vSphere
 
             ObjectSpec objectspec = new ObjectSpec {
                 obj = mor, //task-mor
-            };
-
-            return new PropertyFilterSpec[] {
-                new PropertyFilterSpec {
-                    propSet = new PropertySpec[] { prop },
-                    objectSet = new ObjectSpec[] { objectspec }
-                }
-            };
-        }
-
-        public static PropertyFilterSpec[] VmNetFilter(ManagedObjectReference mor)
-        {
-            PropertySpec prop = new PropertySpec {
-                type = "Network",
-                pathSet = new string[] {"name", "vm"}
-            };
-
-            ObjectSpec objectspec = new ObjectSpec {
-                obj = mor, //task-mor
-                selectSet = new SelectionSpec[] {
-                    new TraversalSpec {
-                        type = "ComputeResource",
-                        path = "network"
-                    }
-                }
             };
 
             return new PropertyFilterSpec[] {
@@ -143,24 +122,134 @@ namespace TopoMojo.vSphere
             };
         }
 
-        // public static PropertyFilterSpec[] DistributedPortgroupFilter(ManagedObjectReference mor)
-        // {
-        //     PropertySpec prop = new PropertySpec {
-        //         type = "ComputeResource",
-        //         pathSet = new string[] { "network" }
-        //     };
+        public static PropertyFilterSpec[] DistributedPortgroupFilter(ManagedObjectReference mor)
+        {
+            PropertySpec prop = new PropertySpec {
+                type = "DistributedVirtualPortgroup",
+                pathSet = new string[] { "name", "parent", "config" }
+            };
 
-        //     ObjectSpec objectspec = new ObjectSpec {
-        //         obj = mor, //_pool
-        //     };
+            ObjectSpec objectspec = new ObjectSpec {
+                obj = mor, //_pool
+                selectSet = new SelectionSpec[]
+                {
+                    new TraversalSpec {
+                        type = "ComputeResource",
+                        path = "network",
+                    }
+                }
+            };
 
-        //     return new PropertyFilterSpec[] {
-        //         new PropertyFilterSpec {
-        //             propSet = new PropertySpec[] { prop },
-        //             objectSet = new ObjectSpec[] { objectspec }
-        //         }
-        //     };
-        // }
+            return new PropertyFilterSpec[] {
+                new PropertyFilterSpec {
+                    propSet = new PropertySpec[] { prop },
+                    objectSet = new ObjectSpec[] { objectspec }
+                }
+            };
+        }
 
+        public static PropertyFilterSpec[] InitFilter(ManagedObjectReference rootMOR)
+        {
+            var plan = new TraversalSpec
+            {
+                name = "FolderTraverseSpec",
+                type = "Folder",
+                path = "childEntity",
+                selectSet = new SelectionSpec[] {
+
+                    new TraversalSpec()
+                    {
+                        type = "Datacenter",
+                        path = "hostFolder",
+                        selectSet = new SelectionSpec[] {
+                            new SelectionSpec {
+                                name = "FolderTraverseSpec"
+                            }
+                        }
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "Datacenter",
+                        path = "networkFolder",
+                        selectSet = new SelectionSpec[] {
+                            new SelectionSpec {
+                                name = "FolderTraverseSpec"
+                            }
+                        }
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "ComputeResource",
+                        path = "resourcePool",
+                        selectSet = new SelectionSpec[]
+                        {
+                            new TraversalSpec
+                            {
+                                type="ResourcePool",
+                                path="resourcePool"
+                            }
+                        }
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "ComputeResource",
+                        path = "host"
+                    }
+                }
+            };
+
+            var props = new PropertySpec[]
+            {
+                new PropertySpec
+                {
+                    type = "Datacenter",
+                    pathSet = new string[] { "name", "parent", "vmFolder" }
+                },
+
+                new PropertySpec
+                {
+                    type = "ComputeResource",
+                    pathSet = new string[] { "name", "parent", "resourcePool", "host" }
+                },
+
+                new PropertySpec
+                {
+                    type = "HostSystem",
+                    pathSet = new string[] { "configManager" }
+                },
+
+                new PropertySpec
+                {
+                    type = "ResourcePool",
+                    pathSet = new string[] { "name", "parent", "resourcePool" }
+                },
+
+                new PropertySpec
+                {
+                    type = "DistributedVirtualSwitch",
+                    pathSet = new string[] { "name", "parent", "uuid" }
+                },
+
+                new PropertySpec
+                {
+                    type = "DistributedVirtualPortgroup",
+                    pathSet = new string[] { "name", "parent", "config" }
+                }
+
+            };
+
+            ObjectSpec objectspec = new ObjectSpec();
+            objectspec.obj = rootMOR;
+            objectspec.selectSet = new SelectionSpec[] { plan };
+
+            PropertyFilterSpec filter = new PropertyFilterSpec();
+            filter.propSet = props;
+            filter.objectSet = new ObjectSpec[] { objectspec };
+
+            return new PropertyFilterSpec[] { filter };
+        }
     }
 }

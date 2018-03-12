@@ -62,8 +62,8 @@ namespace TopoMojo.vSphere.Network
             ObjectContent[] oc = response.returnval;
             foreach (ObjectContent obj in oc)
             {
-                if (!obj.IsInPool(_client.pool))
-                    continue;
+                // if (!obj.IsInPool(_client.pool))
+                //     continue;
 
                 string vmName = obj.GetProperty("name").ToString();
                 VirtualMachineConfigInfo config = obj.GetProperty("config") as VirtualMachineConfigInfo;

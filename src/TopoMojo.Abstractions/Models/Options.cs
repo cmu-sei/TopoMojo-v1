@@ -3,6 +3,7 @@ using System.Collections.Generic;
 namespace TopoMojo.Models
 {
     public class PodConfiguration {
+        public bool IsVCenter { get; set; }
         public string Type { get; set; }
         public string Url { get; set;}  //accepts range expansion
         public string Host { get; set;}

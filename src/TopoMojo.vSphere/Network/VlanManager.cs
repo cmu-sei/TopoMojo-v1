@@ -77,7 +77,7 @@ namespace TopoMojo.vSphere.Network
             }
         }
 
-        public virtual void ReserveVlans(Template template)
+        public virtual void ReserveVlans(Template template, bool UseUplinkSwitch)
         {
             lock (_vlanMap)
             {
@@ -91,7 +91,7 @@ namespace TopoMojo.vSphere.Network
                     else
                     {
                         int id = 0;
-                        if (template.UseUplinkSwitch)
+                        if (UseUplinkSwitch)
                         {
                             //get available uplink vlan
                             while (id < _vlanMap.Length && _vlanMap[id])

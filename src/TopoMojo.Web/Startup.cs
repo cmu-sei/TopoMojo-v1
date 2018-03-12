@@ -96,26 +96,9 @@ namespace TopoMojo
             // add pod manager
             services.AddSingleton<IPodManager>(sp => {
                 var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
-                IPodManager mgr = null;
-                switch (options.Type)
-                {
-                    case "TopoMojo.vSphere.PodManager":
-                    mgr = new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
-                    break;
-
-                    case "TopoMojo.vSphere.VCenter":
-                    mgr = new TopoMojo.vSphere.VCenter(options, sp.GetService<ILoggerFactory>().CreateLogger<TopoMojo.vSphere.VCenter>());
-                    break;
-
-                    default:
-                    mgr = new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>());
-                    break;
-                }
-                return mgr;
-                //return (IPodManager)Activator.CreateInstance(Type.GetType(options.Type), options, sp.GetService<ILoggerFactory>());
-                // return options.Type.ToLowerInvariant().Contains("vmock")
-                //     ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
-                //     : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
+                return String.IsNullOrWhiteSpace(options.Url)
+                    ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
+                    : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
             });
 
             #region Configure Signalr

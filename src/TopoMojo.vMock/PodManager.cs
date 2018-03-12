@@ -299,8 +299,6 @@ namespace TopoMojo.vMock
             return new DisplayInfo
             {
                 Id = id,
-                // Method = _optPod.DisplayMethod,
-                Url = _optPod.DisplayUrl,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag()
             };
@@ -389,7 +387,7 @@ namespace TopoMojo.vMock
 
         public async Task ReloadHost(string host)
         {
-
+            await Task.Delay(0);
         }
     }
 

@@ -120,8 +120,8 @@ namespace TopoMojo.vSphere
             if (nic.Type == "vmx3")
                 eth = new VirtualVmxnet3();
 
-            VirtualEthernetCardNetworkBackingInfo ethbacking = new VirtualEthernetCardNetworkBackingInfo();
-            ethbacking.deviceName = nic.Net;
+            // VirtualEthernetCardNetworkBackingInfo ethbacking = new VirtualEthernetCardNetworkBackingInfo();
+            // ethbacking.deviceName = nic.Net;
 
             eth.key = key--;
             if (dvsuuid.HasValue())

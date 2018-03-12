@@ -96,39 +96,4 @@ namespace TopoMojo.vSphere
         }
     }
 
-    public static class Helper
-    {
-        public static object Clone(object src)
-        {
-            return Clone(src, src.GetType());
-        }
-        public static object Clone(object src, Type type)
-        {
-            //This method offers easy cloning between object types
-            //Not optimal, but had trouble with shared wcf data contracts,
-            //so found it quickest to have the same object in 2 namespaces and transform them here.
-
-            //instantiate memory stream for serialized object
-            using (System.IO.Stream stream = new System.IO.MemoryStream())
-            {
-                //declare serializers
-                XmlSerializer xs, xd;
-
-                //instantiate serializer
-                xs = new XmlSerializer(src.GetType());
-
-                //serialize the object
-                xs.Serialize(stream, src);
-
-                //set stream to beginning
-                stream.Seek(0, System.IO.SeekOrigin.Begin);
-
-                //create serializer of destination type
-                xd = (src.GetType() == type) ? xs : new XmlSerializer(type);
-
-                //deserialize object into new type
-                return xd.Deserialize(stream);
-            }
-        }
-    }
 }

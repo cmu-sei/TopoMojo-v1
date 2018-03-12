@@ -56,7 +56,7 @@ namespace TopoMojo.vSphere.Network
 
             //process vm counts
             var map = GetKeyMap();
-            var vmnets = await GetVmNetworks(_client.vmFolder);
+            var vmnets = await GetVmNetworks(_client.pool);
             foreach (var vmnet in vmnets)
                 if (map.ContainsKey(vmnet.NetworkMOR))
                     map[vmnet.NetworkMOR].Counter += 1;
@@ -133,7 +133,7 @@ namespace TopoMojo.vSphere.Network
 
                 foreach (var sw in _swAllocation.Keys.ToArray())
                 {
-                    if (_swAllocation[sw] < 1)
+                    if (_swAllocation[sw] < 1 && sw.Contains("#"))
                     {
                         RemoveSwitch(sw).Wait();
                         _swAllocation.Remove(sw);
@@ -161,5 +161,30 @@ namespace TopoMojo.vSphere.Network
         public abstract Task RemovePortgroup(string pgReference);
         public abstract Task AddSwitch(string sw);
         public abstract Task RemoveSwitch(string sw);
+
+        protected async Task<TaskInfo> WaitForVimTask(ManagedObjectReference task)
+        {
+            int i = 0;
+            TaskInfo info = new TaskInfo();
+
+            //iterate the search until complete or timeout occurs
+            do
+            {
+                //check every so often
+                await Task.Delay(2000);
+
+                RetrievePropertiesResponse response = await _client.vim.RetrievePropertiesAsync(
+                    _client.props,
+                    FilterFactory.TaskFilter(task));
+
+                ObjectContent[] oc = response.returnval;
+                info = (TaskInfo)oc[0].propSet[0].val;
+                i++;
+
+            } while ((info.state == TaskInfoState.running || info.state == TaskInfoState.queued));
+
+            //return the task info
+            return info;
+        }
     }
 }
