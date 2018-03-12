@@ -62,6 +62,7 @@ namespace TopoMojo.Services
 
         public async Task AddProfileAsync(string globalId, string name)
         {
+            await Task.Delay(0);
             // await _profileManager.SaveAsync(new Profile() {
             //     GlobalId = globalId,
             //     Name = name

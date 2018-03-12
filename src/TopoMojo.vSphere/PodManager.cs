@@ -7,10 +7,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
+using TopoMojo.vSphere.Network;
 
 namespace TopoMojo.vSphere
 {
@@ -26,28 +28,31 @@ namespace TopoMojo.vSphere
             //_optTemplate = templateOptions;
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
-            _hostCache = new Dictionary<string, VimHost>();
-            _affinityMap = new Dictionary<string, VimHost>();
+            _hostCache = new Dictionary<string, VimClient>();
+            _affinityMap = new Dictionary<string, VimClient>();
             _vmCache = new ConcurrentDictionary<string, Vm>();
-            InitVlans();
+            //InitVlans();
+            _vlanman = new VlanManager(_options.Vlan);
+
             InitHost(_options.Url);
         }
 
         private readonly PodConfiguration _options;
         //private readonly TemplateOptions _optTemplate;
+        private readonly VlanManager _vlanman;
+
         private readonly ILogger<PodManager> _logger;
         private readonly ILoggerFactory _mill;
-
-        private int _syncInterval = 20000;
-        private Dictionary<string, VimHost> _hostCache;
-        private Dictionary<string, int> _vlans;
-        private BitArray _vlanMap;
+        private Dictionary<string, VimClient> _hostCache;
+        //private Dictionary<string, int> _vlans;
+        //private BitArray _vlanMap;
         private TemplateOptions _cachedTemplateOptions;
         private DateTime _lastCacheUpdate = DateTime.MinValue;
         private int _cacheExpirationThreshold = 3;
-        private Dictionary<string, VimHost> _affinityMap;
+        private Dictionary<string, VimClient> _affinityMap;
         private ConcurrentDictionary<string, Vm> _vmCache;
 
+        public PodConfiguration Options { get {return _options;}}
         public async Task ReloadHost(string hostname)
         {
             string host = "https://" + hostname + "/sdk";
@@ -83,7 +88,7 @@ namespace TopoMojo.vSphere
                 return vms.First();
 
             _logger.LogDebug("deploy: find host ");
-            VimHost host = FindHostByAffinity(template.IsolationTag);
+            VimClient host = FindHostByAffinity(template.IsolationTag);
             _logger.LogDebug("deploy: host " + host.Name);
             NormalizeTemplate(template, host.Options);
             _logger.LogDebug("deploy: normalized "+ template.Name);
@@ -96,7 +101,7 @@ namespace TopoMojo.vSphere
             }
 
             _logger.LogDebug("deploy: reserve vlans ");
-            ReserveVlans(template);
+            _vlanman.ReserveVlans(template, host.Options.IsVCenter);
 
             _logger.LogDebug("deploy: " + template.Name + " " + host.Name);
             return await host.Deploy(template);
@@ -130,35 +135,35 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Start(string id)
         {
             _logger.LogDebug("starting " + id);
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             return await host.Start(id);
         }
 
         public async Task<Vm> Stop(string id)
         {
             _logger.LogDebug("stopping " + id);
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             return await host.Stop(id);
         }
 
         public async Task<Vm> Save(string id)
         {
             _logger.LogDebug("saving " + id);
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             return await host.Save(id);
         }
 
         public async Task<Vm> Revert(string id)
         {
             _logger.LogDebug("reverting " + id);
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             return await host.Revert(id);
         }
 
         public async Task<Vm> Delete(string id)
         {
             _logger.LogDebug("deleting " + id);
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             Vm vm =  await host.Delete(id);
             RefreshAffinity(); //TODO: fix race condition here
             return vm;
@@ -171,7 +176,7 @@ namespace TopoMojo.vSphere
             if (vm == null)
                 throw new InvalidOperationException();
 
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             VmOptions vmo = null;
             //sanitze inputs
             if (change.Key == "iso")
@@ -213,7 +218,7 @@ namespace TopoMojo.vSphere
 
         public async Task<int> VerifyDisks(Template template)
         {
-            foreach (VimHost vhost in _hostCache.Values)
+            foreach (VimClient vhost in _hostCache.Values)
             {
                 int progress = await vhost.TaskProgress(template.Id);
                 if (progress >= 0)
@@ -227,7 +232,7 @@ namespace TopoMojo.vSphere
                 return 100; //show blank disk as created
             }
 
-            VimHost host = FindHostByRandom();
+            VimClient host = FindHostByRandom();
             NormalizeTemplate(template, host.Options);
             if (template.Disks.Length > 0)
             {
@@ -245,7 +250,7 @@ namespace TopoMojo.vSphere
             int progress = await VerifyDisks(template);
             if (progress < 0)
             {
-                VimHost host = FindHostByRandom();
+                VimClient host = FindHostByRandom();
                 Task cloneTask = host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
                 progress = 0;
             }
@@ -257,7 +262,7 @@ namespace TopoMojo.vSphere
             int progress = await VerifyDisks(template);
             if (progress == 100)
             {
-                VimHost host = FindHostByRandom();
+                VimClient host = FindHostByRandom();
                 foreach (Disk disk in template.Disks)
                 {
                     //protect stock disks; only delete a disk if it is local to the topology
@@ -278,8 +283,10 @@ namespace TopoMojo.vSphere
             Vm vm = Find(id).Result.FirstOrDefault();
             if (vm !=  null)
             {
-                VimHost host = _hostCache[vm.Host];
-                string ticket = "", conditions = "";
+                VimClient host = _hostCache[vm.Host];
+                string ticket = "",
+                    conditions = "";
+
                 try
                 {
                     ticket = await host.GetTicket(id);
@@ -289,14 +296,12 @@ namespace TopoMojo.vSphere
                     conditions = "needs-vm-connected";
                 }
 
-                string[] h = host.Name.Split('.');
                 di = new DisplayInfo
                 {
                     Id = id,
                     Name = vm.Name.Untagged(),
                     TopoId = vm.Name.Tag(),
-                    Method = _options.DisplayMethod,
-                    Url = _options.DisplayUrl.Replace("{host}", h[0]) + ticket,
+                    Url = ticket,
                     Conditions = conditions
                 };
             }
@@ -305,7 +310,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Answer(string id, VmAnswer answer)
         {
-            VimHost host = FindHostByVm(id);
+            VimClient host = FindHostByVm(id);
             return await host.AnswerVmQuestion(id, answer.QuestionId, answer.ChoiceKey);
         }
 
@@ -334,7 +339,7 @@ namespace TopoMojo.vSphere
             //     Guest = (_optTemplate.Guest != null) ? _optTemplate.Guest : new string[] {}
             // };
 
-            // VimHost host = FindHostByRandom();
+            // Client host = FindHostByRandom();
             // if (host != null)
             // {
             //         List<Task<string[]>> taskList = new List<Task<string[]>>();
@@ -357,7 +362,7 @@ namespace TopoMojo.vSphere
 
         public async Task<VmOptions> GetVmIsoOptions(string id)
         {
-            VimHost host = FindHostByRandom();
+            VimClient host = FindHostByRandom();
             List<string> isos = new List<string>();
 
             //translate actual path to display path
@@ -366,7 +371,8 @@ namespace TopoMojo.vSphere
                 .Select(x => "public/" + System.IO.Path.GetFileName(x)).ToArray());
             isos.AddRange(
                 (await host.GetFiles(host.Options.DiskStore + id + "/*.iso", false))
-                .Select(x => System.IO.Path.GetFileName(x)));
+                .Select(x => x.Replace(host.Options.DiskStore, "")));
+                //.Select(x => System.IO.Path.GetFileName(x)));
             isos.Sort();
             return new VmOptions {
                 Iso = isos.ToArray()
@@ -376,13 +382,8 @@ namespace TopoMojo.vSphere
         public async Task<VmOptions> GetVmNetOptions(string id)
         {
             await Task.Delay(0);
-            VimHost host = FindHostByRandom();
-            List<string> nets = new List<string>();
-            nets.AddRange(_vlans.Keys.Where(x => !x.Contains("#")));
-            nets.AddRange(_vlans.Keys.Where(x => x.Contains(id)));
-            nets.Sort();
             return new VmOptions {
-                Net = nets.ToArray()
+                Net = _vlanman.FindNetworks(id)
             };
         }
         public string Version
@@ -403,7 +404,8 @@ namespace TopoMojo.vSphere
             {
                 template.Iso = (template.Iso.StartsWith("public"))
                     ? template.Iso = option.IsoStore + System.IO.Path.GetFileName(template.Iso)
-                    : template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
+                    : template.Iso = option.DiskStore + template.Iso;
+                    //: template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
             }
 
             // if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
@@ -444,7 +446,7 @@ namespace TopoMojo.vSphere
                 foreach (Eth eth in template.Eth)
                 {
                     //don't add tag if referencing a global vlan
-                    if (!_vlans.ContainsKey(eth.Net))
+                    if (!_vlanman.Contains(eth.Net))
                     {
                         eth.Net = rgx.Replace(eth.Net, "") + tag;
                     }
@@ -452,7 +454,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private VimHost FindHostByVm(string id)
+        private VimClient FindHostByVm(string id)
         {
             return _hostCache[_vmCache[id].Host];
         }
@@ -475,9 +477,9 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private VimHost FindHostByAffinity(string tag)
+        private VimClient FindHostByAffinity(string tag)
         {
-            VimHost host = null;
+            VimClient host = null;
             lock(_affinityMap)
             {
                 if (_affinityMap.ContainsKey(tag))
@@ -495,10 +497,10 @@ namespace TopoMojo.vSphere
             return host;
         }
 
-        private VimHost FindHostByFewestVms()
+        private VimClient FindHostByFewestVms()
         {
             Dictionary<string, HostVmCount> hostCounts = new Dictionary<string, HostVmCount>();
-            foreach (VimHost host in _hostCache.Values)
+            foreach (VimClient host in _hostCache.Values)
             {
                 if (!hostCounts.ContainsKey(host.Name))
                     hostCounts.Add(host.Name, new HostVmCount { Name = host.Name });
@@ -527,7 +529,7 @@ namespace TopoMojo.vSphere
                 return FindHostByRandom();
         }
 
-        private VimHost FindHostByRandom()
+        private VimClient FindHostByRandom()
         {
             int i = new Random().Next(0, _hostCache.Values.Count() - 1);
             return _hostCache.Values.ElementAt(i);
@@ -549,18 +551,7 @@ namespace TopoMojo.vSphere
 
             foreach (string url in hosts)
             {
-                AddHost(url);
-                //string hostname = new Uri(url).Host;
-                // PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
-                // hostOptions.Url = url;
-                // hostOptions.Host = hostname;
-                // VimHost vHost = new VimHost(
-                //     hostOptions,
-                //     _vmCache,
-                //     _vlanMap,
-                //     _mill.CreateLogger<VimHost>()
-                // );
-                // _hostCache.Add(hostname, vHost);
+                Task.Run(() => AddHost(url));
             }
         }
 
@@ -570,130 +561,132 @@ namespace TopoMojo.vSphere
 
             if (_hostCache.ContainsKey(hostname))
             {
-                _hostCache[hostname].Disconnect();
+                await _hostCache[hostname].Disconnect();
                 _hostCache.Remove(hostname);
-                Task.Delay(100);
+                await Task.Delay(100);
             }
 
-            PodConfiguration hostOptions = (PodConfiguration)Helper.Clone(_options);
+            PodConfiguration hostOptions = JsonConvert.DeserializeObject<PodConfiguration>(JsonConvert.SerializeObject(_options)); //(PodConfiguration)Helper.Clone(_options);
+            if (!url.EndsWith("/sdk")) url += "/sdk";
+
             hostOptions.Url = url;
             hostOptions.Host = hostname;
-            VimHost vHost = new VimHost(
+            var vHost = new VimClient(
                 hostOptions,
                 _vmCache,
-                _vlanMap,
-                _mill.CreateLogger<VimHost>()
+                _vlanman,
+                _mill.CreateLogger<VimClient>()
             );
             _hostCache.Add(hostname, vHost);
         }
 
-        private void InitVlans()
-        {
-            //initialize vlan map
-            _vlanMap = new BitArray(4096, true);
-            foreach (int i in _options.Vlan.Range.ExpandRange())
-            {
-                _vlanMap[i] = false;
-            }
+        // private void InitVlans()
+        // {
+        //     //initialize vlan map
+        //     _vlanMap = new BitArray(4096, true);
+        //     foreach (int i in _options.Vlan.Range.ExpandRange())
+        //     {
+        //         _vlanMap[i] = false;
+        //     }
 
-            //set admin reservations
-            _vlans = new Dictionary<string,int>();
-            foreach (Vlan vlan in _options.Vlan.Reservations)
-            {
-                _vlans.Add(vlan.Name, vlan.Id);
-                _vlanMap[vlan.Id] = true;
-            }
+        //     //set admin reservations
+        //     _vlans = new Dictionary<string,int>();
+        //     foreach (Vlan vlan in _options.Vlan.Reservations)
+        //     {
+        //         _vlans.Add(vlan.Name, vlan.Id);
+        //         _vlanMap[vlan.Id] = true;
+        //     }
 
-            UpdateVlanReservationsLoop();
-        }
+        //     UpdateVlanReservationsLoop();
+        // }
 
-        private void ReserveVlans(Template template)
-        {
-            lock (_vlanMap)
-            {
-                foreach (Eth eth in template.Eth)
-                {
-                    //if net already reserved, use reserved vlan
-                    if (_vlans.ContainsKey(eth.Net))
-                    {
-                        eth.Vlan = _vlans[eth.Net];
-                    }
-                    else
-                    {
-                        int id = 0;
-                        if (template.UseUplinkSwitch)
-                        {
-                            //get available uplink vlan
-                            while (id < _vlanMap.Length && _vlanMap[id])
-                            {
-                                id += 1;
-                            }
+        // private void ReserveVlans(Template template)
+        // {
+        //     lock (_vlanMap)
+        //     {
+        //         foreach (Eth eth in template.Eth)
+        //         {
+        //             //if net already reserved, use reserved vlan
+        //             if (_vlans.ContainsKey(eth.Net))
+        //             {
+        //                 eth.Vlan = _vlans[eth.Net];
+        //             }
+        //             else
+        //             {
+        //                 int id = 0;
+        //                 if (template.UseUplinkSwitch)
+        //                 {
+        //                     //get available uplink vlan
+        //                     while (id < _vlanMap.Length && _vlanMap[id])
+        //                     {
+        //                         id += 1;
+        //                     }
 
-                            if (id > 0 && id < _vlanMap.Length)
-                            {
-                                eth.Vlan = id;
-                                _vlanMap[id] = true;
-                                _vlans.Add(eth.Net, id);
-                            }
-                            else
-                            {
-                                throw new Exception("Unable to reserve a vlan for " + eth.Net);
-                            }
-                        }
-                        else {
-                            //get highest vlan in this isolation group
-                            id = 100;
-                            foreach (string key in _vlans.Keys.Where(k => k.EndsWith(template.IsolationTag)))
-                                id = Math.Max(id, _vlans[key]);
-                            id += 1;
-                            eth.Vlan = id;
-                            _vlans.Add(eth.Net, id);
-                        }
+        //                     if (id > 0 && id < _vlanMap.Length)
+        //                     {
+        //                         eth.Vlan = id;
+        //                         _vlanMap[id] = true;
+        //                         _vlans.Add(eth.Net, id);
+        //                     }
+        //                     else
+        //                     {
+        //                         throw new Exception("Unable to reserve a vlan for " + eth.Net);
+        //                     }
+        //                 }
+        //                 else {
+        //                     //get highest vlan in this isolation group
+        //                     id = 100;
+        //                     foreach (string key in _vlans.Keys.Where(k => k.EndsWith(template.IsolationTag)))
+        //                         id = Math.Max(id, _vlans[key]);
+        //                     id += 1;
+        //                     eth.Vlan = id;
+        //                     _vlans.Add(eth.Net, id);
+        //                 }
 
-                    }
-                }
-            }
-        }
+        //             }
+        //         }
+        //     }
+        // }
 
-        private async void UpdateVlanReservationsLoop()
-        {
-            while(true)
-            {
-                lock (_vlans)
-                {
-                    List<string> active = new List<string>();
-                    foreach (VimHost host in _hostCache.Values)
-                    {
-                        foreach (Vlan vlan in host.PgCache)
-                        {
-                            //reconstitue vlan reservations from active vlans
-                            if (!_vlans.ContainsKey(vlan.Name))
-                                _vlans.Add(vlan.Name, vlan.Id);
+        // private async void UpdateVlanReservationsLoop()
+        // {
+        //     while(true)
+        //     {
+        //         lock (_vlans)
+        //         {
+        //             List<string> active = new List<string>();
+        //             foreach (Client host in _hostCache.Values)
+        //             {
+        //                 foreach (Vlan vlan in host.PgCache)
+        //                 {
+        //                     //reconstitue vlan reservations from active vlans
+        //                     if (!_vlans.ContainsKey(vlan.Name))
+        //                         _vlans.Add(vlan.Name, vlan.Id);
 
-                            active.Add(vlan.Name);
-                            _vlanMap[vlan.Id] = true;
-                        }
-                    }
+        //                     active.Add(vlan.Name);
+        //                     _vlanMap[vlan.Id] = true;
+        //                 }
+        //             }
 
-                    string[] reserved = _vlans.Keys.Where(x=>x.Contains("#")).ToArray();
-                    string[] stale = reserved.Except(active).ToArray();
+        //             string[] reserved = _vlans.Keys.Where(x=>x.Contains("#")).ToArray();
+        //             string[] stale = reserved.Except(active).ToArray();
 
-                    foreach(string net in stale)
-                    {
-                        if (_vlans.ContainsKey(net)
-                            && !Find(net.Tag()).Result.Any() //don't remove if vm's are still deployed in this group
-                        )
-                        {
-                            _logger.LogDebug("removing stale vlan reservation " + net);
-                            _vlanMap[_vlans[net]] = false;
-                            _vlans.Remove(net);
-                        }
-                    }
-                }
+        //             foreach(string net in stale)
+        //             {
+        //                 if (_vlans.ContainsKey(net)
+        //                     && !Find(net.Tag()).Result.Any() //don't remove if vm's are still deployed in this group
+        //                 )
+        //                 {
+        //                     _logger.LogDebug("removing stale vlan reservation " + net);
+        //                     _vlanMap[_vlans[net]] = false;
+        //                     _vlans.Remove(net);
+        //                 }
+        //             }
+        //         }
 
-                await Task.Delay(_syncInterval);
-            }
-        }
+        //         await Task.Delay(_syncInterval);
+        //     }
+        // }
 
         protected class HostVmCount
         {

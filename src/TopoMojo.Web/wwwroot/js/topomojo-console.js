@@ -476,7 +476,7 @@ function WebConsole(
                         if (vm.state == VmStateRunning) {
                             $('#feedback-div button').hide();
                             $('#feedback-div p:first').text('Connected');
-                            if (settings.method) {
+                            if (settings.url) {
                                 launch();
                             }
                             else {

@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+
 namespace TopoMojo.Models
 {
     public class PodConfiguration {
+        public bool IsVCenter { get; set; }
         public string Type { get; set; }
         public string Url { get; set;}  //accepts range expansion
         public string Host { get; set;}
@@ -14,6 +17,8 @@ namespace TopoMojo.Models
         public string StockStore { get; set; }
         public string DisplayMethod { get; set; }
         public string DisplayUrl { get; set; }
+        public string TicketUrlHandler { get; set; }  = "none"; //"local-app", "external-domain", "host-map", "none"
+        public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
         public VlanOptions Vlan { get; set; }
     }
 
@@ -42,6 +47,7 @@ namespace TopoMojo.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public bool OnUplink { get; set; }
     }
 
     public class TaskStatus

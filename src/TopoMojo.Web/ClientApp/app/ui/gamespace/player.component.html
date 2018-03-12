@@ -4,7 +4,7 @@
 </div>
 
 <div *ngIf="game" class="player">
-    <div id="controlbar">
+    <div id="controlbar" class="hidden-print">
         <ul class="list-inline">
             <li><a [routerLink]="['/home']"><h4>{{appName}}</h4></a></li>
             <li *ngFor="let vm of game.vms">

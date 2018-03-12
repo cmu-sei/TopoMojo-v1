@@ -52,10 +52,8 @@ namespace TopoMojo.Models.Virtual
         public string Id { get; set; }
         public string TopoId { get; set; }
         public string Name { get; set; }
-        public string Method { get; set; }
         public string Url { get; set; }
         public string Conditions { get; set; }
     }
 
-    // public enum DisplayMethod { mock, wmks, guac, vmrc}
 }

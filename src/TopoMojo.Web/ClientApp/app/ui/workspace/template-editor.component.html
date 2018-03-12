@@ -78,8 +78,14 @@
                     </button>
                 </div>
                 <div class="col-xs-10">
-                    <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="template.iso"
-                        max="128" empty="none"></inline-editor>
+                    <!-- <inline-editor type="text" size="30" (onSave)="save()" [(ngModel)]="template.iso"
+                        max="128" empty="none" [disabled]="true"></inline-editor> -->
+                    <p>
+                        {{displayIso(template.iso)}}
+                        <button *ngIf="template.iso" (click)="clearIso()" class="btn btn-default btn-sm">
+                            <i class="fa fa-remove"></i>
+                        </button>
+                    </p>
                     <iso-manager *ngIf="isosVisible" [id]="topo.globalId" (onSelected)="isoChanged($event)"></iso-manager>
                 </div>
             </div>

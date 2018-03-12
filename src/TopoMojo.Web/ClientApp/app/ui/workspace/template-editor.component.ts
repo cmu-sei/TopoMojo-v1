@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angu
 import { TemplateService } from '../../api/template.service';
 import { NotificationService } from '../../svc/notification.service';
 import { Topology, Template, ChangedTemplate } from '../../api/gen/models';
+import { VmService } from '../../api/vm.service';
 
 @Component({
     selector: 'template-editor',
@@ -22,6 +23,7 @@ export class TemplateEditorComponent implements OnInit {
 
     constructor(
         private service : TemplateService,
+        private vmSvc: VmService,
         private notifier: NotificationService
     ) { }
 
@@ -85,7 +87,25 @@ export class TemplateEditorComponent implements OnInit {
         this.template.iso = iso;
         this.save();
         this.isosVisible = false;
-        // todo: if vm, change iso
+
+        if (this.vm) {
+            this.vmSvc.changeVm(this.vm.id, { key: "iso", value: iso }).subscribe(
+                (result) => {
+
+                }
+            )
+        }
+    }
+
+    clearIso() : void {
+        this.isoChanged("");
+    }
+
+    displayIso(v: string) : string {
+        let t = v.split('/').pop().replace(/\.iso/, "");
+        return (t.length > 40)
+            ? t.substring(0, 40) + "..."
+            : t;
     }
 
     hasParent() : boolean {

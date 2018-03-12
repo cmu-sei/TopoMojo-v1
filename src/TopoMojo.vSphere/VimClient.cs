@@ -10,51 +10,45 @@ using System.Text.RegularExpressions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
+using TopoMojo.vSphere.Helpers;
+using TopoMojo.vSphere.Network;
 
 namespace TopoMojo.vSphere
 {
-    public class VimHost
+    public class VimClient
     {
-        public VimHost(
+        public VimClient(
             PodConfiguration options,
             ConcurrentDictionary<string, Vm> vmCache,
-            BitArray master,
-            ILogger<VimHost> logger
+            VlanManager networkManager,
+            ILogger<VimClient> logger
         )
         {
             _logger = logger;
-            _config = (PodConfiguration)Helper.Clone(options);
-            _vmCache = vmCache;
+            _config = options;
             _logger.LogDebug($"Instantiated vSphereHost { _config.Host }");
-            _pgCache = new Dictionary<string,int>();
-            _pgAllocation = new Dictionary<string, PortGroupAllocation>();
-            _swAllocation = new Dictionary<string, int>();
             _tasks = new Dictionary<string, VimHostTask>();
-            //_gcPortGroups = new List<string>();
-            //_vlanMap = new BitArray(4096).Or(master);
-
-            ResolveConfigMacros();
+            _vmCache = vmCache;
+            _pgAllocation = new Dictionary<string, PortGroupAllocation>();
+            _vlanman = networkManager;
             Task sessionMonitorTask = MonitorSession();
             Task taskMonitorTask = MonitorTasks();
         }
 
-        private readonly ILogger<VimHost> _logger;
-        private ConcurrentDictionary<string, Vm> _vmCache;
-        //List<string> _gcPortGroups;
-        Dictionary<string,int> _pgCache;
-        Dictionary<string,PortGroupAllocation> _pgAllocation;
-        Dictionary<string, int> _swAllocation;
+        private readonly VlanManager _vlanman;
+        private readonly ILogger<VimClient> _logger;
         Dictionary<string, VimHostTask> _tasks;
-        //private BitArray _vlanMap;
+        private ConcurrentDictionary<string, Vm> _vmCache;
+        private Dictionary<string, PortGroupAllocation> _pgAllocation;
 
+        private INetworkManager _netman;
         PodConfiguration _config = null;
         VimPortTypeClient _vim = null;
         ServiceContent _sic = null;
         UserSession _session = null;
-        HostConfigManager _hcm = null;
         ManagedObjectReference _props, _vdm, _file;
-        ManagedObjectReference _datacenter, _vms, _res, _pool;
-        ManagedObjectReference _net, _opt, _svc, _dt, _dsb, _hauth, _ds;
+        ManagedObjectReference _datacenter, _vms, _res, _pool, _dvs;
+        string _dvsuuid = "";
         int _pollInterval = 1000;
         int _syncInterval = 30000;
         int _taskMonitorInterval = 3000;
@@ -62,7 +56,7 @@ namespace TopoMojo.vSphere
 
         public string Name
         {
-            get { return _config.Host;}
+            get { return _config.Host; }
         }
 
         public PodConfiguration Options
@@ -70,19 +64,12 @@ namespace TopoMojo.vSphere
             get { return _config; }
         }
 
-        public Vlan[] PgCache
-        {
-            get { return _pgAllocation.Keys.Select(x=> new Vlan { Name = x, Id = _pgAllocation[x].VlanId }).ToArray(); }
-        }
-
-        //public BitArray VlanMap { get { return _vlanMap; }}
-
         public async Task<Vm[]> Find(string term)
         {
             await Connect();
             Vm[] list = await ReloadVmCache();
             if (term.HasValue())
-                return list.Where(o=>o.Id.Contains(term) || o.Name.Contains(term)).ToArray();
+                return list.Where(o => o.Id.Contains(term) || o.Name.Contains(term)).ToArray();
             return list;
         }
 
@@ -147,8 +134,9 @@ namespace TopoMojo.vSphere
                 _props,
                 FilterFactory.VmFilter(vm.AsVim(), "snapshot"));
             ObjectContent[] oc = response.returnval;
-            if (oc.Length > 0 && oc[0].propSet.Length > 0 && oc[0].propSet[0].val != null)
-                mor = ((VirtualMachineSnapshotInfo)oc[0].propSet[0].val).currentSnapshot;
+            mor = ((VirtualMachineSnapshotInfo)oc.First().GetProperty("snapshot")).currentSnapshot as ManagedObjectReference;
+            // if (oc.Length > 0 && oc[0].propSet.Length > 0 && oc[0].propSet[0].val != null)
+            //     mor = ((VirtualMachineSnapshotInfo)oc[0].propSet[0].val).currentSnapshot;
 
             //add new snapshot
             _logger.LogDebug($"Save: add new snap for vm {vm.Name}");
@@ -168,9 +156,10 @@ namespace TopoMojo.vSphere
                 if (info.state == TaskInfoState.error)
                     throw new Exception(info.error.localizedMessage);
 
-                if (info.progress < 100) {
+                if (info.progress < 100)
+                {
                     var t = new VimHostTask { Task = task, Action = "saving", WhenCreated = DateTime.UtcNow };
-                    vm.Task = new VmTask { Name= t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
+                    vm.Task = new VmTask { Name = t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
                     _tasks.Add(vm.Id, t);
                 }
             }
@@ -200,19 +189,23 @@ namespace TopoMojo.vSphere
             //delete the vm.
             await Connect();
             Vm vm = _vmCache[id];
+
             _logger.LogDebug($"Delete: stopping vm {vm.Name}");
             await Stop(id);
             vm.State = VmPowerState.off;
+
             _logger.LogDebug($"Delete: unregistering vm {vm.Name}");
-            string[] vmnets = await LoadVmPortGroups(vm.AsVim());
+            await _netman.Unprovision(vm.AsVim());
             await _vim.UnregisterVMAsync(vm.AsVim());
+
             string folder = vm.Path.Substring(0, vm.Path.LastIndexOf('/'));
             _logger.LogDebug($"Delete: deleting vm folder {folder}");
             await _vim.DeleteDatastoreFile_TaskAsync(_sic.fileManager, folder, _datacenter);
+
             _vmCache.TryRemove(vm.Id, out vm);
-            //remove vm nets
-            await RemoveVmPortGroups(vmnets);
-            await RemoveVirtualSwitch(new string[] { vm.Name.Tag().ToSwitchName() });
+
+            await _netman.Clean();
+
             vm.Status = "initialized";
             return vm;
         }
@@ -222,7 +215,9 @@ namespace TopoMojo.vSphere
             await Connect();
             Vm vm = _vmCache[id];
             _logger.LogDebug($"Aquiring mks ticket for vm {vm.Name}");
-            return (await _vim.AcquireTicketAsync(vm.AsVim(), "webmks")).ticket;
+            var ticket = await _vim.AcquireTicketAsync(vm.AsVim(), "webmks");
+            string port = (ticket.portSpecified && ticket.port != 443) ? $":{ticket.port}" : "";
+            return $"wss://{ticket.host ?? _config.Host}{port}/ticket/{ticket.ticket}";
         }
 
         public async Task<Vm> Deploy(Template template)
@@ -231,10 +226,15 @@ namespace TopoMojo.vSphere
             await Connect();
 
             _logger.LogDebug("deploy: validate portgroups...");
-            await ProvisionPortGroups(template);
+            await _netman.Provision(template);
 
             _logger.LogDebug("deploy: transform template...");
-            VirtualMachineConfigSpec vmcs = Transform.TemplateToVmSpec(template, _config.VmStore);
+            //var transformer = new VCenterTransformer { DVSuuid = _dvsuuid };
+            VirtualMachineConfigSpec vmcs = Transform.TemplateToVmSpec(
+                template,
+                _config.VmStore,
+                _dvsuuid
+            );
 
             _logger.LogDebug("deploy: create vm...");
             ManagedObjectReference task = await _vim.CreateVM_TaskAsync(_vms, vmcs, _pool, null);
@@ -242,6 +242,7 @@ namespace TopoMojo.vSphere
             if (info.state == TaskInfoState.success)
             {
                 _logger.LogDebug("deploy: load vm...");
+                await Task.Delay(200);
                 vm = await GetVirtualMachine((ManagedObjectReference)info.result);
 
                 _logger.LogDebug("deploy: create snapshot...");
@@ -278,8 +279,9 @@ namespace TopoMojo.vSphere
                 _props,
                 FilterFactory.VmFilter(vm.AsVim(), "config"));
             ObjectContent[] oc = response.returnval;
-            VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)oc[0].propSet[0].val;
+            //var content = oc.FindTypeByName("VirtualMachine", vm.Name);
 
+            VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)oc[0].GetProperty("config");
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
 
             switch (feature)
@@ -295,7 +297,8 @@ namespace TopoMojo.vSphere
                             cdrom.backing = new VirtualCdromIsoBackingInfo();
 
                         ((VirtualCdromIsoBackingInfo)cdrom.backing).fileName = newvalue;
-                        cdrom.connectable = new VirtualDeviceConnectInfo {
+                        cdrom.connectable = new VirtualDeviceConnectInfo
+                        {
                             connected = true,
                             startConnected = true
                         };
@@ -318,10 +321,14 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        VirtualEthernetCardNetworkBackingInfo backing  = (VirtualEthernetCardNetworkBackingInfo)card.backing;
-                        //cacheNet(backing.deviceName);
-                        backing.deviceName = newvalue;
-                        card.connectable = new VirtualDeviceConnectInfo() {
+                        if (card.backing is VirtualEthernetCardNetworkBackingInfo)
+                            ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
+
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = newvalue;
+
+                        card.connectable = new VirtualDeviceConnectInfo()
+                        {
                             connected = true,
                             startConnected = true,
                         };
@@ -370,25 +377,33 @@ namespace TopoMojo.vSphere
             {
                 if (_taskMap[id] != null)
                 {
-                    _taskMap[id] = await GetVimTaskInfo(_taskMap[id].task);
-                    switch (_taskMap[id].state)
+                    try
                     {
-                        case TaskInfoState.error:
-                            string msg = _taskMap[id].description.message + " - " +
-                                _taskMap[id].error.localizedMessage;
-                            _taskMap.Remove(id);
-                            throw new Exception(msg);
+
+                        _taskMap[id] = await GetVimTaskInfo(_taskMap[id].task);
+                        switch (_taskMap[id].state)
+                        {
+                            case TaskInfoState.error:
+                                string msg = _taskMap[id].description.message + " - " +
+                                    _taskMap[id].error.localizedMessage;
+                                _taskMap.Remove(id);
+                                throw new Exception(msg);
                             //break;
 
-                        case TaskInfoState.success:
-                            progress = 100;
-                            _taskMap.Remove(id);
-                            _logger.LogDebug($"TaskProgress: {id} {progress}");
-                            break;
+                            case TaskInfoState.success:
+                                progress = 100;
+                                _taskMap.Remove(id);
+                                _logger.LogDebug($"TaskProgress: {id} {progress}");
+                                break;
 
-                        default:
-                            progress = _taskMap[id].progress;
-                            break;
+                            default:
+                                progress = _taskMap[id].progress;
+                                break;
+                        }
+                    } catch
+                    {
+                        //if checking on a task that has expired, clear it.
+                        _taskMap.Remove(id);
                     }
                 }
                 else
@@ -418,7 +433,7 @@ namespace TopoMojo.vSphere
             DatastorePath dsPath = new DatastorePath(path);
 
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
-                _props, FilterFactory.DatastoreFilter(_ds));
+                _props, FilterFactory.DatastoreFilter(_res));
             ObjectContent[] oc = response.returnval;
 
             foreach (ObjectContent obj in oc)
@@ -429,7 +444,8 @@ namespace TopoMojo.vSphere
                 {
                     ManagedObjectReference task = null;
                     TaskInfo info = null;
-                    HostDatastoreBrowserSearchSpec spec = new HostDatastoreBrowserSearchSpec {
+                    HostDatastoreBrowserSearchSpec spec = new HostDatastoreBrowserSearchSpec
+                    {
                         matchPattern = new string[] { dsPath.File }
                     };
                     List<HostDatastoreBrowserSearchResults> results = new List<HostDatastoreBrowserSearchResults>();
@@ -454,7 +470,7 @@ namespace TopoMojo.vSphere
                     {
                         if (result != null && result.file != null && result.file.Length > 0)
                         {
-                            list.AddRange(result.file.Select(o=>result.folderPath + "/" + o.path));
+                            list.AddRange(result.file.Select(o => result.folderPath + "/" + o.path));
                         }
 
                     }
@@ -480,7 +496,8 @@ namespace TopoMojo.vSphere
                 Int32.TryParse(match.Groups[1].Value, out size);
                 string[] parts = match.Groups[2].Value.Split('-');
                 string adapter = (parts.Length > 1) ? parts[1] : "lsiLogic";
-                FileBackedVirtualDiskSpec spec = new FileBackedVirtualDiskSpec {
+                FileBackedVirtualDiskSpec spec = new FileBackedVirtualDiskSpec
+                {
                     diskType = "thin",
                     adapterType = adapter.Replace("lsilogic", "lsiLogic").Replace("buslogic", "busLogic"),
                     capacityKb = size * 1024 * 1024
@@ -536,179 +553,127 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private async Task ProvisionPortGroups(Template template)
-        {
-            await Task.Delay(0);
-            lock(_pgAllocation)
-            {
-                string switchName = _config.Uplink;
-                if (!template.UseUplinkSwitch)
-                {
-                    switchName = template.IsolationTag.ToSwitchName();
-                    if (!_swAllocation.ContainsKey(switchName))
-                    {
-                        HostVirtualSwitchSpec swspec = new HostVirtualSwitchSpec();
-                        swspec.numPorts = 48;
-                        // swspec.policy = new HostNetworkPolicy();
-                        // swspec.policy.security = new HostNetworkSecurityPolicy();
+        // private async Task ProvisionPortGroups(Template template)
+        // {
+        //     await Task.Delay(0);
+        //     lock (_pgAllocation)
+        //     {
+        //         foreach (Eth eth in template.Eth)
+        //         {
+        //             if (!_pgAllocation.ContainsKey(eth.Net))
+        //             {
+        //                 var dvpg = AddDVPortGroup(eth).Result;
+        //                 _pgAllocation.Add(eth.Net, new PortGroupAllocation
+        //                 {
+        //                     Net = eth.Net,
+        //                     Counter = 1,
+        //                     VlanId = eth.Vlan,
+        //                     Key = dvpg.AsString()
+        //                 });
+        //                 _vlanman.Activate(new Vlan[] { new Vlan { Id = eth.Vlan, Name = eth.Net }});
+        //             }
+        //             else
+        //             {
+        //                 _pgAllocation[eth.Net].Counter += 1;
+        //             }
+        //             eth.Net = _pgAllocation[eth.Net].Key.AsReference().Value;
+        //         }
+        //     }
+        // }
 
-                        _vim.AddVirtualSwitchAsync(_net, switchName, swspec).Wait();
-                        _swAllocation.Add(switchName, 0);
-                    }
-                }
+        // private async Task<ManagedObjectReference> AddDVPortGroup(Eth eth)
+        // {
+        //     var mor = new ManagedObjectReference();
+        //     try
+        //     {
+        //         _logger.LogDebug($"Adding portgroup {eth.Net} ({eth.Vlan})");
 
-                foreach (Eth eth in template.Eth)
-                {
-                    if (!_pgAllocation.ContainsKey(eth.Net))
-                    {
-                        try
-                        {
-                            _logger.LogDebug($"Adding portgroup {eth.Net} ({eth.Vlan})");
+        //         var spec = new DVPortgroupConfigSpec()
+        //         {
+        //             name = eth.Net,
+        //             autoExpand = true,
+        //             type = "earlyBinding",
+        //             defaultPortConfig = new VMwareDVSPortSetting
+        //             {
+        //                 vlan = new VmwareDistributedVirtualSwitchVlanIdSpec
+        //                 {
+        //                     vlanId = eth.Vlan
+        //                 },
+        //                 securityPolicy = new DVSSecurityPolicy()
+        //                 {
+        //                     allowPromiscuous = new BoolPolicy()
+        //                     {
+        //                         value = true,
+        //                         valueSpecified = true
+        //                     }
+        //                 }
+        //             }
+        //         };
 
-                            HostPortGroupSpec spec = new HostPortGroupSpec();
-                            spec.vswitchName = switchName;
-                            spec.vlanId = eth.Vlan;
-                            spec.name = eth.Net;
-                            spec.policy = new HostNetworkPolicy();
-                            spec.policy.security = new HostNetworkSecurityPolicy();
-                            spec.policy.security.allowPromiscuous = true;
-                            spec.policy.security.allowPromiscuousSpecified = true;
+        //         var task = await _vim.CreateDVPortgroup_TaskAsync(_dvs, spec);
+        //         var info = await WaitForVimTask(task);
+        //         mor = info.result as ManagedObjectReference;
+        //     }
+        //     catch { }
+        //     return mor;
+        // }
 
-                            _vim.AddPortGroupAsync(_net, spec).Wait();
-                            _pgAllocation.Add(spec.name, new PortGroupAllocation { Net = spec.name, Counter = 1, VlanId = spec.vlanId });
-                            if (_swAllocation.ContainsKey(switchName))
-                                _swAllocation[switchName] += 1;
+        // private async Task RemoveDVPortgroup(ManagedObjectReference mor)
+        // {
+        //     try
+        //     {
+        //         await _vim.Destroy_TaskAsync(mor);
+        //     }
+        //     catch { }
+        // }
 
-                        } catch {
+        // private async Task<string[]> LoadVmPortGroups(ManagedObjectReference mor)
+        // {
+        //     if (mor == null) mor = _vms;
+        //     List<string> result = new List<string>();
+        //     RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
+        //         _props,
+        //         FilterFactory.VmFilter(mor, "config"));
+        //     ObjectContent[] oc = response.returnval;
+        //     foreach (ObjectContent obj in oc)
+        //     {
+        //         if (!obj.IsInPool(_pool))
+        //             continue;
 
-                        }
-                    }
-                    else
-                    {
-                        _pgAllocation[eth.Net].Counter += 1;
-                    }
-                }
-            }
-        }
-        private async Task<ObjectContent[]> LoadNetObject()
-        {
-            RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
-                _props,
-                FilterFactory.NetworkFilter(_net));
-            return response.returnval;
-            // ObjectContent[] oc = response.returnval;
-            // return (HostPortGroup[])oc[0].propSet[0].val;
-        }
+        //         VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)obj.GetProperty("config");
+        //         foreach (VirtualEthernetCard card in config.hardware.device.OfType<VirtualEthernetCard>())
+        //         {
+        //             // if (card.backing is VirtualEthernetCardNetworkBackingInfo)
+        //             //     result.Add(((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName);
+        //             if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+        //                 result.Add(((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey);
+        //         }
+        //     }
+        //     return result.ToArray();
+        // }
 
-        private async Task ReloadPgCache()
-        {
-            string[] vmPgs = await LoadVmPortGroups(null);
-            ObjectContent[] oc = await LoadNetObject();
-            HostPortGroup[] pgs = (HostPortGroup[])oc[0].propSet[0].val;
-            HostVirtualSwitch[] sws = (HostVirtualSwitch[])oc[0].propSet[1].val;
-
-            lock (_pgAllocation)
-            {
-                _swAllocation.Clear();
-                foreach (HostVirtualSwitch sw in sws)
-                    if (sw.name.StartsWith("sw#") && !_swAllocation.ContainsKey(sw.name))
-                        _swAllocation.Add(sw.name, 0);
-
-                foreach(HostPortGroup pg in pgs)
-                {
-                    if (pg.spec.name.Contains("#") && !_pgAllocation.ContainsKey(pg.spec.name))
-                        _pgAllocation.Add(pg.spec.name, new PortGroupAllocation { Net = pg.spec.name, VlanId = pg.spec.vlanId });
-
-                    if (_swAllocation.ContainsKey(pg.spec.vswitchName))
-                        _swAllocation[pg.spec.vswitchName] += 1;
-                }
-
-                foreach (string net in vmPgs)
-                {
-                    if (_pgAllocation.ContainsKey(net))
-                        _pgAllocation[net].Counter += 1;
-                }
-
-                // TODO: Revisit this cleanup upon start if things start getting messy.
-                // TODO: Need to change it to preserve pg/vs if any vm exists in the isolation group, regardless
-                // of where its nics are attached.  This should prevent garbage collection of a network when the
-                // vm nic is temporarily on bridge-net.
-
-                // //cleanup any empties
-                // string[] empties = _pgAllocation.Values.Where(p => p.Counter ==0).Select(p => p.Net).ToArray();
-                // RemoveVmPortGroups(empties).Wait();
-
-                // //remove empty switches
-                // List<string> emptySwitches = new List<string>();
-                // foreach (string key in _swAllocation.Keys)
-                //     if (_swAllocation[key]==0)
-                //         emptySwitches.Add(key);
-                // RemoveVirtualSwitch(emptySwitches.ToArray()).Wait();
-
-            }
-        }
-
-        private async Task<string[]> LoadVmPortGroups(ManagedObjectReference mor)
-        {
-            if (mor == null) mor = _vms;
-            List<string> result = new List<string>();
-            RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
-                _props,
-                FilterFactory.VmFilter(mor, "config"));
-            ObjectContent[] oc = response.returnval;
-            foreach (ObjectContent obj in oc)
-            {
-                VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)obj.propSet[0].val;
-                foreach (VirtualEthernetCard card in config.hardware.device.OfType<VirtualEthernetCard>())
-                {
-                    result.Add(((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName);
-                }
-            }
-            return result.ToArray();
-        }
-
-        private async Task RemoveVmPortGroups(string[] nets)
-        {
-            await Task.Delay(0);
-            lock(_pgAllocation)
-            {
-                foreach (string net in nets.Distinct().ToArray())
-                {
-                    if (_pgAllocation.ContainsKey(net))
-                    {
-                        _pgAllocation[net].Counter -= 1;
-                        if (_pgAllocation[net].Counter < 1)
-                        {
-                            //_vlanMap[_pgAllocation[net].VlanId] = false;
-                            _pgAllocation.Remove(net);
-                            _vim.RemovePortGroupAsync(_net, net);
-
-                            //decrement _swAllocation[key]
-                            string key = net.Tag().ToSwitchName();
-                            if (_swAllocation.ContainsKey(key))
-                                _swAllocation[key] -= 1;
-                        }
-                    }
-                }
-            }
-
-        }
-
-        private async Task RemoveVirtualSwitch(string[] keys)
-        {
-            await Task.Delay(0);
-            lock (_swAllocation)
-            {
-                foreach (string key in keys)
-                {
-                    if (_swAllocation.ContainsKey(key) && _swAllocation[key]==0)
-                    {
-                        _vim.RemoveVirtualSwitchAsync(_net, key).Wait();
-                        _swAllocation.Remove(key);
-                    }
-                }
-            }
-        }
+        // private async Task RemoveVmPortGroups(string[] keys)
+        // {
+        //     await Task.Delay(0);
+        //     lock (_pgAllocation)
+        //     {
+        //         foreach (string net in keys.Distinct().ToArray())
+        //         {
+        //             var dvpg = _pgAllocation.Values.Where(p => p.Key.EndsWith(net)).SingleOrDefault();
+        //             // only remove tagged nets
+        //             if (dvpg != null && dvpg.Net.Contains("#"))
+        //             {
+        //                 dvpg.Counter -= 1;
+        //                 if (dvpg.Counter < 1)
+        //                 {
+        //                     RemoveDVPortgroup(dvpg.Key.AsReference()).Wait();
+        //                     _pgAllocation.Remove(dvpg.Net);
+        //                     _vlanman.Deactivate(dvpg.Net);
+        //                     }
+        //             }
+        //         }
+        //     }
+        // }
 
         private async Task<TaskInfo> WaitForVimTask(ManagedObjectReference task)
         {
@@ -743,7 +708,7 @@ namespace TopoMojo.vSphere
             ObjectContent[] oc = response.returnval;
             // if (oc != null)
             //     if (oc.Length > 0 && oc[0].propSet.Length > 0)
-                    info = (TaskInfo)oc[0].propSet[0].val;
+            info = (TaskInfo)oc[0].propSet[0].val;
             return info;
         }
 
@@ -768,14 +733,15 @@ namespace TopoMojo.vSphere
                     try
                     {
                         DateTime sp = DateTime.Now;
-                        _logger.LogDebug($"Instantiating client {_config.Url}...");
+                        _logger.LogDebug($"Instantiating client {_config.Host}...");
                         VimPortTypeClient client = new VimPortTypeClient(VimPortTypeClient.EndpointConfiguration.VimPort, _config.Url);
                         _logger.LogDebug($"client: [{client}]");
                         _logger.LogDebug($"Instantiated {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
 
                         sp = DateTime.Now;
-                        _logger.LogInformation($"Connecting to {_config.Host}...");
-                        _sic = client.RetrieveServiceContentAsync(new ManagedObjectReference { type = "ServiceInstance", Value = "ServiceInstance"}).Result;
+                        _logger.LogInformation($"Connecting to {_config.Url}...");
+                        _sic = client.RetrieveServiceContentAsync(new ManagedObjectReference { type = "ServiceInstance", Value = "ServiceInstance" }).Result;
+                        _config.IsVCenter = _sic.about.apiType == "VirtualCenter";
                         _props = _sic.propertyCollector;
                         _vdm = _sic.virtualDiskManager;
                         _file = _sic.fileManager;
@@ -788,7 +754,7 @@ namespace TopoMojo.vSphere
 
                         sp = DateTime.Now;
                         _logger.LogDebug($"Initializing {_config.Host}...");
-                        InitManagedObjectReferences(client).Wait();
+                        InitReferences(client).Wait();
                         _logger.LogDebug($"Initialized {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
 
                         _vim = client;
@@ -796,7 +762,7 @@ namespace TopoMojo.vSphere
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(0, ex, $"Failed to connect with " + _config.Host);
+                        _logger.LogError(0, ex, $"Failed to connect with " + _config.Url);
                     }
                 }
             }
@@ -813,102 +779,256 @@ namespace TopoMojo.vSphere
             _session = null;
         }
 
-        private async Task InitManagedObjectReferences(VimPortTypeClient client)
+        private async Task<ObjectContent[]> LoadReferenceTree(VimPortTypeClient client)
         {
-            //Verbose method
-            PropertySpec prop;
-            List<PropertySpec> props = new List<PropertySpec>();
+            var plan = new TraversalSpec
+            {
+                name = "FolderTraverseSpec",
+                type = "Folder",
+                path = "childEntity",
+                selectSet = new SelectionSpec[] {
 
-            TraversalSpec trav;
-            List<SelectionSpec> list = new List<SelectionSpec>();
+                    new TraversalSpec()
+                    {
+                        type = "Datacenter",
+                        path = "hostFolder",
+                        selectSet = new SelectionSpec[] {
+                            new SelectionSpec {
+                                name = "FolderTraverseSpec"
+                            }
+                        }
+                    },
 
-            SelectionSpec sel;
-            List<SelectionSpec> selectset = new List<SelectionSpec>();
+                    new TraversalSpec()
+                    {
+                        type = "Datacenter",
+                        path = "networkFolder",
+                        selectSet = new SelectionSpec[] {
+                            new SelectionSpec {
+                                name = "FolderTraverseSpec"
+                            }
+                        }
+                    },
 
-            trav = new TraversalSpec();
-            trav.name = "DatacenterTraversalSpec";
-            trav.type = "Datacenter";
-            trav.path = "hostFolder";
+                    new TraversalSpec()
+                    {
+                        type = "ComputeResource",
+                        path = "resourcePool",
+                        selectSet = new SelectionSpec[]
+                        {
+                            new TraversalSpec
+                            {
+                                type="ResourcePool",
+                                path="resourcePool"
+                            }
+                        }
+                    },
 
-            selectset.Clear();
-            sel = new SelectionSpec();
-            sel.name = "FolderTraversalSpec";
-            selectset.Add(sel);
-            trav.selectSet = selectset.ToArray();
-            list.Add(trav);
+                    new TraversalSpec()
+                    {
+                        type = "ComputeResource",
+                        path = "host"
+                    }
+                }
+            };
 
-            trav = new TraversalSpec();
-            trav.name = "FolderTraversalSpec";
-            trav.type = "Folder";
-            trav.path = "childEntity";
-            selectset.Clear();
-            sel = new SelectionSpec();
-            sel.name = "DatacenterTraversalSpec";
-            selectset.Add(sel);
-            sel = new SelectionSpec();
-            sel.name = "ComputeResourceTraversalSpec";
-            selectset.Add(sel);
-            trav.selectSet = selectset.ToArray();
-            list.Add(trav);
+            var props = new PropertySpec[]
+            {
+                new PropertySpec
+                {
+                    type = "Datacenter",
+                    pathSet = new string[] { "name", "parent", "vmFolder" }
+                },
 
-            trav = new TraversalSpec();
-            trav.name = "ComputeResourceTraversalSpec";
-            trav.type = "ComputeResource";
-            trav.path = "host";
-            list.Add(trav);
+                new PropertySpec
+                {
+                    type = "ComputeResource",
+                    pathSet = new string[] { "name", "parent", "resourcePool", "host" }
+                },
 
-            prop = new PropertySpec();
-            prop.type = "Datacenter";
-            prop.pathSet = new string[] { "vmFolder" };
-            props.Add(prop);
+                new PropertySpec
+                {
+                    type = "HostSystem",
+                    pathSet = new string[] { "configManager" }
+                },
 
-            prop = new PropertySpec();
-            prop.type = "ComputeResource";
-            prop.pathSet = new string[] { "resourcePool" };
-            props.Add(prop);
+                new PropertySpec
+                {
+                    type = "ResourcePool",
+                    pathSet = new string[] { "name", "parent", "resourcePool" }
+                },
 
-            prop = new PropertySpec();
-            prop.type = "HostSystem";
-            prop.pathSet = new string[] { "configManager", "datastoreBrowser"};
-            props.Add(prop);
+                new PropertySpec
+                {
+                    type = "DistributedVirtualSwitch",
+                    pathSet = new string[] { "name", "parent", "uuid" }
+                },
+
+                new PropertySpec
+                {
+                    type = "DistributedVirtualPortgroup",
+                    pathSet = new string[] { "name", "parent", "config" }
+                }
+
+            };
 
             ObjectSpec objectspec = new ObjectSpec();
             objectspec.obj = _sic.rootFolder;
-            objectspec.selectSet = list.ToArray();
+            objectspec.selectSet = new SelectionSpec[] { plan };
 
             PropertyFilterSpec filter = new PropertyFilterSpec();
-            filter.propSet = props.ToArray();
+            filter.propSet = props;
             filter.objectSet = new ObjectSpec[] { objectspec };
 
             PropertyFilterSpec[] filters = new PropertyFilterSpec[] { filter };
-            RetrievePropertiesResponse response = await client.RetrievePropertiesAsync(
-                _props, filters);
-            ObjectContent[] oc = response.returnval;
+            RetrievePropertiesResponse response = await client.RetrievePropertiesAsync(_props, filters);
 
-            _datacenter = (ManagedObjectReference)oc[0].obj;
-            _vms = (ManagedObjectReference)oc[0].propSet[0].val;
-            _res = (ManagedObjectReference)oc[1].obj;
-            _pool = (ManagedObjectReference)oc[1].propSet[0].val;
-            _dsb = (ManagedObjectReference)oc[2].propSet[1].val;
-
-            _hcm = (HostConfigManager)oc[2].propSet[0].val;
-            _net = _hcm.networkSystem;
-            _opt = _hcm.advancedOption;
-            _svc = _hcm.serviceSystem;
-            _dt = _hcm.dateTimeSystem;
-            _ds = _hcm.datastoreSystem;
-            _hauth = _hcm.authenticationManager;
+            return response.returnval;
         }
+
+        private async Task InitReferences(VimPortTypeClient client)
+        {
+            var clunkyTree = await LoadReferenceTree(client);
+            if (clunkyTree.Length == 0)
+                throw new InvalidOperationException();
+
+            string[] path = _config.PoolPath.ToLower().Split(new char[] { '/', '\\' });
+            string datacenter = (path.Length > 0) ? path[0] : "";
+            string cluster = (path.Length > 1) ? path[1] : "";
+            string pool = (path.Length > 2) ? path[2] : "";
+
+            var dcContent = (clunkyTree.FindTypeByName("Datacenter", datacenter) ?? clunkyTree.First("Datacenter"));
+            _datacenter = dcContent.obj;
+            _vms = (ManagedObjectReference)dcContent.GetProperty("vmFolder");
+
+            var clusterContent = clunkyTree.FindTypeByName("ComputeResource", cluster) ?? clunkyTree.First("ComputeResource");
+            _res = clusterContent.obj;
+
+            var poolContent = clunkyTree.FindTypeByName("ResourcePool", pool)
+                ?? clunkyTree.FindTypeByReference(
+                    (ManagedObjectReference)clusterContent.GetProperty("resourcePool")
+                );
+            _pool = poolContent.obj;
+
+            var netSettings = new Settings
+            {
+                vim = client,
+                cluster = _res,
+                props = _props,
+                pool = _pool,
+                vmFolder = _vms,
+                UplinkSwitch = _config.Uplink
+                //net = netSystem,
+                //dvs = _dvs,
+                //DvsUuid = _dvsuuid,
+            };
+
+            if (_config.IsVCenter)
+            {
+                ManagedObjectReference[] subpools = poolContent.GetProperty("resourcePool") as ManagedObjectReference[];
+                if (subpools != null && subpools.Length > 0)
+                    _pool = subpools.First();
+
+                var dvs = clunkyTree.FindTypeByName("DistributedVirtualSwitch", _config.Uplink.ToLower()) ?? clunkyTree.First("DistributedVirtualSwitch");
+                _dvs = dvs?.obj;
+                _dvsuuid = dvs?.GetProperty("uuid").ToString();
+
+                netSettings.dvs = dvs?.obj;
+                netSettings.DvsUuid = _dvsuuid;
+
+                _netman = new DistributedNetworkManager(
+                    netSettings,
+                    _vmCache,
+                    _vlanman
+                );
+            }
+            else
+            {
+                var hostContent = clunkyTree.FindType("HostSystem").FirstOrDefault();
+                if (hostContent != null)
+                {
+                    var hostConfig = hostContent.GetProperty("configManager") as HostConfigManager;
+                    netSettings.net = hostConfig?.networkSystem;
+                }
+
+                _netman = new HostNetworkManager(
+                  netSettings,
+                  _vmCache,
+                  _vlanman
+                );
+            }
+
+            await _netman.Initialize();
+
+            // foreach (var dvpg in clunkyTree.FindType("DistributedVirtualPortgroup"))
+            // {
+            //     var config = (DVPortgroupConfigInfo)dvpg.GetProperty("config");
+            //     if (config.distributedVirtualSwitch.Value == _dvs.Value)
+            //     {
+            //         string net = dvpg.GetProperty("name") as string;
+            //         if (config.defaultPortConfig is VMwareDVSPortSetting
+            //             && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec)
+            //         {
+            //             _pgAllocation.Add(
+            //                 net,
+            //                 new PortGroupAllocation
+            //                 {
+            //                     Net = net,
+            //                     Key = dvpg.obj.AsString(),
+            //                     VlanId = ((VmwareDistributedVirtualSwitchVlanIdSpec)((VMwareDVSPortSetting)config.defaultPortConfig).vlan).vlanId
+            //                 }
+            //             );
+            //         }
+            //     }
+            // }
+
+            // _netMgr.Activate(
+            //     _pgAllocation.Values.Select(p => new Vlan { Id = p.VlanId, Name = p.Net }).ToArray()
+            // );
+        }
+
+        // private async Task InitPortgroups()
+        // {
+        //     var map = new Dictionary<string, PortGroupAllocation>();
+        //     foreach (var pga in _pgAllocation.Values)
+        //     {
+        //         string key = pga.Key.AsReference().Value;
+        //         if (!map.ContainsKey(key))
+        //             map.Add(key, pga);
+        //     }
+        //     foreach (string net in await LoadVmPortGroups(_vms))
+        //     {
+        //         if (map.ContainsKey(net))
+        //             map[net].Counter += 1;
+        //         // if (!_pgAllocation.ContainsKey(net))
+        //         //     _pgAllocation.Add(net, new PortGroupAllocation { Net = net });
+        //         // _pgAllocation[net].Counter += 1;
+        //     }
+
+        //     //find empties with no associated vm's
+        //     var empties = new List<string>();
+        //     var vms = await ReloadVmCache();
+        //     foreach (var pg in _pgAllocation.Values)
+        //     {
+        //         if (pg.Counter < 1 && !vms.Any(v => v.Name.EndsWith(pg.Net.Tag())))
+        //         {
+        //             empties.Add(pg.Key);
+        //         }
+        //     }
+
+        //     if (empties.Count > 0)
+        //         await RemoveVmPortGroups(empties.ToArray());
+        // }
 
         private async Task<Vm[]> ReloadVmCache()
         {
-            List<string> existing = _vmCache.Values.Where(o=>o.Host == _config.Host).Select(o=>o.Id).ToList();
+            List<string> existing = _vmCache.Values.Select(o => o.Id).ToList();
             List<Vm> list = new List<Vm>();
 
             //retrieve the properties specificied
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
                 _props,
-                FilterFactory.VmFilter(_vms));
+                FilterFactory.VmFilter(_pool)); // _vms
 
             ObjectContent[] oc = response.returnval;
 
@@ -923,11 +1043,10 @@ namespace TopoMojo.vSphere
                 }
             }
 
-            Vm stale = null;
-            List<string> active = list.Select(o=>o.Id).ToList();
+            List<string> active = list.Select(o => o.Id).ToList();
             foreach (string key in existing.Except(active))
             {
-                if (_vmCache.TryRemove(key, out stale))
+                if (_vmCache.TryRemove(key, out Vm stale))
                 {
                     _logger.LogDebug($"refreshing cache on {_config.Host} deleted vm {stale.Name}");
                 }
@@ -939,6 +1058,7 @@ namespace TopoMojo.vSphere
 
         private Vm LoadVm(ObjectContent obj)
         {
+
             //create a new vm object
             Vm vm = new Vm();
 
@@ -995,7 +1115,7 @@ namespace TopoMojo.vSphere
                         if (_tasks.ContainsKey(vm.Id))
                         {
                             var t = _tasks[vm.Id];
-                            vm.Task = new VmTask { Name= t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
+                            vm.Task = new VmTask { Name = t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
                         }
                     }
                     catch (Exception ex)
@@ -1021,7 +1141,7 @@ namespace TopoMojo.vSphere
                 return null;
             }
 
-            _vmCache.AddOrUpdate(vm.Id, vm, (k,v) => (v = vm));
+            _vmCache.AddOrUpdate(vm.Id, vm, (k, v) => (v = vm));
 
             return vm;
         }
@@ -1031,12 +1151,14 @@ namespace TopoMojo.vSphere
             if (question == null)
                 return null;
 
-            return new VmQuestion {
+            return new VmQuestion
+            {
                 Id = question.id,
                 Prompt = question.text,
                 DefaultChoice = question.choice.choiceInfo[question.choice.defaultIndex].key,
                 Choices = question.choice.choiceInfo.Select(x =>
-                    new VmQuestionChoice {
+                    new VmQuestionChoice
+                    {
                         Key = x.key,
                         Label = x.label
                     })
@@ -1053,35 +1175,19 @@ namespace TopoMojo.vSphere
             return (oc.Length > 0) ? LoadVm(oc[0]) : null;
         }
 
-        private void ResolveConfigMacros()
-        {
-            string pattern = "{host}";
-            string val = _config.Host.Split('.').First();
-            _config.VmStore = _config.VmStore.Replace(pattern, val);
-            _config.DiskStore = _config.DiskStore.Replace(pattern, val);
-            _config.StockStore = _config.StockStore.Replace(pattern, val);
-            _config.IsoStore = _config.IsoStore.Replace(pattern, val);
-            _config.DisplayUrl = _config.DisplayUrl.Replace(pattern, val);
-        }
 
-        private bool _portgroupsInitialized = false;
+        //private bool _portgroupsInitialized = false;
         private async Task MonitorSession()
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");
             await Task.Delay(0);
+
             while (!_disposing)
             {
                 try
                 {
                     await Connect();
                     await ReloadVmCache();
-
-                    //only run this after the first connection
-                    if (!_portgroupsInitialized)
-                    {
-                        _portgroupsInitialized = true;
-                        await ReloadPgCache();
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -1146,18 +1252,4 @@ namespace TopoMojo.vSphere
         }
     }
 
-    internal class PortGroupAllocation
-    {
-        public string Net { get; set; }
-        public int Counter { get; set; }
-        public int VlanId { get; set; }
-    }
-
-    internal class VimHostTask
-    {
-        public ManagedObjectReference Task { get; set; }
-        public string Action { get; set; }
-        public int Progress { get; set; }
-        public DateTime WhenCreated { get; set; }
-    }
 }

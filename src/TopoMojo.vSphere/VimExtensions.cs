@@ -3,6 +3,8 @@ using System.Text;
 using System.Collections.Generic;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
+using System.Linq;
+using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere
 {
@@ -11,6 +13,16 @@ namespace TopoMojo.vSphere
         public static string AsString(this ManagedObjectReference mor)
         {
             return $"{mor.type}|{mor.Value}";
+        }
+
+        public static ManagedObjectReference AsReference(this string mor)
+        {
+            var a = mor.Split('|');
+            return new ManagedObjectReference
+            {
+                type = a.First(),
+                Value = a.Last()
+            };
         }
 
         public static ManagedObjectReference AsVim(this Vm vm)
@@ -91,6 +103,50 @@ namespace TopoMojo.vSphere
             //constitute settings array
             //foreach setting add/update options
             //persist result in annotation
+        }
+
+        public static ObjectContent First(this ObjectContent[] tree, string type)
+        {
+            return tree.Where(o => o.obj.type == type).FirstOrDefault();
+        }
+
+        public static ObjectContent FindTypeByName(this ObjectContent[] tree, string type, string name)
+        {
+            foreach (var content in tree.Where(o => o.obj.type.EndsWith(type)))
+            {
+                if (content.propSet
+                    .Any(p => p.name == "name" && p.val.ToString().ToLower() == name))
+                {
+                    return content;
+                }
+            }
+            return null;
+        }
+
+        public static ObjectContent[] FindType(this ObjectContent[] tree, string type)
+        {
+            return tree.Where(o => o.obj.type.EndsWith(type)).ToArray();
+        }
+
+        public static ObjectContent FindTypeByReference(this ObjectContent[] tree, ManagedObjectReference mor)
+        {
+            return tree
+                .Where(o => o.obj.type == mor.type && o.obj.Value == mor.Value)
+                .SingleOrDefault();
+        }
+
+        public static object GetProperty(this ObjectContent content, string name)
+        {
+            return content
+                .propSet.Where(p => p.name == name)
+                .Select(p => p.val)
+                .SingleOrDefault();
+        }
+
+        public static bool IsInPool(this ObjectContent content, ManagedObjectReference pool)
+        {
+            ManagedObjectReference mor = content.GetProperty("resourcePool") as ManagedObjectReference;
+            return mor != null && mor.Value == pool.Value;
         }
     }
 }

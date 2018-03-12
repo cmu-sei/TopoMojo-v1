@@ -96,7 +96,7 @@ namespace TopoMojo
             // add pod manager
             services.AddSingleton<IPodManager>(sp => {
                 var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
-                return options.Type.ToLowerInvariant().Contains("vmock")
+                return String.IsNullOrWhiteSpace(options.Url)
                     ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
                     : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
             });

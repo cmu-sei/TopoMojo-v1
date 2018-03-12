@@ -100,6 +100,7 @@ namespace TopoMojo.Core
 
             Template linked = Mapper.Map<Template>(entity);
             linked.TopologyId = topoId;
+            linked.Name += new Random().Next(100, 200).ToString();
             await _repo.Add(linked);
             //TODO: streamline object graph hydration
             linked = await _repo.Load(linked.Id);

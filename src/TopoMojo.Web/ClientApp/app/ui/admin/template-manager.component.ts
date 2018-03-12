@@ -80,18 +80,6 @@ export class TemplateManagerComponent implements OnInit {
         }
     }
 
-    // load(template) {
-    //     this.template = template;
-
-    //     this._ngZone.runOutsideAngular(() => {
-    //         setTimeout(() => this.focusEditor(), 5);
-    //     });
-    //     // this.service.loadTemplate(id)
-    //     // .subscribe(result => {
-    //     //     this.template = result as any;
-    //     // })
-    // }
-
     focusEditor() {
         this.focusTagEl.nativeElement.focus();
     }
@@ -111,24 +99,21 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     save() {
-        this.service.configureTemplate(this.template)
-        .subscribe(data => {
-            // for (let i=0; i<this.templates.length; i++) {
-            //     if (this.templates[i].id == data.id) {
-            //         this.templates[i] = data;
-            //         return;
-            //     }
-            // }
-            // this.templates.push(data);
 
-            //TODO: find cleaner way to keep summary sync'd with detail
-            this.templates.map(
-                (v) => {
-                    if (v.id == data.id) v.name = data.name;
-                }
+        try {
+            let s = JSON.parse(this.template.detail);
+            this.service.configureTemplate(this.template).subscribe(
+                (data) => {
+                    this.templates.find((v) => v.id == data.id).name = data.name;
+                    this.select(this.template.id);
+                },
+                (err) => { }
             );
-            this.template = null;
-        }, (err) => { });
+        } catch(Error) {
+            this.errorMessage = Error.message;
+        }
+
+
     }
 
     delete() {
@@ -144,12 +129,4 @@ export class TemplateManagerComponent implements OnInit {
     clearError() {
         this.errorMessage = null;
     }
-
-    // selectLinker(template) {
-    //     if (this.templateLinker === template) {
-    //         this.templateLinker = null;
-    //     } else {
-    //         this.templateLinker = template;
-    //     }
-    // }
 }

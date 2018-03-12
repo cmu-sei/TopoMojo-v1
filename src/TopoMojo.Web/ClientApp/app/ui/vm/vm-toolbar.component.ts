@@ -187,6 +187,7 @@ export class VmToolbarComponent implements OnChanges {
 
     onError(err) {
         this.errors.push(err.error);
+        this.working = false;
         console.debug(err.error.message);
     }
 
