@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -100,78 +101,23 @@ namespace TopoMojo.Controllers
                 },
                 options => {
                     options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
+                },
+                metadata => {
+                    string dp = metadata["destination-path"];
+                    if (!dp.ToLower().EndsWith(".iso") && System.IO.File.Exists(dp))
+                    {
+                        CDBuilder builder = new CDBuilder();
+                        builder.UseJoliet = true;
+                        builder.VolumeIdentifier = "UploadedFile";
+                        builder.AddFile(Path.GetFileName(dp), dp);
+                        builder.Build(dp + ".iso");
+                        System.IO.File.Delete(dp);
+                    }
                 }
             );
 
-            //TODO: handle exceptions -- remove partially saved files
-
             return Json(true);
         }
-
-        // [HttpPost("api/[controller]/[action]")]
-        // [DisableFormValueModelBinding]
-        // //[ValidateAntiForgeryToken]
-        // public async Task<IActionResult> Upload()
-        // {
-        //     if (!MultipartRequestExtensions.IsMultipartContentType(Request.ContentType))
-        //     {
-        //         return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
-        //     }
-
-        //     FormOptions _formOptions = new FormOptions
-        //     {
-        //         MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9)
-        //     };
-
-        //     string boundary = MultipartRequestExtensions.GetBoundary(
-        //         MediaTypeHeaderValue.Parse(Request.ContentType),
-        //         _formOptions.MultipartBoundaryLengthLimit);
-        //     MultipartReader reader = new MultipartReader(boundary, HttpContext.Request.Body);
-
-        //     MultipartSection section = await reader.ReadNextSectionAsync();
-        //     while (section != null)
-        //     {
-        //         ContentDispositionHeaderValue contentDisposition;
-        //         bool hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
-
-        //         if (hasContentDispositionHeader)
-        //         {
-        //             if (MultipartRequestExtensions.HasFileContentDisposition(contentDisposition))
-        //             {
-        //                 NameValueCollection metadata = MultipartRequestExtensions.ParseFormValues(contentDisposition.FileName);
-
-        //                 string filename = metadata["fn"];
-        //                 string pkey = metadata["pk"] ?? Guid.NewGuid().ToString();
-        //                 string key = metadata["fk"];
-        //                 string scope = metadata["fd"];
-        //                 long size = Int64.Parse(metadata["fs"] ?? "0");
-
-        //                 if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
-        //                     throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
-
-        //                 if (scope == "private" && ! await _topoManager.CanEdit(key))
-        //                     throw new InvalidOperationException();
-
-        //                 if (scope == "public" && !_profile.IsAdmin)
-        //                     throw new InvalidOperationException();
-
-        //                 Log("uploading", null, filename);
-        //                 string dest = DestinationPath(filename, key, scope);
-
-        //                 using (var targetStream = System.IO.File.Create(dest))
-        //                 {
-        //                     await Save(section.Body, targetStream, size, pkey);
-        //                 }
-        //             }
-        //         }
-
-        //         // Drains any remaining section body that has not been consumed and
-        //         // reads the headers for the next section.
-        //         section = await reader.ReadNextSectionAsync();
-        //     }
-
-        //     return Json(true);
-        // }
 
         private string SanitizeFileName(string filename)
         {
@@ -217,33 +163,6 @@ namespace TopoMojo.Controllers
             path = Path.Combine(path, fn);
             return path;
         }
-
-        // private async Task Save(Stream source, Stream dest, long size, string key)
-        // {
-        //     _monitor.Update(key, 0);
-
-        //     if (size == 0) size = (long)5E9;
-        //     byte[] buffer = new byte[4096];
-        //     int bytes = 0, progress = 0;
-        //     long totalBytes = 0, totalBlocks = 0;
-
-        //     do
-        //     {
-        //         bytes = await source.ReadAsync(buffer, 0, buffer.Length);
-        //         await dest.WriteAsync(buffer, 0, bytes);
-        //         totalBlocks += 1;
-        //         totalBytes += bytes;
-        //         if (totalBlocks % 1024 == 0)
-        //         {
-        //             progress = (int)(((float)totalBytes / (float)size) * 100);
-        //             _monitor.Update(key, progress);
-        //         }
-        //     } while (bytes > 0);
-        //     _monitor.Update(key, 100);
-        //     FileProgress fp = _monitor.Check(key);
-        //     int duration = (int)fp.Stop.Subtract(fp.Start).TotalSeconds;
-        //     _logger.LogInformation($"FileUpload complete for {key} in {duration}s");
-        // }
 
         public IActionResult Error()
         {

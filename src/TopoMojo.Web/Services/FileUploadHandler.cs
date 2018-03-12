@@ -16,7 +16,8 @@ namespace TopoMojo.Services
             HttpRequest request,
             Func<NameValueCollection, Stream> getDestinationStream,
             Action<FileUploadStatus> statusUpdate,
-            Action<FormOptions> optionsAction
+            Action<FormOptions> optionsAction,
+            Action<NameValueCollection> postProcess
         );
     }
 
@@ -38,7 +39,8 @@ namespace TopoMojo.Services
             HttpRequest request,
             Func<NameValueCollection, Stream> getDestinationStream,
             Action<FileUploadStatus> statusUpdate,
-            Action<FormOptions> optionsAction
+            Action<FormOptions> optionsAction,
+            Action<NameValueCollection> postProcess = null
         )
         {
             if (!request.ContentType.IsMultipartContentType())
@@ -94,7 +96,11 @@ namespace TopoMojo.Services
                                 Key = metadata["monitor-key"],
                                 Size = Int64.Parse(metadata["size"] ?? "1E9")
                             };
+
                             await Save(section.Body, targetStream, status, statusUpdate);
+
+                            if (postProcess != null)
+                                postProcess.Invoke(metadata);
                         }
                         catch (Exception ex)
                         {

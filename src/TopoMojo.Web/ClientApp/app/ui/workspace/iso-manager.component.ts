@@ -98,7 +98,8 @@ export class IsoManagerComponent implements OnInit {
                     if (event.type === HttpEventType.UploadProgress) {
                         qf.progress = Math.round(100 * event.loaded / event.total);
                     } else if (event instanceof HttpResponse) {
-                        this.select(qf.name);
+                        if (!qf.name.match(/.*\.iso/)) qf.name += ".iso";
+                        this.select(`${this.id}/${qf.name}`);
                     }
                 },
                 (err) => {
