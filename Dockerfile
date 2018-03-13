@@ -22,4 +22,4 @@ WORKDIR /app
 COPY --from=dev /app/dist .
 VOLUME /app/data
 ENV ASPNETCORE_URLS=http://0.0.0.0:5000
-ENTRYPOINT [ 'dotnet", '"TopoMojo.Web.dll" ]
+ENTRYPOINT [ "dotnet", "TopoMojo.Web.dll" ]
