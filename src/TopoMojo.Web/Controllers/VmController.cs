@@ -55,25 +55,32 @@ namespace TopoMojo.Controllers
             if (info.Url.HasValue())
             {
                 var src = new Uri(info.Url);
+                string target = "";
                 string internalHost = src.Host.Split('.').First();
+                string domain = Request.Host.Value.IndexOf(".") >= 0
+                            ? Request.Host.Value.Substring(Request.Host.Value.IndexOf(".")+1)
+                            : Request.Host.Value;
 
                 switch (_pod.Options.TicketUrlHandler.ToLower())
                 {
                     case "local-app":
-                        info.Url = info.Url.Replace(src.Host, $"{Request.Host.Value}/{src.Host}");
+                        target = $"{Request.Host.Value}/{internalHost}";
                     break;
 
                     case "external-domain":
-                        string external = $"{internalHost}{Request.Host.Value.Substring(Request.Host.Value.IndexOf("."))}";
-                        info.Url = info.Url.Replace(src.Host, external);
+                        target = $"{internalHost}.{domain}";
                     break;
 
                     case "host-map":
                         var map = _pod.Options.TicketUrlHostMap;
                         if (map.ContainsKey(src.Host))
-                            info.Url = info.Url.Replace(src.Host, map[src.Host]);
+                            target = map[src.Host];
                     break;
                 }
+
+                if (target.HasValue())
+                    info.Url = info.Url.Replace(src.Host, target);
+
             }
             return Ok(info);
         }

@@ -193,7 +193,7 @@ namespace TopoMojo
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
 
-            if (env.IsDevelopment() || Configuration.GetValue<bool>("ShowDeveloperExceptions"))
+            if (env.IsDevelopment() || Configuration.GetValue<bool>("Control:ShowExceptionDetail"))
             {
                 app.UseDeveloperExceptionPage();
             }
