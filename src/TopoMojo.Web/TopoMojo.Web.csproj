@@ -33,7 +33,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.1.0" />
   </ItemGroup>
   <Target Name="Webpack" BeforeTargets="PrepareForPublish">
-    <!-- <Exec Command="npm install" /> -->
+    <Exec Command="npm install" />
     <Exec Command="node node_modules/webpack/bin/webpack.js --color --config webpack.config.vendor.js --env.prod" />
     <Exec Command="node node_modules/webpack/bin/webpack.js --color --env.prod" />
   </Target>
