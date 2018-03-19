@@ -1,5 +1,6 @@
 import { Injectable, InjectionToken } from '@angular/core';
-import { Observable, Subject } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { HttpClient } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 // import { SignalRConfiguration } from 'ng2-signalr';

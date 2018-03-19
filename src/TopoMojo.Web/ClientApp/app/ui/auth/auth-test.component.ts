@@ -38,9 +38,9 @@ export class AuthTestComponent implements OnInit {
   startSignoutMainWindow() {
     this.authService.logout();
   }
-  // endSignoutMainWindow() {
-  //   this.authService.finalizeLogout();
-  // }
+  endSignoutMainWindow() {
+    // this.authService.finalizeLogout();
+  }
 
   ngOnDestroy(){
     if(this.loadedUserSub !== null){

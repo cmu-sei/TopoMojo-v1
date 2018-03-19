@@ -3,7 +3,10 @@
 }
 <base href="/"/>
 <!--<app asp-prerender-module="ClientApp/dist/main-server">Loading...</app>-->
-<app>Loading...</app>
+<app>
+    <i id="loading-animation" class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
+    <span class="sr-only">Loading...</span>
+</app>
 
 <script src="~/dist/vendor.js" asp-append-version="true"></script>
 @section scripts {

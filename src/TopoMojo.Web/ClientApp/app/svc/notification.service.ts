@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@angular/core';
 // import { SignalR, ISignalRConnection, IConnectionOptions, BroadcastEventListener } from 'ng2-signalr';
 import { HubConnection } from '@aspnet/signalr-client';
 import { AuthService, AuthTokenState } from './auth.service';
-import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
+
 
 // let connection = new signalR.HubConnection('/chat');
 

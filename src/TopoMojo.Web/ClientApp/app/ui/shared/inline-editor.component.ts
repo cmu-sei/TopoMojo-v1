@@ -212,7 +212,7 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
     private _value: string = '';
     private preValue: string = '';
-    private editing: boolean = false;
+    editing: boolean = false;
     private isEmpty: boolean = false;
     private _options;
 

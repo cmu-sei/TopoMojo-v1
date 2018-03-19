@@ -88,7 +88,7 @@ export class TemplateEditorComponent implements OnInit {
         this.save();
         this.isosVisible = false;
 
-        if (this.vm) {
+        if (this.vm.id) {
             this.vmSvc.changeVm(this.vm.id, { key: "iso", value: iso }).subscribe(
                 (result) => {
 
@@ -102,8 +102,8 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     displayIso(v: string) : string {
-        let t = v.split('/').pop().replace(/\.iso/, "");
-        return (t.length > 40)
+        let t = v && v.split('/').pop().replace(/\.iso/, "");
+        return (t && t.length > 40)
             ? t.substring(0, 40) + "..."
             : t;
     }

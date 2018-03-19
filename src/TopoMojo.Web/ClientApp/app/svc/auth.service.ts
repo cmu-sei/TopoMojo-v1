@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { UserManager, UserManagerSettings, WebStorageStateStore, Log, MetadataService, User } from 'oidc-client';
-import { Observable, Subject } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { LocalUserService } from './localuser.service';
 import { SettingsService } from './settings.service';
 import { AccountService } from '../api/account.service';

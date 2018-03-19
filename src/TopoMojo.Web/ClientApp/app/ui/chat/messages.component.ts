@@ -7,7 +7,9 @@ import { NotificationService, TopoEvent, Actor, ChatMessage } from '../../svc/no
 import { ChatService } from '../../api/chat.service';
 import { Message } from '../../api/gen/models';
 
-import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 import { ClipboardService } from '../../svc/clipboard.service';
 import { setTimeout, clearTimeout } from 'timers';
 
@@ -20,17 +22,17 @@ export class MessagesComponent implements OnChanges {
     @Input() space: any;
     @ViewChild('scrollMe') private messagePanel: ElementRef;
     notifier: NotificationService;
-    private messages:Array<Message> = new Array<Message>();
-    private newMessage : string = '';
+    messages:Array<Message> = new Array<Message>();
+    typers: string = "";
+    newMessage : string = '';
+    showHistoryButton: boolean = false;
     private subs: Subscription[] = [];
     private autoScroll: boolean = true;
     private typingSource: Subject<boolean> = new Subject<boolean>();
     private typing$: Observable<boolean> = this.typingSource.asObservable();
-    private typers: string = "";
     private typingTimer: any;
     private typingMonitor : any;
     private key: string;
-    private showHistoryButton: boolean = false;
 
     constructor(
         private authService:AuthService,
@@ -140,7 +142,7 @@ export class MessagesComponent implements OnChanges {
         );
     }
 
-    private onScroll() {
+    onScroll() {
         let element = this.messagePanel.nativeElement
         let atBottom = element.scrollHeight - element.scrollTop === element.clientHeight
         this.autoScroll = atBottom;

@@ -1,7 +1,7 @@
 
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedChatService } from "./gen/chat.service";
 import { ChangedMessage,Message,NewMessage,TemplateDetail } from "./gen/models";
 

@@ -1,7 +1,7 @@
 
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedGamespaceService } from "./gen/gamespace.service";
 import { GameState,Gamespace,VmState } from "./gen/models";
 import { SettingsService } from '../svc/settings.service';

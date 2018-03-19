@@ -25,7 +25,7 @@ export class ImageManagerComponent implements OnInit {
         this.list();
     }
 
-    private fileSelectorChanged(e) {
+    fileSelectorChanged(e) {
         //console.log(e.srcElement.files);
         this.queuedFiles = [];
         for (let i = 0; i < e.srcElement.files.length; i++) {

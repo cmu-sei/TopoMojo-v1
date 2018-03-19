@@ -47,4 +47,12 @@ export class GameManagerComponent implements OnInit {
             }
         )
     }
+
+    hasMore(): boolean {
+        return false;
+    }
+
+    termChanged(term: string) : void {
+
+    }
 }

@@ -2,7 +2,9 @@ import { Component, OnInit, Input, Output, OnChanges, OnDestroy, SimpleChanges, 
 import { VmService } from '../../api/vm.service';
 import { Template, VirtualVm, VirtualVmAnswer, VirtualVmStateEnum } from '../../api/gen/models';
 import { NotificationService } from '../../svc/notification.service';
-import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
     //moduleId: module.id,

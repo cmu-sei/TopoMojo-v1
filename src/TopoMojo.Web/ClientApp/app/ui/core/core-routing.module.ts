@@ -5,6 +5,7 @@ import { HomeComponent } from './home.component';
 import { NavbarComponent } from './navbar.component';
 import { NotFoundComponent } from './notfound.component';
 import { AboutPanelComponent } from './about-panel.component';
+import { NotAllowedComponent } from './notallowed.component';
 
 const routes: Routes = [
     {
@@ -13,6 +14,7 @@ const routes: Routes = [
         children: [
             { path: 'about', component: AboutPanelComponent },
             { path: 'notfound', component: NotFoundComponent },
+            { path: 'notallowed', component: NotAllowedComponent },
             { path: '', component: HomeComponent },
         ]
     }
@@ -28,6 +30,7 @@ export class CoreRoutingModule {
         HomeComponent,
         NavbarComponent,
         NotFoundComponent,
+        NotAllowedComponent,
         AboutPanelComponent
     ]
 }

@@ -104,4 +104,14 @@ export class LoginComponent implements OnInit {
                 break;
         }
     }
+
+    showLocal() : boolean {
+        return this.auth.loginSettings.allowLocalLogin
+    }
+    showExternal() : boolean {
+        return this.auth.loginSettings.allowExternalLogin
+    }
+    showBoth() : boolean {
+        return this.auth.loginSettings.allowLocalLogin && this.auth.loginSettings.allowExternalLogin
+    }
 }

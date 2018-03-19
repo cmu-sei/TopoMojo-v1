@@ -4,7 +4,9 @@ import { TopologyService } from '../../api/topology.service';
 import { TemplateService } from '../../api/template.service';
 import { Topology, Template, TemplateSummary, TemplateSummarySearchResult } from '../../api/gen/models';
 import { NotificationService } from '../../svc/notification.service';
-import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 import { ORIGIN_URL } from '../../svc/settings.service';
 import { ClipboardService } from '../../svc/clipboard.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -306,6 +308,10 @@ export class WorkspaceComponent {
     collaborate() {
         this.collaborationVisible = !this.collaborationVisible;
         this.messageCount = 0;
+    }
+
+    showCollaboration() : boolean {
+        return this.collaborationVisible;
     }
 
     redirect() {

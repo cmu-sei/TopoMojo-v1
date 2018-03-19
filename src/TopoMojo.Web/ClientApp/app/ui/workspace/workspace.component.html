@@ -159,7 +159,7 @@
 
 <notification-panel></notification-panel>
 
-<div [hidden]="!collaborationVisible" id="collab-div">
+<div [hidden]="!showCollaboration()" id="collab-div">
     <chat-messages *ngIf="topo" [space]="topo"></chat-messages>
 </div>
 

@@ -1,7 +1,7 @@
 
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedAccountService } from "./gen/account.service";
 import { AccountsCredentials } from "./gen/models";
 

@@ -6,7 +6,9 @@ import { NotificationService } from '../../svc/notification.service';
 import { Converter } from 'showdown/dist/showdown';
 import { VmService } from '../../api/vm.service';
 import { SettingsService, SHOWDOWN_OPTS } from '../../svc/settings.service';
-import {Observable, Subscription, Subject} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
     selector: 'player',
@@ -27,7 +29,7 @@ export class PlayerComponent implements OnInit {
     private converter : Converter;
     private id: number;
     private subs: Subscription[] = [];
-    private showOverlay: boolean;
+    showOverlay: boolean;
     private appName: string = "";
 
     constructor(

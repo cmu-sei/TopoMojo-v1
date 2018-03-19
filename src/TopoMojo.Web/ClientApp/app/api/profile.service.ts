@@ -1,7 +1,7 @@
 
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedProfileService } from "./gen/profile.service";
 import { Profile,ProfileSearchResult,Search } from "./gen/models";
 

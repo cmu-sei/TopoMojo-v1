@@ -1,7 +1,7 @@
 
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpRequest, HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedFileService } from "./gen/file.service";
 import {  } from "./gen/models";
 

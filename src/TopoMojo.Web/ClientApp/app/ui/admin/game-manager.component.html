@@ -31,7 +31,7 @@
                 </div>
             </li>
         </ul>
-        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
+        <button *ngIf="hasMore()" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>
     </div>
