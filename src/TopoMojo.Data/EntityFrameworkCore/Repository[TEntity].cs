@@ -24,7 +24,8 @@ namespace TopoMojo.Data.EntityFrameworkCore
         {
             entity.Name = entity.Name ?? $"[{typeof(TEntity).Name}Name]";
             entity.WhenCreated = DateTime.UtcNow;
-            entity.GlobalId = Guid.NewGuid().ToString();
+            if (!entity.GlobalId.HasValue() || !Guid.TryParse(entity.GlobalId, out Guid guid))
+                entity.GlobalId = Guid.NewGuid().ToString();
             DbContext.Add(entity);
             await DbContext.SaveChangesAsync();
             return entity;

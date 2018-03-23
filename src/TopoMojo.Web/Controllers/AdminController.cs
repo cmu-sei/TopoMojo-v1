@@ -25,10 +25,14 @@ namespace TopoMojo.Controllers
             ChatService chatService,
             IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp,
-            IHostingEnvironment env
+            IHostingEnvironment env,
+            TransferService transferSvc,
+            FileUploadOptions fileUploadOptions
         ) : base(sp)
         {
             _chatService = chatService;
+            _transferSvc = transferSvc;
+            _fileUploadOptions = fileUploadOptions;
             _hub = hub;
             _env = env;
         }
@@ -36,7 +40,8 @@ namespace TopoMojo.Controllers
         private readonly ChatService _chatService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
         private readonly IHostingEnvironment _env;
-
+        private readonly TransferService _transferSvc;
+        private readonly FileUploadOptions _fileUploadOptions;
 
         [HttpGet("/api/admin/getsettings")]
         [JsonExceptionFilter]
@@ -95,6 +100,35 @@ namespace TopoMojo.Controllers
         {
             await Task.Run(() => SendBroadcast(text));
             return Ok(true);
+        }
+
+        [HttpPost("api/admin/export")]
+        [ProducesResponseType(typeof(string[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Export([FromBody]int[] ids)
+        {
+            string destPath = Path.Combine(
+                _fileUploadOptions.TopoRoot,
+                "exports",
+                DateTime.Now.ToString("s").Replace(":", "")
+            );
+            string docPath = Path.Combine(_env.WebRootPath, "docs");
+            await _transferSvc.Export(ids, destPath, docPath);
+            string[] results = new string[] {
+                "Make note of your backend export folder:",
+                destPath
+            };
+            return Ok(results);
+        }
+
+        [HttpGet("api/admin/import")]
+        [ProducesResponseType(typeof(string[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> Import()
+        {
+            string destPath = _fileUploadOptions.TopoRoot;
+            string docPath = Path.Combine(_env.WebRootPath, "docs");
+            return Ok(await _transferSvc.Import(destPath, docPath));
         }
 
 

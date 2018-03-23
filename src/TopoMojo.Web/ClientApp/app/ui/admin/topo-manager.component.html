@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-xs-12">
+    <div class="col-xs-12" [class.col-xs-8]="hasExports()">
         <div class="spaced">
             <search-bar (onSearch)="termChanged($event)"></search-bar>
         </div>
@@ -21,6 +21,9 @@
                         <button (click)="toggleLocked(topo)" class="btn btn-default btn-sm">
                             <i *ngIf="topo.isLocked" class="fa fa-lock"></i>
                             <i *ngIf="!topo.isLocked" class="fa fa-unlock"></i>
+                        </button>
+                        <button (click)="addExport(topo)" class="btn btn-default btn-sm" tooltip="export">
+                            <i class="fa fa-folder"></i>
                         </button>
                         <button (click)="destroy(topo)" class="btn btn-link">
                             <i class="fa fa-trash"></i>
@@ -46,5 +49,20 @@
         <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary">
             <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
         </button>
+    </div>
+    <div *ngIf="hasExports()" class="col-xs-4">
+        <h3>Export List</h3>
+        <div *ngFor="let t of exports">
+            <span>{{t.name}}</span>
+            <button class="btn btn-default btn-sm" (click)="removeExport(t)">
+                <i class="fa fa-remove"></i>
+            </button>
+        </div>
+        <hr/>
+        <button class="btn btn-default" (click)="export()">
+            <i class="fa fa-folder"></i>
+            <span>Export</span>
+        </button>
+        <p *ngIf="exportResult">{{exportResult}}</p>
     </div>
 </div>

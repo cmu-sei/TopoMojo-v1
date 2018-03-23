@@ -22,6 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddScoped<GamespaceManager>()
                 .AddScoped<ProfileManager>()
                 .AddScoped<ChatService>()
+                .AddScoped<TransferService>()
                 .AddMappers();
         }
     }

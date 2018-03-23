@@ -576,7 +576,7 @@ export class GeneratedService {
 const ngGeneratedService = `
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { GeneratedService } from "./_service";
 import { ##REFS## } from "./models";
 
@@ -597,7 +597,7 @@ const ngGeneratedServiceTail = `
 const ngService = `
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { Generated##SVC##Service } from "./gen/##svc##.service";
 import { ##REFS## } from "./gen/models";
 

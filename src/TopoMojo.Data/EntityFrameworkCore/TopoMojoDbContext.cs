@@ -14,6 +14,10 @@ namespace TopoMojo.Data.EntityFrameworkCore
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<Topology>().HasAlternateKey(t => t.GlobalId);
+            builder.Entity<Template>().HasAlternateKey(t => t.GlobalId);
+            builder.Entity<Gamespace>().HasAlternateKey(t => t.GlobalId);
+            builder.Entity<Profile>().HasAlternateKey(t => t.GlobalId);
             builder.Entity<Message>().HasIndex(m => m.RoomId);
         }
 

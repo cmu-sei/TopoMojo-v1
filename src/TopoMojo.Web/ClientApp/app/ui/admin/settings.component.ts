@@ -18,6 +18,7 @@ export class AdminSettingsComponent implements OnInit {
     settings: string = "";
     hostField: string = "";
     errors: any[] = [];
+    importResults: string = "";
 
     ngOnInit() {
     }
@@ -58,5 +59,13 @@ export class AdminSettingsComponent implements OnInit {
             () => {
             }
         );
+    }
+
+    import() : void {
+        this.svc.importAdmin().subscribe(
+            (results : Array<string>) => {
+                this.importResults = results.join('\n');
+            }
+        )
     }
 }

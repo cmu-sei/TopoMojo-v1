@@ -8,6 +8,13 @@
         </button>
     </div>
     <div class="form-input">
+        <h4>Process Imports</h4>
+        <button class="btn btn-primary" (click)="import()">Import</button>
+        <pre *ngIf="importResults">
+            {{ importResults }}
+        </pre>
+    </div>
+    <div class="form-input">
         <h4>Reload Host</h4>
         <!-- <input type="text" [(ngModel)]="hostField" class="form-control">
         <button class="btn btn-default" (click)="reloadHost()">ReloadHost</button> -->

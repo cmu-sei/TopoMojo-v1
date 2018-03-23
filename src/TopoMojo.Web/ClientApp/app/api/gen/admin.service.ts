@@ -21,6 +21,12 @@ export class GeneratedAdminService extends GeneratedService {
 	public announceAdmin(text: string) : Observable<boolean> {
 		return this.http.post<boolean>("/api/admin/announce", text);
 	}
+	public exportAdmin(ids: Array<number>) : Observable<Array<string>> {
+		return this.http.post<Array<string>>("/api/admin/export", ids);
+	}
+	public importAdmin() : Observable<Array<string>> {
+		return this.http.get<Array<string>>("/api/admin/import");
+	}
 
 }
 

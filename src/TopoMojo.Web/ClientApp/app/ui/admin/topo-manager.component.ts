@@ -3,6 +3,7 @@ import { TopologyService } from '../../api/topology.service';
 import { Topology, TopologySummary, TopologyState, TemplateSummary, Worker, VmState, VirtualVm, Search } from '../../api/gen/models';
 import { VmService } from '../../api/vm.service';
 import { SettingsService } from '../../svc/settings.service';
+import { AdminService } from '../../api/admin.service';
 
 @Component({
     selector: 'topo-manager',
@@ -14,7 +15,8 @@ export class TopoManagerComponent implements OnInit {
     constructor(
         private topoSvc: TopologyService,
         private vmSvc: VmService,
-        private settingSvc: SettingsService
+        private settingSvc: SettingsService,
+        private adminSvc: AdminService
     ) { }
 
     topos: Array<Topology> = new Array<Topology>();
@@ -23,6 +25,8 @@ export class TopoManagerComponent implements OnInit {
     vms: Array<VmState>;
     seachParams: Search = { skip: 0, take: 0 };
     hasMore: number = 0;
+    exports: Array<Topology> = new Array<Topology>();
+    exportResult: string = "";
 
     ngOnInit() {
         this.search();
@@ -100,4 +104,28 @@ export class TopoManagerComponent implements OnInit {
         this.settingSvc.showTab(topo.document); //Url || `/docs/${topo.globalId}.md`);
     }
 
+    hasExports() : boolean {
+        return this.exports.length > 0 || !!this.exportResult;
+    }
+
+    addExport(t : Topology) : void {
+        let found = this.exports.find((v) => v.id == t.id);
+        if (!found)
+            this.exports.push(t);
+    }
+
+    removeExport(t: Topology) : void {
+        // let found = this.exports.find((v) => v.id == t.id);
+        // if (found)
+            this.exports.splice(this.exports.indexOf(t), 1);
+    }
+
+    export() : void {
+        this.adminSvc.exportAdmin(this.exports.map((v) => v.id)).subscribe(
+            (result : Array<string>) => {
+                this.exports = new Array<Topology>();
+                this.exportResult = result.join('\n');
+            }
+        );
+    }
 }
