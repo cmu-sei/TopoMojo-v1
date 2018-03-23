@@ -99,7 +99,7 @@ export class LoginComponent implements OnInit {
                 this.action = "reset";
                 break;
             case 4:
-                this.title = "Register New Account";
+                this.title = "Register Account";
                 this.action = "register";
                 break;
         }

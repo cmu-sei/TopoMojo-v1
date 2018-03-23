@@ -13,7 +13,8 @@
                 </div>
                 <h4>{{ title }}</h4>
                 <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-                    <div *ngIf="mode==4">{{ auth.loginSettings.allowedDomains }}</div>
+                    <div *ngIf="mode==4" class="form-group">Allowed Domains: <small>{{ auth.loginSettings.allowedDomains || "any" }}</small></div>
+                    <div *ngIf="mode > 2" class="form-group">Password Requirement: <small>{{ auth.loginSettings.passwordComplexity }}</small></div>
                     <div class="form-group">
                         <label class="sr-only" for="username">Username</label>
                         <div class="input-group">
@@ -27,7 +28,6 @@
                                 required>
                         </div>
                     </div>
-                    <div *ngIf="mode > 2">{{ auth.loginSettings.passwordComplexity }}</div>
                     <div *ngIf="mode != 1" class="form-group">
                         <label for="pass1" class="sr-only">Password</label>
                         <div class="input-group">
@@ -52,7 +52,7 @@
                                 type="password"
                                 name="pass2"
                                 [(ngModel)]="pass2"
-                                placeholder="Password"
+                                placeholder="Confirm Password"
                                 required>
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                                 required>
                             <span class="input-group-btn">
                                 <button type="button" (click)="requestCode()" class="btn btn-default" [disabled]="codeSent">
-                                    <i class="fa fa-send"></i>
+                                    <i class="fa fa-send"></i> Send me a Code
                                 </button>
                             </span>
                         </div>
