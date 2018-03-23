@@ -26,11 +26,12 @@ namespace TopoMojo.vSphere
         {
             _logger = logger;
             _config = options;
-            _logger.LogDebug($"Instantiated vSphereHost { _config.Host }");
+            _logger.LogDebug($"Constructing Client { _config.Host }");
             _tasks = new Dictionary<string, VimHostTask>();
             _vmCache = vmCache;
             _pgAllocation = new Dictionary<string, PortGroupAllocation>();
             _vlanman = networkManager;
+            _hostPrefix = _config.Host.Split('.').FirstOrDefault();
             Task sessionMonitorTask = MonitorSession();
             Task taskMonitorTask = MonitorTasks();
         }
@@ -53,6 +54,7 @@ namespace TopoMojo.vSphere
         int _syncInterval = 30000;
         int _taskMonitorInterval = 3000;
         bool _disposing;
+        string _hostPrefix = "";
 
         public string Name
         {
@@ -232,7 +234,7 @@ namespace TopoMojo.vSphere
             //var transformer = new VCenterTransformer { DVSuuid = _dvsuuid };
             VirtualMachineConfigSpec vmcs = Transform.TemplateToVmSpec(
                 template,
-                _config.VmStore,
+                _config.VmStore.Replace("{host}", _hostPrefix),
                 _dvsuuid
             );
 
@@ -1022,7 +1024,11 @@ namespace TopoMojo.vSphere
 
         private async Task<Vm[]> ReloadVmCache()
         {
-            List<string> existing = _vmCache.Values.Select(o => o.Id).ToList();
+            List<string> existing = _vmCache.Values
+                .Where(v => v.Host == _config.Host)
+                .Select(o => o.Id)
+                .ToList();
+
             List<Vm> list = new List<Vm>();
 
             //retrieve the properties specificied
@@ -1039,16 +1045,19 @@ namespace TopoMojo.vSphere
 
                 if (vm != null)
                 {
+                    //_logger.LogDebug($"refreshing cache [{_config.Host}] found: {vm.Name}");
                     list.Add(vm);
                 }
             }
 
             List<string> active = list.Select(o => o.Id).ToList();
+            //_logger.LogDebug($"refreshing cache [{_config.Host}] existing: {existing.Count} active: {active.Count}");
+
             foreach (string key in existing.Except(active))
             {
                 if (_vmCache.TryRemove(key, out Vm stale))
                 {
-                    _logger.LogDebug($"refreshing cache on {_config.Host} deleted vm {stale.Name}");
+                    _logger.LogDebug($"removing stale cache entry [{_config.Host}] {stale.Name}");
                 }
             }
 

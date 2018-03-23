@@ -28,7 +28,7 @@ namespace TopoMojo.vSphere
             //_optTemplate = templateOptions;
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
-            _hostCache = new Dictionary<string, VimClient>();
+            _hostCache = new ConcurrentDictionary<string, VimClient>();
             _affinityMap = new Dictionary<string, VimClient>();
             _vmCache = new ConcurrentDictionary<string, Vm>();
             //InitVlans();
@@ -43,7 +43,7 @@ namespace TopoMojo.vSphere
 
         private readonly ILogger<PodManager> _logger;
         private readonly ILoggerFactory _mill;
-        private Dictionary<string, VimClient> _hostCache;
+        private ConcurrentDictionary<string, VimClient> _hostCache;
         //private Dictionary<string, int> _vlans;
         //private BitArray _vlanMap;
         private TemplateOptions _cachedTemplateOptions;
@@ -549,20 +549,29 @@ namespace TopoMojo.vSphere
                 hosts.Add(host);
             }
 
-            foreach (string url in hosts)
-            {
-                Task.Run(() => AddHost(url));
-            }
+            Parallel.ForEach(
+                hosts,
+                async (url) => {
+                    try {
+                        await AddHost(url);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to construct {0}", url);
+                    }
+                }
+            );
         }
 
         private async Task AddHost(string url)
         {
             string hostname = new Uri(url).Host;
+            _logger.LogDebug($"Adding host {hostname}");
 
             if (_hostCache.ContainsKey(hostname))
             {
                 await _hostCache[hostname].Disconnect();
-                _hostCache.Remove(hostname);
+                _hostCache.TryRemove(hostname, out VimClient discard);
                 await Task.Delay(100);
             }
 
@@ -577,116 +586,10 @@ namespace TopoMojo.vSphere
                 _vlanman,
                 _mill.CreateLogger<VimClient>()
             );
-            _hostCache.Add(hostname, vHost);
+            _hostCache.AddOrUpdate(hostname, vHost, (k, v) => (v = vHost));
+            _logger.LogDebug($"Added host {hostname}; cache: {_hostCache.Values.Count}");
+
         }
-
-        // private void InitVlans()
-        // {
-        //     //initialize vlan map
-        //     _vlanMap = new BitArray(4096, true);
-        //     foreach (int i in _options.Vlan.Range.ExpandRange())
-        //     {
-        //         _vlanMap[i] = false;
-        //     }
-
-        //     //set admin reservations
-        //     _vlans = new Dictionary<string,int>();
-        //     foreach (Vlan vlan in _options.Vlan.Reservations)
-        //     {
-        //         _vlans.Add(vlan.Name, vlan.Id);
-        //         _vlanMap[vlan.Id] = true;
-        //     }
-
-        //     UpdateVlanReservationsLoop();
-        // }
-
-        // private void ReserveVlans(Template template)
-        // {
-        //     lock (_vlanMap)
-        //     {
-        //         foreach (Eth eth in template.Eth)
-        //         {
-        //             //if net already reserved, use reserved vlan
-        //             if (_vlans.ContainsKey(eth.Net))
-        //             {
-        //                 eth.Vlan = _vlans[eth.Net];
-        //             }
-        //             else
-        //             {
-        //                 int id = 0;
-        //                 if (template.UseUplinkSwitch)
-        //                 {
-        //                     //get available uplink vlan
-        //                     while (id < _vlanMap.Length && _vlanMap[id])
-        //                     {
-        //                         id += 1;
-        //                     }
-
-        //                     if (id > 0 && id < _vlanMap.Length)
-        //                     {
-        //                         eth.Vlan = id;
-        //                         _vlanMap[id] = true;
-        //                         _vlans.Add(eth.Net, id);
-        //                     }
-        //                     else
-        //                     {
-        //                         throw new Exception("Unable to reserve a vlan for " + eth.Net);
-        //                     }
-        //                 }
-        //                 else {
-        //                     //get highest vlan in this isolation group
-        //                     id = 100;
-        //                     foreach (string key in _vlans.Keys.Where(k => k.EndsWith(template.IsolationTag)))
-        //                         id = Math.Max(id, _vlans[key]);
-        //                     id += 1;
-        //                     eth.Vlan = id;
-        //                     _vlans.Add(eth.Net, id);
-        //                 }
-
-        //             }
-        //         }
-        //     }
-        // }
-
-        // private async void UpdateVlanReservationsLoop()
-        // {
-        //     while(true)
-        //     {
-        //         lock (_vlans)
-        //         {
-        //             List<string> active = new List<string>();
-        //             foreach (Client host in _hostCache.Values)
-        //             {
-        //                 foreach (Vlan vlan in host.PgCache)
-        //                 {
-        //                     //reconstitue vlan reservations from active vlans
-        //                     if (!_vlans.ContainsKey(vlan.Name))
-        //                         _vlans.Add(vlan.Name, vlan.Id);
-
-        //                     active.Add(vlan.Name);
-        //                     _vlanMap[vlan.Id] = true;
-        //                 }
-        //             }
-
-        //             string[] reserved = _vlans.Keys.Where(x=>x.Contains("#")).ToArray();
-        //             string[] stale = reserved.Except(active).ToArray();
-
-        //             foreach(string net in stale)
-        //             {
-        //                 if (_vlans.ContainsKey(net)
-        //                     && !Find(net.Tag()).Result.Any() //don't remove if vm's are still deployed in this group
-        //                 )
-        //                 {
-        //                     _logger.LogDebug("removing stale vlan reservation " + net);
-        //                     _vlanMap[_vlans[net]] = false;
-        //                     _vlans.Remove(net);
-        //                 }
-        //             }
-        //         }
-
-        //         await Task.Delay(_syncInterval);
-        //     }
-        // }
 
         protected class HostVmCount
         {
