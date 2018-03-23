@@ -127,6 +127,10 @@ namespace TopoMojo.Core
             var files = Directory.GetFiles(repoPath, "import.this", SearchOption.AllDirectories);
             foreach (string file in files)
             {
+                //skip any staged exports
+                if (file.Contains("_exports"))
+                    continue;
+
                 try
                 {
                     _logger.LogInformation("Importing topo from {0}", file);

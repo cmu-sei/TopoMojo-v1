@@ -109,7 +109,7 @@ namespace TopoMojo.Controllers
         {
             string destPath = Path.Combine(
                 _fileUploadOptions.TopoRoot,
-                "exports",
+                "_exports",
                 DateTime.Now.ToString("s").Replace(":", "")
             );
             string docPath = Path.Combine(_env.WebRootPath, "docs");
@@ -130,7 +130,6 @@ namespace TopoMojo.Controllers
             string docPath = Path.Combine(_env.WebRootPath, "docs");
             return Ok(await _transferSvc.Import(destPath, docPath));
         }
-
 
         private void SendBroadcast(string text = "")
         {
