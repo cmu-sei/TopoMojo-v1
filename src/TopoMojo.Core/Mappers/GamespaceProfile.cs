@@ -7,8 +7,10 @@ namespace TopoMojo.Core.Mappers
     {
         public GamespaceProfile()
         {
-            CreateMap<Data.Entities.Gamespace, Models.Gamespace>();
+            CreateMap<Data.Entities.Gamespace, Models.Gamespace>()
+                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")));
             CreateMap<Data.Entities.Gamespace, Models.GameState>()
+                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.Name, opt => opt.ResolveUsing(s => s.Topology.Name));
 
             CreateMap<Data.Entities.Player, Models.Player>()

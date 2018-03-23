@@ -29,7 +29,7 @@ export class AgedDatePipe implements PipeTransform {
     transform(date: any): string {
         let r = "";
         let n = new Date();
-        let t = new Date(date + " GMT");
+        let t = new Date(date); // + " GMT");
         let tag = [ "s", "m", "h", "d" ];
         // console.log(date);
         // console.log(n);

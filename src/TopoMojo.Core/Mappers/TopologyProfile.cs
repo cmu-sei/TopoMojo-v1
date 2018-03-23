@@ -16,6 +16,7 @@ namespace TopoMojo.Core.Mappers
                     opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanManage())))
                 .ForMember(d => d.CanEdit, opt =>
                     opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())))
+                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
                 .ReverseMap();
 
             CreateMap<Data.Entities.Topology, Models.TopologySummary>()
