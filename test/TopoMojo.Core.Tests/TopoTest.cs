@@ -27,8 +27,8 @@ namespace Tests
                     Id = topo.Id,
                     Name = topo.Name + "Changed",
                     Description = topo.Description}).Result;
-                Assert.True(topo.Name.Contains("Changed"));
-                Assert.True(topo.Description == "original");
+                Assert.Matches("Changed", topo.Name);
+                Assert.Equal("original", topo.Description);
             }
         }
 

@@ -23,8 +23,8 @@ namespace Tests
                 template.Name += "Changed";
                 template.Detail = "detail";
                 template = mgr.Configure(template).Result;
-                Assert.True(template.Name.Contains("Changed"));
-                Assert.True(template.Detail == "detail");
+                Assert.Matches("Changed", template.Name);
+                Assert.Equal("detail", template.Detail);
             }
         }
 
