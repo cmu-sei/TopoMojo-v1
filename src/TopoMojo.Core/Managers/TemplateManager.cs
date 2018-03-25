@@ -100,6 +100,7 @@ namespace TopoMojo.Core
 
             Template linked = Mapper.Map<Template>(entity);
             linked.TopologyId = topoId;
+            linked.GlobalId = "";
             linked.Name += new Random().Next(100, 200).ToString();
             await _repo.Add(linked);
             //TODO: streamline object graph hydration
@@ -219,10 +220,10 @@ namespace TopoMojo.Core
             tu.Name = template.Name;
             tu.Networks = template.Networks ?? "lan";
             tu.Iso = template.Iso;
-            tu.IsolationTag = tag.HasValue() ? tag : template.Topology.GlobalId;
+            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId;
             tu.Id = template.Id.ToString();
             TopoMojo.Models.Virtual.Template result =  tu.AsTemplate();
-            result.UseUplinkSwitch = template.Topology.UseUplinkSwitch;
+            result.UseUplinkSwitch = template.Topology?.UseUplinkSwitch ?? false;
             return result;
         }
 
