@@ -128,7 +128,7 @@ namespace TopoMojo.Controllers
             foreach (char c in filename.ToCharArray())
                 if (!badFilenameChars.Contains(c))
                     fn += c;
-            return fn;
+            return fn.ToLower();
         }
     }
 }

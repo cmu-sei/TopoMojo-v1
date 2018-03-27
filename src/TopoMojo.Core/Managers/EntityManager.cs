@@ -32,14 +32,21 @@ namespace TopoMojo.Core
                 {
                     _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
                     if (_user.GlobalId.HasValue() && _user.Id == 0)
-                        _user = _user.Id > 0
+                    {
+                        var profile = _user.Id > 0
                             ? _profileRepo.Load(_user.Id).Result
                             : _profileRepo.FindByGlobalId(_user.GlobalId).Result;
-                        if (_user == null)
+
+                        if (profile == null)
                         {
                             _user.WorkspaceLimit = _options.DefaultWorkspaceLimit;
                             _user = _profileRepo.Add(_user).Result;
                         }
+                        else
+                        {
+                            _user = profile;
+                        }
+                    }
                 }
                 return _user;
             }
