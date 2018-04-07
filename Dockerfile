@@ -8,6 +8,7 @@ ENV ASPNETCORE_URLS=http://*:5000 \
 
 COPY . /app
 WORKDIR /app/src/TopoMojo.Web
+RUN bower install
 RUN dotnet publish -o /app/dist
 CMD ["dotnet", "run"]
 
@@ -15,8 +16,8 @@ CMD ["dotnet", "run"]
 #multi-stage target: prod
 #
 FROM dockreg.cwd.local/dotnet:2 AS prod
+COPY --from=dev /app/dist /app
 WORKDIR /app
-COPY --from=dev /app/dist .
-VOLUME /app/data
+EXPOSE 5000
 ENV ASPNETCORE_URLS=http://*:5000
-ENTRYPOINT [ "dotnet", "TopoMojo.Web.dll" ]
+CMD [ "dotnet", "TopoMojo.Web.dll" ]
