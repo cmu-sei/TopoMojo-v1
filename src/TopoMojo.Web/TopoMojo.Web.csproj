@@ -34,12 +34,12 @@
   </ItemGroup>
   <Target Name="Webpack" BeforeTargets="PrepareForPublish">
     <Exec Command="npm install" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --color --config webpack.config.vendor.js --env.prod" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --color --env.prod" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.prod" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --env.prod" />
   </Target>
   <Target Name="WebpackDev">
     <Exec Command="npm install" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --color" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --color --config webpack.config.vendor.js" />
     <Exec Command="node node_modules/webpack/bin/webpack.js --color" />
   </Target>
   <ItemGroup>
