@@ -519,9 +519,10 @@ function WebConsole(
 /**
  * UserManager
  */
-function UserManager() {
+function UserManager(
+    oidcKey
+) {
     const storageKey = 'sketch.auth.jwt.' + window.navigator.userAgent.split(' ').pop(); //.substring(window.navigator.userAgent.lastIndexOf(' '));
-    const oidcKey = 'oidc.user:https://id.sketchdemo.us:topomojo';
     var token = null;
     var timer;
     var expiringEvent = new CustomEvent("AuthExpiringEvent");

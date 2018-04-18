@@ -41,6 +41,7 @@ namespace TopoMojo
         public bool monitorSession { get; set; }
         public int checkSessionInterval { get; set; }
         public int accessTokenExpiringNotificationTime { get; set; }
+        public string storageKeyPrefix { get; set; } = "oidc.user";
 
     }
 

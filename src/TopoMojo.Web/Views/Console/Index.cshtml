@@ -1,3 +1,4 @@
+@model TopoMojo.Models.ConsoleDetail
 
 <div id="console-canvas-div" style="position:absolute;width:100%;height:100%">
     <div id="console-admin-div">
@@ -70,8 +71,10 @@
         $(function() {
             new WebConsole(
                 new VmService(
-                    '@Model',
-                    new UserManager()
+                    '@Model.Id',
+                    new UserManager(
+                        '@Model.Key'
+                    )
                 )
             )
         });
