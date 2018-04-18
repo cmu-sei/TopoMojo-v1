@@ -521,6 +521,23 @@ namespace TopoMojo.vSphere
             return info.progress;
         }
 
+        public async Task CreateDisk(string name, string type, string adapter, int size)
+        {
+            await Connect();
+            Task task = _vim.CreateVirtualDisk_TaskAsync(
+                _vdm,
+                name,
+                _datacenter,
+                new FileBackedVirtualDiskSpec
+                {
+                    diskType = type,
+                    adapterType = adapter,
+                    capacityKb = size * 1000 * 1000,
+                    profile = null
+                }
+            );
+        }
+
         public async Task DeleteDisk(string path)
         {
             await Connect();
