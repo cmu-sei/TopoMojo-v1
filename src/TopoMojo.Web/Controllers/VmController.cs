@@ -63,6 +63,11 @@ namespace TopoMojo.Controllers
 
                 switch (_pod.Options.TicketUrlHandler.ToLower())
                 {
+                    case "querystring":
+                        info.Url += $"?vmhost={src.Host}";
+                        target = _pod.Options.DisplayUrl;
+                    break;
+
                     case "local-app":
                         target = $"{Request.Host.Value}/{internalHost}";
                     break;
