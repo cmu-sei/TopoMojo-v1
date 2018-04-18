@@ -34,16 +34,23 @@ namespace TopoMojo.Core
                 if (_user == null)
                 {
                     string id = _profileResolver.Profile.GlobalId;
-                    _user = _profileCache.Find(id);
-                    if (_user == null)
+                    if (id.HasValue())
                     {
-                        _user = _profileRepo.FindByGlobalId(id).Result;
+                        _user = _profileCache.Find(id);
                         if (_user == null)
                         {
-                            _user.WorkspaceLimit = _options.DefaultWorkspaceLimit;
-                            _user = _profileRepo.Add(_user).Result;
+                            _user = _profileRepo.FindByGlobalId(id).Result;
+                            if (_user == null)
+                            {
+                                _user.WorkspaceLimit = _options.DefaultWorkspaceLimit;
+                                _user = _profileRepo.Add(_user).Result;
+                            }
+                            _profileCache.Add(_user);
                         }
-                        _profileCache.Add(_user);
+                    }
+                    else
+                    {
+                        _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
                     }
                 }
                 return _user;

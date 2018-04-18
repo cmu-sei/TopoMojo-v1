@@ -23,6 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddScoped<ProfileManager>()
                 .AddScoped<ChatService>()
                 .AddScoped<TransferService>()
+                .AddSingleton<IProfileCache, ProfileCache>()
                 .AddMappers();
         }
     }
