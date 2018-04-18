@@ -29,8 +29,9 @@ namespace TopoMojo.Core
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager
-        ) : base (pr, mill, options, profileResolver)
+            IPodManager podManager,
+            IProfileCache profileCache
+        ) : base (pr, mill, options, profileResolver, profileCache)
         {
             _pod = podManager;
             _repo = repo;

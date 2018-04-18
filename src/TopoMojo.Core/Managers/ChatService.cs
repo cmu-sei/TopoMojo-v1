@@ -19,8 +19,10 @@ namespace TopoMojo.Core
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            TopoMojoDbContext db
-        ) : base (pr, mill, options, profileResolver)
+            TopoMojoDbContext db,
+            IProfileCache profileCache
+
+        ) : base (pr, mill, options, profileResolver, profileCache)
         {
             _db = db;
         }

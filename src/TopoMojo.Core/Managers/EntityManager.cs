@@ -13,16 +13,19 @@ namespace TopoMojo.Core
             IProfileRepository profileRepo,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
+            IProfileResolver profileResolver,
+            IProfileCache profileCache
         )
         {
             _profileRepo = profileRepo;
             _logger = mill?.CreateLogger(this.GetType());
             _options = options;
             _profileResolver = profileResolver;
+            _profileCache = profileCache;
         }
 
         protected readonly IProfileRepository _profileRepo;
+        protected readonly IProfileCache _profileCache;
         private Data.Entities.Profile _user;
         protected Data.Entities.Profile Profile
         {
@@ -30,22 +33,17 @@ namespace TopoMojo.Core
             {
                 if (_user == null)
                 {
-                    _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
-                    if (_user.GlobalId.HasValue() && _user.Id == 0)
+                    string id = _profileResolver.Profile.GlobalId;
+                    _user = _profileCache.Find(id);
+                    if (_user == null)
                     {
-                        var profile = _user.Id > 0
-                            ? _profileRepo.Load(_user.Id).Result
-                            : _profileRepo.FindByGlobalId(_user.GlobalId).Result;
-
-                        if (profile == null)
+                        _user = _profileRepo.FindByGlobalId(id).Result;
+                        if (_user == null)
                         {
                             _user.WorkspaceLimit = _options.DefaultWorkspaceLimit;
                             _user = _profileRepo.Add(_user).Result;
                         }
-                        else
-                        {
-                            _user = profile;
-                        }
+                        _profileCache.Add(_user);
                     }
                 }
                 return _user;

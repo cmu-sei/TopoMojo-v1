@@ -32,7 +32,8 @@ namespace Tests
                 {
                     Name = "admin@test",
                     IsAdmin = true
-                })
+                }),
+                new ProfileCache()
             );
             AddUser("tester@test", true, true);
         }

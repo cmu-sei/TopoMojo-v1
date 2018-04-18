@@ -21,8 +21,9 @@ namespace TopoMojo.Core
             IProfileRepository profileRepo,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
-        ) : base(profileRepo, mill, options, profileResolver)
+            IProfileResolver profileResolver,
+            IProfileCache profileCache
+        ) : base(profileRepo, mill, options, profileResolver, profileCache)
         {
         }
 
@@ -43,6 +44,7 @@ namespace TopoMojo.Core
             var entity = await _profileRepo.Load(profile.Id);
             Mapper.Map(profile, entity);
             await _profileRepo.Update(entity);
+            _profileCache.Remove(entity.GlobalId);
             return true;
         }
 
