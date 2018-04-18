@@ -29,11 +29,11 @@ namespace TopoMojo.Extensions
                 break;
 
                 case "SqlServer":
-                //services.AddEntityFrameworkSqlServer();
+                services.AddEntityFrameworkSqlServer();
                 break;
 
                 case "PostgreSQL":
-                //services.AddEntityFrameworkNpgsql();
+                services.AddEntityFrameworkNpgsql();
                 break;
 
             }
@@ -50,8 +50,9 @@ namespace TopoMojo.Extensions
         )
         {
             string dbProvider = config.GetValue<string>("Database:Provider", "Sqlite").Trim();
-            //var migrationsAssembly = String.Format("{0}.Migrations.{1}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name, dbProvider);
-            var migrationsAssembly = String.Format("{0}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+            // var migrationsAssembly = String.Format("{0}.Migrations.{1}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name, dbProvider);
+            // var migrationsAssembly = String.Format("{0}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+            var migrationsAssembly = String.Format("TopoMojo.Data.{0}", dbProvider);
             var connectionString = config.GetConnectionString(dbProvider);
 
             switch (dbProvider)
@@ -61,11 +62,11 @@ namespace TopoMojo.Extensions
                 break;
 
                 case "SqlServer":
-                //builder.UseSqlServer(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
+                builder.UseSqlServer(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
                 break;
 
                 case "PostgreSQL":
-                //builder.UseNpgsql(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
+                builder.UseNpgsql(connectionString, options => options.MigrationsAssembly(migrationsAssembly));
                 break;
 
             }

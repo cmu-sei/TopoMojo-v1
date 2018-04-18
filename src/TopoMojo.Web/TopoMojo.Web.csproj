@@ -21,6 +21,9 @@
     <ProjectReference Include="..\TopoMojo.vMock\TopoMojo.vMock.csproj" />
     <ProjectReference Include="..\TopoMojo.vSphere\TopoMojo.vSphere.csproj" />
     <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />
+    <ProjectReference Include="..\TopoMojo.Data.Sqlite\TopoMojo.Data.Sqlite.csproj" />
+    <ProjectReference Include="..\TopoMojo.Data.SqlServer\TopoMojo.Data.SqlServer.csproj" />
+    <ProjectReference Include="..\TopoMojo.Data.PostgreSQL\TopoMojo.Data.PostgreSQL.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="6.2.2" />

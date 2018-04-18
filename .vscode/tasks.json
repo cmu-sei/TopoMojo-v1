@@ -25,7 +25,8 @@
         },
         {
             "label": "api-gen",
-            "command": "node src/TopoMojo.Web/swagger-ng.js -u http://localhost:5004/docs/v1/api.json -o src/TopoMojo.Web/ClientApp/app/api -m TermSkipTakeSortFilters:Search",           "type": "shell",
+            "command": "node src/TopoMojo.Web/swagger-ng.js -u http://localhost:5004/docs/v1/api.json -o src/TopoMojo.Web/ClientApp/app/api -m TermSkipTakeSortFilters:Search",
+            "type": "shell",
             "group": "build",
             "problemMatcher": "$tsc"
         }
