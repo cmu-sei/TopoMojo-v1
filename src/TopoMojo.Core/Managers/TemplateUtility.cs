@@ -19,7 +19,7 @@ namespace TopoMojo.Core
                 _template = new Template
                 {
                     Ram = 4,
-                    VideoRam = 24,
+                    VideoRam = 0,
                     Cpu = "1x2",
                     Adapters = 1,
                     Eth = new Eth[] { new Eth { Net = "lan", Type="e1000" }},
