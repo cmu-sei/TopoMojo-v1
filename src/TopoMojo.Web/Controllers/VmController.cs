@@ -54,8 +54,10 @@ namespace TopoMojo.Controllers
 
             if (info.Url.HasValue())
             {
+                _logger.LogDebug("ticket url: {0}", info.Url);
                 var src = new Uri(info.Url);
                 string target = "";
+                string qs = "";
                 string internalHost = src.Host.Split('.').First();
                 string domain = Request.Host.Value.IndexOf(".") >= 0
                             ? Request.Host.Value.Substring(Request.Host.Value.IndexOf(".")+1)
@@ -64,7 +66,7 @@ namespace TopoMojo.Controllers
                 switch (_pod.Options.TicketUrlHandler.ToLower())
                 {
                     case "querystring":
-                        info.Url += $"?vmhost={src.Host}";
+                        qs = $"?vmhost={src.Host}";
                         target = _pod.Options.DisplayUrl;
                     break;
 
@@ -86,6 +88,7 @@ namespace TopoMojo.Controllers
                 if (target.HasValue())
                     info.Url = info.Url.Replace(src.Host, target);
 
+                info.Url += qs;
             }
             return Ok(info);
         }

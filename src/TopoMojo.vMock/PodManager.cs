@@ -300,7 +300,8 @@ namespace TopoMojo.vMock
             {
                 Id = id,
                 Name = _vms[id].Name.Untagged(),
-                TopoId = _vms[id].Name.Tag()
+                TopoId = _vms[id].Name.Tag(),
+                Url = "wss://test1.internal.net/ticket/12345678"
             };
         }
 
