@@ -62,4 +62,8 @@ export class NavbarComponent {
     toggleDropdown() : void {
         this.dropDownVisible = !this.dropDownVisible;
     }
+
+    isAdmin() : boolean {
+        return this.service.isAdmin();
+    }
 }

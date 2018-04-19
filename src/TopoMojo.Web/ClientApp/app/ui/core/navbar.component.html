@@ -38,7 +38,7 @@
                 <!--Profile-->
             </a>
         </li>
-        <li *ngIf="profile.isAdmin" [routerLinkActive]="['link-active']">
+        <li *ngIf="isAdmin()" [routerLinkActive]="['link-active']">
             <a [routerLink]="['/admin']" [routerLinkActive]="['link-active']" [tooltip]="'ADMIN' | translate | lowercase">
                 <span class='fa fa-cog fa-2x'></span>
                 <!--Admin-->
