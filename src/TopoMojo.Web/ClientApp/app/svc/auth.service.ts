@@ -188,7 +188,12 @@ export class AuthService {
     }
 
     isAdmin() {
-        return (this.currentUser && this.currentUser.profile.isAdmin);
+        return this.currentUser &&
+            (
+                this.currentUser.profile.isAdmin ||
+                this.currentUser.profile.role == "administrator"
+            )
+        ;
     }
 
     cleanUrl(url) {
