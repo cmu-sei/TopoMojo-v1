@@ -33,24 +33,24 @@ namespace TopoMojo.Core
             {
                 if (_user == null)
                 {
-                    string id = _profileResolver.Profile.GlobalId;
-                    if (id.HasValue())
+                    var incoming = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
+                    if (incoming.GlobalId.HasValue())
                     {
-                        _user = _profileCache.Find(id);
+                        _user = _profileCache.Find(incoming.GlobalId);
                         if (_user == null)
                         {
-                            _user = _profileRepo.FindByGlobalId(id).Result;
+                            _user = _profileRepo.FindByGlobalId(incoming.GlobalId).Result;
                             if (_user == null)
                             {
-                                _user.WorkspaceLimit = _options.DefaultWorkspaceLimit;
-                                _user = _profileRepo.Add(_user).Result;
+                                incoming.WorkspaceLimit = _options.DefaultWorkspaceLimit;
+                                _user = _profileRepo.Add(incoming).Result;
                             }
                             _profileCache.Add(_user);
                         }
                     }
                     else
                     {
-                        _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
+                        _user = incoming;
                     }
                 }
                 return _user;
