@@ -30,6 +30,8 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
         this.url = this.auth.cleanUrl(this.auth.redirectUrl || this.route.snapshot.params['url'] || "/");
+        if (this.showExternal() && !this.showLocal())
+            this.oidcLogin();
     }
 
     oidcLogin() {
