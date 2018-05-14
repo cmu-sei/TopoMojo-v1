@@ -24,14 +24,14 @@ namespace TopoMojo.Controllers
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Groups.AddAsync(Context.ConnectionId, channelId);
+            Groups.AddToGroupAsync(Context.ConnectionId, channelId);
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
         public Task Leave(string channelId)
         {
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Groups.RemoveAsync(Context.ConnectionId, channelId);
+            Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 

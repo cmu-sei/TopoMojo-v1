@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 // import { SignalR, ISignalRConnection, IConnectionOptions, BroadcastEventListener } from 'ng2-signalr';
-import { HubConnection } from '@aspnet/signalr-client';
+import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
 import { AuthService, AuthTokenState } from './auth.service';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -86,7 +86,7 @@ export class NotificationService {
 
     start(key: string) : Promise<boolean> {
         this.key = key;
-        this.connection = new HubConnection(`/hub?bearer=${this.auth.currentUser.access_token}`);
+        this.connection = new HubConnectionBuilder().withUrl(`/hub?bearer=${this.auth.currentUser.access_token}`).build();
         this.log("starting sigr");
         return this.connection.start().then(() => {
             this.log("started sigr");

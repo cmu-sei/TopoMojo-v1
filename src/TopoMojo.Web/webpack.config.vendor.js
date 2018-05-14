@@ -23,7 +23,7 @@ const treeShakableModules = [
     'zone.js',
 ];
 const nonTreeShakableModules = [
-    '@aspnet/signalr-client',
+    '@aspnet/signalr',
     'babel-polyfill',
     'bootstrap/dist/css/bootstrap.css',
     'core-js',

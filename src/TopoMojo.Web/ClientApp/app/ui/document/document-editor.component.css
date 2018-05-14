@@ -15,7 +15,7 @@
     height: 100vh;
     /* display: inline-block; */
     vertical-align: top;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .fixed-height {
