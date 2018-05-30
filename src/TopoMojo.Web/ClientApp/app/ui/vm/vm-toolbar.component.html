@@ -10,7 +10,8 @@
     <li><span class="label"
         [class.label-default]="vm.status == 'created'"
         [class.label-primary]="vm.status == 'initialized'"
-        [class.label-success]="vm.status == 'deployed'">{{vm.status}}</span></li>
+        [class.label-success]="vm.status == 'deployed'"
+        [class.label-danger]="vm.status == 'confirm'">{{vm.status}}</span></li>
     <div class="btn-group">
         <button class="btn btn-default" (click)="startRefresh()" [tooltip]="'REFRESH' | translate | lowercase"><i class="fa fa-refresh"></i></button>
         <ng-template [ngSwitchCase]="'created'">
@@ -26,6 +27,10 @@
             <button class="btn btn-default" (click)="revert()" [tooltip]="'REVERT' | translate | lowercase"><i class="fa fa-fast-backward"></i></button>
             <button class="btn btn-default" (click)="save()" [tooltip]="'SAVE' | translate | lowercase" *ngIf="!hasParent()"><i class="fa fa-save"></i></button>
             <button class="btn btn-default" (click)="delete()" [tooltip]="'REMOVE' | translate | lowercase"><i class="fa fa-remove"></i></button>
+        </ng-template>
+        <ng-template [ngSwitchCase]="'confirm'">
+            <button class="btn btn-danger" (click)="confirmDelete()" [tooltip]="'REMOVE' | translate | lowercase"><i class="fa fa-trash"></i></button>
+            <button class="btn btn-default" (click)="cancelDelete()" [tooltip]="'CANCEL' | translate | lowercase"><i class="fa fa-remove"></i></button>
         </ng-template>
     </div>
 </div>
