@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -22,6 +23,7 @@ namespace TopoMojo.Core
         public TopologyManager(
             IProfileRepository profileRepository,
             ITopologyRepository repo,
+            IGamespaceRepository gameRepo,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
@@ -30,10 +32,12 @@ namespace TopoMojo.Core
         ) : base (profileRepository, mill, options, profileResolver, profileCache)
         {
             _repo = repo;
+            _gameRepo = gameRepo;
             _pod = podManager;
         }
 
         private readonly ITopologyRepository _repo;
+        private readonly IGamespaceRepository _gameRepo;
         private readonly IPodManager _pod;
 
         public async Task<Models.SearchResult<Models.TopologySummary>> List(Models.Search search)
@@ -282,6 +286,54 @@ namespace TopoMojo.Core
                 await _repo.Update(topology);
             }
             return true;
+        }
+
+        public async Task<bool> HasGames(int id)
+        {
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidOperationException();
+
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
+
+            return topology.Gamespaces.Any();
+        }
+
+        public async Task<Models.GameState[]> GetGames(int id)
+        {
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidOperationException();
+
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.GameState[]>(topology.Gamespaces);
+        }
+
+        public async Task<Models.GameState[]> KillGames(int id)
+        {
+            Data.Entities.Topology topology = await _repo.Load(id);
+            if (topology == null)
+                throw new InvalidOperationException();
+
+            if (! await _repo.CanEdit(id, Profile))
+                throw new InvalidOperationException();
+
+            var result = topology.Gamespaces.ToArray();
+            foreach (var gamespace in result)
+            {
+                List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+                foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
+                    tasks.Add(_pod.Delete(vm.Id));
+                Task.WaitAll(tasks.ToArray());
+                //TODO: _pod.DeleteMatches(player.Gamespace.GlobalId);
+
+                await _gameRepo.Remove(gamespace);
+            }
+
+            return Mapper.Map<Models.GameState[]>(result);
         }
     }
 }

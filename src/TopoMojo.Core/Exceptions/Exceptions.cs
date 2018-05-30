@@ -6,4 +6,5 @@ namespace TopoMojo.Core
     public class WorkspaceLimitException : Exception { }
     public class WorkspaceTemplateLimitException : Exception { }
     public class ParentTemplateException : Exception { }
+    public class WorkspaceNotIsolatedException : Exception { }
 }

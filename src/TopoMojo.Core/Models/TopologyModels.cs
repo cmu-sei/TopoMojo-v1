@@ -17,6 +17,7 @@ namespace TopoMojo.Core.Models
         public int TemplateLimit { get; set; }
         public bool IsPublished { get; set; }
         public bool IsLocked { get; set; }
+        public int GamespaceCount { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
     }
