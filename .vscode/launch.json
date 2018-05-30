@@ -45,6 +45,9 @@
             },
             "sourceFileMap": {
                 "/Views": "${workspaceRoot}/src/TopoMojo.Web/Views"
+            },
+            "logging": {
+                "engineLogging": false
             }
         },
         {

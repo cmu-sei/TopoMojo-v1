@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
-//using TopoMojo.Core;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
@@ -19,6 +18,7 @@ namespace TopoMojo.Controllers
     {
         public VmController(
             Core.TemplateManager templateManager,
+            Core.TopologyManager topoManager,
             IHubContext<TopologyHub, ITopoEvent> hub,
             Core.ProfileManager profileManager,
             IPodManager podManager,
@@ -27,6 +27,7 @@ namespace TopoMojo.Controllers
         :base(sp)
         {
             _mgr = templateManager;
+            _topoMgr = topoManager;
             _profileManager = profileManager;
             _pod = podManager;
             _hub = hub;
@@ -34,6 +35,7 @@ namespace TopoMojo.Controllers
 
         private readonly IPodManager _pod;
         private readonly Core.TemplateManager _mgr;
+        private readonly Core.TopologyManager _topoMgr;
         private readonly Core.ProfileManager _profileManager;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
@@ -155,12 +157,14 @@ namespace TopoMojo.Controllers
             return Ok(vm);
         }
 
-        [HttpGet("api/vm/{id}/save")]
+        [HttpGet("api/vm/{id}/save/{topoId}")]
         [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Save(string id)
+        public async Task<IActionResult> Save(string id, int topoId)
         {
             await AuthorizeAction(id, "save");
+            if (await _topoMgr.HasGames(topoId))
+                throw new Core.WorkspaceNotIsolatedException();
             Vm vm = await _pod.Save(id);
             SendBroadcast(vm, "save");
             return Ok(vm);

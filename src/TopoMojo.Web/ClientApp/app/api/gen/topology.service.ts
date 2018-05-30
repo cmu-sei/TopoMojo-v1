@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs/Observable';
 import { GeneratedService } from "./_service";
-import { ChangedTopology,NewTopology,Search,Template,Topology,TopologySearchResult,TopologyState,TopologySummary,TopologySummarySearchResult,VmOptions,Worker } from "./models";
+import { ChangedTopology,GameState,NewTopology,Search,Template,Topology,TopologySearchResult,TopologyState,TopologySummary,TopologySummarySearchResult,VmOptions,Worker } from "./models";
 
 @Injectable()
 export class GeneratedTopologyService extends GeneratedService {
@@ -60,6 +60,10 @@ export class GeneratedTopologyService extends GeneratedService {
 	public netsTopology(id: string) : Observable<VmOptions> {
 		return this.http.get<VmOptions>("/api/topology/" + id + "/nets");
 	}
-
+	public getGames(id: number) : Observable<Array<GameState>> {
+		return this.http.get<Array<GameState>>("/api/topology/" + id + "/games");
+	}
+	public deleteGames(id: number) : Observable<boolean> {
+		return this.http.delete<boolean>("/api/topology/" + id + "/games");
+	}
 }
-

@@ -339,5 +339,18 @@ export class WorkspaceComponent {
         setTimeout(()=>{ ev.state = "normal"}, 2000);
     }
 
-
+    killGames() : void {
+        this.service.deleteGames(this.topo.id).subscribe(
+            (result) => {
+                if (result) {
+                    this.animateSuccess("gameCount");
+                    this.topo.gamespaceCount = 0;
+                }
+            },
+            (err) => {
+                this.animateFailure("gameCount");
+                this.onError(err);
+            }
+        );
+    }
 }
