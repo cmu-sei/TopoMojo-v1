@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Jam.Accounts;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.EntityFrameworkCore;
 
@@ -80,9 +82,18 @@ namespace TopoMojo.Extensions
             using (var scope = webHost.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
+                IConfiguration config = services.GetRequiredService<IConfiguration>();
+                IHostingEnvironment env = services.GetService<IHostingEnvironment>();
                 DatabaseOptions options = services.GetService<DatabaseOptions>();
                 TopoMojoDbContext topoDb = services.GetService<TopoMojoDbContext>();
                 AccountDbContext accountDb = services.GetService<AccountDbContext>();
+                IAccountRepository datarepo = services.GetRequiredService<IAccountRepository>();
+                IAccountManager mgr = new AccountManager(
+                    datarepo,
+                    new AccountOptions(),
+                    services.GetRequiredService<ILoggerFactory>(),
+                    null, null, null);
+
                 if (options.DevModeRecreate)
                 {
                     topoDb.Database.EnsureDeleted();
@@ -92,31 +103,34 @@ namespace TopoMojo.Extensions
                 topoDb.Database.Migrate();
                 accountDb.Database.Migrate();
 
-                string guid = Guid.NewGuid().ToString();
-                if (!accountDb.Accounts.Any())
-                {
-                    //IAccountManager mgr = scope.ServiceProvider.GetRequiredService<IAccountManager>();
-                    IAccountRepository datarepo = services.GetRequiredService<IAccountRepository>();
-                    IAccountManager mgr = new AccountManager(
-                        datarepo,
-                        new AccountOptions(),
-                        services.GetRequiredService<ILoggerFactory>(),
-                        null, null, null);
-                        mgr.RegisterWithCredentialsAsync(
-                            new Credentials {
-                                Username = "admin@this.ws",
-                                Password = "321ChangeMe!"
-                            }, guid).Wait();
-                }
+                string seedFile = Path.Combine(env.ContentRootPath, options.SeedTemplateKey);
+                if (File.Exists(seedFile)) {
+                    DbSeedModel seedData = JsonConvert.DeserializeObject<DbSeedModel>(File.ReadAllText(seedFile));
+                    foreach (var u in seedData.Users)
+                    {
+                        if (!topoDb.Profiles.Any(p => p.GlobalId == u.GlobalId))
+                        {
+                            topoDb.Profiles.Add(new Profile
+                            {
+                                Name = u.Name,
+                                GlobalId = u.GlobalId,
+                                WhenCreated = DateTime.UtcNow,
+                                IsAdmin = u.IsAdmin
+                            });
+                        }
 
-                if (!topoDb.Profiles.Any())
-                {
-                    topoDb.Profiles.Add(new Profile {
-                        GlobalId = guid,
-                        Name = "Administrator",
-                        WhenCreated = DateTime.UtcNow,
-                        IsAdmin = true
-                    });
+                        if (
+                            u.Password.HasValue() &&
+                            !(accountDb.Accounts.Any(a => a.GlobalId == u.GlobalId))
+                        )
+                        {
+                            mgr.RegisterWithCredentialsAsync(
+                            new Credentials {
+                                Username = u.Username,
+                                Password = u.Password
+                            }, u.GlobalId).Wait();
+                        }
+                    }
                     topoDb.SaveChanges();
                 }
 
@@ -124,5 +138,19 @@ namespace TopoMojo.Extensions
             }
         }
 
+    }
+
+    public class DbSeedModel
+    {
+        public DbSeedUser[] Users { get; set; } = new DbSeedUser[] {};
+    }
+
+    public class DbSeedUser
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string GlobalId { get; set; }
+        public string Name { get; set; }
+        public bool IsAdmin { get; set; }
     }
 }

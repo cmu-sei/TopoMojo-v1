@@ -43,4 +43,12 @@
             <span>Save</span>
         </button>
     </div>
+    <div>
+        <h4>Live Users</h4>
+        <button (click)="loadLiveUsers()" class="btn btn-default">
+            <i class="fa fa-refresh"></i>
+            <span>Load</span>
+        </button>
+        <pre>{{liveUsers}}</pre>
+    </div>
 </div>

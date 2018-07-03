@@ -27,6 +27,8 @@ export class GeneratedAdminService extends GeneratedService {
 	public importAdmin() : Observable<Array<string>> {
 		return this.http.get<Array<string>>("/api/admin/import");
 	}
-
+	public getLiveUsers() : Observable<Array<any>> {
+		return this.http.get<Array<any>>("/api/admin/live");
+	}
 }
 

@@ -8,5 +8,6 @@ namespace TopoMojo
         public string Provider { get; set; }
         public string ConnectionString { get; set; }
         public string MigrationsAssembly { get; set; }
+        public string SeedTemplateKey { get; set; } = "seed-data.json";
     }
 }

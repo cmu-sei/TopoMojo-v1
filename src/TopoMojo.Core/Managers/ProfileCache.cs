@@ -10,12 +10,15 @@ namespace TopoMojo.Core
         void Add(Profile profile);
         void Remove(string id);
         Profile Find(string id);
+        bool IsEmpty { get; set;}
     }
 
     public class ProfileCache : IProfileCache
     {
         Dictionary<string, CachedProfile> _cache = new Dictionary<string, CachedProfile>();
         DateTime _lastPurge = DateTime.UtcNow;
+
+        public bool IsEmpty { get; set; } = true;
 
         public void Add(Profile profile)
         {

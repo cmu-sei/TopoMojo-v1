@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core.Models;
 using TopoMojo.Models.Virtual;
+using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
 {
@@ -14,17 +15,27 @@ namespace TopoMojo.Controllers
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (
-            ILogger<TopologyHub> logger
+            ILogger<TopologyHub> logger,
+            HubCache cache
         ) {
             _logger = logger;
+            _cache = cache;
         }
         private readonly ILogger<TopologyHub> _logger;
-
+        private readonly HubCache _cache;
 
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Groups.AddToGroupAsync(Context.ConnectionId, channelId);
+            var cc = new CachedConnection
+            {
+                Id = Context.ConnectionId,
+                ProfileName = Context.User?.Identity.Name,
+                ProfileId = Context.User?.FindFirstValue(JwtClaimTypes.Subject),
+                Room = channelId
+            };
+            _cache.Connections.TryAdd(cc.Id, cc);
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
@@ -32,6 +43,7 @@ namespace TopoMojo.Controllers
         {
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
+            _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 
