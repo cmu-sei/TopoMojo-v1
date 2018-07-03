@@ -119,7 +119,10 @@ namespace TopoMojo.Extensions
                             });
                         }
 
-                        if (!(accountDb.Accounts.Any(a => a.GlobalId == u.GlobalId)))
+                        if (
+                            u.Password.HasValue() &&
+                            !(accountDb.Accounts.Any(a => a.GlobalId == u.GlobalId))
+                        )
                         {
                             mgr.RegisterWithCredentialsAsync(
                             new Credentials {
