@@ -27,6 +27,8 @@
     "DELETE": "Delete",
     "DELETE-GAME": "End Game",
     "DELETE-GAME-PROMPT": "Please confirm you are done.",
+    "DELETE-WORKSPACE-GAMES": "End Games",
+    "DELETE-WORKSPACE-GAMES-PROMPT": "This will end all running gamespaces derived from this workspace.",
     "DELETE-TOPO": "Delete Topology",
     "DELETE-TOPO-PROMPT": "Please confirm you intend to delete this Topology along with its templates.",
     "DELETE-TEMPLATE": "Delete Template",
@@ -71,6 +73,7 @@
     "UPLOAD": "Upload",
     "VALIDATE-SHARE-CODE": "Validating share code...",
     "WORKSPACE": "Workspace",
+    "WORKSPACE-GAME-COUNT": "Instances",
     "WORKSPACE-LIST-EMPTY": "You've got no topo right now.",
     "AUTH" : {
         "CONFIRMATION-NEEDS-USERNAME": "Please specify the username to confirm.",
@@ -132,7 +135,8 @@
         "HOME-PLAY": "Already have one running?  Head here to pick up where you left off.",
         "NETWORKS": "Enter a space-delimited list of network names. Nics are assigned respectively. (Requires redeployment)",
         "PUBLISH": "When published, this topology is discoverable in the browser. (And saving machines in this workspace is disabled.)",
-        "SHARE": "Distribute this link to add your colleagues. (Refresh to generate a new share url.)"
+        "SHARE": "Distribute this link to add your colleagues. (Refresh to generate a new share url.)",
+        "WORKSPACE-GAMES": "If gamespaces are running from this workspace, local templates cannot be saved."
     },
     "EXCEPTION": {
         "AUTHENTICATIONFAILURE": "Authentication failed.",
@@ -143,6 +147,7 @@
         "NODOCUMENT": "No instruction document available.",
         "PARENTTEMPLATE": "This template is linked by other templates, so your action cannot be completed.",
         "WORKSPACETEMPLATELIMIT": "The template limit for this workspace prevented your action.",
-        "WORKSPACELIMIT": "The workspace limit for your profile prevented your action."
+        "WORKSPACELIMIT": "The workspace limit for your profile prevented your action.",
+        "WORKSPACENOTISOLATED": "This workspace has derived gamespaces running.  You must end those before saving."
     }
 }

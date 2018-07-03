@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -86,6 +87,28 @@ namespace TopoMojo.Controllers
             Topology topo = await _mgr.Delete(id);
             Log("deleted", topo);
             //Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
+            return Ok(true);
+        }
+
+        [HttpGet("api/topology/{id}/games")]
+        [ProducesResponseType(typeof(GameState[]), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> LoadGames([FromRoute]int id)
+        {
+            GameState[] games = await _mgr.GetGames(id);
+            return Ok(games);
+        }
+
+        [HttpDelete("api/topology/{id}/games")]
+        [ProducesResponseType(typeof(bool), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> DeleteGames([FromRoute]int id)
+        {
+            var games = await _mgr.KillGames(id);
+            List<Task> tasklist = new List<Task>();
+            foreach (var game in games)
+                tasklist.Add(_hub.Clients.Group(game.GlobalId).GameEvent(new BroadcastEvent<GameState>(User, "GAME.OVER", game)));
+            Task.WaitAll(tasklist.ToArray());
             return Ok(true);
         }
 

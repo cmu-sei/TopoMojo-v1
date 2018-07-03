@@ -113,6 +113,14 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     delete() {
+        this.vm.status = "confirm";
+    }
+
+    cancelDelete() {
+        this.vm.status = "deployed";
+    }
+
+    confirmDelete() {
         this.working = true;
         this.vm.task = { name: "deleting" };
         this.service.deleteVm(this.vm.id)
@@ -158,7 +166,7 @@ export class VmToolbarComponent implements OnChanges {
     save() {
         this.working = true;
         this.vm.task = { name: "saving" };
-        this.service.saveVm(this.vm.id)
+        this.service.saveVm(this.vm.id, this.template.topologyId)
         .subscribe(data => {
             this.startRefresh();
         }, (err) => { this.onError(err); });

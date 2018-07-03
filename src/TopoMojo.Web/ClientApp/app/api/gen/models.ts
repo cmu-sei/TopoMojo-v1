@@ -175,6 +175,7 @@ export interface Topology {
 	templateLimit?: number;
 	isPublished?: boolean;
 	isLocked?: boolean;
+	gamespaceCount?: number;
 	workers?: Array<Worker>;
 	templates?: Array<Template>;
 }
@@ -261,4 +262,3 @@ export enum VirtualVmStateEnum {
 	running = <any>'running',
 	suspended = <any>'suspended'
 }
-

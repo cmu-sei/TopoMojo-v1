@@ -170,7 +170,7 @@ namespace TopoMojo.Core
             Task.WaitAll(tasks.ToArray());
             //TODO: _pod.DeleteMatches(player.Gamespace.GlobalId);
 
-             await _repo.Remove(gamespace);
+            await _repo.Remove(gamespace);
             return Mapper.Map<Models.GameState>(gamespace);
         }
 

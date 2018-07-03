@@ -30,8 +30,8 @@ export class GeneratedVmService extends GeneratedService {
 	public stopVm(id: string) : Observable<VirtualVm> {
 		return this.http.get<VirtualVm>("/api/vm/" + id + "/stop");
 	}
-	public saveVm(id: string) : Observable<VirtualVm> {
-		return this.http.get<VirtualVm>("/api/vm/" + id + "/save");
+	public saveVm(id: string, topoId: number) : Observable<VirtualVm> {
+		return this.http.get<VirtualVm>("/api/vm/" + id + "/save/" + topoId);
 	}
 	public revertVm(id: string) : Observable<VirtualVm> {
 		return this.http.get<VirtualVm>("/api/vm/" + id + "/revert");
@@ -62,4 +62,3 @@ export class GeneratedVmService extends GeneratedService {
 	}
 
 }
-

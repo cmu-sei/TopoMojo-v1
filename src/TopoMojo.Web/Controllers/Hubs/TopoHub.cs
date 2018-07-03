@@ -27,7 +27,7 @@ namespace TopoMojo.Controllers
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Groups.AddAsync(Context.ConnectionId, channelId);
+            Groups.AddToGroupAsync(Context.ConnectionId, channelId);
             var cc = new CachedConnection
             {
                 Id = Context.ConnectionId,
@@ -42,7 +42,7 @@ namespace TopoMojo.Controllers
         public Task Leave(string channelId)
         {
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            Groups.RemoveAsync(Context.ConnectionId, channelId);
+            Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
             _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
             return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }

@@ -108,14 +108,33 @@
             </div>
         </div>
         <div [class.hidden]="showing!='templates'"  class="col-xs-12">
-            <div class="col-xs-8 well">
-                <p *ngIf="!topo.templates || topo.templates.length == 0" translate>MACHINE-LIST-EMPTY</p>
-                <div *ngIf="topo.templates" >
-                    <div *ngFor="let t of topo.templates" class="truncate">
-                        <template-editor
-                            [topo]="topo"
-                            [template]="t"
-                            ></template-editor>
+            <div class="col-xs-8">
+                <div class="col-xs-12 well">
+                    <p *ngIf="!topo.templates || topo.templates.length == 0" translate>MACHINE-LIST-EMPTY</p>
+                    <div *ngIf="topo.templates" >
+                        <div *ngFor="let t of topo.templates" class="truncate">
+                            <template-editor
+                                [topo]="topo"
+                                [template]="t"
+                                ></template-editor>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 well" *ngIf="topo.gamespaceCount">
+                    <div class="col-xs-12 prop">
+                        <p>
+                            <i class="fa fa-warning text text-warning"></i>
+                            <span translate>HELP.WORKSPACE-GAMES</span>
+                        </p>
+                        <span class="col-xs-2 prop-label" translate>WORKSPACE-GAME-COUNT</span>
+                        <div class="col-xs-10">
+                            <span class="label label-warning" [@eventState]="getEvent('gameCount').state">{{topo.gamespaceCount}}</span>
+                            <confirm-delete
+                                (onDelete)="killGames()"
+                                label="DELETE-WORKSPACE-GAMES"
+                                prompt="DELETE-WORKSPACE-GAMES-PROMPT">
+                            </confirm-delete>
+                        </div>
                     </div>
                 </div>
             </div>

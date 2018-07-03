@@ -241,7 +241,7 @@ namespace TopoMojo
             app.UseAuthentication();
 
             app.UseSignalR(routes => {
-                routes.MapHub<TopologyHub>("hub");
+                routes.MapHub<TopologyHub>("/hub");
             });
 
             app.UseMvc(routes =>
