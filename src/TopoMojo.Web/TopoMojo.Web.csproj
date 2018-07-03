@@ -10,7 +10,7 @@
   <ItemGroup>
     <Compile Remove="node_modules\**\*" />
     <Content Update="ClientApp/**/*;**/*.map;wwwroot/docs/**/*;**/*.json;**/*.DS_Store;topomojo.db" CopyToPublishDirectory="Never" />
-    <Content Update="appsettings.json;wwwroot/lang/**/*" CopyToPublishDirectory="Always" />
+    <Content Update="appsettings.json;**/*.example;wwwroot/lang/**/*" CopyToPublishDirectory="Always" />
     <Content Update="wwwroot/lib/**/*" CopyToPublishDirectory="Never"></Content>
     <Content Update="wwwroot/lib/**/*.min.js;wwwroot/lib/**/*.min.css" CopyToPublishDirectory="Always"></Content>
     <Content Update="wwwroot/lib/bootstrap/dist/fonts/**/*.woff2" CopyToPublishDirectory="Always"></Content>

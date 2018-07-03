@@ -9,7 +9,7 @@ ENV ASPNETCORE_URLS=http://*:5000 \
 COPY . /app
 WORKDIR /app/src/TopoMojo.Web
 RUN bower install
-RUN dotnet publish -o /app/dist
+RUN dotnet publish -c Release -o /app/dist
 CMD ["dotnet", "run"]
 
 #
