@@ -72,5 +72,10 @@ namespace TopoMojo.Data.EntityFrameworkCore
 
             return result;
         }
+
+        public async Task<bool> IsEmpty()
+        {
+            return !(await DbContext.Profiles.AnyAsync());
+        }
     }
 }

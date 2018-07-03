@@ -7,5 +7,6 @@ namespace TopoMojo.Data.Abstractions
     {
         Task<Profile> LoadDetail(int id);
         Task<bool> CanEditSpace(string globalId, Profile profile);
+        Task<bool> IsEmpty();
     }
 }

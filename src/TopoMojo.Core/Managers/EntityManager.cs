@@ -42,8 +42,18 @@ namespace TopoMojo.Core
                             _user = _profileRepo.FindByGlobalId(incoming.GlobalId).Result;
                             if (_user == null)
                             {
+                                //if empty, check db for emptiness
+                                if (_profileCache.IsEmpty)
+                                    _profileCache.IsEmpty = _profileRepo.IsEmpty().Result;
+
+                                //if empty, make this profile an admin
+                                incoming.IsAdmin = (_profileCache.IsEmpty) ? true : incoming.IsAdmin;
                                 incoming.WorkspaceLimit = _options.DefaultWorkspaceLimit;
                                 _user = _profileRepo.Add(incoming).Result;
+
+                                //set cache to !empty
+                                if (_profileCache.IsEmpty)
+                                    _profileCache.IsEmpty = false;
                             }
                             _profileCache.Add(_user);
                         }
