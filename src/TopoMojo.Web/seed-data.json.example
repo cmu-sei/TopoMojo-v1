@@ -1,9 +1,10 @@
 {
     "Users": [
         {
+            "GlobalId": "9fd3c38e-58b0-4af1-80d1-1895af91f1f9",
             "Name": "Administrator",
             "Username": "admin@this.ws",
-            "GlobalId": "9fd3c38e-58b0-4af1-80d1-1895af91f1f9",
+            "Password": "",
             "IsAdmin": true
         }
     ]
