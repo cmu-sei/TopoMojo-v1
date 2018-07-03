@@ -14,11 +14,12 @@ using Newtonsoft.Json.Linq;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
+using TopoMojo.Services;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "admin")]
+    [Authorize(AuthenticationSchemes = "IdSrv,Bearer", Roles = "admin,administrator")]
     public class AdminController : _Controller
     {
         public AdminController(
@@ -27,7 +28,8 @@ namespace TopoMojo.Controllers
             IServiceProvider sp,
             IHostingEnvironment env,
             TransferService transferSvc,
-            FileUploadOptions fileUploadOptions
+            FileUploadOptions fileUploadOptions,
+            HubCache hubCache
         ) : base(sp)
         {
             _chatService = chatService;
@@ -35,6 +37,7 @@ namespace TopoMojo.Controllers
             _fileUploadOptions = fileUploadOptions;
             _hub = hub;
             _env = env;
+            _hubCache = hubCache;
         }
 
         private readonly ChatService _chatService;
@@ -42,6 +45,7 @@ namespace TopoMojo.Controllers
         private readonly IHostingEnvironment _env;
         private readonly TransferService _transferSvc;
         private readonly FileUploadOptions _fileUploadOptions;
+        private readonly HubCache _hubCache;
 
         [HttpGet("/api/admin/getsettings")]
         [JsonExceptionFilter]
@@ -129,6 +133,14 @@ namespace TopoMojo.Controllers
             string destPath = _fileUploadOptions.TopoRoot;
             string docPath = Path.Combine(_env.WebRootPath, "docs");
             return Ok(await _transferSvc.Import(destPath, docPath));
+        }
+
+        [HttpGet("api/admin/live")]
+        [ProducesResponseType(typeof(CachedConnection[]), 200)]
+        [JsonExceptionFilter]
+        public IActionResult LiveUsers()
+        {
+            return Ok(_hubCache.Connections.Values);
         }
 
         private void SendBroadcast(string text = "")

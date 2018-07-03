@@ -19,6 +19,7 @@ export class AdminSettingsComponent implements OnInit {
     hostField: string = "";
     errors: any[] = [];
     importResults: string = "";
+    liveUsers: string = "";
 
     ngOnInit() {
     }
@@ -65,6 +66,14 @@ export class AdminSettingsComponent implements OnInit {
         this.svc.importAdmin().subscribe(
             (results : Array<string>) => {
                 this.importResults = results.join('\n');
+            }
+        )
+    }
+
+    loadLiveUsers() : void {
+        this.svc.getLiveUsers().subscribe(
+            (results: Array<any>) => {
+                this.liveUsers = JSON.stringify(results, null, 4);
             }
         )
     }

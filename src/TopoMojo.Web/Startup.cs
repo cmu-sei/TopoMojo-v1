@@ -84,6 +84,7 @@ namespace TopoMojo
             services.AddScoped<IFileUploadHandler, FileUploadHandler>();
             services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<HubCache>();
 
             // add pod manager
             services.AddSingleton<IPodManager>(sp => {
