@@ -90,7 +90,8 @@ namespace Tests
             {
                 mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
                     new TopologyRepository(_ctx),
-                    _mill, _coreOptions, _ur, null);
+                    new GamespaceRepository(_ctx),
+                    _mill, _coreOptions, _ur, null, new ProfileCache());
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
             return mgr as TopologyManager;
@@ -104,7 +105,7 @@ namespace Tests
             {
                 mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
                     new TemplateRepository(_ctx),
-                    _mill, _coreOptions, _ur);
+                    _mill, _coreOptions, _ur, null, new ProfileCache());
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
             return mgr as TemplateManager;

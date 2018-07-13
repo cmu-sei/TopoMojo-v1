@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <AssemblyName>TopoMojo.Web</AssemblyName>
     <OutputType>Exe</OutputType>
@@ -10,7 +10,7 @@
   <ItemGroup>
     <Compile Remove="node_modules\**\*" />
     <Content Update="ClientApp/**/*;**/*.map;wwwroot/docs/**/*;**/*.json;**/*.DS_Store;topomojo.db" CopyToPublishDirectory="Never" />
-    <Content Update="appsettings.json;**/*.example;wwwroot/lang/**/*" CopyToPublishDirectory="Always" />
+    <Content Update="appsettings.json;*.example;wwwroot/lang/**/*" CopyToPublishDirectory="Always" />
     <Content Update="wwwroot/lib/**/*" CopyToPublishDirectory="Never"></Content>
     <Content Update="wwwroot/lib/**/*.min.js;wwwroot/lib/**/*.min.css" CopyToPublishDirectory="Always"></Content>
     <Content Update="wwwroot/lib/bootstrap/dist/fonts/**/*.woff2" CopyToPublishDirectory="Always"></Content>
@@ -26,14 +26,13 @@
     <ProjectReference Include="..\TopoMojo.Data.PostgreSQL\TopoMojo.Data.PostgreSQL.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="6.2.2" />
+    <PackageReference Include="AutoMapper" Version="7.0.1" />
     <PackageReference Include="DiscUtils.Iso9660" Version="0.13.0-alpha" />
     <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="2.6.0" />
     <PackageReference Include="Jam.Accounts" Version="2.0.0" />
     <PackageReference Include="MailKit" Version="2.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-rc1-final" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="2.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.2"/>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="2.5.0" />
   </ItemGroup>
   <Target Name="Webpack" BeforeTargets="PrepareForPublish">
     <Exec Command="npm install" />
@@ -45,7 +44,4 @@
     <Exec Command="node node_modules/webpack/bin/webpack.js --color --config webpack.config.vendor.js" />
     <Exec Command="node node_modules/webpack/bin/webpack.js --color" />
   </Target>
-  <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
-  </ItemGroup>
 </Project>

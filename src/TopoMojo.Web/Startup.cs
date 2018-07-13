@@ -7,6 +7,7 @@ using Jam.Accounts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,7 +70,8 @@ namespace TopoMojo
             services.AddMvc(options =>
             {
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
-            });
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
             // .AddJsonOptions(options =>
             // {
             //     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -173,6 +175,13 @@ namespace TopoMojo
                         options.Authority = oidcOptions.Authority;
                         options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
                         options.ApiName = oidcOptions.AuthorizationScope;
+                        // options.Events = new OpenIdConnectEvents
+                        // {
+                        //     OnTokenValidated = async ctx =>
+                        //     {
+
+                        //     }
+                        // };
                     }
                 );
             }
