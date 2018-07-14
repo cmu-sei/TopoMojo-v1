@@ -17,14 +17,12 @@ namespace TopoMojo.Core
     public class TemplateManager : EntityManager<Template>
     {
         public TemplateManager(
-            IProfileRepository profileRepository,
             ITemplateRepository repo,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager,
-            IProfileCache profileCache
-        ) : base(profileRepository, mill, options, profileResolver, profileCache)
+            IPodManager podManager
+        ) : base(mill, options, profileResolver)
         {
             _repo = repo;
             _pod = podManager;

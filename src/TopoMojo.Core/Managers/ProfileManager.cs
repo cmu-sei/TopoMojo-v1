@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
@@ -22,11 +23,15 @@ namespace TopoMojo.Core
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IProfileCache profileCache
-        ) : base(profileRepo, mill, options, profileResolver, profileCache)
+            IMemoryCache profileCache
+        ) : base(mill, options, profileResolver)
         {
+            _profileRepo = profileRepo;
+            _profileCache = profileCache;
         }
 
+        private readonly IProfileRepository _profileRepo;
+        private readonly IMemoryCache _profileCache;
         public async Task<Models.Profile> Add(Models.Profile profile)
         {
             if (!Profile.IsAdmin)
@@ -44,7 +49,7 @@ namespace TopoMojo.Core
             var entity = await _profileRepo.Load(profile.Id);
             Mapper.Map(profile, entity);
             await _profileRepo.Update(entity);
-            _profileCache.Remove(entity.GlobalId);
+            _profileCache.Remove(profile.GlobalId);
             return true;
         }
 
@@ -87,12 +92,13 @@ namespace TopoMojo.Core
 
         public async Task<bool> UpdateProfile(Models.ChangedProfile profile)
         {
-            if (!Profile.IsAdmin || Profile.GlobalId != profile.GlobalId)
+            if (!Profile.IsAdmin && Profile.GlobalId != profile.GlobalId)
                 throw new InvalidOperationException();
 
             var p = await _profileRepo.FindByGlobalId(profile.GlobalId);
             Mapper.Map(profile, p);
             await _profileRepo.Update(p);
+            _profileCache.Remove(profile.GlobalId);
             return true;
         }
 

@@ -21,15 +21,13 @@ namespace TopoMojo.Core
     public class TopologyManager : EntityManager<Topology>
     {
         public TopologyManager(
-            IProfileRepository profileRepository,
             ITopologyRepository repo,
             IGamespaceRepository gameRepo,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager,
-            IProfileCache profileCache
-        ) : base (profileRepository, mill, options, profileResolver, profileCache)
+            IPodManager podManager
+        ) : base (mill, options, profileResolver)
         {
             _repo = repo;
             _gameRepo = gameRepo;
@@ -136,8 +134,8 @@ namespace TopoMojo.Core
         {
             if (!Profile.IsAdmin)
             {
-                var profile = await _profileRepo.LoadDetail(Profile.Id);
-                if (profile.Workspaces.Count() >= profile.WorkspaceLimit)
+                int existingWorkspaceCount = await _repo.GetWorkspaceCount(Profile.Id);
+                if (existingWorkspaceCount >= Profile.WorkspaceLimit)
                     throw new WorkspaceLimitException();
             }
 

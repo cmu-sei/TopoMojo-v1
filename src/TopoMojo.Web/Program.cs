@@ -3,7 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using TopoMojo.Extensions;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     public class Program
     {

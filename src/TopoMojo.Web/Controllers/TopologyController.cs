@@ -12,7 +12,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class TopologyController : _Controller
     {
         public TopologyController(

@@ -13,18 +13,20 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class ProfileController : _Controller
     {
         public ProfileController(
             ProfileManager profileManager,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _mgr = profileManager;
         }
 
         private readonly ProfileManager _mgr;
 
+        [Authorize(Roles = "admin")]
         [HttpGet("api/profiles")]
         [ProducesResponseType(typeof(SearchResult<Profile>), 200)]
         [JsonExceptionFilter]
@@ -43,6 +45,7 @@ namespace TopoMojo.Controllers
             return profile;
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost("api/profile/priv")]
         [ProducesResponseType(typeof(Profile), 200)]
         [JsonExceptionFilter]

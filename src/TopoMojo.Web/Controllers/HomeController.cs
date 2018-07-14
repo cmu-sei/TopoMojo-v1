@@ -16,22 +16,22 @@ namespace TopoMojo.Controllers
     {
         public HomeController
         (
-            ClientSettings settings,
-            Jam.Accounts.AccountOptions accountOptions
+            ClientSettings settings
+            // Jam.Accounts.AccountOptions accountOptions
         )
         {
             _settings = settings;
-            _accountOptions = accountOptions;
+            // _accountOptions = accountOptions;
         }
 
         private readonly ClientSettings _settings;
-        private readonly Jam.Accounts.AccountOptions _accountOptions;
+        // private readonly Jam.Accounts.AccountOptions _accountOptions;
 
         public IActionResult Index()
         {
             ViewBag.Title = _settings.Branding.ApplicationName;
-            _settings.Login.AllowedDomains = _accountOptions.Registration.AllowedDomains;
-            _settings.Login.PasswordComplexity = _accountOptions.Password.ComplexityText;
+            // _settings.Login.AllowedDomains = _accountOptions.Registration.AllowedDomains;
+            // _settings.Login.PasswordComplexity = _accountOptions.Password.ComplexityText;
             ViewBag.ClientSettings = _settings.ToUglyJson();
             return View();
         }

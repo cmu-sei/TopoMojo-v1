@@ -19,7 +19,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer", Roles = "admin,administrator")]
+    [Authorize(Roles = "admin")]
     public class AdminController : _Controller
     {
         public AdminController(

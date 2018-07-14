@@ -11,7 +11,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (

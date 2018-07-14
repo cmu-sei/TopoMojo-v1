@@ -22,7 +22,7 @@ export class ProfileEditorComponent implements OnInit {
 
     update() : void {
         this.profileSvc.postProfile({
-            globalId : this.authSvc.currentUser.profile.id,
+            globalId : this.authSvc.currentUser.profile.sub,
             name : this.profileName
         }).subscribe(
             (result) => {

@@ -15,14 +15,11 @@ namespace TopoMojo.Core
     public class ChatService : EntityManager<Data.Entities.Message>
     {
         public ChatService (
-            IProfileRepository pr,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            TopoMojoDbContext db,
-            IProfileCache profileCache
-
-        ) : base (pr, mill, options, profileResolver, profileCache)
+            TopoMojoDbContext db
+        ) : base (mill, options, profileResolver)
         {
             _db = db;
         }

@@ -1,111 +1,68 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Text;
-using IdentityModel;
-using Jam.Accounts;
+using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
-using TopoMojo.Core.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Services;
-using TopoMojo.Web;
+//using TopoMojo.Web;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     public class Startup
     {
-         public Startup(IConfiguration configuration, IHostingEnvironment env)
+         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Env = env;
         }
 
         public IConfiguration Configuration { get; }
-        public IHostingEnvironment Env { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions()
-
-                .Configure<ControlOptions>(Configuration.GetSection("Control"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<ControlOptions>>().CurrentValue)
-
-                .Configure<ClientSettings>(Configuration.GetSection("ClientSettings"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<ClientSettings>>().CurrentValue)
-
-                .Configure<MessagingOptions>(Configuration.GetSection("Messaging"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<MessagingOptions>>().CurrentValue)
-
-                .Configure<FileUploadOptions>(Configuration.GetSection("FileUpload"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<FileUploadOptions>>().CurrentValue);
-
-            // add specified db provider
-            services.AddDbProvider(Configuration);
-
-            // add Account services
-            services.AddJamAccounts()
-                .WithConfiguration(() => Configuration.GetSection("Account"), opt => opt.RootPath = Env.ContentRootPath)
-                .WithDefaultRepository(builder => builder.UseConfiguredDatabase(Configuration))
-                .WithProfileService(builder => builder.AddScoped<IProfileService, ProfileService>());
-
-            // add TopoMojo
-            services
-                .AddTopoMojo(() => Configuration.GetSection("Core"))
-                .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration));
-
             // Add framework services.
             services.AddMvc(options =>
             {
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            // .AddJsonOptions(options =>
-            // {
-            //     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            //     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            // });
-
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
 
-            services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddScoped<IProfileResolver, ProfileResolver>();
-            services.AddScoped<IFileUploadHandler, FileUploadHandler>();
-            services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<HubCache>();
+            services.AddDbProvider(() => Configuration.GetSection("Database"));
 
-            // add pod manager
-            services.AddSingleton<IPodManager>(sp => {
-                var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
-                return String.IsNullOrWhiteSpace(options.Url)
-                    ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
-                    : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
-            });
+            #region Configure TopoMojo
+
+            services
+                .AddApplicationOptions(Configuration)
+                .AddProfileResolver()
+                .AddTopoMojo(() => Configuration.GetSection("Core"))
+                .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
+                .AddScoped<IFileUploadHandler, FileUploadHandler>()
+                .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
+                .AddSingleton<IPodManager>(sp => {
+                    var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
+                    return String.IsNullOrWhiteSpace(options.Url)
+                        ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
+                        : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
+                });
+
+            #endregion
 
             #region Configure Signalr
 
             services.AddSignalR(options =>{});
+            services.AddSingleton<HubCache>();
 
-            // services.AddSingleton(_ => new JsonSerializer
-            //     {
-            //         ContractResolver = new SignalRContractResolver(),
-            //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            //     }
-            // );
             #endregion
 
             #region Configure Swagger
@@ -140,55 +97,24 @@ namespace TopoMojo
             #endregion
 
             #region Configure Authentication
-            // add authentication
-            AccountOptions accountOptions = Configuration.GetSection("Account").Get<AccountOptions>();
-            TokenOptions tokenOptions = accountOptions.Token;
 
-            var authBuilder = services.AddAuthentication(
+            var oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
+            services.AddAuthentication(
                 options =>
                 {
-                    options.DefaultScheme = tokenOptions.Scheme;
-                    options.DefaultChallengeScheme = tokenOptions.Scheme;
+                    options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
                 }
             )
-            .AddJwtBearer(
-                tokenOptions.Scheme,
+            .AddIdentityServerAuthentication(
+                IdentityServerAuthenticationDefaults.AuthenticationScheme,
                 options => {
-                    options.RequireHttpsMetadata = false; //tokenOptions.RequireHttpsMetadata;
-                    options.TokenValidationParameters =  new TokenValidationParameters
-                    {
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key)),
-                        ValidIssuer = tokenOptions.Issuer,
-                        ValidAudience = tokenOptions.Audience,
-                        NameClaimType = JwtClaimTypes.Name,
-                        RoleClaimType = JwtClaimTypes.Role
-                    };
+                    options.Authority = oidcOptions.Authority;
+                    options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                    options.ApiName = oidcOptions.AuthorizationScope;
                 }
             );
 
-            var oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
-            if (oidcOptions.Enabled)
-            {
-                authBuilder.AddIdentityServerAuthentication(
-                    "IdSrv", //IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                    options => {
-                        options.Authority = oidcOptions.Authority;
-                        options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                        options.ApiName = oidcOptions.AuthorizationScope;
-                        // options.Events = new OpenIdConnectEvents
-                        // {
-                        //     OnTokenValidated = async ctx =>
-                        //     {
-
-                        //     }
-                        // };
-                    }
-                );
-            }
-            else
-            {
-                authBuilder.AddJwtBearer("IdSrv", options => {});
-            }
             #endregion
         }
 

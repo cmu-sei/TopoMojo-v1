@@ -14,7 +14,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class ChatController : _Controller
     {
         public ChatController(

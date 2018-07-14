@@ -2,7 +2,6 @@ namespace TopoMojo
 {
     public class AuthorizationOptions
     {
-        public bool Enabled { get; set; }
         public string Authority { get; set; }
         public string AuthorizationUrl { get; set; }
         public string AuthorizationScope { get; set; }

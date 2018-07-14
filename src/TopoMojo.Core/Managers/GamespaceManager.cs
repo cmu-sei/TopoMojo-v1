@@ -23,15 +23,13 @@ namespace TopoMojo.Core
     public class GamespaceManager : EntityManager<Gamespace>
     {
         public GamespaceManager(
-            IProfileRepository pr,
             IGamespaceRepository repo,
             ITopologyRepository topos,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager,
-            IProfileCache profileCache
-        ) : base (pr, mill, options, profileResolver, profileCache)
+            IPodManager podManager
+        ) : base (mill, options, profileResolver)
         {
             _pod = podManager;
             _repo = repo;
