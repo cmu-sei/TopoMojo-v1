@@ -1,0 +1,16 @@
+<div>
+  <button class="btn btn-default" (click)="clearState()" id='clearState'>Clear Stale State</button>
+  <button class="btn btn-default" (click)="getUser()" id='getUser'>Get User</button>
+  <button class="btn btn-default" (click)="removeUser()" id='removeUser'>Remove</button>
+</div>
+<div>
+  <button class="btn btn-default" (click)="startSigninMainWindow()" id='startSigninMainWindow'>Login</button>
+  <button class="btn btn-default" (click)="endSigninMainWindow()" id='endSigninMainWindow'>Callback</button>
+</div>
+<div>
+  <button class="btn btn-default" (click)="startSignoutMainWindow()" id='startSignoutMainWindow'>Logout</button>
+  <button class="btn btn-default" (click)="endSignoutMainWindow()" id='endSignoutMainWindow'>Callback</button>
+</div>
+<div *ngIf="_user">
+  <pre>{{_user | json}}</pre>
+</div>

@@ -1,0 +1,28 @@
+<div class="container">
+    <div class="row">
+        <div *ngIf="loading" class="text-center">
+            <span class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></span>
+        </div>
+        <p *ngIf="games && games.length == 0" translate>GAME-LIST-EMPTY</p>
+        <div *ngIf="games && games.length > 0"  class="col-xs-12">
+            <div *ngFor="let g of games" class="col-xs-12 alert alert-success">
+                <h4>{{ g.name }}</h4>
+                <div class="pull-right">
+                    <button class="btn btn-link"
+                    [tooltip]="'CONTINUE' | translate | lowercase"
+                    [routerLink]="['/mojo', g.topologyId]">
+                        <i class="fa fa-flash fa-2x text text-success"></i>
+                    </button>
+                    <confirm-delete
+                        (onDelete)="delete(g.id)"
+                        prompt="DELETE-GAME-PROMPT"
+                        [asLink]="true">
+                    </confirm-delete>
+                </div>
+                <div class="col-xs-10 col-xs-offset-1">
+                    <p><span class="label label-success" translate>CREATED</span> {{g.whenCreated}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

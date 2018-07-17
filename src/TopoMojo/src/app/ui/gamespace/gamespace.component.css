@@ -1,0 +1,7 @@
+.container {
+    padding: 16px 0px 16px 0px;
+    max-width: 600px;
+}
+h4 {
+    display: inline-block;
+}

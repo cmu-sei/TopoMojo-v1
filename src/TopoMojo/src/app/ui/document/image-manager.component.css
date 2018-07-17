@@ -1,0 +1,34 @@
+.offscreen {
+    position: absolute;
+    left: -1000px;
+    height: 0px;
+    width: 0px;
+    resize: none;
+    border: 0px;
+}
+div {
+    vertical-align: top;
+}
+h4 {
+    display: inline-block;
+    background-color: black;
+    color: white;
+    border-radius: 4px;
+    padding: 8px;
+}
+label {
+    margin: 8px;
+}
+.upload-ui {
+    display: inline-block;
+}
+.thumb {
+    height: 150px;
+    overflow: hidden;
+}
+.pic-overlay {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    z-index: 2;
+}

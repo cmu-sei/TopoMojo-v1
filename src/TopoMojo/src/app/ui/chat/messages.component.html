@@ -1,0 +1,59 @@
+    <div class="presence-div">
+        <ul class="list-inline">
+            <li>
+                <button (click)="pasteUrl()"
+                    class="btn btn-default btn-sm"
+                    [tooltip]="'SHARE' | translate | lowercase">
+                    <i class="fa fa-clipboard"></i>
+                </button>
+            </li>
+            <li *ngIf="notifier.actors.length == 0">
+                <span translate>PLAYER-LIST-EMPTY</span>
+            </li>
+            <li *ngFor="let actor of notifier.actors">
+                <span
+                    class="label label-default"
+                    [class.label-success]="actor.online"
+                >
+                    <i class="fa fa-user" [class.fa-keyboard-o]="actor.typing"></i>
+                    {{actor.name || "Anonymous"}}
+                </span>
+            </li>
+        </ul>
+        <hr />
+    </div>
+     <div class="messages-div" #scrollMe (scroll)="onScroll()">
+        <button
+            *ngIf="showHistoryButton"
+            class="btn btn-link"
+            (click)="moreHistory()"
+        >
+            load history
+        </button>
+
+        <chat-message
+            *ngFor="let message of messages"
+            [message]="message">
+        </chat-message>
+    </div>
+    <div class="footer">
+        <hr />
+        <div *ngIf="typers" class="text text-muted">
+            <small>
+                <i class="fa fa-keyboard-o"></i>
+                <span *ngIf="typers">{{typers}} {{'IS-TYPING' | translate}}</span>
+            </small>
+        </div>
+        <div class="editor">
+            <textarea
+                [(ngModel)]="newMessage"
+                (keyup)="typing()"
+                (keyup.enter)="submitMessage()"
+                class="form-control"
+                placeholder="Write a note..."
+                rows="3"
+                resize="none">
+            </textarea>
+        </div>
+
+    </div>

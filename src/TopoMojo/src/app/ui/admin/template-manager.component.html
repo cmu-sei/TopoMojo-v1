@@ -1,0 +1,86 @@
+<div class="row">
+    <div class="col-xs-12">
+        <!--<h4>Templates</h4>-->
+        <div>
+            <search-bar (onSearch)="termChanged($event)"></search-bar>
+        </div>
+        <div *ngIf="!model.term">
+            <button (click)="create()" class="btn btn-link">
+                <i class="fa fa-plus-circle"></i> Add New Template
+            </button>
+        </div>
+        <div *ngIf="loading" class="spaced text-center">
+            <span class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></span>
+        </div>
+        <ul *ngIf="templates" class="list-unstyled">
+            <li *ngFor="let t of templates" class="">
+                <div class="">
+                    <button class="btn btn-link" (click)="select(t.id)"
+                        [disabled]="t.parentId"
+                        [class.btn-primary]="t.id === selected">
+                        <i class="fa fa-file-o"></i>
+                        <span>{{ t.name }}</span>
+                    </button>
+                    <span class="text text-muted">{{ t.topologyName || "Stock" }} </span>
+                    <button *ngIf="t.parentId" class="btn btn-link" (click)="select(t.parentId)"
+                        [class.btn-primary]="t.parentId === selected">
+                        <i class="fa fa-file-o"></i>
+                        <span>{{ t.parentName }}</span>
+                    </button>
+                    <!-- <span *ngIf="!t.topologyId" class="text text-muted">Stock</span> -->
+                    <!-- only display linkers link if any are found -->
+                   <!-- <span *ngIf="t.linkers && t.linkers.length > 0">
+                        <button (click)="selectLinker(t)" class="btn btn-link">
+                            <span>Linked Topologies</span>
+                        </button>
+                   </span>
+                    <span *ngIf="t.linkers.length == 0">
+                        <span class="spaced text text-muted">No Linked Topologies</span>
+                    </span> -->
+                </div>
+                <!-- loop through the found links and display associated topo names -->
+                <!-- <div *ngIf="t === templateLinker">
+                    <ul *ngIf="t.linkers">
+                        <li *ngFor="let linker of t.linkers">
+                            <div class="">
+                                <span>{{linker.topology.name}}</span>
+                             </div>
+                        </li>
+                    </ul>
+                </div> -->
+                <div *ngIf="template && template.id == t.id" spellcheck="false" class="well">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="template.isPublished"> Published
+                        </label>
+                    </div>
+                    <input #focusTag [(ngModel)]="template.name" class="form-control" placeholder="Name"/>
+                    <textarea [(ngModel)]="template.description" class="form-control" placeholder="Description"></textarea>
+                    <input [(ngModel)]="template.networks" class="form-control" placeholder="Networks"/>
+                    <textarea [(ngModel)]="template.detail" class="form-control json" placeholder="Save for defaults" rows="40"></textarea>
+                    <div>
+                        <button class="btn btn-primary" (click)="save()">
+                            <i class="fa fa-save"></i> Save</button>
+                            <confirm-delete
+                                (onDelete)="delete()"
+                                label="Delete"
+                                class="pull-right"
+                                prompt="Please confirm you intend to delete this Template.">
+                            </confirm-delete>
+                        <!--<button class="btn btn-default pull-right" (click)="delete()">
+                            <i class="fa fa-trash text text-danger"></i> Delete</button>-->
+                    </div>
+                    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible" role="alert">
+                        <button (click)="clearError()" type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        <span>{{errorMessage}}</span>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <button *ngIf="hasMore>0" (click)="more()" class="btn btn-primary btn-sm">
+            <i class="fa fa-search"></i> More <span class="badge">{{hasMore}}</span>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,11 @@
+<div *ngIf="workers">
+    <ul class="list-inline">
+        <li *ngFor="let w of workers">
+            <i class="fa fa-user"></i>
+            <span>{{w.personName}}</span>
+            <button *ngIf="canManage()" (click)="delist(w.id)" class="btn btn-link">
+                <i class="fa fa-times-circle"></i>
+            </button>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,11 @@
+.json {
+    font-family: Courier New, Courier, monospace;
+}
+
+div.spaced {
+    margin: 20px 0px 5px 0px;
+}
+
+span.spaced {
+    padding: 6px 12px;
+}
