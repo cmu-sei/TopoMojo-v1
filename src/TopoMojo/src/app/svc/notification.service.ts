@@ -23,7 +23,7 @@ export class NotificationService {
     }
     private profile: Profile;
     private key: string;
-    private debug: boolean = false;
+    private debug: boolean = true;
     private connected: boolean = false;
     private connection: HubConnection;
 
@@ -104,8 +104,8 @@ export class NotificationService {
 
                 this.connection.on("presenceEvent",
                     (event : TopoEvent) => {
-                        if (event.actor.id == this.profile.globalId)
-                            return;
+                        // if (event.actor.id == this.profile.globalId)
+                        //     return;
 
                         if (event.action == "PRESENCE.ARRIVED") {
                             this.connection.invoke("Greet", this.key);
@@ -181,7 +181,6 @@ export class NotificationService {
     }
 
     private setActor(event: TopoEvent) : void {
-        this.log(this.actors);
         event.actor.online = (event.action == "PRESENCE.ARRIVED" || event.action == "PRESENCE.GREETED");
         let actor = this.actors.find(a => { return a.id == event.actor.id });
         if (actor) {
@@ -193,8 +192,8 @@ export class NotificationService {
 
     private setChatActor(event: TopoEvent): void {
 
-        if (event.actor.id == this.profile.globalId)
-            return;
+        // if (event.actor.id == this.profile.globalId)
+        //     return;
 
         let actor = this.actors.find(a => { return a.id == event.actor.id });
         if (actor) {

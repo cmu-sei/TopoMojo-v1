@@ -16,12 +16,15 @@ export class AuthTestComponent implements OnInit {
     ) { }
 
   ngOnInit() {
+    this.getUser();
   }
   clearState() {
     this.authService.clearStaleState();
   }
   getUser() {
-    this._user = this.authService.oidcUser;
+    setTimeout(() => {
+      this._user = this.authService.oidcUser;
+    }, 3000);
   }
   removeUser() {
     this.authService.expireToken();
@@ -39,5 +42,8 @@ export class AuthTestComponent implements OnInit {
   endSignoutMainWindow() {
     // this.authService.finalizeLogout();
   }
-
+  startSigninSilent() {
+    this.authService.silentLogin();
+    this.getUser();
+  }
 }

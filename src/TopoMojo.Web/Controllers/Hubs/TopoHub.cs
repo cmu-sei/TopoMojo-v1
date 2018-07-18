@@ -24,6 +24,12 @@ namespace TopoMojo.Controllers
         private readonly ILogger<TopologyHub> _logger;
         private readonly HubCache _cache;
 
+        public override async Task OnDisconnectedAsync(Exception ex)
+        {
+            _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
+            await base.OnDisconnectedAsync(ex);
+        }
+
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
@@ -36,7 +42,7 @@ namespace TopoMojo.Controllers
                 Room = channelId
             };
             _cache.Connections.TryAdd(cc.Id, cc);
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
         public Task Leave(string channelId)
@@ -44,12 +50,12 @@ namespace TopoMojo.Controllers
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
             _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 
         public Task Greet(string channelId)
         {
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
         }
 
         // public Task Post(string channelId, string text)
@@ -59,7 +65,7 @@ namespace TopoMojo.Controllers
 
         public Task Typing(string channelId, bool val)
         {
-            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
+            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
         }
 
         // public Task Typed(string channelId)
@@ -73,7 +79,7 @@ namespace TopoMojo.Controllers
         // }
 
         public Task TemplateMessage(string action, Core.Models.Template model){
-            return Clients.Group(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
+            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
         }
 
     }

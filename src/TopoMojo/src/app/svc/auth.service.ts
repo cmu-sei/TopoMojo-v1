@@ -21,8 +21,8 @@ export class AuthService {
         this.mgr = new UserManager(this.settingsSvc.settings.oidc);
         this.mgr.events.addUserLoaded(user => { this.onTokenLoaded(user); });
         this.mgr.events.addUserUnloaded(user => { this.onTokenUnloaded(user); });
-        this.mgr.events.addAccessTokenExpiring(e => { this.onTokenExpiring(e); });
-        this.mgr.events.addAccessTokenExpired(e => { this.onTokenExpired(e); });
+        this.mgr.events.addAccessTokenExpiring(e => { this.onTokenExpiring(); });
+        this.mgr.events.addAccessTokenExpired(e => { this.onTokenExpired(); });
         this.mgr.getUser().then((user) => {
             this.onTokenLoaded(user);
         });
@@ -73,17 +73,15 @@ export class AuthService {
         this.tokenState$.next(AuthTokenState.invalid);
     }
 
-    private onTokenExpiring(ev) {
-        console.log(ev);
+    private onTokenExpiring() {
         if (Date.now() - this.lastCall < 30000)
-            this.refreshToken();
+            this.silentLogin();
         else {
             this.tokenState$.next(AuthTokenState.expiring);
         }
     }
 
-    private onTokenExpired(ev) {
-        console.log(ev);
+    private onTokenExpired() {
         this.tokenState$.next(AuthTokenState.expired);
 
         //this.logout();
@@ -115,8 +113,20 @@ export class AuthService {
         }
     }
 
-    refreshToken() {
+    silentLogin() {
         this.mgr.signinSilent().then(() => { });
+    }
+
+    silentLoginCallback() : void {
+        this.mgr.signinSilentCallback();
+    }
+
+    clearStaleState(): void {
+        this.mgr.clearStaleState();
+    }
+
+    expireToken(): void {
+        this.mgr.removeUser();
     }
 
     cleanUrl(url) {
@@ -124,13 +134,6 @@ export class AuthService {
             .replace(/[?&]auth-hint=[^&]*/, '')
             .replace(/[?&]contentId=[^&]*/, '')
             .replace(/[?&]profileId=[^&]*/, '');
-    }
-
-    clearStaleState(): void {
-        this.mgr.clearStaleState();
-    }
-    expireToken(): void {
-        this.mgr.removeUser();
     }
 }
 

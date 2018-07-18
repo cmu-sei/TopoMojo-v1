@@ -42,7 +42,6 @@ export class UserService {
 
     getProfile(reload?: boolean): Observable<Profile> {
         if (this.profile.id && !reload) {
-            console.log(this.profile);
             return of(this.profile);
         }
 

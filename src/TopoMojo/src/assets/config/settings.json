@@ -7,16 +7,11 @@
     "lang": "en",
     "maintenanceMessage": "",
 
-    "login": {
-      "allowLocalLogin": false,
-      "allowExternalLogin": true
-    },
-
     "oidc": {
       "authority": "http://localhost:5000",
       "client_id": "topomojo",
       "redirect_uri": "http://localhost:4200/auth/oidc",
-      "silent_redirect_uri": "http://localhost:4200/silent.html",
+      "silent_redirect_uri": "http://localhost:4200/auth/oidc-silent",
       "post_logout_redirect_uri": "http://localhost:4200",
       "response_type": "id_token token",
       "scope": "openid profile sketch-common",

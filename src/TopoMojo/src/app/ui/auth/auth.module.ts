@@ -7,11 +7,13 @@ import { AuthFailedComponent } from './auth-failed.component';
 import { AuthTestComponent } from './auth-test.component';
 import { LoginComponent } from './login.component';
 import { ProfileEditorComponent } from './profile-editor.component';
+import { AuthSilentComponent } from './auth-silent.component';
 
 @NgModule({
     declarations: [
         AuthComponent,
         AuthPendingComponent,
+        AuthSilentComponent,
         AuthFailedComponent,
         AuthTestComponent,
         LoginComponent,
@@ -28,6 +30,7 @@ import { ProfileEditorComponent } from './profile-editor.component';
                     { path: 'test', component: AuthTestComponent },
                     { path: 'login', component: LoginComponent },
                     { path: 'oidc', component: AuthPendingComponent },
+                    { path: 'oidc-silent', component: AuthSilentComponent },
                     { path: 'profile', component: ProfileEditorComponent },
                     { path: '', redirectTo: 'login', pathMatch: 'full'}
                 ]

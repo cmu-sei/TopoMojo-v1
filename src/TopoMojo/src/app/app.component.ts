@@ -54,7 +54,7 @@ export class AppComponent {
     }
 
     continue() {
-        this.authSvc.refreshToken();
+        this.authSvc.silentLogin();
     }
 
 }
