@@ -1,32 +1,27 @@
 import { Injectable } from '@angular/core';
-import { UserManager, User, WebStorageStateStore } from 'oidc-client';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { UserManager, User, WebStorageStateStore, Log } from 'oidc-client';
+import { BehaviorSubject } from 'rxjs';
 import { SettingsService } from './settings.service';
-import { AccountService } from '../api/account.service';
 
 @Injectable()
 export class AuthService {
     mgr: UserManager;
-    currentUser: User;
     authority: string;
-    loginSettings: any;
     redirectUrl: string;
-    private userSource: Subject<User> = new Subject<User>();
-    public user$: Observable<User> = this.userSource.asObservable();
-    private tokenStatus: Subject<AuthTokenState> = new Subject<AuthTokenState>();
-    tokenStatus$: Observable<AuthTokenState> = this.tokenStatus.asObservable();
-    public profile$ : BehaviorSubject<UserProfile>;
-    private profile: UserProfile;
     lastCall : number;
+    profile: UserProfile;
+    public profile$ : BehaviorSubject<UserProfile>;
+    currentUser: User;
+    public oidcUser$ : BehaviorSubject<User>;
 
     constructor(
-        private accountSvc : AccountService,
         private settingsSvc: SettingsService
     ) {
         // Log.level = Log.DEBUG;
         // Log.logger = console;
         this.profile = { state: AuthTokenState.invalid };
         this.profile$ = new BehaviorSubject<UserProfile>(this.profile);
+        this.oidcUser$ = new BehaviorSubject<User>(null);
         this.authority = this.settingsSvc.settings.oidc.authority.replace(/https?:\/\//,"") || "External";
         this.mgr = new UserManager(this.settingsSvc.settings.oidc);
         this.mgr.events.addUserLoaded(user => { this.onTokenLoaded(user); });
@@ -34,34 +29,16 @@ export class AuthService {
         this.mgr.events.addAccessTokenExpiring(e => { this.onTokenExpiring(e); });
         this.mgr.events.addAccessTokenExpired(e => { this.onTokenExpired(e); });
         this.mgr.getUser().then((user) => {
-            if (user) {
-                this.onTokenLoaded(user);
-            }
+            this.onTokenLoaded(user);
         });
     }
 
-    init() {
-        //this.localmgr.init();
-        this.mgr.getUser().then(user => {
-            if (user) this.onTokenLoaded(user);
-        })
-    }
-
-    // isAuthenticated() : Promise<boolean> {
-    //     return Promise.resolve(!!this.currentUser);
-    // }
-
-    // init() {
-    //     this.mgr.getUser().then((user) => {
-    //         if (user) {
-    //             this.onTokenLoaded(user);
-    //         }
-    //     });
-    // }
-
     isAuthenticated() : Promise<boolean> {
         if (!!this.currentUser)
-            return Promise.resolve(true);
+            return Promise.resolve(
+                this.profile.state == AuthTokenState.valid
+                || this.profile.state == AuthTokenState.expiring
+            );
 
         return this.mgr.getUser().then(
             (user) => {
@@ -70,6 +47,7 @@ export class AuthService {
                 }
             }
         );
+
     }
 
     getAuthorizationHeader() : string {
@@ -84,23 +62,22 @@ export class AuthService {
     }
 
     private onTokenLoaded(user) {
-        if (user && user.sub) {
-            this.profile.id = user.sub;
+        if (user && user.profile.sub) {
+            this.profile.id = user.profile.sub;
             this.profile.name = user.profile.name;
             this.profile.state = AuthTokenState.valid;
+            this.profile.isAdmin = true;
         }
         this.profile$.next(this.profile);
-
         this.currentUser = user;
-        //this.loggedIn = (user !== null);
-        this.userSource.next(user);
-        this.tokenStatus.next(AuthTokenState.valid);
+        this.oidcUser$.next(this.currentUser);
     }
 
     private onTokenUnloaded(user) {
+        this.profile = { state: AuthTokenState.invalid };
+        this.profile$.next(this.profile);
         this.currentUser = user;
-        this.userSource.next(user);
-        this.tokenStatus.next(AuthTokenState.invalid);
+        this.oidcUser$.next(this.currentUser);
     }
 
     private onTokenExpiring(ev) {
@@ -110,7 +87,6 @@ export class AuthService {
         else {
             this.profile.state = AuthTokenState.expiring;
             this.profile$.next(this.profile);
-            this.tokenStatus.next(AuthTokenState.expiring);
         }
     }
 
@@ -118,32 +94,19 @@ export class AuthService {
         console.log(ev);
         this.profile.state = AuthTokenState.expired;
         this.profile$.next(this.profile);
-
-        this.tokenStatus.next(AuthTokenState.expired);
-
-        //give any clean process 10 seconds or so.
+        //this.logout();
+        //give any clean process 5 seconds or so.
         setTimeout(() => {
             this.mgr.removeUser();
-        }, 10000);
-    }
-
-    localLogin(method: string, creds: any) {
-        return this.accountSvc.submit(method, creds)
-        // .map(
-        //     (token) => {
-        //         this.localmgr.addUser(token);
-        //         return token;
-        //     }
-        // )
-        .toPromise();
+        }, 5000);
     }
 
     externalLogin(url) {
-        this.mgr.signinRedirect({ state: url }).then(function () {
-            //console.log("signinRedirect done");
-        }).catch(function (err) {
-            console.log(err);
-        });
+        this.mgr.signinRedirect({ state: url })
+            .then(() => {})
+            .catch(err => {
+                console.log(err);
+            });
     }
 
     externalLoginCallback(url) : Promise<User> {
@@ -160,21 +123,8 @@ export class AuthService {
         }
     }
 
-    sendAuthCode(u : string) {
-        return this.accountSvc.confirmAccount({ username: u });
-    }
-
     refreshToken() {
         this.mgr.signinSilent().then(() => { });
-    }
-
-    isAdmin() {
-        return this.currentUser &&
-            (
-                this.currentUser.profile.isAdmin ||
-                this.currentUser.profile.role == "administrator"
-            )
-        ;
     }
 
     cleanUrl(url) {

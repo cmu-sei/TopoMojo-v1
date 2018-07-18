@@ -7,6 +7,7 @@ import { AdminGuard } from './admin-guard.service';
 import { NotificationService } from './notification.service';
 import { ClipboardService } from './clipboard.service';
 import { SettingsService, ORIGIN_URL, getOriginUrl, SHOWDOWN_OPTS, getShowdownOpts } from './settings.service';
+import { LayoutService } from './layout.service';
 
 @NgModule({
     providers: [
@@ -16,6 +17,7 @@ import { SettingsService, ORIGIN_URL, getOriginUrl, SHOWDOWN_OPTS, getShowdownOp
         AdminGuard,
         ClipboardService,
         NotificationService,
+        LayoutService,
         {
             provide: ORIGIN_URL,
             useFactory: (getOriginUrl)

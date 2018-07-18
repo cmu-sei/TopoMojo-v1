@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
-import { AuthService, AuthTokenState } from './auth.service';
+import { AuthService, AuthTokenState, UserProfile } from './auth.service';
 import { Observable, Subject } from "rxjs";
 import { SettingsService } from './settings.service';
 
@@ -14,7 +14,7 @@ export class NotificationService {
         this.initTokenRefresh();
     }
     private key: string;
-    private debug: boolean = true;
+    private debug: boolean = false;
     private online: boolean = false;
     private connection: HubConnection;
 
@@ -42,20 +42,18 @@ export class NotificationService {
     gameEvents : Observable<any> = this.gameSource.asObservable();
 
     private initTokenRefresh() : void {
-        this.auth.tokenStatus$.subscribe(
-            (state : AuthTokenState) => {
-                switch (state) {
+        this.auth.profile$.subscribe(
+            (profile : UserProfile) => {
+                switch (profile.state) {
                     case AuthTokenState.valid:
-                    this.log(this.auth.currentUser.profile.id);
-
-                    this.restart();
-                    break;
+                        this.restart();
+                        break;
 
                     case AuthTokenState.invalid:
                     case AuthTokenState.expired:
-                    this.stop();
-                    this.key = null;
-                    break;
+                        this.stop();
+                        this.key = null;
+                        break;
                 }
             }
         );

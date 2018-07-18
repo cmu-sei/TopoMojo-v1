@@ -15,7 +15,7 @@ export class AuthTestComponent implements OnInit {
     ) { }
 
   ngOnInit() {
-    this.loadedUserSub = this.authService.user$
+    this.loadedUserSub = this.authService.oidcUser$
       .subscribe(user => {
         this._user = user;
       });
@@ -24,7 +24,7 @@ export class AuthTestComponent implements OnInit {
     //this.authService.clearState();
   }
   getUser() {
-    this.authService.init();
+    //this.authService.init();
   }
   removeUser() {
     //this.authService.removeUser();

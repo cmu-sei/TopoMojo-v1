@@ -1,6 +1,6 @@
 import { OnInit, Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../svc/auth.service';
+import { AuthService, UserProfile } from '../../svc/auth.service';
 import { Subscription } from 'rxjs';
 import { SettingsService, Layout } from '../../svc/settings.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -11,7 +11,7 @@ import { TranslateService } from '@ngx-translate/core';
     styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent {
-    profile : any;
+    profile : UserProfile;
     profileSubscription: Subscription;
     status: Subscription;
     appName: string;
@@ -34,11 +34,11 @@ export class NavbarComponent {
         this.setCulture(this.lang[0]);
         this.appName = this.settingsSvc.settings.branding.applicationName;
         this.maintMessage = this.settingsSvc.settings.maintMessage;
-        this.profileSubscription = this.service.user$
-        .subscribe(p =>  {
-            this.profile = (p) ? p.profile : p;
-        });
-        this.profile = this.service.currentUser && this.service.currentUser.profile;
+        this.service.profile$.subscribe(
+            p =>  {
+                this.profile = p;
+            }
+        );
     }
 
     logout() {
@@ -63,7 +63,11 @@ export class NavbarComponent {
         this.dropDownVisible = !this.dropDownVisible;
     }
 
+    isUser() : boolean {
+        return !!this.profile.id;
+    }
+
     isAdmin() : boolean {
-        return this.service.isAdmin();
+        return this.profile.isAdmin;
     }
 }

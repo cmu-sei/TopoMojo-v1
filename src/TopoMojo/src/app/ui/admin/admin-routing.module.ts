@@ -17,12 +17,17 @@ const routes: Routes = [
         component: AdminComponent,
         canActivate: [ AdminGuard, AuthGuard ],
         children: [
-            { path: 'templates', component: TemplateManagerComponent },
-            { path: 'users', component: UserManagerComponent },
-            { path: 'games', component: GameManagerComponent },
-            { path: 'vms', component: VmManagerComponent },
-            { path: 'topos', component: TopoManagerComponent },
-            { path: 'settings', component: AdminSettingsComponent }
+            {
+                path: '',
+                children: [
+                    { path: 'templates', component: TemplateManagerComponent },
+                    { path: 'users', component: UserManagerComponent },
+                    { path: 'games', component: GameManagerComponent },
+                    { path: 'vms', component: VmManagerComponent },
+                    { path: 'topos', component: TopoManagerComponent },
+                    { path: 'settings', component: AdminSettingsComponent },
+                ]
+            }
         ]
     }
 ];

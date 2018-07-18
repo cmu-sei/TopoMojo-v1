@@ -1,21 +1,25 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, CanActivateChild, CanLoad,
-    Router, Route, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Observable } from "rxjs";
-import { AuthService } from './auth.service';
+import { CanActivate, CanActivateChild, Router, Route, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { AuthService, UserProfile } from './auth.service';
 
 @Injectable()
 export class AdminGuard implements CanActivate, CanActivateChild {
 
+    private profile: UserProfile;
+
     constructor(
         private authService: AuthService,
         private router: Router
-        ){ }
+        ){
+            this.authService.profile$.subscribe(
+                (p : UserProfile) => {
+                    this.profile = p;
+                }
+            )
+        }
 
     canLoad(route: Route): boolean {
-        let url = `/${route.path}`;
-        //console.log('AdminGuard#canLoad ' + url)
-        return this.isAdmin(url);
+        return this.profile.isAdmin;
     }
 
     canActivate(
@@ -23,8 +27,7 @@ export class AdminGuard implements CanActivate, CanActivateChild {
         state: RouterStateSnapshot
         ) : boolean {
 
-        let url: string = state.url;
-        return this.isAdmin(url);
+        return this.profile.isAdmin;
     }
 
     canActivateChild(
@@ -32,17 +35,7 @@ export class AdminGuard implements CanActivate, CanActivateChild {
         state: RouterStateSnapshot
         ): boolean {
 
-        return this.canActivate(route, state);
+        return this.profile.isAdmin;
     }
 
-    isAdmin(url: string) : boolean {
-        //console.log('AdminGuard#isAuthenticated()');
-
-        if (this.authService.isAdmin()) {
-            return true;
-        }
-
-        this.router.navigate(['notallowed']);
-        return false;
-    }
 }

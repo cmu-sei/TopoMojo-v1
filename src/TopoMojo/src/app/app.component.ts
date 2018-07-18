@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService, AuthTokenState } from './svc/auth.service';
+import { AuthService, AuthTokenState, UserProfile } from './svc/auth.service';
 import { Subscription } from 'rxjs';
 import { SettingsService, Layout } from './svc/settings.service';
 import { TranslateService } from '@ngx-translate/core';
+import { LayoutService } from './svc/layout.service';
 
 @Component({
     selector: 'app-root',
@@ -11,9 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    profile : any;
-    profile$: Subscription;
-    status$: Subscription;
+    profile : UserProfile;
     showExpiring: boolean;
     showExpired: boolean;
     layout: Layout;
@@ -24,7 +23,8 @@ export class AppComponent {
         private service : AuthService,
         private router: Router,
         private settingsSvc: SettingsService,
-        private translator: TranslateService
+        private translator: TranslateService,
+        private layoutSvc: LayoutService
     ){
         let lang = (settingsSvc.settings.lang).trim().split(' ').shift();
         translator.setDefaultLang(lang);
@@ -34,35 +34,27 @@ export class AppComponent {
     ngOnInit() {
         this.appName = this.settingsSvc.settings.branding.applicationName;
 
-        this.profile$ = this.service.user$.subscribe(
+        this.service.profile$.subscribe(
             (p) =>  {
-                this.profile = (p) ? p.profile : p;
+                this.profile = p;
+                this.showExpiring = (p.state == AuthTokenState.expiring);
+                this.showExpired = (p.state == AuthTokenState.expired);
+                if (p.id && p.state == AuthTokenState.invalid) {
+                    this.router.navigate(['/home']);
+                }
             }
         );
-        this.profile = this.service.currentUser && this.service.currentUser.profile;
 
-        this.status$ = this.service.tokenStatus$
-        .subscribe(status => {
-            //console.log(status);
-            this.showExpiring = (status == AuthTokenState.expiring);
-            this.showExpired = (status == AuthTokenState.expired);
-            if (status == AuthTokenState.invalid)
-                this.router.navigate(['/home']);
-        });
-
-        this.layout$ = this.settingsSvc.layout$.subscribe((layout : Layout) => {
-            this.layout = layout;
-        });
+        this.layoutSvc.layout$.subscribe(
+            (layout : Layout) => {
+                this.layout = layout;
+            }
+        );
         this.layout = this.settingsSvc.layout;
-        //this.service.init();
     }
 
     continue() {
         this.service.refreshToken();
     }
 
-    ngOnDestroy() {
-        this.profile$.unsubscribe();
-        this.status$.unsubscribe();
-    }
 }

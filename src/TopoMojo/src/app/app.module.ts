@@ -46,9 +46,6 @@ import { AppComponent } from './app.component'
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'home/notfound' }
         ])
-    ],
-    providers: [
-
     ]
 })
 export class AppModule {

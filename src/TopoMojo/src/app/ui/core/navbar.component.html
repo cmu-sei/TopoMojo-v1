@@ -13,7 +13,7 @@
             </ul>
         </div>
     </div>
-    <ul *ngIf="profile" class="list-inline">
+    <ul *ngIf="isUser()" class="list-inline">
         <li [routerLinkActive]="['link-active']">
             <a [routerLink]="['/browse']" [routerLinkActive]="['link-active']" [tooltip]="'BROWSE' | translate | lowercase">
                 <span class='fa fa-list fa-2x'></span>

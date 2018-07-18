@@ -24,20 +24,20 @@ export class LoginComponent implements OnInit {
     codeSent: boolean;
 
     constructor(
-        private auth : AuthService,
+        private authSvc : AuthService,
         private router: Router,
         private route: ActivatedRoute
         ) { }
 
     ngOnInit() {
-        this.url = this.auth.cleanUrl(this.auth.redirectUrl || this.route.snapshot.params['url'] || "/");
-        this.authority = this.auth.authority;
+        this.url = this.authSvc.cleanUrl(this.authSvc.redirectUrl || this.route.snapshot.params['url'] || "/");
+        this.authority = this.authSvc.authority;
         if (this.showExternal() && !this.showLocal())
             this.oidcLogin();
     }
 
     oidcLogin() {
-        this.auth.externalLogin(this.url);
+        this.authSvc.externalLogin(this.url);
     }
 
     onSubmit() {
@@ -51,26 +51,26 @@ export class LoginComponent implements OnInit {
             }
         }
 
-        this.auth.localLogin(this.action, this.getCreds())
-        .then(result => {
-            this.router.navigateByUrl(this.url);
-        }).catch((response: HttpErrorResponse) => {
+        // this.auth.localLogin(this.action, this.getCreds())
+        // .then(result => {
+        //     this.router.navigateByUrl(this.url);
+        // }).catch((response: HttpErrorResponse) => {
 
-            console.error(response);
-            this.errorMessage = response.error.message;
-        });
+        //     console.error(response);
+        //     this.errorMessage = response.error.message;
+        // });
     }
 
     requestCode() {
-        if (!this.username) {
-            this.infoMessage = "AUTH.CONFIRMATION-NEEDS-USERNAME";
-            return;
-        }
+        // if (!this.username) {
+        //     this.infoMessage = "AUTH.CONFIRMATION-NEEDS-USERNAME";
+        //     return;
+        // }
 
-        this.auth.sendAuthCode(this.username).subscribe(result => {
-            this.infoMessage = "AUTH.CODE-SENT";
-            this.codeSent = true;
-        })
+        // this.auth.sendAuthCode(this.username).subscribe(result => {
+        //     this.infoMessage = "AUTH.CODE-SENT";
+        //     this.codeSent = true;
+        // })
     }
 
     getCreds() {
