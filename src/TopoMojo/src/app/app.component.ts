@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService, AuthTokenState, UserProfile } from './svc/auth.service';
+import { AuthService, AuthTokenState } from './svc/auth.service';
 import { Subscription } from 'rxjs';
 import { SettingsService, Layout } from './svc/settings.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -12,15 +12,15 @@ import { LayoutService } from './svc/layout.service';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    profile : UserProfile;
     showExpiring: boolean;
     showExpired: boolean;
     layout: Layout;
     layout$: Subscription;
     appName: string;
+    tokenState: AuthTokenState = AuthTokenState.invalid;
 
     constructor (
-        private service : AuthService,
+        private authSvc : AuthService,
         private router: Router,
         private settingsSvc: SettingsService,
         private translator: TranslateService,
@@ -34,14 +34,14 @@ export class AppComponent {
     ngOnInit() {
         this.appName = this.settingsSvc.settings.branding.applicationName;
 
-        this.service.profile$.subscribe(
-            (p) =>  {
-                this.profile = p;
-                this.showExpiring = (p.state == AuthTokenState.expiring);
-                this.showExpired = (p.state == AuthTokenState.expired);
-                if (p.id && p.state == AuthTokenState.invalid) {
+        this.authSvc.tokenState$.subscribe(
+            (state: AuthTokenState) =>  {
+                this.showExpiring = (state == AuthTokenState.expiring);
+                this.showExpired = (state == AuthTokenState.expired);
+                if (state != this.tokenState && state == AuthTokenState.invalid) {
                     this.router.navigate(['/home']);
                 }
+                this.tokenState = state;
             }
         );
 
@@ -54,7 +54,7 @@ export class AppComponent {
     }
 
     continue() {
-        this.service.refreshToken();
+        this.authSvc.refreshToken();
     }
 
 }

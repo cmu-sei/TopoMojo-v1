@@ -12,6 +12,9 @@ export class GeneratedProfileService extends GeneratedService {
        protected http: HttpClient
     ) { super(http); }
 
+	public getProfile(): Observable<Profile> {
+		return this.http.get<Profile>(this.hostUrl + "/api/profile");
+	}
 	public getProfiles(search: Search) : Observable<ProfileSearchResult> {
 		return this.http.get<ProfileSearchResult>(this.hostUrl + "/api/profiles" + this.paramify(search));
 	}

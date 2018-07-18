@@ -25,9 +25,10 @@
      <div class="messages-div" #scrollMe (scroll)="onScroll()">
         <button
             *ngIf="showHistoryButton"
-            class="btn btn-link"
+            class="btn btn-default btn-sm"
             (click)="moreHistory()"
         >
+            <i class="fa fa-history"></i>
             load history
         </button>
 

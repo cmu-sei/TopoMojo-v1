@@ -3,10 +3,9 @@ import { NotificationService, TopoEvent } from '../../svc/notification.service';
 import { ChatService } from '../../api/chat.service';
 import { Message } from '../../api/gen/models';
 
-import { Observable ,  Subject ,  Subscription } from "rxjs";
-import { debounceTime } from 'rxjs/operators';
+import { Observable ,  Subject ,  Subscription } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { ClipboardService } from '../../svc/clipboard.service';
-//import { setTimeout, clearTimeout } from 'timers';
 
 @Component({
     selector: 'chat-messages',
@@ -25,8 +24,7 @@ export class MessagesComponent implements OnChanges {
     private autoScroll: boolean = true;
     private typingSource: Subject<boolean> = new Subject<boolean>();
     private typing$: Observable<boolean> = this.typingSource.asObservable();
-    // private typingTimer: any;
-    // private typingMonitor : any;
+    private typingMonitor : any;
     private key: string;
 
     constructor(
@@ -46,10 +44,6 @@ export class MessagesComponent implements OnChanges {
         this.moreHistory();
 
         this.subs.push(
-            this.notifier.presenceEvents.subscribe(
-                () => {
-                }
-            ),
             this.notifier.chatEvents.subscribe(
                 (event: TopoEvent) => {
                     switch (event.action) {
@@ -68,23 +62,22 @@ export class MessagesComponent implements OnChanges {
                     }
                 }
             ),
-            this.typing$.pipe(debounceTime(500)).subscribe(
+            this.typing$.pipe(
+                distinctUntilChanged()
+            ).subscribe(
                 (v) => {
                     this.notifier.typing(v);
                 }
             )
         );
-
-        //this.typingSource.next(false);
-
     }
 
     typing() {
         this.typingSource.next(true);
-        // clearTimeout(this.typingMonitor);
-        // this.typingMonitor = setTimeout(() => {
-        //     this.typingSource.next(false);
-        // }, 1000);
+        clearTimeout(this.typingMonitor);
+        this.typingMonitor = setTimeout(() => {
+            this.typingSource.next(false);
+        }, 1000);
     }
 
     submitMessage() {
@@ -94,20 +87,17 @@ export class MessagesComponent implements OnChanges {
         }
 
         let text = this.newMessage;
+        this.newMessage = "";
+        // //TODO: push messages directly to canvas, and ignore incoming from self
         // this.messages.push({
         //     text: text,
-        //     actor: this.authService.currentUser.profile.name,
+        //     authorName: "me",
         // });
-        this.newMessage = "";
 
-        //this.notifier.sendChat(msg.text);
         this.service.postChat({
             roomId: this.key,
             text: text
-        }).subscribe(
-            () => {
-            }
-        );
+        }).subscribe();
     }
 
     pasteUrl() {
@@ -123,9 +113,7 @@ export class MessagesComponent implements OnChanges {
         let marker = (this.messages.length) ? this.messages[0].id : 0;
         this.service.getChat(this.key, marker, take).subscribe(
             (result: Message[]) => {
-                // if (result && result.length > 0) {
-                    this.messages.unshift(...result.reverse());
-                // }
+                this.messages.unshift(...result.reverse());
                 this.showHistoryButton = result.length == take;
             }
         );

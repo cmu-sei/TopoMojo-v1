@@ -9,20 +9,15 @@ export class AuthService {
     authority: string;
     redirectUrl: string;
     lastCall : number;
-    profile: UserProfile;
-    public profile$ : BehaviorSubject<UserProfile>;
-    currentUser: User;
-    public oidcUser$ : BehaviorSubject<User>;
+    oidcUser: User;
+    public tokenState$: BehaviorSubject<AuthTokenState> = new BehaviorSubject<AuthTokenState>(AuthTokenState.invalid);
 
     constructor(
         private settingsSvc: SettingsService
     ) {
         // Log.level = Log.DEBUG;
         // Log.logger = console;
-        this.profile = { state: AuthTokenState.invalid };
-        this.profile$ = new BehaviorSubject<UserProfile>(this.profile);
-        this.oidcUser$ = new BehaviorSubject<User>(null);
-        this.authority = this.settingsSvc.settings.oidc.authority.replace(/https?:\/\//,"") || "External";
+        this.authority = this.settingsSvc.settings.oidc.authority.replace(/https?:\/\//,"");
         this.mgr = new UserManager(this.settingsSvc.settings.oidc);
         this.mgr.events.addUserLoaded(user => { this.onTokenLoaded(user); });
         this.mgr.events.addUserUnloaded(user => { this.onTokenUnloaded(user); });
@@ -34,11 +29,9 @@ export class AuthService {
     }
 
     isAuthenticated() : Promise<boolean> {
-        if (!!this.currentUser)
-            return Promise.resolve(
-                this.profile.state == AuthTokenState.valid
-                || this.profile.state == AuthTokenState.expiring
-            );
+        let state = this.tokenState$.getValue();
+        if (state == AuthTokenState.valid || state == AuthTokenState.expiring)
+            return Promise.resolve(true);
 
         return this.mgr.getUser().then(
             (user) => {
@@ -47,13 +40,18 @@ export class AuthService {
                 }
             }
         );
-
     }
 
-    getAuthorizationHeader() : string {
+    access_token() : string {
+        return ((this.oidcUser)
+            ? this.oidcUser.access_token
+            : "no_token");
+    }
+
+    auth_header() : string {
         this.markAction();
-        return ((this.currentUser)
-            ? this.currentUser.token_type + " " + this.currentUser.access_token
+        return ((this.oidcUser)
+            ? this.oidcUser.token_type + " " + this.oidcUser.access_token
             : "no_token");
     }
 
@@ -62,22 +60,17 @@ export class AuthService {
     }
 
     private onTokenLoaded(user) {
-        if (user && user.profile.sub) {
-            this.profile.id = user.profile.sub;
-            this.profile.name = user.profile.name;
-            this.profile.state = AuthTokenState.valid;
-            this.profile.isAdmin = true;
-        }
-        this.profile$.next(this.profile);
-        this.currentUser = user;
-        this.oidcUser$.next(this.currentUser);
+        this.oidcUser = user;
+        this.tokenState$.next(
+            (user)
+            ? AuthTokenState.valid
+            : AuthTokenState.invalid
+        )
     }
 
     private onTokenUnloaded(user) {
-        this.profile = { state: AuthTokenState.invalid };
-        this.profile$.next(this.profile);
-        this.currentUser = user;
-        this.oidcUser$.next(this.currentUser);
+        this.oidcUser = user;
+        this.tokenState$.next(AuthTokenState.invalid);
     }
 
     private onTokenExpiring(ev) {
@@ -85,15 +78,14 @@ export class AuthService {
         if (Date.now() - this.lastCall < 30000)
             this.refreshToken();
         else {
-            this.profile.state = AuthTokenState.expiring;
-            this.profile$.next(this.profile);
+            this.tokenState$.next(AuthTokenState.expiring);
         }
     }
 
     private onTokenExpired(ev) {
         console.log(ev);
-        this.profile.state = AuthTokenState.expired;
-        this.profile$.next(this.profile);
+        this.tokenState$.next(AuthTokenState.expired);
+
         //this.logout();
         //give any clean process 5 seconds or so.
         setTimeout(() => {
@@ -114,10 +106,10 @@ export class AuthService {
     }
 
     logout() {
-        if (this.currentUser) {
-            this.mgr.signoutRedirect().then(() => {
-                console.log("initiated external logout");
-            }).catch(err => {
+        if (this.oidcUser) {
+            this.mgr.signoutRedirect()
+            .then(() => {})
+            .catch(err => {
                 console.log(err.text());
             });
         }
@@ -133,13 +125,13 @@ export class AuthService {
             .replace(/[?&]contentId=[^&]*/, '')
             .replace(/[?&]profileId=[^&]*/, '');
     }
-}
 
-export interface UserProfile {
-    id?: string,
-    name?: string,
-    isAdmin?: boolean,
-    state?: AuthTokenState
+    clearStaleState(): void {
+        this.mgr.clearStaleState();
+    }
+    expireToken(): void {
+        this.mgr.removeUser();
+    }
 }
 
 export enum AuthTokenState {

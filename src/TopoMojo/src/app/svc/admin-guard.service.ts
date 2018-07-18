@@ -1,39 +1,37 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, CanActivateChild, Router, Route, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { AuthService, UserProfile } from './auth.service';
+import { CanActivate, CanActivateChild } from '@angular/router';
+import { UserService } from './user.service';
+import { Profile } from '../api/gen/models';
 
 @Injectable()
 export class AdminGuard implements CanActivate, CanActivateChild {
 
-    private profile: UserProfile;
+    private profile: Profile;
 
     constructor(
-        private authService: AuthService,
-        private router: Router
-        ){
-            this.authService.profile$.subscribe(
-                (p : UserProfile) => {
-                    this.profile = p;
-                }
-            )
-        }
+        private userSvc: UserService
+    ){
 
-    canLoad(route: Route): boolean {
+        //TODO: this fails if navigating directly to <host>/admin because profile load will race
+        this.userSvc.profile$.subscribe(
+            (p : Profile) => {
+                this.profile = p;
+            }
+        );
+    }
+
+    canLoad(): boolean {
         return this.profile.isAdmin;
     }
 
     canActivate(
-        route: ActivatedRouteSnapshot,
-        state: RouterStateSnapshot
-        ) : boolean {
+                ) : boolean {
 
         return this.profile.isAdmin;
     }
 
     canActivateChild(
-        route: ActivatedRouteSnapshot,
-        state: RouterStateSnapshot
-        ): boolean {
+                ): boolean {
 
         return this.profile.isAdmin;
     }

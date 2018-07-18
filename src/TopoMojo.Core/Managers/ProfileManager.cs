@@ -55,7 +55,9 @@ namespace TopoMojo.Core
 
         public async Task<Models.Profile> FindByGlobalId(string globalId)
         {
-            Data.Entities.Profile profile = await _profileRepo.FindByGlobalId(globalId);
+            Data.Entities.Profile profile = (globalId.HasValue())
+                ? await _profileRepo.FindByGlobalId(globalId)
+                : this.Profile;
             return (profile != null)
                 ? Mapper.Map<Models.Profile>(profile)
                 : null;

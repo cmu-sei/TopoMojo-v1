@@ -36,6 +36,15 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
+        [HttpGet("api/profile")]
+        [ProducesResponseType(typeof(Profile), 200)]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> GetProfile()
+        {
+            var result = await _mgr.FindByGlobalId("");
+            return Ok(result);
+        }
+
         [HttpPost("api/profile")]
         [ProducesResponseType(typeof(ChangedProfile), 200)]
         [JsonExceptionFilter]

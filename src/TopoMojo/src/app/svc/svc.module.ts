@@ -8,6 +8,7 @@ import { NotificationService } from './notification.service';
 import { ClipboardService } from './clipboard.service';
 import { SettingsService, ORIGIN_URL, getOriginUrl, SHOWDOWN_OPTS, getShowdownOpts } from './settings.service';
 import { LayoutService } from './layout.service';
+import { UserService } from './user.service';
 
 @NgModule({
     providers: [
@@ -18,6 +19,7 @@ import { LayoutService } from './layout.service';
         ClipboardService,
         NotificationService,
         LayoutService,
+        UserService,
         {
             provide: ORIGIN_URL,
             useFactory: (getOriginUrl)

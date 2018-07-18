@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { TopologyService } from '../../api/topology.service';
-import { Worker } from '../../api/gen/models';
-import { AuthService, UserProfile } from '../../svc/auth.service';
+import { Worker, Profile } from '../../api/gen/models';
+import { UserService } from '../../svc/user.service';
 
 @Component({
     selector: 'topo-members',
@@ -17,16 +17,16 @@ import { AuthService, UserProfile } from '../../svc/auth.service';
 })
 export class TopoMembersComponent implements OnInit {
     @Input() workers : Worker[];
-    profile: UserProfile;
+    profile: Profile;
 
     constructor(
         private service: TopologyService,
-        private auth: AuthService
+        private userSvc: UserService
     ) { }
 
     ngOnInit() {
-        this.auth.profile$.subscribe(
-            (p: UserProfile) => {
+        this.userSvc.profile$.subscribe(
+            (p: Profile) => {
                 this.profile = p;
             }
         )
@@ -36,7 +36,7 @@ export class TopoMembersComponent implements OnInit {
         if (this.profile.isAdmin)
             return true;
 
-        let actor = this.workers.find((w) => { return w.personGlobalId == this.profile.id });
+        let actor = this.workers.find((w) => { return w.personGlobalId == this.profile.globalId });
         return actor && actor.canManage;
     }
 

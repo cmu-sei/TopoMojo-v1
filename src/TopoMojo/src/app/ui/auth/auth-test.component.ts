@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../svc/auth.service';
 
 @Component({
@@ -7,27 +8,24 @@ import { AuthService } from '../../svc/auth.service';
   styleUrls: ['auth-test.component.css']
 })
 export class AuthTestComponent implements OnInit {
-  _user: any;
-  loadedUserSub: any;
+  _user: any = {};
 
     constructor(
-      private authService: AuthService
+      private authService: AuthService,
+      private router: Router
     ) { }
 
   ngOnInit() {
-    this.loadedUserSub = this.authService.oidcUser$
-      .subscribe(user => {
-        this._user = user;
-      });
   }
   clearState() {
-    //this.authService.clearState();
+    this.authService.clearStaleState();
   }
   getUser() {
-    //this.authService.init();
+    this._user = this.authService.oidcUser;
   }
   removeUser() {
-    //this.authService.removeUser();
+    this.authService.expireToken();
+    this.router.navigateByUrl("/home");
   }
   startSigninMainWindow() {
     this.authService.externalLogin('');
@@ -42,9 +40,4 @@ export class AuthTestComponent implements OnInit {
     // this.authService.finalizeLogout();
   }
 
-  ngOnDestroy(){
-    if(this.loadedUserSub !== null){
-      this.loadedUserSub.unsubscribe();
-    }
-  }
 }

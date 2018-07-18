@@ -1,21 +1,30 @@
 import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
-import { AuthService, AuthTokenState, UserProfile } from './auth.service';
+import { AuthService, AuthTokenState } from './auth.service';
 import { Observable, Subject } from "rxjs";
 import { SettingsService } from './settings.service';
+import { UserService } from './user.service';
+import { Profile } from '../api/gen/models';
 
 @Injectable()
 export class NotificationService {
 
     constructor(
-        private auth: AuthService,
+        private authSvc: AuthService,
+        private userSvc: UserService,
         private settingSvc: SettingsService
     ) {
         this.initTokenRefresh();
+        this.userSvc.profile$.subscribe(
+            (p: Profile) => {
+                this.profile = p;
+            }
+        );
     }
+    private profile: Profile;
     private key: string;
     private debug: boolean = false;
-    private online: boolean = false;
+    private connected: boolean = false;
     private connection: HubConnection;
 
     actors : Array<Actor> = new Array<Actor>();
@@ -42,9 +51,9 @@ export class NotificationService {
     gameEvents : Observable<any> = this.gameSource.asObservable();
 
     private initTokenRefresh() : void {
-        this.auth.profile$.subscribe(
-            (profile : UserProfile) => {
-                switch (profile.state) {
+        this.authSvc.tokenState$.subscribe(
+            (state : AuthTokenState) => {
+                switch (state) {
                     case AuthTokenState.valid:
                         this.restart();
                         break;
@@ -60,7 +69,7 @@ export class NotificationService {
     }
 
     private restart() : void {
-        if (this.online) {
+        if (this.connected) {
             this.stop().then(
                 () => {
                     this.log("sigr: leave/stop complete. starting");
@@ -74,26 +83,28 @@ export class NotificationService {
     start(key: string) : Promise<boolean> {
         this.key = key;
         this.connection = new HubConnectionBuilder()
-            .withUrl(`${this.settingSvc.settings.urls.apiUrl}/hub?bearer=${this.auth.currentUser.access_token}`).build();
+            .withUrl(`${this.settingSvc.settings.urls.apiUrl}/hub?bearer=${this.authSvc.access_token()}`).build();
         this.log("starting sigr");
         return this.connection.start()
             .catch(err => { console.error(err)})
             .then(() => {
                 this.log("started sigr");
-                this.online = true;
-                this.log(this.auth.currentUser.profile);
-                this.setActor({
-                    action: "PRESENCE.ARRIVED",
-                    actor: {
-                        id: this.auth.currentUser.profile.id,
-                        name: this.auth.currentUser.profile.name,
-                        online: true
-                    }
-                });
+                this.connected = true;
+
+                if (this.profile.globalId) {
+                    this.setActor({
+                        action: "PRESENCE.ARRIVED",
+                        actor: {
+                            id: this.profile.globalId,
+                            name: this.profile.name,
+                            online: true
+                        }
+                    });
+                }
 
                 this.connection.on("presenceEvent",
                     (event : TopoEvent) => {
-                        if (event.actor.id == this.getMyId())
+                        if (event.actor.id == this.profile.globalId)
                             return;
 
                         if (event.action == "PRESENCE.ARRIVED") {
@@ -132,12 +143,8 @@ export class NotificationService {
             });
     }
 
-    getMyId() : string {
-        return this.auth.currentUser.profile.id;
-    }
-
     stop() : Promise<boolean> {
-        if (!this.online || !this.key)
+        if (!this.connected || !this.key)
             return Promise.resolve<boolean>(true);
 
         this.log("sigr: invoking Leave");
@@ -146,7 +153,7 @@ export class NotificationService {
                 this.log("sigr: invoked Leave, stopping");
                 this.connection.stop();
                 this.actors = [];
-                this.online = false;
+                this.connected = false;
                 return true;
             }
         ).catch(
@@ -155,7 +162,7 @@ export class NotificationService {
                 this.log(reason);
                 this.connection.stop();
                 this.actors = [];
-                this.online = false;
+                this.connected = false;
                 return true;
             }
         );
@@ -186,7 +193,7 @@ export class NotificationService {
 
     private setChatActor(event: TopoEvent): void {
 
-        if (event.actor.id == this.auth.currentUser.profile.id)
+        if (event.actor.id == this.profile.globalId)
             return;
 
         let actor = this.actors.find(a => { return a.id == event.actor.id });
