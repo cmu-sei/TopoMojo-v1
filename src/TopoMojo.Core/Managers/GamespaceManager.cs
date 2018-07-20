@@ -40,8 +40,12 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
 
-        public async Task<Models.Gamespace[]> List()
+        public async Task<Models.Gamespace[]> List(string filter)
         {
+            if (filter == "all")
+            {
+                return await ListAll();
+            }
             var list = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
             return Mapper.Map<Models.Gamespace[]>(list);
         }

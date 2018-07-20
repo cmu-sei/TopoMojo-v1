@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Observable ,  Subject ,  Subscription } from "rxjs";
+import { Subscription } from 'rxjs';
 import { NotificationService } from '../../svc/notification.service';
 
 @Component({
@@ -9,10 +9,10 @@ import { NotificationService } from '../../svc/notification.service';
 })
 export class NotificationPanelComponent implements OnInit, OnDestroy {
     constructor(
-        private svc : NotificationService
+        private svc: NotificationService
     ) { }
 
-    messages : Array<Notification> = new Array<Notification>();
+    messages: Array<Notification> = new Array<Notification>();
     events: Array<any> = new Array<any>();
 
     private subs: Subscription[] = [];
@@ -48,18 +48,18 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         );
     }
 
-    addStatic(event : any) : void {
+    addStatic(event: any): void {
         this.events.push(event);
     }
 
-    push(event : any) : void {
+    push(event: any): void {
         this.events.push(event);
         setTimeout(() => {
             this.pop(event);
         }, 8000);
     }
 
-    pop(event : any) : void {
+    pop(event: any): void {
         this.events.splice(this.events.indexOf(event), 1);
     }
 
@@ -72,11 +72,11 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 }
 
 export class Notification {
-    id : string;
-    text : string;
+    id: string;
+    text: string;
     progress: number;
 
-    constructor(text: string, id?: string, progress? : number) {
+    constructor(text: string, id?: string, progress?: number) {
         this.text = text;
         this.id = id;
         this.progress = progress;

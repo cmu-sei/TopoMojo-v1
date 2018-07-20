@@ -44,6 +44,15 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Message[]>(msgs);
         }
 
+        public async Task<Models.Message> Find(int msgId)
+        {
+            var entity = await _db.Messages.FindAsync(msgId);
+            if (! await IsAllowed(entity.RoomId))
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.Message>(entity);
+        }
+
         public async Task<Models.Message> Add(NewMessage message)
         {
             if (! await IsAllowed(message.RoomId))

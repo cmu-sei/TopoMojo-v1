@@ -4,11 +4,11 @@ import { TopologyService } from '../../api/topology.service';
 import { Search, TopologySummarySearchResult, Topology } from '../../api/gen/models';
 
 @Component({
-    selector: 'workspace-browser',
+    selector: 'app-workspace-browser',
     templateUrl: './work-browser.component.html',
     styleUrls: ['./work-browser.component.css']
 })
-export class WorkBrowserComponent {
+export class WorkBrowserComponent implements OnInit {
     topos: Topology[] = [];
     term: string;
     model: Search = {
@@ -30,7 +30,7 @@ export class WorkBrowserComponent {
 
     ngOnInit(): void {
         this.search();
-    };
+    }
 
     more() {
         this.model.skip += this.model.take;
@@ -47,12 +47,12 @@ export class WorkBrowserComponent {
 
     search() {
         this.loading = true;
-        this.model.filters = ["mine"];
-        this.service.getTopologies(this.model)
+        this.model.filters = ['mine'];
+        this.service.getTopologySummaries(this.model)
         .subscribe(
-            (data) => {
+            (data: TopologySummarySearchResult) => {
                 this.topos = this.topos.concat(data.results);
-                this.hasMore = data.total - (data.search.skip+data.search.take);
+                this.hasMore = data.total - (data.search.skip + data.search.take);
             },
             (err) => { },
             () => {

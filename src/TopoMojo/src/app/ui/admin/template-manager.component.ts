@@ -3,26 +3,26 @@ import { TemplateService } from '../../api/template.service';
 import { Search, TemplateSummary, TemplateDetail } from '../../api/gen/models';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'template-manager',
+    // moduleId: module.id,
+    selector: 'app-template-manager',
     templateUrl: 'template-manager.component.html',
     styleUrls: [ 'template-manager.component.css' ]
 })
 export class TemplateManagerComponent implements OnInit {
     template: TemplateDetail;
-    //templateLinker: any;
+    // templateLinker: any;
     templates: TemplateSummary[] = [];
     selected: number;
-    icon: string = 'fa fa-clipboard';
-    //private term: string = '';
+    icon = 'fa fa-clipboard';
+    // private term: string = '';
     errorMessage: string;
     hasMore: number;
     model: Search = { filters: [ 'parents' ]};
     loading: boolean;
 
     constructor(
-        private service : TemplateService,
-        private _ngZone : NgZone
+        private service: TemplateService,
+        private _ngZone: NgZone
         ) { }
 
     @ViewChild('focusTag') focusTagEl;
@@ -53,22 +53,22 @@ export class TemplateManagerComponent implements OnInit {
         this.service.getTemplates(this.model)
         .subscribe(data => {
             this.templates = this.templates.concat(data.results);
-            this.hasMore = data.total - (data.search.skip+data.search.take);
+            this.hasMore = data.total - (data.search.skip + data.search.take);
             this.template = null;
             }, (err) => { },
             () => {
                 this.loading = false;
-            })
+            });
     }
 
-    select(selected : number) {
+    select(selected: number) {
         if (this.selected === selected) {
             this.template = null;
             this.selected = 0;
         } else {
-            //load template detail
+            // load template detail
             this.selected = selected;
-            this.service.detailedTemplate(selected)
+            this.service.getTemplateDetailed(selected)
             .subscribe(
                 (result: TemplateDetail) => {
                     this.template = result;
@@ -76,7 +76,7 @@ export class TemplateManagerComponent implements OnInit {
                         setTimeout(() => this.focusEditor(), 5);
                     });
                 }
-            )
+            );
         }
     }
 
@@ -85,11 +85,11 @@ export class TemplateManagerComponent implements OnInit {
     }
 
     create() {
-        this.service.createTemplate({ name: 'new-template'})
+        this.service.postTemplateDetailed({ name: 'new-template'})
         .subscribe(data => {
             this.selected = data.id;
             this.templates.unshift({ id: data.id, name: data.name });
-            //this.templates.push(data);
+            // this.templates.push(data);
             this.template = data;
             this._ngZone.runOutsideAngular(() => {
                 setTimeout(() => this.focusEditor(), 5);
@@ -101,15 +101,15 @@ export class TemplateManagerComponent implements OnInit {
     save() {
 
         try {
-            let s = JSON.parse(this.template.detail);
-            this.service.configureTemplate(this.template).subscribe(
+            const s = JSON.parse(this.template.detail);
+            this.service.putTemplateDetail(this.template).subscribe(
                 (data) => {
-                    this.templates.find((v) => v.id == data.id).name = data.name;
+                    this.templates.find((v) => v.id === data.id).name = data.name;
                     this.select(this.template.id);
                 },
                 (err) => { }
             );
-        } catch(Error) {
+        } catch (Error) {
             this.errorMessage = Error.message;
         }
 
@@ -123,7 +123,7 @@ export class TemplateManagerComponent implements OnInit {
             this.termChanged(this.model.term);
         }, (err) => {
             this.errorMessage = err.error.message;
-        })
+        });
     }
 
     clearError() {

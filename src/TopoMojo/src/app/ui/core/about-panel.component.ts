@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'about-panel',
+    selector: 'app-about-panel',
     templateUrl: 'about-panel.component.html'
 })
 export class AboutPanelComponent implements OnInit {

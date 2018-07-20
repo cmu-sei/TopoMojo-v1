@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GamespaceService } from '../../api/gamespace.service';
 import { GameState, VmState } from '../../api/gen/models';
@@ -9,23 +9,23 @@ import { Subscription } from 'rxjs';
 import { LayoutService } from '../../svc/layout.service';
 
 @Component({
-    selector: 'player',
+    selector: 'app-player',
     templateUrl: 'player.component.html',
     styleUrls: [ 'player.component.css']
 })
-export class PlayerComponent implements OnInit {
+export class PlayerComponent implements OnInit, OnDestroy {
     game: GameState;
     errors: any[] = [];
     markdownDoc: string;
     renderedDoc: string;
     docMissing: boolean;
     launching: boolean;
-    loading: boolean = true;
+    loading = true;
     destroyMsgVisible: boolean;
-    messageCount: number = 0;
-    collaborationVisible: boolean = false;
+    messageCount = 0;
+    collaborationVisible = false;
     appName: string;
-    private converter : Converter;
+    private converter: Converter;
     private id: number;
     private subs: Subscription[] = [];
     showOverlay: boolean;
@@ -33,30 +33,30 @@ export class PlayerComponent implements OnInit {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        private service : GamespaceService,
+        private service: GamespaceService,
         private notifier: NotificationService,
         private settingsSvc: SettingsService,
         private layoutSvc: LayoutService
         ) {
         this.converter = new Converter(SHOWDOWN_OPTS);
         this.settingsSvc.changeLayout({ embedded : true });
-        this.appName = this.settingsSvc.settings.branding.applicationName || "TopoMojo";
+        this.appName = this.settingsSvc.settings.branding.applicationName || 'TopoMojo';
     }
 
     ngOnInit() {
         this.loading = true;
         this.id = +this.route.snapshot.paramMap.get('id');
         this.service.getGamespace(this.id).subscribe(
-            (result : GameState) => {
-                this.service.getText(result.topologyDocument + "?ts=" + Date.now())
+            (result: GameState) => {
+                this.service.getText(result.topologyDocument + '?ts=' + Date.now())
                     .subscribe(
                         (text) => {
-                            //todo: update console urls
-                            //todo: enforce image size?
-                            //let newHtml = this.converter.makeHtml(text);
-                            //newHtml = newHtml.replace(/href="console"/g, 'href="console" target="console"');
-                            //this.renderedDocument = newHtml;
-                            //this.status = '';
+                            // todo: update console urls
+                            // todo: enforce image size?
+                            // let newHtml = this.converter.makeHtml(text);
+                            // newHtml = newHtml.replace(/href="console"/g, 'href="console" target="console"');
+                            // this.renderedDocument = newHtml;
+                            // this.status = '';
                             this.markdownDoc = text;
                         },
                         () => this.render()
@@ -78,15 +78,16 @@ export class PlayerComponent implements OnInit {
 
         this.game = game;
 
-        if (!this.game.globalId)
+        if (!this.game.globalId) {
             return;
+        }
 
-        this.game.shareCode = this.settingsSvc.hostUrl + "/mojo/enlist/" + this.game.shareCode;
+        this.game.shareCode = this.settingsSvc.hostUrl + '/mojo/enlist/' + this.game.shareCode;
         this.subs.push(
             this.notifier.gameEvents.subscribe(
                 (event) => {
                     switch (event.action) {
-                        case "GAME.OVER":
+                        case 'GAME.OVER':
                         this.showOverlay = true;
                         break;
                     }
@@ -100,9 +101,10 @@ export class PlayerComponent implements OnInit {
             this.notifier.chatEvents.subscribe(
                 (event) => {
                     switch (event.action) {
-                        case "CHAT.MESSAGE":
-                        if (!this.collaborationVisible)
+                        case 'CHAT.MESSAGE':
+                        if (!this.collaborationVisible) {
                             this.messageCount += 1;
+                        }
                         break;
                     }
                 }
@@ -114,7 +116,7 @@ export class PlayerComponent implements OnInit {
 
     private render() {
         this.docMissing = (!this.markdownDoc);
-        let html = this.converter.makeHtml(this.markdownDoc);
+        const html = this.converter.makeHtml(this.markdownDoc);
 
         this.renderedDoc = html;
     }
@@ -122,13 +124,13 @@ export class PlayerComponent implements OnInit {
     onVmUpdated(vm: VmState) {
         this.game.vms.forEach(
             (v, i) => {
-                //console.log(v);
-                if (v.id == vm.id) {
+                // console.log(v);
+                if (v.id === vm.id) {
                     v.isRunning = vm.isRunning;
                     this.game.vms.splice(i, 1, v);
                 }
             }
-        )
+        );
     }
 
     ngOnDestroy() {
@@ -146,7 +148,7 @@ export class PlayerComponent implements OnInit {
     launch() {
         this.loading = true;
 
-        this.service.launchGamespace(this.id)
+        this.service.postGamespaceLaunch(this.id)
         .subscribe(
             (result) => {
                 this.initGame(result);
@@ -160,11 +162,11 @@ export class PlayerComponent implements OnInit {
         );
     }
 
-    //wmks : any;
+    // wmks : any;
     launchConsole(vm) {
-        //console.log('launch console ' + vm.id);
+        // console.log('launch console ' + vm.id);
         this.service.openConsole(vm.id, vm.name);
-        //this.vmService.launchPage("/vm/display/" + id);
+        // this.vmService.launchPage("/vm/display/" + id);
         // this.vmService.ticket(id).subscribe(
         //     (result) => {
         //         console.log(result);
@@ -197,8 +199,9 @@ export class PlayerComponent implements OnInit {
 
     collaborate() {
         this.collaborationVisible = !this.collaborationVisible;
-        if (this.collaborationVisible)
+        if (this.collaborationVisible) {
             this.messageCount = 0;
+        }
     }
 
     redirect() {
@@ -223,7 +226,6 @@ export class PlayerComponent implements OnInit {
 
     onError(err) {
         this.errors.push(err.error);
-        console.debug(err.error.message);
     }
 
 }

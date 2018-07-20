@@ -57,4 +57,9 @@ namespace TopoMojo.Core.Models
         public string ParentName { get; set; }
     }
 
+    public class TemplateLink
+    {
+        public int TemplateId { get; set; }
+        public int TopologyId { get; set; }
+    }
 }

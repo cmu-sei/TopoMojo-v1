@@ -3,7 +3,7 @@
         <span class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></span>
     </div>
     <div class="col-xs-12">
-        <search-bar (onSearch)="termChanged($event)"></search-bar>
+        <search-bar (searched)="termChanged($event)"></search-bar>
         <div *ngFor="let t of topos" class="col-sm-6">
             <div class="card">
                 <!--<div class="col-xs-1">

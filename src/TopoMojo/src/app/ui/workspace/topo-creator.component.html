@@ -26,7 +26,7 @@
                 placeholder="Description"></textarea>
         </div>
         <div class="form-group">
-            <error-div [errors]="errors"></error-div>
+            <app-error-div [errors]="errors"></app-error-div>
             <input type="submit" class="btn btn-primary pull-right" [disabled]="!createForm.form.valid" value="Create">
         </div>
     </form>

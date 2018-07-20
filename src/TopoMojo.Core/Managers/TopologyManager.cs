@@ -38,13 +38,31 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _gameRepo;
         private readonly IPodManager _pod;
 
-        public async Task<Models.SearchResult<Models.TopologySummary>> List(Models.Search search)
+        public IQueryable<Topology> GetTopoQuery(Models.Search search)
         {
-            string[] allowedFilters = new string[] { "mine", "published" };
-            if (!Profile.IsAdmin && !search.Filters.Intersect(allowedFilters).Any())
+            if (search.Take == 0) search.Take = 50;
+
+            string[] allowedFilters = new string[] { "mine", "published", "all" };
+
+            if (!Profile.IsAdmin)
+            {
+                search.Filters = search.Filters.Except(new string[] { "all" }).ToArray();
+            }
+
+            if (!search.Filters.Intersect(allowedFilters).Any())
+            {
                 search.Filters = new string[] { "mine" };
+            }
 
             IQueryable<Topology> q = _repo.List();
+
+            if (search.HasFilter("detail"))
+            {
+             q = q.Include(t => t.Templates)
+                .Include(t => t.Workers)
+                .ThenInclude(w => w.Person);
+            }
+
             if (search.Term.HasValue())
             {
                 q = q.Where(o =>
@@ -60,26 +78,14 @@ namespace TopoMojo.Core
             if (search.HasFilter("mine"))
                 q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
 
-            return await ProcessQuery(search, q);
+            return q;
         }
 
-        // public async Task<SearchResult<Models.Topology>> ListMine(Search search)
-        // {
-        //     IQueryable<Topology> q = _repo.List()
-        //         .Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
-
-        //     if (search.Term.HasValue())
-        //     {
-        //         q = q.Where(o => o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0);
-        //     }
-
-        //     return await ProcessQuery(search, q);
-        // }
-
-        public async Task<Models.SearchResult<Models.TopologySummary>> ProcessQuery(Models.Search search, IQueryable<Topology> q)
+        public async Task<Models.SearchResult<Models.TopologySummary>> List(Models.Search search)
         {
-            if (search.Take == 0) search.Take = 50;
-            Models.SearchResult<Models.TopologySummary> result = new Models.SearchResult<Models.TopologySummary>();
+            var q = GetTopoQuery(search);
+
+            var result = new Models.SearchResult<Models.TopologySummary>();
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.TopologySummary[]>(q
@@ -90,26 +96,20 @@ namespace TopoMojo.Core
             return result;
         }
 
-        public async Task<Models.SearchResult<Models.Topology>> ListAll(Models.Search search)
+        public async Task<Models.SearchResult<Models.Topology>> ListDetail(Models.Search search)
         {
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            IQueryable<Topology> q = _repo.List()
-                .Include(t => t.Templates)
-                .Include(t => t.Workers)
-                .ThenInclude(w => w.Person);
-
-            if (search.Term.HasValue())
+            if (!search.HasFilter("detail"))
             {
-                q = q.Where(o =>
-                    o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                );
+                var filters = search.Filters.ToList();
+                filters.Add("detail");
+                search.Filters = filters.ToArray();
             }
 
-            if (search.Take == 0) search.Take = 50;
+            var q = GetTopoQuery(search);
+
             Models.SearchResult<Models.Topology> result = new Models.SearchResult<Models.Topology>();
             result.Search = search;
             result.Total = await q.CountAsync();
@@ -197,6 +197,32 @@ namespace TopoMojo.Core
             return await _repo.CanEdit(topoId, Profile);
         }
 
+        public async Task<Models.TopologyState> ChangeState(Models.TopologyStateAction action)
+        {
+            Models.TopologyState state = null;
+            switch (action.Type)
+            {
+                case Models.TopologyStateActionType.Share:
+                state = await Share(action.Id, false);
+                break;
+                case Models.TopologyStateActionType.Unshare:
+                state = await Share(action.Id, true);
+                break;
+                case Models.TopologyStateActionType.Publish:
+                state = await Publish(action.Id, false);
+                break;
+                case Models.TopologyStateActionType.Unpublish:
+                state = await Publish(action.Id, true);
+                break;
+                case Models.TopologyStateActionType.Lock:
+                state = await Lock(action.Id, false);
+                break;
+                case Models.TopologyStateActionType.Unlock:
+                state = await Lock(action.Id, true);
+                break;
+            }
+            return state;
+        }
         public async Task<Models.TopologyState> Share(int id, bool revoke)
         {
             Data.Entities.Topology topology = await _repo.Load(id);

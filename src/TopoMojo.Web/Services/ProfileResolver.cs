@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models;
 using TopoMojo.Core.Privileged;
-using TopoMojo.Data.EntityFrameworkCore;
 
 namespace TopoMojo.Services
 {
@@ -51,8 +49,8 @@ namespace TopoMojo.Services
         private Profile BuildProfileModel(ClaimsPrincipal principal)
         {
             var profile = new Profile();
-            profile.GlobalId = principal.FindFirst(JwtClaimTypes.Subject)?.Value;
-            profile.Name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? "Anonymous";
+            profile.GlobalId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            profile.Name = principal.FindFirst("name")?.Value ?? "Anonymous";
             profile.IsAdmin = principal.IsInRole("admin");
 
             if (Int32.TryParse(principal.FindFirst(JwtRegisteredClaimNames.NameId)?.Value, out int id))
@@ -74,7 +72,7 @@ namespace TopoMojo.Services
             if (_profile != null)
                 return principal;
 
-            string sub = principal.FindFirstValue(JwtClaimTypes.Subject);
+            string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
             if (!_cache.TryGetValue(sub, out List<Claim> claims))
             {
                 claims = new List<Claim>();
@@ -82,9 +80,9 @@ namespace TopoMojo.Services
                 if (profile != null)
                 {
                     if (profile.IsAdmin)
-                        claims.Add(new Claim(JwtClaimTypes.Role, "admin"));
+                        claims.Add(new Claim("role", "admin"));
 
-                    string name = principal.FindFirstValue(JwtClaimTypes.Name);
+                    string name = principal.FindFirstValue("name");
                     if (!String.IsNullOrEmpty(name) && name != profile.Name)
                     {
                         profile.Name = name;

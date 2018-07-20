@@ -1,4 +1,4 @@
-import { ElementRef, ViewChild, Component, OnChanges, Input } from '@angular/core';
+import { ElementRef, ViewChild, Component, OnChanges, Input, OnDestroy, AfterViewChecked } from '@angular/core';
 import { NotificationService, TopoEvent } from '../../svc/notification.service';
 import { ChatService } from '../../api/chat.service';
 import { Message } from '../../api/gen/models';
@@ -8,23 +8,23 @@ import { distinctUntilChanged } from 'rxjs/operators';
 import { ClipboardService } from '../../svc/clipboard.service';
 
 @Component({
-    selector: 'chat-messages',
+    selector: 'app-chat-messages',
     templateUrl: './messages.component.html',
     styleUrls: ['./messages.component.css']
 })
-export class MessagesComponent implements OnChanges {
+export class MessagesComponent implements OnChanges, OnDestroy, AfterViewChecked {
     @Input() space: any;
     @ViewChild('scrollMe') private messagePanel: ElementRef;
     notifier: NotificationService;
-    messages:Array<Message> = new Array<Message>();
-    typers: string = "";
-    newMessage : string = '';
-    showHistoryButton: boolean = false;
+    messages: Array<Message> = new Array<Message>();
+    typers = '';
+    newMessage = '';
+    showHistoryButton = false;
     private subs: Subscription[] = [];
-    private autoScroll: boolean = true;
+    private autoScroll = true;
     private typingSource: Subject<boolean> = new Subject<boolean>();
     private typing$: Observable<boolean> = this.typingSource.asObservable();
-    private typingMonitor : any;
+    private typingMonitor: any;
     private key: string;
 
     constructor(
@@ -37,8 +37,9 @@ export class MessagesComponent implements OnChanges {
 
     ngOnChanges() {
 
-        if (!this.space || !this.space.globalId)
+        if (!this.space || !this.space.globalId) {
             return;
+        }
 
         this.key = this.space.globalId;
         this.moreHistory();
@@ -47,11 +48,11 @@ export class MessagesComponent implements OnChanges {
             this.notifier.chatEvents.subscribe(
                 (event: TopoEvent) => {
                     switch (event.action) {
-                        case "CHAT.TYPING":
+                        case 'CHAT.TYPING':
                         this.typers = this.notifier.actors.filter((a) => a.typing).map((a) => a.name).join();
                         break;
 
-                        case "CHAT.ADDED":
+                        case 'CHAT.ADDED':
                         this.messages.push(
                             {
                                 authorName: event.actor.name,
@@ -81,13 +82,13 @@ export class MessagesComponent implements OnChanges {
     }
 
     submitMessage() {
-        if (!this.newMessage || this.newMessage == '\n') {
-            this.newMessage = "";
+        if (!this.newMessage || this.newMessage === '\n') {
+            this.newMessage = '';
             return;
         }
 
-        let text = this.newMessage;
-        this.newMessage = "";
+        const text = this.newMessage;
+        this.newMessage = '';
         // //TODO: push messages directly to canvas, and ignore incoming from self
         // this.messages.push({
         //     text: text,
@@ -109,29 +110,29 @@ export class MessagesComponent implements OnChanges {
     }
 
     moreHistory() {
-        let take = 25;
-        let marker = (this.messages.length) ? this.messages[0].id : 0;
-        this.service.getChat(this.key, marker, take).subscribe(
+        const take = 25;
+        const marker = (this.messages.length) ? this.messages[0].id : 0;
+        this.service.getChats(this.key, marker, take).subscribe(
             (result: Message[]) => {
                 this.messages.unshift(...result.reverse());
-                this.showHistoryButton = result.length == take;
+                this.showHistoryButton = result.length === take;
             }
         );
     }
 
     onScroll() {
-        let element = this.messagePanel.nativeElement
-        let atBottom = element.scrollHeight - element.scrollTop === element.clientHeight
+        const element = this.messagePanel.nativeElement;
+        const atBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
         this.autoScroll = atBottom;
     }
 
     private scrollToBottom(): void {
         try {
             if (this.autoScroll) {
-                let element = this.messagePanel.nativeElement
+                const element = this.messagePanel.nativeElement;
                 element.scrollTop = element.scrollHeight;
             }
-        } catch(err) { }
+        } catch (err) { }
     }
 
 
@@ -139,6 +140,6 @@ export class MessagesComponent implements OnChanges {
 
         this.subs.forEach(sub => {
             sub.unsubscribe();
-        })
+        });
     }
 }

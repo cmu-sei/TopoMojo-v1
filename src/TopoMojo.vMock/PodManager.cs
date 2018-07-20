@@ -22,7 +22,7 @@ namespace TopoMojo.vMock
             _mill = mill;
             _logger = _mill.CreateLogger<PodManager>();
             _vms = new Dictionary<string, Vm>();
-            _tasks = new Dictionary<string, VmTask>();
+            _tasks = new Dictionary<string, Models.Virtual.VmTask>();
             _rand = new Random();
         }
 
@@ -31,7 +31,7 @@ namespace TopoMojo.vMock
         private readonly ILoggerFactory _mill;
         private Random _rand;
         private Dictionary<string, Vm> _vms;
-        private Dictionary<string, VmTask> _tasks;
+        private Dictionary<string, Models.Virtual.VmTask> _tasks;
 
         public PodConfiguration Options { get { return _optPod; } }
 
@@ -63,7 +63,7 @@ namespace TopoMojo.vMock
         {
             if (_tasks.ContainsKey(key))
             {
-                VmTask task = _tasks[key];
+                Models.Virtual.VmTask task = _tasks[key];
                 float elapsed = (int)DateTime.UtcNow.Subtract(task.WhenCreated).TotalSeconds;
                 task.Progress = (int) Math.Min(100, (elapsed / 10) * 100);
                 if (task.Progress == 100)
@@ -131,6 +131,34 @@ namespace TopoMojo.vMock
             return _vms[id];
         }
 
+        public async Task<Vm> ChangeState(VmOperation op)
+        {
+            Vm vm = null;
+            switch (op.Type)
+            {
+                case VmOperationType.Start:
+                vm = await Start(op.Id);
+                break;
+
+                case VmOperationType.Stop:
+                vm = await Stop(op.Id);
+                break;
+
+                case VmOperationType.Save:
+                vm = await Save(op.Id);
+                break;
+
+                case VmOperationType.Revert:
+                vm = await Revert(op.Id);
+                break;
+
+                case VmOperationType.Delete:
+                vm = await Delete(op.Id);
+                break;
+            }
+            return vm;
+        }
+
         public async Task<Vm> Start(string id)
         {
             Vm vm = _vms[id];
@@ -153,7 +181,7 @@ namespace TopoMojo.vMock
                 throw new InvalidOperationException();
 
             Vm vm = _vms[id];
-            vm.Task = new VmTask { Id = id, Name = "saving", WhenCreated = DateTime.UtcNow};
+            vm.Task = new Models.Virtual.VmTask { Id = id, Name = "saving", WhenCreated = DateTime.UtcNow};
             _tasks.Add(vm.Name, vm.Task);
             await Delay();
             return vm;
@@ -177,7 +205,7 @@ namespace TopoMojo.vMock
             return vm;
         }
 
-        public async Task<Vm> Change(string id, KeyValuePair change)
+        public async Task<Vm> ChangeConfiguration(string id, KeyValuePair change)
         {
             Vm vm = _vms[id];
             await Delay();

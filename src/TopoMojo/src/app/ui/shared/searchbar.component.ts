@@ -6,30 +6,30 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 })
 export class SearchBarComponent {
     timer: any;
-    term: string = '';
-    last: string = '';
+    term = '';
+    last = '';
     @Input() hasMore: boolean;
-    @Output() onSearch: EventEmitter<string> = new EventEmitter<string>();
-    @Output() onMore: EventEmitter<string> = new EventEmitter<string>();
+    @Output() searched: EventEmitter<string> = new EventEmitter<string>();
+    @Output() mored: EventEmitter<string> = new EventEmitter<string>();
 
     refresh(term) {
         this.term = term.trim();
-        if (this.timer) { clearTimeout(this.timer);}
+        if (this.timer) { clearTimeout(this.timer); }
         this.timer = setTimeout(() => this.timerFired(), 500);
     }
 
     fire() {
-        this.onSearch.emit(this.term);
+        this.searched.emit(this.term);
     }
 
     timerFired() {
         if (this.term !== this.last) {
             this.last = this.term;
-            this.onSearch.emit(this.term);
+            this.searched.emit(this.term);
         }
     }
 
     more() {
-        this.onMore.emit('');
+        this.mored.emit('');
     }
 }

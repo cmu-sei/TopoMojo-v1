@@ -28,5 +28,5 @@ export class DocumentRoutingModule {
         DocumentComponent,
         DocumentEditorComponent,
         ImageManagerComponent
-     ]
+     ];
 }

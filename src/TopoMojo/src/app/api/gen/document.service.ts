@@ -1,26 +1,27 @@
 
-import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { GeneratedService } from "./_service";
-import { ImageFile } from "./models";
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiSettings } from '../api-settings';
+import { GeneratedService } from './_service';
+import { ImageFile } from './models';
 
 @Injectable()
 export class GeneratedDocumentService extends GeneratedService {
 
     constructor(
-       protected http: HttpClient
-    ) { super(http); }
+       protected http: HttpClient,
+       protected api: ApiSettings
+    ) { super(http, api); }
 
-	public putDocument(guid: string, text: string) : Observable<boolean> {
-		return this.http.put<boolean>(this.hostUrl + "/api/document/" + guid, text);
-	}
-	public getImages(guid: string) : Observable<Array<ImageFile>> {
-		return this.http.get<Array<ImageFile>>(this.hostUrl + "/api/images/" + guid);
-	}
-	public deleteImage(guid: string, filename: string) : Observable<ImageFile> {
-		return this.http.delete<ImageFile>(this.hostUrl + "/api/image/" + guid + this.paramify({filename: filename}));
-	}
+    public putDocument(id: string, text: string): Observable<boolean> {
+        return this.http.put<boolean>(this.api.url + '/api/document/' + id, text);
+    }
+    public getImages(id: string): Observable<Array<ImageFile>> {
+        return this.http.get<Array<ImageFile>>(this.api.url + '/api/images/' + id);
+    }
+    public deleteImage(id: string, filename: string): Observable<ImageFile> {
+        return this.http.delete<ImageFile>(this.api.url + '/api/image/' + id + this.paramify({filename: filename}));
+    }
 
 }
-

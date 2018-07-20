@@ -1,7 +1,7 @@
-import {Component, Input, AfterViewInit, ElementRef, ChangeDetectorRef} from "@angular/core";
+import {Component, Input, AfterViewInit, ElementRef, ChangeDetectorRef} from '@angular/core';
 
 @Component({
-    selector: "tooltip-content",
+    selector: 'tooltip-content',
     template: `
 <div class="tooltip {{ placement }}"
      [style.top]="top + 'px'"
@@ -17,7 +17,7 @@ import {Component, Input, AfterViewInit, ElementRef, ChangeDetectorRef} from "@a
 </div>
 `
 })
-export class TooltipContent implements AfterViewInit {
+export class TooltipContentComponent implements AfterViewInit {
 
     // -------------------------------------------------------------------------
     // Inputs / Outputs
@@ -30,19 +30,19 @@ export class TooltipContent implements AfterViewInit {
     content: string;
 
     @Input()
-    placement: "top"|"bottom"|"left"|"right" = "bottom";
+    placement: 'top'|'bottom'|'left'|'right' = 'bottom';
 
     @Input()
-    animation: boolean = true;
+    animation = true;
 
     // -------------------------------------------------------------------------
     // Properties
     // -------------------------------------------------------------------------
 
-    top: number = -100000;
-    left: number = -100000;
-    isIn: boolean = false;
-    isFade: boolean = false;
+    top = -100000;
+    left = -100000;
+    isIn = false;
+    isFade = false;
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -66,37 +66,45 @@ export class TooltipContent implements AfterViewInit {
     // -------------------------------------------------------------------------
 
     show(): void {
-        if (!this.hostElement)
+        if (!this.hostElement) {
             return;
+        }
 
         const p = this.positionElements(this.hostElement, this.element.nativeElement.children[0], this.placement);
         this.top = p.top;
         this.left = p.left;
         this.isIn = true;
-        if (this.animation)
+        if (this.animation) {
             this.isFade = true;
+        }
     }
 
     hide(): void {
         this.top = -100000;
         this.left = -100000;
         this.isIn = true;
-        if (this.animation)
+        if (this.animation) {
             this.isFade = false;
+        }
     }
 
     // -------------------------------------------------------------------------
     // Private Methods
     // -------------------------------------------------------------------------
 
-    private positionElements(hostEl: HTMLElement, targetEl: HTMLElement, positionStr: string, appendToBody: boolean = false): { top: number, left: number } {
-        let positionStrParts = positionStr.split("-");
-        let pos0 = positionStrParts[0];
-        let pos1 = positionStrParts[1] || "center";
-        let hostElPos = appendToBody ? this.offset(hostEl) : this.position(hostEl);
-        let targetElWidth = targetEl.offsetWidth;
-        let targetElHeight = targetEl.offsetHeight;
-        let shiftWidth: any = {
+    private positionElements(
+        hostEl: HTMLElement,
+        targetEl: HTMLElement,
+        positionStr: string,
+        appendToBody: boolean = false
+    ): { top: number, left: number } {
+        const positionStrParts = positionStr.split('-');
+        const pos0 = positionStrParts[0];
+        const pos1 = positionStrParts[1] || 'center';
+        const hostElPos = appendToBody ? this.offset(hostEl) : this.position(hostEl);
+        const targetElWidth = targetEl.offsetWidth;
+        const targetElHeight = targetEl.offsetHeight;
+        const shiftWidth: any = {
             center: function (): number {
                 return hostElPos.left + hostElPos.width / 2 - targetElWidth / 2;
             },
@@ -108,7 +116,7 @@ export class TooltipContent implements AfterViewInit {
             }
         };
 
-        let shiftHeight: any = {
+        const shiftHeight: any = {
             center: function (): number {
                 return hostElPos.top + hostElPos.height / 2 - targetElHeight / 2;
             },
@@ -122,21 +130,21 @@ export class TooltipContent implements AfterViewInit {
 
         let targetElPos: { top: number, left: number };
         switch (pos0) {
-            case "right":
+            case 'right':
                 targetElPos = {
                     top: shiftHeight[pos1](),
                     left: shiftWidth[pos0]()
                 };
                 break;
 
-            case "left":
+            case 'left':
                 targetElPos = {
                     top: shiftHeight[pos1](),
                     left: hostElPos.left - targetElWidth
                 };
                 break;
 
-            case "bottom":
+            case 'bottom':
                 targetElPos = {
                     top: shiftHeight[pos0](),
                     left: shiftWidth[pos1]()
@@ -173,7 +181,7 @@ export class TooltipContent implements AfterViewInit {
         };
     }
 
-    private offset(nativeEl:any): { width: number, height: number, top: number, left: number } {
+    private offset(nativeEl: any): { width: number, height: number, top: number, left: number } {
         const boundingClientRect = nativeEl.getBoundingClientRect();
         return {
             width: boundingClientRect.width || nativeEl.offsetWidth,
@@ -184,18 +192,20 @@ export class TooltipContent implements AfterViewInit {
     }
 
     private getStyle(nativeEl: HTMLElement, cssProp: string): string {
-        if ((nativeEl as any).currentStyle) // IE
+        if ((nativeEl as any).currentStyle) { // IE
             return (nativeEl as any).currentStyle[cssProp];
+        }
 
-        if (window.getComputedStyle)
+        if (window.getComputedStyle) {
             return (window.getComputedStyle(nativeEl) as any)[cssProp];
+        }
 
         // finally try and get inline style
         return (nativeEl.style as any)[cssProp];
     }
 
     private isStaticPositioned(nativeEl: HTMLElement): boolean {
-        return (this.getStyle(nativeEl, "position") || "static" ) === "static";
+        return (this.getStyle(nativeEl, 'position') || 'static' ) === 'static';
     }
 
     private parentOffsetEl(nativeEl: HTMLElement): any {

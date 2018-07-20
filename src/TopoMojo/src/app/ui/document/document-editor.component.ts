@@ -4,18 +4,18 @@ import { DocumentService } from '../../api/document.service';
 import { SHOWDOWN_OPTS } from '../../svc/settings.service';
 
 @Component({
-    selector: 'document-editor',
+    selector: 'app-document-editor',
     templateUrl: 'document-editor.component.html',
     styleUrls: [ 'document-editor.component.css']
 })
 export class DocumentEditorComponent implements OnInit {
 
-    private converter : Converter;
-    @Input() id : string;
-    rendered : string;
-    dirty : boolean;
+    private converter: Converter;
+    @Input() id: string;
+    rendered: string;
+    dirty: boolean;
     showImageDiv: boolean;
-    markdown: string = `
+    markdown = `
 # Title
 #### Subtitle
 
@@ -41,7 +41,7 @@ main() : void {
 Normal markdown image linking works using \`![caption](url)\`.
 If you need to store graphics, use the image manager to upload,
 then paste in the MD text.
-`
+`;
 
     constructor(
         private service: DocumentService,
@@ -53,7 +53,7 @@ then paste in the MD text.
     ngOnInit() {
         this.service.getDocument(this.id)
         .subscribe(
-            (text : string) => {
+            (text: string) => {
                 this.markdown = text;
             },
             () => this.render()

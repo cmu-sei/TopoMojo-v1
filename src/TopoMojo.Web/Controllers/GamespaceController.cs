@@ -30,36 +30,33 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/gamespaces")]
-        [ProducesResponseType(typeof(Gamespace[]), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List()
+        public async Task<ActionResult<Gamespace[]>> List(string filter)
         {
-            var result = await _mgr.List();
+            var result = await _mgr.List(filter);
             return Ok(result);
         }
 
-        [HttpGet("api/gamespaces/all")]
-        [ProducesResponseType(typeof(Gamespace[]), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> ListAll()
-        {
-            var result = await _mgr.ListAll();
-            return Ok(result);
-        }
+        // [Authorize(Roles = "admin")]
+        // [HttpGet("api/gamespaces/all")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<Gamespace[]>> ListAll()
+        // {
+        //     var result = await _mgr.ListAll();
+        //     return Ok(result);
+        // }
 
         [HttpGet("api/gamespace/{id}")]
-        [ProducesResponseType(typeof(GameState), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Load([FromRoute] int id)
+        public async Task<ActionResult<GameState>> Load(int id)
         {
             var result = await _mgr.LoadFromTopo(id);
             return Ok(result);
         }
 
-        [HttpGet("api/gamespace/{id}/launch")]
-        [ProducesResponseType(typeof(GameState), 200)]
+        [HttpPost("api/gamespace/{id}/launch")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Launch([FromRoute] int id)
+        public async Task<ActionResult<GameState>> Launch(int id)
         {
             var result = await _mgr.Launch(id);
             Log("launched", result);
@@ -67,18 +64,16 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/gamespace/{id}/state")]
-        [ProducesResponseType(typeof(GameState), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> CheckState([FromRoute] int id)
+        public async Task<ActionResult<GameState>> CheckState(int id)
         {
             var result = await _mgr.Load(id);
             return Ok(result);
         }
 
         [HttpDelete("api/gamespace/{id}")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Destroy([FromRoute] int id)
+        public async Task<ActionResult<bool>> Destroy(int id)
         {
             var result = await _mgr.Destroy(id);
             Log("destroyed", result);
@@ -86,26 +81,23 @@ namespace TopoMojo.Controllers
             return Ok(true);
         }
 
-        [HttpGet("api/player/enlist/{code}")]
-        [ProducesResponseType(typeof(bool), 200)]
+        [HttpPost("api/player/enlist/{code}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Enlist([FromRoute] string code)
+        public async Task<ActionResult<bool>> Enlist(string code)
         {
             return Ok(await _mgr.Enlist(code));
         }
 
-        [HttpDelete("api/player/delist/{playerId}")]
-        [ProducesResponseType(typeof(bool), 200)]
+        [HttpDelete("api/player/{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delist([FromRoute] int playerId)
+        public async Task<ActionResult<bool>> Delist(int id)
         {
-            return Ok(await _mgr.Delist(playerId));
+            return Ok(await _mgr.Delist(id));
         }
 
         [HttpGet("api/gamespace/{id}/players")]
-        [ProducesResponseType(typeof(Player[]), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Players([FromRoute] int id)
+        public async Task<ActionResult<Player[]>> Players(int id)
         {
             return Ok(await _mgr.Players(id));
         }

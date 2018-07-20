@@ -28,10 +28,10 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 export class ConfirmDeleteComponent implements OnInit {
 
     deleteMsgVisible: boolean;
-    @Input() prompt: string = "CONFIRM";
-    @Input() label: string = '';
+    @Input() prompt = 'CONFIRM';
+    @Input() label = '';
     @Input() asLink: boolean;
-    @Output() onDelete : EventEmitter<boolean> = new EventEmitter<boolean>();
+    @Output() deleted: EventEmitter<boolean> = new EventEmitter<boolean>();
 
     constructor() { }
 
@@ -48,6 +48,6 @@ export class ConfirmDeleteComponent implements OnInit {
 
     delete() {
         this.deleteMsgVisible = false;
-        this.onDelete.emit(true);
+        this.deleted.emit(true);
     }
 }

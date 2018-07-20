@@ -22,7 +22,7 @@
             </button>
         </div>
         <div *ngIf="!showImageDiv" id="render-div" [innerHtml]="rendered"></div>
-        <image-manager *ngIf="showImageDiv" [id]="id" class="fixed-right"></image-manager>
+        <app-image-manager *ngIf="showImageDiv" [id]="id" class="fixed-right"></app-image-manager>
     </div>
 </div>
 

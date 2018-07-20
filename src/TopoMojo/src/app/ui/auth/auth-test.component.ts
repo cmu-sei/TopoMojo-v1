@@ -28,7 +28,7 @@ export class AuthTestComponent implements OnInit {
   }
   removeUser() {
     this.authService.expireToken();
-    this.router.navigateByUrl("/home");
+    this.router.navigateByUrl('/home');
   }
   startSigninMainWindow() {
     this.authService.externalLogin('');

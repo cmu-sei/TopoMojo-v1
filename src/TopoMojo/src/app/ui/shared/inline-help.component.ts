@@ -1,7 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 
 @Component({
-    //moduleId: module.id,
     selector: 'inline-help',
     templateUrl: 'inline-help.component.html',
     styles: [ `
@@ -12,7 +11,7 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class InlineHelpComponent implements OnInit {
     visible: boolean;
-    @Input() message : string;
+    @Input() message: string;
 
     constructor() { }
 

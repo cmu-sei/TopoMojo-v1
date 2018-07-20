@@ -4,18 +4,18 @@ import { TopologyService } from '../../api/topology.service';
 import { TopologySummary, Search, TopologySummarySearchResult } from '../../api/gen/models';
 
 @Component({
-    selector: 'topo-browser',
+    selector: 'app-topo-browser',
     templateUrl: './topo-browser.component.html',
     styleUrls: ['./topo-browser.component.css']
 })
-export class TopoBrowserComponent {
+export class TopoBrowserComponent implements OnInit {
     topos: TopologySummary[] = [];
     term: string;
     model: Search = {
         term: '',
         skip: 0,
         take: 20,
-        filters: [ "published" ]
+        filters: [ 'published' ]
     };
     hasMore: number;
     editorVisible: boolean;
@@ -29,7 +29,7 @@ export class TopoBrowserComponent {
 
     ngOnInit(): void {
         this.search();
-    };
+    }
 
     more() {
         this.model.skip += this.model.take;
@@ -46,11 +46,11 @@ export class TopoBrowserComponent {
 
     search() {
         this.loading = true;
-        this.service.getTopologies(this.model)
+        this.service.getTopologySummaries(this.model)
         .subscribe(
             (data) => {
                 this.topos = this.topos.concat(data.results);
-                this.hasMore = data.total - (data.search.skip+data.search.take);
+                this.hasMore = data.total - (data.search.skip + data.search.take);
             },
             (err) => { },
             () => {
@@ -63,5 +63,3 @@ export class TopoBrowserComponent {
         this.editorVisible = !this.editorVisible;
     }
 }
-
-

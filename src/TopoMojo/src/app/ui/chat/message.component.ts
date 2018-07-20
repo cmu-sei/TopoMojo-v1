@@ -4,7 +4,7 @@ import { SHOWDOWN_OPTS } from '../../svc/settings.service';
 import { Message } from '../../api/gen/models';
 
 @Component({
-    selector: 'chat-message',
+    selector: 'app-chat-message',
     templateUrl: 'message.component.html',
     styles: [`
     div.message {

@@ -1,34 +1,35 @@
 
-import { HttpClient } from "@angular/common/http";
+import { HttpClient } from '@angular/common/http';
+import { ApiSettings } from '../api-settings';
 
 export class GeneratedService {
 
     constructor(
-        protected http : HttpClient
-    ){ }
+        protected http: HttpClient,
+        protected api: ApiSettings
+    ) { }
 
-    protected hostUrl: string = "http://localhost:5004";
-
-    protected paramify(obj : any) : string {
-        var segments = [];
-        for (let p in obj) {
-            let prop = obj[p];
-            if (prop) {
-                if (Array.isArray(prop)) {
-                    prop.forEach(element => {
-                        segments.push(this.encodeKVP(p, element));
-                    });
-                } else {
-                    segments.push(this.encodeKVP(p, prop));
+    protected paramify(obj: any): string {
+        const segments: Array<string> = new Array<string>();
+        for (const p in obj) {
+            if (obj.hasOwnProperty(p)) {
+                const prop = obj[p];
+                if (prop) {
+                    if (Array.isArray(prop)) {
+                        prop.forEach(element => {
+                            segments.push(this.encodeKVP(p, element));
+                        });
+                    } else {
+                        segments.push(this.encodeKVP(p, prop));
+                    }
                 }
             }
         }
-        let qs = segments.join('&');
-        return (qs) ? "?" + qs : "";
+        const qs = segments.join('&');
+        return (qs) ? '?' + qs : '';
     }
 
-    private encodeKVP(key : string, value: string) {
-        return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+    private encodeKVP(key: string, value: string) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(value);
     }
 }
-

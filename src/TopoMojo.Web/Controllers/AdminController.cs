@@ -49,7 +49,7 @@ namespace TopoMojo.Controllers
 
         [HttpGet("/api/admin/getsettings")]
         [JsonExceptionFilter]
-        public IActionResult Settings()
+        public ActionResult<string> Settings()
         {
             string settings = "";
             string root = Path.Combine(_env.ContentRootPath, "appsettings.json");
@@ -81,7 +81,7 @@ namespace TopoMojo.Controllers
 
         [HttpPost("api/admin/savesettings")]
         [JsonExceptionFilter]
-        public IActionResult Settings([FromBody]object settings)
+        public ActionResult<bool> Settings([FromBody]object settings)
         {
             try
             {
@@ -98,9 +98,8 @@ namespace TopoMojo.Controllers
 
 
         [HttpPost("api/admin/announce")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Announce([FromBody]string text)
+        public async Task<ActionResult<bool>> Announce([FromBody]string text)
         {
             await Task.Run(() => SendBroadcast(text));
             return Ok(true);
@@ -109,7 +108,7 @@ namespace TopoMojo.Controllers
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Export([FromBody]int[] ids)
+        public async Task<ActionResult<string[]>> Export(int[] ids)
         {
             string destPath = Path.Combine(
                 _fileUploadOptions.TopoRoot,
@@ -126,9 +125,8 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/admin/import")]
-        [ProducesResponseType(typeof(string[]), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Import()
+        public async Task<ActionResult<string[]>> Import()
         {
             string destPath = _fileUploadOptions.TopoRoot;
             string docPath = Path.Combine(_env.WebRootPath, "docs");
@@ -136,9 +134,8 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/admin/live")]
-        [ProducesResponseType(typeof(CachedConnection[]), 200)]
         [JsonExceptionFilter]
-        public IActionResult LiveUsers()
+        public ActionResult<CachedConnection[]> LiveUsers()
         {
             return Ok(_hubCache.Connections.Values);
         }

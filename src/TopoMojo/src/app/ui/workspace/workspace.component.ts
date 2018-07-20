@@ -1,8 +1,8 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TopologyService } from '../../api/topology.service';
 import { TemplateService } from '../../api/template.service';
-import { Topology, Template, TemplateSummary } from '../../api/gen/models';
+import { Topology, Template, TemplateSummary, TopologyStateActionTypeEnum } from '../../api/gen/models';
 import { NotificationService } from '../../svc/notification.service';
 import { Subscription } from 'rxjs';
 import { ORIGIN_URL } from '../../svc/settings.service';
@@ -15,33 +15,33 @@ export class EventState {
 }
 
 @Component({
-    selector: 'workspace',
+    selector: 'app-workspace',
     templateUrl: './workspace.component.html',
     styleUrls: [ './workspace.component.css' ],
     animations:  [
         trigger('eventState', [
             state('normal', style({
-                color: "inherit"
+                color: 'inherit'
             })),
             state('success', style({
-                color: "green"
+                color: 'green'
             })),
             state('failure', style({
-                color: "crimson"
+                color: 'crimson'
             }))
         ])
     ]
 })
-export class WorkspaceComponent {
+export class WorkspaceComponent implements OnInit, OnDestroy {
     topo: Topology;
     publishedTemplates: TemplateSummary[];
     selectorVisible: boolean;
-    //documentVisible: boolean;
-    //documentText: string = "# Title";
+    // documentVisible: boolean;
+    // documentText: string = "# Title";
     deleteMsgVisible: boolean;
-    //ttIcon: string = 'fa fa-clipboard';
-    addIcon: string = 'fa fa-plus-circle';
-    showing: string = "topo";
+    // ttIcon: string = 'fa fa-clipboard';
+    addIcon = 'fa fa-plus-circle';
+    showing = 'topo';
     errors: any[] = [];
     showOverlay: boolean;
     messageCount: number;
@@ -67,18 +67,18 @@ export class WorkspaceComponent {
         this.service.getTopology(this.id).subscribe(
             (result: Topology) => {
                 this.topo = result;
-                this.topo.shareCode = this.origin + "/topo/enlist/" + this.topo.shareCode;
+                this.topo.shareCode = this.origin + '/topo/enlist/' + this.topo.shareCode;
 
-                //console.log(this.topo);
+                // console.log(this.topo);
                 this.subs.push(
                     this.notifier.topoEvents.subscribe(
                         (event) => {
                             switch (event.action) {
-                                case "TOPO.UPDATED":
+                                case 'TOPO.UPDATED':
                                 this.topo = event.model;
                                 break;
 
-                                case "TOPO.DELETED":
+                                case 'TOPO.DELETED':
                                 this.showOverlay = true;
                                 break;
                             }
@@ -87,16 +87,16 @@ export class WorkspaceComponent {
                     this.notifier.templateEvents.subscribe(
                         (event) => {
                             switch (event.action) {
-                                case "TEMPLATE.ADDED":
+                                case 'TEMPLATE.ADDED':
                                 console.log(event.model);
                                 this.topo.templates.push(event.model);
                                 break;
 
-                                case "TEMPLATE.UPDATED":
+                                case 'TEMPLATE.UPDATED':
                                 this.merge(event.model);
                                 break;
 
-                                case "TEMPLATE.REMOVED":
+                                case 'TEMPLATE.REMOVED':
                                 this.remove(event.model);
                                 break;
                             }
@@ -104,20 +104,21 @@ export class WorkspaceComponent {
                     ),
                     this.notifier.chatEvents.subscribe(
                         (event) => {
-                            if (event.action == "CHAT.MESSAGE" && !this.collaborationVisible)
+                            if (event.action === 'CHAT.MESSAGE' && !this.collaborationVisible) {
                                 this.messageCount += 1;
+                            }
                         }
                     )
                 );
 
-                let loadWorkers = new Promise((resolve) => {
+                const loadWorkers = new Promise((resolve) => {
                     this.notifier.actors = this.topo.workers.map(
                         (worker) => {
                             return {
                                 id: worker.personGlobalId,
                                 name: worker.personName,
                                 online: false
-                            }
+                            };
                         }
                     );
                     resolve(true);
@@ -147,12 +148,12 @@ export class WorkspaceComponent {
 
     clipShareUrl() {
         this.clipboard.copyToClipboard(this.topo.shareCode);
-        this.animateSuccess("clipShareUrl");
+        this.animateSuccess('clipShareUrl');
     }
 
     clipPublishUrl() {
-        this.clipboard.copyToClipboard(this.origin + "/mojo/" + this.topo.id);
-        this.animateSuccess("clipPublishUrl");
+        this.clipboard.copyToClipboard(this.origin + '/mojo/' + this.topo.id);
+        this.animateSuccess('clipPublishUrl');
     }
 
     toggleSelector() {
@@ -170,7 +171,7 @@ export class WorkspaceComponent {
         this.templateSvc.getTemplates({
             term: term,
             take: 100,
-            filters: ["published"]
+            filters: ['published']
         })
         .subscribe(
             (data) => {
@@ -180,8 +181,11 @@ export class WorkspaceComponent {
         );
     }
 
-    onAdded(template : TemplateSummary) {
-        this.templateSvc.linkTemplate(template.id, this.topo.id)
+    onAdded(template: TemplateSummary) {
+        this.templateSvc.postTemplateLink({
+            templateId: template.id,
+            topologyId: this.topo.id
+        })
         .subscribe(
             // (result: Template) => {
             //     this.notifier.sendTemplateEvent("TEMPLATE.ADDED", result);
@@ -203,15 +207,16 @@ export class WorkspaceComponent {
     merge(tref) {
         this.topo.templates.forEach(
             (v, i, a) => {
-                if (v.id == tref.id)
+                if (v.id === tref.id) {
                     a[i] = tref;
+                }
             }
-        )
+        );
     }
 
-    //remove tref from list
+    // remove tref from list
     remove(template: Template) {
-        let target = this.topo.templates.find((t) => { return t.id == template.id; });
+        const target = this.topo.templates.find((t) => t.id === template.id);
         if (target) {
             this.topo.templates.splice(
                 this.topo.templates.indexOf(target),
@@ -241,47 +246,56 @@ export class WorkspaceComponent {
             }, (err) => {  this.onError(err); });
     }
 
-    show(section: string) : void {
+    show(section: string): void {
         this.showing = section;
     }
 
     publish() {
-        this.service.publishTopology(this.topo.id)
+        this.service.postTopologyAction(this.topo.id, {
+            id: this.topo.id,
+            type: TopologyStateActionTypeEnum.publish
+        })
         .subscribe(
             () => {
                 this.topo.isPublished = true;
-                this.animateSuccess("publish");
+                this.animateSuccess('publish');
             },
             (err) => {
-                this.animateFailure("publish");
+                this.animateFailure('publish');
                 this.onError(err);
             }
         );
     }
 
     unpublish() {
-        this.service.unpublishTopology(this.topo.id)
+        this.service.postTopologyAction(this.topo.id, {
+            id: this.topo.id,
+            type: TopologyStateActionTypeEnum.unpublish
+        })
         .subscribe(
             () => {
                 this.topo.isPublished = false;
-                this.animateSuccess("publish");
+                this.animateSuccess('publish');
             },
             (err) => {
-                this.animateFailure("publish");
+                this.animateFailure('publish');
                 this.onError(err);
             }
         );
     }
 
     share() {
-        this.service.shareTopology(this.topo.id)
+        this.service.postTopologyAction(this.topo.id, {
+            id: this.topo.id,
+            type: TopologyStateActionTypeEnum.share
+        })
         .subscribe(
             (data) => {
-                this.topo.shareCode = this.origin + "/topo/enlist/" + data.shareCode;
-                this.animateSuccess("share");
+                this.topo.shareCode = this.origin + '/topo/enlist/' + data.shareCode;
+                this.animateSuccess('share');
             },
             (err) => {
-                this.animateFailure("share");
+                this.animateFailure('share');
                 this.onError(err);
             }
         );
@@ -299,7 +313,7 @@ export class WorkspaceComponent {
 
     onError(err) {
         this.errors.push(err.error);
-        console.debug(err.error.message);
+        // console.debug(err.error.message);
     }
 
     collaborate() {
@@ -307,7 +321,7 @@ export class WorkspaceComponent {
         this.messageCount = 0;
     }
 
-    showCollaboration() : boolean {
+    showCollaboration(): boolean {
         return this.collaborationVisible;
     }
 
@@ -316,36 +330,36 @@ export class WorkspaceComponent {
     }
 
     getEvent(type: string) {
-        let ev = this.state.find((item)=>{ return item.type == type});
+        let ev = this.state.find((item) => item.type === type);
         if (!ev) {
-            ev = { type: type, state: "normal"};
+            ev = { type: type, state: 'normal'};
             this.state.push(ev);
         }
         return ev;
     }
 
-    animateSuccess(type : string) : void {
-        let ev = this.getEvent(type);
-        ev.state = "success";
-        setTimeout(()=>{ ev.state = "normal"}, 2000);
+    animateSuccess(type: string): void {
+        const ev = this.getEvent(type);
+        ev.state = 'success';
+        setTimeout(() => { ev.state = 'normal'; }, 2000);
     }
 
-    animateFailure(type : string) : void {
-        let ev = this.getEvent(type);
-        ev.state = "failure";
-        setTimeout(()=>{ ev.state = "normal"}, 2000);
+    animateFailure(type: string): void {
+        const ev = this.getEvent(type);
+        ev.state = 'failure';
+        setTimeout(() => { ev.state = 'normal'; }, 2000);
     }
 
-    killGames() : void {
-        this.service.deleteGames(this.topo.id).subscribe(
+    killGames(): void {
+        this.service.deleteTopologyGames(this.topo.id).subscribe(
             (result) => {
                 if (result) {
-                    this.animateSuccess("gameCount");
+                    this.animateSuccess('gameCount');
                     this.topo.gamespaceCount = 0;
                 }
             },
             (err) => {
-                this.animateFailure("gameCount");
+                this.animateFailure('gameCount');
                 this.onError(err);
             }
         );

@@ -10,7 +10,7 @@ export const CUSTOM_INPUT_CONTROL_VALUE_ACCESSOR: any = {
 
 // TO-DO interface hierarchy
 export interface InputConfig {
-    //input's attribute
+    // input's attribute
     empty: string;
     placeholder: string;
     type: string;
@@ -167,14 +167,14 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
     // inline edit form control
     @ViewChild('inlineEditControl') inlineEditControl;
-    @Output() public onSave: EventEmitter<any> = new EventEmitter();
-    @Output() public onEdit: EventEmitter<any> = new EventEmitter();
-    @Output() public onCancel: EventEmitter<any> = new EventEmitter();
+    @Output() public saved: EventEmitter<any> = new EventEmitter();
+    @Output() public edited: EventEmitter<any> = new EventEmitter();
+    @Output() public canceled: EventEmitter<any> = new EventEmitter();
 
-    //Configuration attribute
+    // Configuration attribute
     @Input() empty: string;
 
-    //input's attribute
+    // input's attribute
     @Input() public type: string;
     @Input() public disabled: boolean;
     @Input() public placeholder: string;
@@ -186,9 +186,9 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
     @Input() public pattern: string;
     @Input() public fnErrorPattern;
 
-    //textarea's attribute
-    @Input() public cols: number = 50;
-    @Input() public rows: number = 4;
+    // textarea's attribute
+    @Input() public cols = 50;
+    @Input() public rows = 4;
 
     // select's attribute
     @Input()
@@ -210,13 +210,13 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
     public onChange: any = Function.prototype;
     public onTouched: any = Function.prototype;
 
-    private _value: string = '';
-    private preValue: string = '';
-    editing: boolean = false;
-    private isEmpty: boolean = false;
+    private _value = '';
+    private preValue = '';
+    editing = false;
+    private isEmpty = false;
     private _options;
 
-    get value(): any { return this._value; };
+    get value(): any { return this._value; }
 
     set value(v: any) {
         if (v !== this._value) {
@@ -243,10 +243,11 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
     writeValue(value: any) {
 
-        if (value === "")
+        if (value === '') {
             value = null;
+        }
 
-        if (value || value == 0) {
+        if (value || value === 0) {
             this.value = value;
             this.isEmpty = false;
         } else {
@@ -254,14 +255,14 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
             /*if (this.type === "select") {
                 this.empty = this.options.data[0][this.options.value];
             }*/
-            //this._value = this.empty;
+            // this._value = this.empty;
             this.isEmpty = true;
         }
     }
 
     public registerOnChange(fn: (_: any) => {}): void { this.onChange = fn; }
 
-    public registerOnTouched(fn: () => {}): void { this.onTouched = fn; };
+    public registerOnTouched(fn: () => {}): void { this.onTouched = fn; }
 
     // Method to display the inline edit form and hide the <a> element
     edit(value) {
@@ -270,7 +271,7 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
         // Automatically focus input
         setTimeout(_ => this._renderer.invokeElementMethod(this.inlineEditControl.nativeElement, 'focus', []));
 
-        this.onEdit.emit(this);
+        this.edited.emit(this);
     }
 
     // Method to display the editable value as text and emit save event to host
@@ -283,16 +284,16 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
 
         const length = (NUMERIC_TYPES.indexOf(this.type) !== -1) ? Number(value) : value.length;
 
-        if (length == 0) {
+        if (length === 0) {
             value = null;
         }
         if (length < this.min || length > this.max) {
             return this.fnErrorLength();
         }
 
-        this.onSave.emit(value);
+        this.saved.emit(value);
         this.editing = false;
-        this.isEmpty = (length == 0); //false;
+        this.isEmpty = (length === 0); // false;
     }
 
     // Method to reset the editable value
@@ -300,7 +301,7 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
         this.value = this.preValue;
         this.editing = false;
 
-        this.onCancel.emit(this);
+        this.canceled.emit(this);
     }
 
     private initProperty(property: string): void {
@@ -312,19 +313,19 @@ export class InlineEditorComponent implements ControlValueAccessor, OnInit, Inpu
         return (this.isEmpty) ? this.empty : this.value;
     }
     private optionSelected() {
-        let dataLength = this._options['data'].length;
+        const dataLength = this._options['data'].length;
         let i = 0;
         while (dataLength > i) {
-            let element = this._options['data'][i];
-            if (element[this._options['value']] == this['value']) {
+            const element = this._options['data'][i];
+            if (element[this._options['value']] === this['value']) {
                 return element[this._options['text']];
             }
             if (element.hasOwnProperty('children')) {
-                let childrenLength = element.children.length;
+                const childrenLength = element.children.length;
                 let j = 0;
                 while (childrenLength > j) {
-                    let children = element.children[j];
-                    if (children[this._options['value']] == this['value']) {
+                    const children = element.children[j];
+                    if (children[this._options['value']] === this['value']) {
                         return children[this._options['text']];
                     }
                     j++;

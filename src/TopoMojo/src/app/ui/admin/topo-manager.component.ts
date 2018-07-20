@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { TopologyService } from '../../api/topology.service';
-import { Topology, TopologyState, Worker, VmState, VirtualVm, Search } from '../../api/gen/models';
+import { Topology, TopologyState, Worker, VmState, Vm, Search, TopologyStateActionTypeEnum } from '../../api/gen/models';
 import { VmService } from '../../api/vm.service';
 import { AdminService } from '../../api/admin.service';
 import { LayoutService } from '../../svc/layout.service';
 
 @Component({
-    selector: 'topo-manager',
+    selector: 'app-topo-manager',
     templateUrl: 'topo-manager.component.html',
     styleUrls: [ 'topo-manager.component.css' ]
 })
@@ -23,10 +23,10 @@ export class TopoManagerComponent implements OnInit {
     selected: Array<number> = new Array<number>();
     players: Array<Worker>;
     vms: Array<VmState>;
-    seachParams: Search = { skip: 0, take: 0 };
-    hasMore: number = 0;
+    seachParams: Search = { skip: 0, take: 0, filters: [ 'all' ] };
+    hasMore = 0;
     exports: Array<Topology> = new Array<Topology>();
-    exportResult: string = "";
+    exportResult = '';
 
     ngOnInit() {
         this.search();
@@ -40,13 +40,13 @@ export class TopoManagerComponent implements OnInit {
         this.search();
     }
 
-    search() : void {
-        this.topoSvc.allTopologies(this.seachParams).subscribe(
+    search(): void {
+        this.topoSvc.getTopologies(this.seachParams).subscribe(
             (result) => {
                 this.topos.push(...result.results);
-                this.hasMore = result.total - (result.search.skip+result.search.take);
+                this.hasMore = result.total - (result.search.skip + result.search.take);
             }
-        )
+        );
     }
 
     more() {
@@ -54,41 +54,47 @@ export class TopoManagerComponent implements OnInit {
         this.search();
     }
 
-    workerlist(topo: Topology) : string {
+    workerlist(topo: Topology): string {
         return topo.workers.map(p => p.personName).join();
     }
 
-    toggleSelected(topo: Topology) : void {
-        let found = this.selected.filter(
+    toggleSelected(topo: Topology): void {
+        const found = this.selected.filter(
             (v) => {
-                return v == topo.id;
+                return v === topo.id;
             }
         );
         if (found && found.length > 0) {
             this.selected.splice(this.selected.indexOf(found[0]), 1);
         } else {
             this.selected.push(topo.id);
-            this.vmSvc.findVms(topo.globalId).subscribe(
-                (result: Array<VirtualVm>) => {
+            this.vmSvc.getVms(topo.globalId).subscribe(
+                (result: Array<Vm>) => {
                     this.vms = result;
                 }
-            )
+            );
         }
     }
 
-    toggleLocked(topo: Topology) : void {
-        let q = (topo.isLocked )
-            ? this.topoSvc.unlockTopology(topo.id)
-            : this.topoSvc.lockTopology(topo.id);
+    toggleLocked(topo: Topology): void {
+        const q = (topo.isLocked )
+            ? this.topoSvc.postTopologyAction(topo.id, {
+                id: topo.id,
+                type: TopologyStateActionTypeEnum.unlock
+            })
+            : this.topoSvc.postTopologyAction(topo.id, {
+                id: topo.id,
+                type: TopologyStateActionTypeEnum.lock
+            });
 
         q.subscribe(
-            (result : TopologyState) => {
+            (result: TopologyState) => {
                 topo.isLocked = result.isLocked;
             }
-        )
+        );
     }
 
-    isSelected(id: number) : boolean {
+    isSelected(id: number): boolean {
         return this.selected.indexOf(id) >= 0;
     }
 
@@ -97,32 +103,33 @@ export class TopoManagerComponent implements OnInit {
             () => {
                 this.topos.splice(this.topos.indexOf(topo), 1);
             }
-        )
+        );
     }
 
-    showDoc(topo: Topology) : void {
-        this.layoutSvc.showTab(topo.document); //Url || `/docs/${topo.globalId}.md`);
+    showDoc(topo: Topology): void {
+        this.layoutSvc.showTab(topo.document); // Url || `/docs/${topo.globalId}.md`);
     }
 
-    hasExports() : boolean {
+    hasExports(): boolean {
         return this.exports.length > 0 || !!this.exportResult;
     }
 
-    addExport(t : Topology) : void {
-        let found = this.exports.find((v) => v.id == t.id);
-        if (!found)
+    addExport(t: Topology): void {
+        const found = this.exports.find((v) => v.id === t.id);
+        if (!found) {
             this.exports.push(t);
+        }
     }
 
-    removeExport(t: Topology) : void {
+    removeExport(t: Topology): void {
         // let found = this.exports.find((v) => v.id == t.id);
         // if (found)
             this.exports.splice(this.exports.indexOf(t), 1);
     }
 
-    export() : void {
-        this.adminSvc.exportAdmin(this.exports.map((v) => v.id)).subscribe(
-            (result : Array<string>) => {
+    export(): void {
+        this.adminSvc.postAdminExport(this.exports.map((v) => v.id)).subscribe(
+            (result: Array<string>) => {
                 this.exports = new Array<Topology>();
                 this.exportResult = result.join('\n');
             }

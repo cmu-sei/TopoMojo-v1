@@ -4,8 +4,8 @@ import { ProfileService} from '../../api/profile.service';
 import { Search, ProfileSearchResult, Profile } from '../../api/gen/models';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'user-manager',
+    // moduleId: module.id,
+    selector: 'app-user-manager',
     templateUrl: 'user-manager.component.html',
     styleUrls: ['user-manager.component.css']
 })
@@ -14,18 +14,18 @@ export class UserManagerComponent implements OnInit {
     activeTopoId: number;
     userUploadVisible: boolean;
     roster: Profile[] = [];
-    icon: string = 'fa fa-user';
+    icon = 'fa fa-user';
     hasMore: number;
     model: Search = {
         term: '',
         skip: 0,
         take: 50,
         filters: []
-    }
+    };
 
     constructor(
-        private service : ProfileService,
-        private router : Router,
+        private service: ProfileService,
+        private router: Router,
         ) { }
 
     ngOnInit() {
@@ -48,17 +48,17 @@ export class UserManagerComponent implements OnInit {
         this.service.getProfiles(this.model)
         .subscribe(data => {
             this.roster = this.roster.concat(data.results);
-            this.hasMore = data.total - (data.search.skip+data.search.take);
-            //this.person = null;
+            this.hasMore = data.total - (data.search.skip + data.search.take);
+            // this.person = null;
         }, (err) => { });
     }
 
     load(person) {
-        //this.person = person;
+        // this.person = person;
     }
 
-    update(person: Profile) : void {
-        this.service.privProfile(person).subscribe(
+    update(person: Profile): void {
+        this.service.putProfilePriv(person).subscribe(
             (r) => { },
             (e) => { }
         );

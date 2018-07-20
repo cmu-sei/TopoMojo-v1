@@ -5,14 +5,14 @@ import { Topology, Template, ChangedTemplate } from '../../api/gen/models';
 import { VmService } from '../../api/vm.service';
 
 @Component({
-    selector: 'template-editor',
+    selector: 'app-template-editor',
     templateUrl: 'template-editor.component.html',
     styleUrls: [ 'template-editor.component.css' ]
 })
 export class TemplateEditorComponent implements OnInit {
     @Input() template: Template;
     @Input() topo: Topology;
-    @Output() onRemoved: EventEmitter<any> = new EventEmitter<any>();
+    @Output() removedEmitter: EventEmitter<any> = new EventEmitter<any>();
     @ViewChild('cloneHelp') cloneHelp: any;
     editing: boolean;
     cloneVisible: boolean;
@@ -22,7 +22,7 @@ export class TemplateEditorComponent implements OnInit {
     errors: any[] = [];
 
     constructor(
-        private service : TemplateService,
+        private service: TemplateService,
         private vmSvc: VmService,
         private notifier: NotificationService
     ) { }
@@ -36,42 +36,46 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     remove() {
-        if ((this.vm) && (this.vm.id))
-            return; //don't remove if vm created
+        if ((this.vm) && (this.vm.id)) {
+            return;
+        } // don't remove if vm created
 
         this.service.deleteTemplate(this.template.id)
         .subscribe(
             (result) => {
                 if (result) {
-                    //this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.template);
-                    //this.topo.templates.splice(this.topo.templates.indexOf(this.template), 1);
+                    // this.notifier.sendTemplateEvent("TEMPLATE.REMOVED", this.template);
+                    // this.topo.templates.splice(this.topo.templates.indexOf(this.template), 1);
                 }
             },
-            (err) => { this.onError(err);}
+            (err) => { this.onError(err); }
         );
     }
 
     save() {
         this.service.putTemplate(this.template as ChangedTemplate).subscribe(
-            (result : Template) => {
-                //this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", result);
+            (result: Template) => {
+                // this.notifier.sendTemplateEvent("TEMPLATE.UPDATED", result);
             },
-            (err) => { this.onError(err);}
+            (err) => { this.onError(err); }
         );
     }
 
     clone() {
-        if ((!this.vm) || (this.vm.id))
-            return; //don't clone unless empty vm loaded
+        if ((!this.vm) || (this.vm.id)) {
+            return;
+        } // don't clone unless empty vm loaded
 
         this.cloneHelp.toggle();
-        this.service.unlinkTemplate(this.template.id)
+        this.service.postTemplateUnlink({
+            templateId: this.template.id
+        })
         .subscribe(
             (result) => {
-                //let i = this.topo.templates.indexOf(this.template);
-                //this.topo.templates.splice(i, 1, result);
+                // let i = this.topo.templates.indexOf(this.template);
+                // this.topo.templates.splice(i, 1, result);
             },
-            (err) => { this.onError(err);}
+            (err) => { this.onError(err); }
         );
     }
 
@@ -83,38 +87,37 @@ export class TemplateEditorComponent implements OnInit {
         this.vm = vm;
     }
 
-    isoChanged(iso : string) {
+    isoChanged(iso: string) {
         this.template.iso = iso;
         this.save();
         this.isosVisible = false;
 
         if (this.vm.id) {
-            this.vmSvc.changeVm(this.vm.id, { key: "iso", value: iso }).subscribe(
+            this.vmSvc.postVmChange(this.vm.id, { key: 'iso', value: iso }).subscribe(
                 (result) => {
 
                 }
-            )
+            );
         }
     }
 
-    clearIso() : void {
-        this.isoChanged("");
+    clearIso(): void {
+        this.isoChanged('');
     }
 
-    displayIso(v: string) : string {
-        let t = v && v.split('/').pop().replace(/\.iso/, "");
+    displayIso(v: string): string {
+        const t = v && v.split('/').pop().replace(/\.iso/, '');
         return (t && t.length > 40)
-            ? t.substring(0, 40) + "..."
+            ? t.substring(0, 40) + '...'
             : t;
     }
 
-    hasParent() : boolean {
+    hasParent(): boolean {
         return !!this.template.parentId;
     }
 
     onError(err) {
         this.errors.push(err.error);
-        console.debug(err.error.messsage);
     }
 
 }

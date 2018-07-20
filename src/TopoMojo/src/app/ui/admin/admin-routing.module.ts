@@ -46,5 +46,5 @@ export class AdminRoutingModule {
         TemplateManagerComponent,
         AdminSettingsComponent,
         VmManagerComponent
-    ]
+    ];
 }

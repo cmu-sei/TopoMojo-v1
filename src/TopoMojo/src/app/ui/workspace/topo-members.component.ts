@@ -4,7 +4,7 @@ import { Worker, Profile } from '../../api/gen/models';
 import { UserService } from '../../svc/user.service';
 
 @Component({
-    selector: 'topo-members',
+    selector: 'app-workers',
     templateUrl: 'topo-members.component.html',
     styles: [`
         ul {
@@ -16,7 +16,7 @@ import { UserService } from '../../svc/user.service';
     `]
 })
 export class TopoMembersComponent implements OnInit {
-    @Input() workers : Worker[];
+    @Input() workers: Worker[];
     profile: Profile;
 
     constructor(
@@ -29,26 +29,26 @@ export class TopoMembersComponent implements OnInit {
             (p: Profile) => {
                 this.profile = p;
             }
-        )
+        );
     }
 
-    canManage() : boolean {
-        if (this.profile.isAdmin)
+    canManage(): boolean {
+        if (this.profile.isAdmin) {
             return true;
+        }
 
-        let actor = this.workers.find((w) => { return w.personGlobalId == this.profile.globalId });
+        const actor = this.workers.find((w) => w.personGlobalId === this.profile.globalId);
         return actor && actor.canManage;
     }
 
     delist(workerId) {
-        this.service.delistWorker(workerId)
+        this.service.deleteWorker(workerId)
         .subscribe(() => {
-                let w = this.workers.find((worker) => worker.id == workerId);
+                const w = this.workers.find((worker) => worker.id === workerId);
                 if (w) {
-                    let index = this.workers.indexOf(w);
+                    const index = this.workers.indexOf(w);
                     this.workers.splice(index, 1);
                 }
             }, () => { });
     }
-
 }

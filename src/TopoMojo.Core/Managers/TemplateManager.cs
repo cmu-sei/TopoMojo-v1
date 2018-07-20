@@ -88,17 +88,17 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(entity);
         }
 
-        public async Task<Models.Template> Link(int templateId, int topoId)
+        public async Task<Models.Template> Link(Models.TemplateLink newlink)
         {
-            Template entity = await _repo.Load(templateId);
+            Template entity = await _repo.Load(newlink.TemplateId);
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
-            if (await _repo.AtTemplateLimit(topoId))
+            if (await _repo.AtTemplateLimit(newlink.TopologyId))
                 throw new WorkspaceTemplateLimitException();
 
             Template linked = Mapper.Map<Template>(entity);
-            linked.TopologyId = topoId;
+            linked.TopologyId = newlink.TopologyId;
             linked.GlobalId = "";
             linked.Name += new Random().Next(100, 200).ToString();
             await _repo.Add(linked);
@@ -107,9 +107,9 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(linked, WithActor());
         }
 
-        public async Task<Models.Template> Unlink(int id) //CLONE
+        public async Task<Models.Template> Unlink(Models.TemplateLink link) //CLONE
         {
-            Template entity = await _repo.Load(id);
+            Template entity = await _repo.Load(link.TemplateId);
             if (entity == null)
                 throw new InvalidOperationException();
 

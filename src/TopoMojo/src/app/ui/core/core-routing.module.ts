@@ -32,5 +32,5 @@ export class CoreRoutingModule {
         NotFoundComponent,
         NotAllowedComponent,
         AboutPanelComponent
-    ]
+    ];
 }

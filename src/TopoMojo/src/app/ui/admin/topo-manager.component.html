@@ -34,8 +34,8 @@
                         <ul class="list-unstyled">
                             <li *ngFor="let t of topo.templates">
                                 <!-- <span>{{t.name | untagged}}</span> -->
-                                <!-- <vm-toolbar [template]="t"></vm-toolbar> -->
-                                <template-editor [topo]="topo" [template]="t"></template-editor>
+                                <!-- <app-vm-toolbar [template]="t"></app-vm-toolbar> -->
+                                <app-template-editor [topo]="topo" [template]="t"></app-template-editor>
                             </li>
                         </ul>
                         <!-- <button class="btn btn-link" (click)="showDoc(topo)">

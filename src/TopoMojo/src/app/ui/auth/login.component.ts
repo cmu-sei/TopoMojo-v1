@@ -4,8 +4,7 @@ import { AuthService } from '../../svc/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'login',
+    selector: 'app-login',
     templateUrl: 'login.component.html'
 })
 export class LoginComponent implements OnInit {
@@ -16,24 +15,25 @@ export class LoginComponent implements OnInit {
     code: string;
     url: string;
     authority: string;
-    errorMessage : string;
-    infoMessage : string;
-    mode: number = 0;
-    title: string = "Login";
-    action: string = "login";
+    errorMessage: string;
+    infoMessage: string;
+    mode = 0;
+    title = 'Login';
+    action = 'login';
     codeSent: boolean;
 
     constructor(
-        private authSvc : AuthService,
+        private authSvc: AuthService,
         private router: Router,
         private route: ActivatedRoute
         ) { }
 
     ngOnInit() {
-        this.url = this.authSvc.cleanUrl(this.authSvc.redirectUrl || this.route.snapshot.params['url'] || "/");
+        this.url = this.authSvc.cleanUrl(this.authSvc.redirectUrl || this.route.snapshot.params['url'] || '/');
         this.authority = this.authSvc.authority;
-        if (this.showExternal() && !this.showLocal())
+        if (this.showExternal() && !this.showLocal()) {
             this.oidcLogin();
+        }
     }
 
     oidcLogin() {
@@ -41,12 +41,12 @@ export class LoginComponent implements OnInit {
     }
 
     onSubmit() {
-        this.infoMessage = "";
-        this.errorMessage = "";
+        this.infoMessage = '';
+        this.errorMessage = '';
 
         if (this.mode > 2) {
-            if (this.pass1 == null || this.pass2 == null || this.pass1 != this.pass2) {
-                this.errorMessage = "AUTH.PASSWORDS-MUST-MATCH";
+            if (this.pass1 == null || this.pass2 == null || this.pass1 !== this.pass2) {
+                this.errorMessage = 'AUTH.PASSWORDS-MUST-MATCH';
                 return;
             }
         }
@@ -78,44 +78,44 @@ export class LoginComponent implements OnInit {
             username : this.username,
             password : this.pass1,
             code : this.code
-        }
+        };
     }
 
-    setMode(i : number) : void {
-        this.infoMessage = "";
-        this.errorMessage = "";
+    setMode(i: number): void {
+        this.infoMessage = '';
+        this.errorMessage = '';
         this.mode = i;
         switch (i) {
             case 0:
-                this.title = "Login";
-                this.action = "login";
+                this.title = 'Login';
+                this.action = 'login';
                 break;
             case 1:
-                this.title = "Login with One-Time-Passcode";
-                this.action = "otp";
+                this.title = 'Login with One-Time-Passcode';
+                this.action = 'otp';
                 break;
             case 2:
-                this.title = "Login with Two-Factor-Auth";
-                this.action = "login";
+                this.title = 'Login with Two-Factor-Auth';
+                this.action = 'login';
                 break;
             case 3:
-                this.title = "Reset Password";
-                this.action = "reset";
+                this.title = 'Reset Password';
+                this.action = 'reset';
                 break;
             case 4:
-                this.title = "Register Account";
-                this.action = "register";
+                this.title = 'Register Account';
+                this.action = 'register';
                 break;
         }
     }
 
-    showLocal() : boolean {
-        return false; //this.auth.loginSettings.allowLocalLogin
+    showLocal(): boolean {
+        return false; // this.auth.loginSettings.allowLocalLogin
     }
-    showExternal() : boolean {
-        return true; //this.auth.loginSettings.allowExternalLogin
+    showExternal(): boolean {
+        return true; // this.auth.loginSettings.allowExternalLogin
     }
-    showBoth() : boolean {
-        return false; //this.auth.loginSettings.allowLocalLogin && this.auth.loginSettings.allowExternalLogin
+    showBoth(): boolean {
+        return false; // this.auth.loginSettings.allowLocalLogin && this.auth.loginSettings.allowExternalLogin
     }
 }

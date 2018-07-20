@@ -46,18 +46,17 @@ namespace TopoMojo.Controllers
 
         [HttpGet("api/file/progress/{id}")]
         [ProducesResponseType(typeof(int), 200)]
-        public IActionResult Progress([FromRoute]string id)
+        public IActionResult Progress(string id)
         {
             return Json(_monitor.Check(id).Progress);
         }
 
         [HttpPost("api/file/upload")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
         [DisableFormValueModelBinding]
-        [ApiExplorerSettings(IgnoreApi=true)]
+        // [ApiExplorerSettings(IgnoreApi=true)]
         //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload()
+        public async Task<ActionResult<bool>> Upload()
         {
             await _uploader.Process(
                 Request,

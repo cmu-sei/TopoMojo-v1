@@ -73,8 +73,8 @@ namespace Tests
                     }).Result;
                 }
 
-                Template t = mgr.Link(5, topo.Id).Result;
-                t = mgr.Unlink(t.Id).Result;
+                Template t = mgr.Link(new TemplateLink { TemplateId = 5, TopologyId = topo.Id}).Result;
+                t = mgr.Unlink(new TemplateLink { TemplateId = t.Id }).Result;
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",

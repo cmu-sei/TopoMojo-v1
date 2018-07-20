@@ -17,19 +17,18 @@ export class GamespaceEnlistComponent implements OnInit {
     errors: any[] = [];
 
     ngOnInit(): void {
-        let code = this.route.snapshot.paramMap.get("code");
-        this.service.enlistPlayer(code)
+        const code = this.route.snapshot.paramMap.get('code');
+        this.service.postPlayerCode(code)
             .subscribe(
                 result => {
                     this.router.navigate(['/mojo']);
                 },
                 (err) => { this.onError(err); },
-                () => { this.complete = true;}
+                () => { this.complete = true; }
             );
     }
 
     onError(err) {
         this.errors.push(err.error);
-        //console.debug(err.error.message);
     }
 }

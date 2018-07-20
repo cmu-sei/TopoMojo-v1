@@ -17,8 +17,8 @@ export class TopoEnlistComponent implements OnInit {
     errors: any[] = [];
 
     ngOnInit(): void {
-        let code = this.route.snapshot.paramMap.get('code');
-        this.service.enlistWorker(code)
+        const code = this.route.snapshot.paramMap.get('code');
+        this.service.postWorkerCode(code)
             .subscribe(
                 result => {
                     this.router.navigate(['/topo']);
@@ -31,7 +31,6 @@ export class TopoEnlistComponent implements OnInit {
 
     onError(err) {
         this.errors.push(err.error);
-        //console.debug(err.error.message);
     }
 
 }

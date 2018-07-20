@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../svc/auth.service';
 import { Subscription } from 'rxjs';
@@ -8,28 +8,28 @@ import { UserService } from '../../svc/user.service';
 import { Profile } from '../../api/gen/models';
 
 @Component({
-    selector: 'navbar',
+    selector: 'app-navbar',
     templateUrl: './navbar.component.html',
     styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {
-    profile : Profile;
+export class NavbarComponent implements OnInit {
+    profile: Profile;
     profileSubscription: Subscription;
     status: Subscription;
     appName: string;
     @Input() layout: Layout;
-    currentLanguage: string = "LANG.EN";
-    dropDownVisible: boolean = false;
+    currentLanguage = 'LANG.EN';
+    dropDownVisible = false;
     lang: string[] = [];
-    maintMessage: string = "";
+    maintMessage = '';
 
     constructor (
         private authSvc: AuthService,
-        private userSvc : UserService,
+        private userSvc: UserService,
         private router: Router,
         private settingsSvc: SettingsService,
         private translate: TranslateService
-    ){
+    ) {
     }
 
     ngOnInit() {
@@ -49,28 +49,28 @@ export class NavbarComponent {
         this.router.navigate(['/home']);
     }
 
-    setCulture(code: string) : void {
+    setCulture(code: string): void {
         this.translate.use(code);
-        this.currentLanguage = "LANG." + code.toUpperCase();
+        this.currentLanguage = 'LANG.' + code.toUpperCase();
         this.dropDownVisible = false;
 
     }
 
     contribute() {
-        let url = `/lang/${this.currentLanguage.split('.').pop().toLowerCase()}.json`;
+        const url = `/lang/${this.currentLanguage.split('.').pop().toLowerCase()}.json`;
         window.open(url);
         this.dropDownVisible = false;
     }
 
-    toggleDropdown() : void {
+    toggleDropdown(): void {
         this.dropDownVisible = !this.dropDownVisible;
     }
 
-    isUser() : boolean {
+    isUser(): boolean {
         return !!this.profile.id;
     }
 
-    isAdmin() : boolean {
+    isAdmin(): boolean {
         return this.profile.isAdmin;
     }
 }

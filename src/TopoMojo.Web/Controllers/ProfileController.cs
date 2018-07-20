@@ -28,25 +28,22 @@ namespace TopoMojo.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpGet("api/profiles")]
-        [ProducesResponseType(typeof(SearchResult<Profile>), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromQuery]Search search)
+        public async Task<ActionResult<SearchResult<Profile>>> List(Search search)
         {
             var result = await _mgr.List(search);
             return Ok(result);
         }
 
         [HttpGet("api/profile")]
-        [ProducesResponseType(typeof(Profile), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> GetProfile()
+        public async Task<ActionResult<Profile>> GetProfile()
         {
             var result = await _mgr.FindByGlobalId("");
             return Ok(result);
         }
 
-        [HttpPost("api/profile")]
-        [ProducesResponseType(typeof(ChangedProfile), 200)]
+        [HttpPut("api/profile")]
         [JsonExceptionFilter]
         public async Task<ChangedProfile> UpdateProfile([FromBody]ChangedProfile profile)
         {
@@ -55,8 +52,7 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPost("api/profile/priv")]
-        [ProducesResponseType(typeof(Profile), 200)]
+        [HttpPut("api/profile/priv")]
         [JsonExceptionFilter]
         public async Task<Profile> PrivilegedUpdate([FromBody]Profile profile)
         {

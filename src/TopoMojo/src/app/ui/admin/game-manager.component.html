@@ -24,7 +24,7 @@
                         <ul *ngIf="vms" class="list-unstyled">
                             <li *ngFor="let vm of vms">
                                 <span>{{vm.name | untagged}}</span>
-                                <vm-toolbar [vm]="vm"></vm-toolbar>
+                                <app-vm-toolbar [vm]="vm"></app-vm-toolbar>
                             </li>
                         </ul>
                     </div>

@@ -1,23 +1,18 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
-    selector: 'error-div',
+    selector: 'app-error-div',
     templateUrl: 'error-div.component.html'
 })
-export class ErrorDivComponent implements OnInit {
+export class ErrorDivComponent {
+    @Input() errors: any[];
+    @Output() errorCleared: EventEmitter<any> = new EventEmitter<any>();
 
     constructor() { }
 
-    ngOnInit() {
-
-    }
-
-    @Input() errors: any[];
-    @Output() onErrorCleared : EventEmitter<any> = new EventEmitter<any>();
-
-    errorCleared(e : any) : void {
+    clearError(e: any): void {
         this.errors.splice(this.errors.indexOf(e), 1);
-        this.onErrorCleared.emit(e);
+        this.errorCleared.emit(e);
     }
 
 }

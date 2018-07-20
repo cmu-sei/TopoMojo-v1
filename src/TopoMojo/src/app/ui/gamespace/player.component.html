@@ -1,5 +1,5 @@
 <div *ngIf="!game" class="player">
-        <error-div [errors]="errors"></error-div>
+        <app-error-div [errors]="errors"></app-error-div>
         <a class="btn btn-link" [routerLink]="['/home']"><i class="fa fa-home"></i> Home</a>
 </div>
 
@@ -56,7 +56,7 @@
 
         <div id="doc-div">
 
-            <error-div [errors]="errors"></error-div>
+            <app-error-div [errors]="errors"></app-error-div>
 
             <div *ngIf="docMissing" translate>EXCEPTION.NODOCUMENT</div>
 
@@ -69,7 +69,7 @@
         </div>
 
         <div [hidden]="!collaborationVisible" id="collab-div">
-            <chat-messages *ngIf="game" [space]="game"></chat-messages>
+            <app-chat-messages *ngIf="game" [space]="game"></app-chat-messages>
         </div>
 
     </div>

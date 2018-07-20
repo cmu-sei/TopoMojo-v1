@@ -3,23 +3,23 @@ import { AuthService } from '../../svc/auth.service';
 import { ProfileService } from '../../api/profile.service';
 
 @Component({
-    selector: 'profile-editor',
+    selector: 'app-profile-editor',
     templateUrl: 'profile-editor.component.html',
     styleUrls: [ 'profile-editor.component.css' ]
 })
 export class ProfileEditorComponent implements OnInit {
 
     constructor(
-        private authSvc : AuthService,
-        private profileSvc : ProfileService
+        private authSvc: AuthService,
+        private profileSvc: ProfileService
     ) { }
-    profileName: string = "";
+    profileName = '';
 
     ngOnInit() {
         // this.profileName = this.authSvc.currentUser.profile.name;
     }
 
-    update() : void {
+    update(): void {
         // this.profileSvc.postProfile({
         //     globalId : this.authSvc.currentUser.profile.sub,
         //     name : this.profileName

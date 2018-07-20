@@ -3,7 +3,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../svc/auth.service';
 
 @Component({
-    selector: 'auth-pending',
     templateUrl: 'auth-pending.component.html'
 })
 export class AuthPendingComponent implements OnInit {
@@ -21,9 +20,9 @@ export class AuthPendingComponent implements OnInit {
         this.authSvc.externalLoginCallback(this.route.snapshot.fragment)
         .then(
             (user) => {
-                this.router.navigateByUrl(this.authSvc.cleanUrl(user.state) || "/home");
+                this.router.navigateByUrl(this.authSvc.cleanUrl(user.state) || '/home');
             },
-            (err) => { this.errorMessage = err }
+            (err) => { this.errorMessage = err; }
         );
     }
 

@@ -28,18 +28,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="7.0.1" />
     <PackageReference Include="DiscUtils.Iso9660" Version="0.13.0-alpha" />
-    <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="2.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.2"/>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="2.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />
   </ItemGroup>
-  <Target Name="Webpack" BeforeTargets="PrepareForPublish">
-    <Exec Command="npm install" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.prod" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --env.prod" />
-  </Target>
-  <Target Name="WebpackDev">
-    <Exec Command="npm install" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --color --config webpack.config.vendor.js" />
-    <Exec Command="node node_modules/webpack/bin/webpack.js --color" />
-  </Target>
 </Project>

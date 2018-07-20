@@ -1,6 +1,6 @@
 
 <div class="row">
-    <error-div [errors]="errors"></error-div>
+    <app-error-div [errors]="errors"></app-error-div>
     <div class="col-xs-3 prop-label">
         <span>
             <!--<i class="fa fa-desktop"></i> <span>{{template.name}}</span>-->
@@ -13,7 +13,7 @@
             </button>
     </div>
     <div class="col-xs-9">
-        <vm-toolbar (onLoaded)="vmLoaded($event)" [template]="template" [isPublished]="topo.isPublished" class=""></vm-toolbar>
+        <app-vm-toolbar (onLoaded)="vmLoaded($event)" [template]="template" [isPublished]="topo.isPublished" class=""></app-vm-toolbar>
     </div>
     <div *ngIf="editing" class="col-xs-10 col-xs-offset-1 well">
         <!--<div *ngIf="editing">-->
@@ -86,7 +86,7 @@
                             <i class="fa fa-remove"></i>
                         </button>
                     </p>
-                    <iso-manager *ngIf="isosVisible" [id]="topo.globalId" (onSelected)="isoChanged($event)"></iso-manager>
+                    <app-iso-manager *ngIf="isosVisible" [id]="topo.globalId" (selected)="isoChanged($event)"></app-iso-manager>
                 </div>
             </div>
             <!--<dl class="dl-horizontal">

@@ -4,7 +4,6 @@ import { AuthGuard } from '../../svc/auth-guard.service';
 import { TopoComponent } from './topo.component';
 import { TopoBrowserComponent } from './topo-browser.component';
 import { WorkBrowserComponent } from './work-browser.component';
-import { TopoDetailComponent } from './topo-detail.component';
 import { TopoCreatorComponent } from './topo-creator.component';
 import { TopoMembersComponent } from './topo-members.component';
 import { TemplateEditorComponent} from './template-editor.component';
@@ -33,7 +32,7 @@ const routes: Routes = [
                 children: [
                     {
                         path: ':id',
-                        component: WorkspaceComponent //TopoDetailComponent
+                        component: WorkspaceComponent
                     },
                     {
                         path: 'enlist',
@@ -52,11 +51,10 @@ const routes: Routes = [
     imports: [ RouterModule.forChild(routes) ],
     exports: [ RouterModule ]
 })
-export class TopoRoutingModule {
+export class WorkspaceRoutingModule {
     static components = [
         TopoComponent,
         TopoBrowserComponent,
-        TopoDetailComponent,
         TopoCreatorComponent,
         TopoMembersComponent,
         TemplateEditorComponent,
@@ -64,5 +62,5 @@ export class TopoRoutingModule {
         TopoEnlistComponent,
         IsoManagerComponent,
         WorkspaceComponent
-     ]
+     ];
 }

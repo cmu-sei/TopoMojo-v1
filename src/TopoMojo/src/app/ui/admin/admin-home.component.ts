@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'admin-home',
+    selector: 'app-admin-home',
     template: ''
 })
 export class AdminHomeComponent implements OnInit {

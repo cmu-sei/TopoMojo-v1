@@ -4,13 +4,13 @@ import { GamespaceService } from '../../api/gamespace.service';
 import { Gamespace } from '../../api/gen/models';
 
 @Component({
-    selector: 'gamespace',
+    selector: 'app-gamespace',
     templateUrl: './gamespace.component.html',
     styleUrls: ['./gamespace.component.css']
 })
-export class GamespaceComponent {
+export class GamespaceComponent implements OnInit {
     games: Gamespace[];
-    loading: boolean = true;
+    loading = true;
 
     constructor(
         private service: GamespaceService,
@@ -20,11 +20,11 @@ export class GamespaceComponent {
 
     ngOnInit(): void {
         this.loadActive();
-    };
+    }
 
     loadActive() {
         this.loading = true;
-        this.service.getGamespaces()
+        this.service.getGamespaces('')
         .subscribe(result => {
             this.games = result;
         },
@@ -39,7 +39,7 @@ export class GamespaceComponent {
         this.service.deleteGamespace(id)
         .subscribe(result => {
             this.loadActive();
-        })
+        });
     }
 }
 

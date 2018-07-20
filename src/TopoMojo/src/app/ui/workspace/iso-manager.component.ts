@@ -1,11 +1,11 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { HttpEvent, HttpEventType, HttpResponse } from "@angular/common/http";
+import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 import { TopologyService } from '../../api/topology.service';
 import { FileService } from '../../api/file.service';
 import { VmOptions } from '../../api/gen/models';
 
 @Component({
-    selector: 'iso-manager',
+    selector: 'app-iso-manager',
     templateUrl: 'iso-manager.component.html',
     styles: [`
     .ellipsis {
@@ -25,11 +25,11 @@ export class IsoManagerComponent implements OnInit {
     ) { }
 
     @Input() id: string;
-    @Output() onSelected: EventEmitter<string> = new EventEmitter<string>();
+    @Output() selected: EventEmitter<string> = new EventEmitter<string>();
     isos: Array<string> = [];
     visible: Array<string> = [];
-    queuedFiles : any[] = [];
-    pendingFiles : any[] = [];
+    queuedFiles: any[] = [];
+    pendingFiles: any[] = [];
     loading: boolean;
     uploading: boolean;
     errorMessage: string;
@@ -39,7 +39,7 @@ export class IsoManagerComponent implements OnInit {
 
     refresh() {
         this.loading = true;
-        this.service.isosTopology(this.id)
+        this.service.getTopologyIsos(this.id)
         .subscribe(
             (result) => {
                 this.isos = result.iso;
@@ -50,20 +50,20 @@ export class IsoManagerComponent implements OnInit {
             () => {
                 this.loading = false;
             }
-        )
+        );
     }
 
     select(iso: string) {
-        this.onSelected.emit(iso);
+        this.selected.emit(iso);
     }
 
     private fileSelectorChanged(e) {
         // console.log(e.srcElement.files);
         this.queuedFiles = [];
         for (let i = 0; i < e.srcElement.files.length; i++) {
-            let file = e.srcElement.files[i];
+            const file = e.srcElement.files[i];
             this.queuedFiles.push({
-                key: this.id + "-" + file.name,
+                key: this.id + '-' + file.name,
                 name: file.name,
                 file: file,
                 progress: -1
@@ -72,7 +72,7 @@ export class IsoManagerComponent implements OnInit {
     }
 
     dequeueFile(qf) {
-        this.queuedFiles.splice(this.queuedFiles.indexOf(qf),1);
+        this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1);
     }
 
     filesQueued() {
@@ -85,19 +85,20 @@ export class IsoManagerComponent implements OnInit {
 
     upload() {
         this.uploading = true;
-        for (let i = 0; i < this.queuedFiles.length; i++)
+        for (let i = 0; i < this.queuedFiles.length; i++) {
             this.uploadFile(this.queuedFiles[i]);
-        //this.queuedFiles = [];
+        }
+        // this.queuedFiles = [];
     }
 
-    private uploadFile(qf) : void {
+    private uploadFile(qf): void {
         this.fileSvc.uploadIso(this.id, qf.key, qf.file)
             .subscribe(
                 (event) => {
                     if (event.type === HttpEventType.UploadProgress) {
                         qf.progress = Math.round(100 * event.loaded / event.total);
                     } else if (event instanceof HttpResponse) {
-                        if (!qf.name.match(/.*\.iso/)) qf.name += ".iso";
+                        if (!qf.name.match(/.*\.iso/)) { qf.name += '.iso'; }
                         this.select(`${this.id}/${qf.name}`);
                     }
                 },
@@ -107,25 +108,27 @@ export class IsoManagerComponent implements OnInit {
     }
 
     trunc(text: string) {
-        if (text.length > 40)
-            text = text.substring(0,40) + "...";
+        if (text.length > 40) {
+            text = text.substring(0, 40) + '...';
+        }
         return text;
     }
 
-    display(v: string) : string {
-        let t = v.split('/').pop();
+    display(v: string): string {
+        const t = v.split('/').pop();
         return t;
     }
 
-    search(term: string) : void {
-        if (term)
+    search(term: string): void {
+        if (term) {
             this.visible = this.isos.filter(
-                (item : string) => {
+                (item: string) => {
                     return item.indexOf(term) > -1;
                 }
             );
-        else
+        } else {
             this.visible = this.isos.slice(0);
+        }
     }
 
 }

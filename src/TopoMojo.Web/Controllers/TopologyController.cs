@@ -32,37 +32,34 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [AllowAnonymous]
-        [HttpGet("api/topologies")]
-        [ProducesResponseType(typeof(SearchResult<TopologySummary>), 200)]
+        [HttpGet("api/topology/summaries")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromQuery]Search search)
+        public async Task<ActionResult<SearchResult<TopologySummary>>> List(Search search)
         {
             var result = await _mgr.List(search);
             return Ok(result);
         }
 
-        [HttpGet("api/topologies/all")]
-        [ProducesResponseType(typeof(SearchResult<Topology>), 200)]
+        [Authorize(Roles = "admin")]
+        [HttpGet("api/topologies")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> ListAll([FromQuery]Search search)
+        public async Task<ActionResult<SearchResult<Topology>>> ListDetail(Search search)
         {
-            var result = await _mgr.ListAll(search);
+            var result = await _mgr.ListDetail(search);
             return Ok(result);
         }
 
         [HttpPost("api/topology")]
-        [ProducesResponseType(typeof(Topology), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Create([FromBody]NewTopology model)
+        public async Task<ActionResult<Topology>> Create([FromBody]NewTopology model)
         {
             Topology topo = await _mgr.Create(model);
             return Ok(topo);
         }
 
         [HttpPut("api/topology")]
-        [ProducesResponseType(typeof(Topology), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Update([FromBody]ChangedTopology model)
+        public async Task<ActionResult<Topology>> Update([FromBody]ChangedTopology model)
         {
             Topology topo = await _mgr.Update(model);
             // Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
@@ -71,18 +68,16 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/topology/{id}")]
-        [ProducesResponseType(typeof(Topology), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Load([FromRoute]int id)
+        public async Task<ActionResult<Topology>> Load(int id)
         {
             Topology topo = await _mgr.Load(id);
             return Ok(topo);
         }
 
         [HttpDelete("api/topology/{id}")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<ActionResult<bool>> Delete(int id)
         {
             Topology topo = await _mgr.Delete(id);
             Log("deleted", topo);
@@ -91,18 +86,16 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/topology/{id}/games")]
-        [ProducesResponseType(typeof(GameState[]), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> LoadGames([FromRoute]int id)
+        public async Task<ActionResult<GameState[]>> LoadGames(int id)
         {
             GameState[] games = await _mgr.GetGames(id);
             return Ok(games);
         }
 
         [HttpDelete("api/topology/{id}/games")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> DeleteGames([FromRoute]int id)
+        public async Task<ActionResult<bool>> DeleteGames(int id)
         {
             var games = await _mgr.KillGames(id);
             List<Task> tasklist = new List<Task>();
@@ -112,89 +105,86 @@ namespace TopoMojo.Controllers
             return Ok(true);
         }
 
-        [HttpGet("api/topology/{id}/publish")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
+        [HttpPost("api/topology/{id}/action")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Publish([FromRoute] int id)
+        public async Task<ActionResult<TopologyState>> ChangeState(int id, [FromBody]TopologyStateAction action)
         {
-            TopologyState state = await _mgr.Publish(id, false);
-            return Ok(state);
+            return Ok(await _mgr.ChangeState(action));
         }
 
-        [HttpGet("api/topology/{id}/unpublish")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Unpublish([FromRoute] int id)
-        {
-            TopologyState state = await _mgr.Publish(id, true);
-            return Ok(state);
-        }
+        // [HttpGet("api/topology/{id}/publish")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Publish(int id)
+        // {
+        //     TopologyState state = await _mgr.Publish(id, false);
+        //     return Ok(state);
+        // }
 
-        [HttpGet("api/topology/{id}/lock")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Lock([FromRoute] int id)
-        {
-            TopologyState state = await _mgr.Lock(id, false);
-            return Ok(state);
-        }
+        // [HttpGet("api/topology/{id}/unpublish")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Unpublish(int id)
+        // {
+        //     TopologyState state = await _mgr.Publish(id, true);
+        //     return Ok(state);
+        // }
 
-        [HttpGet("api/topology/{id}/unlock")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Unlock([FromRoute] int id)
-        {
-            TopologyState state = await _mgr.Lock(id, true);
-            return Ok(state);
-        }
+        // [HttpGet("api/topology/{id}/lock")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Lock(int id)
+        // {
+        //     TopologyState state = await _mgr.Lock(id, false);
+        //     return Ok(state);
+        // }
 
-        [HttpGet("api/topology/{id}/share")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Share([FromRoute] int id)
-        {
-            TopologyState state = await _mgr.Share(id, false);
-            return Ok(state);
-        }
+        // [HttpGet("api/topology/{id}/unlock")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Unlock(int id)
+        // {
+        //     TopologyState state = await _mgr.Lock(id, true);
+        //     return Ok(state);
+        // }
 
-        [HttpGet("api/topology/{id}/unshare")]
-        [ProducesResponseType(typeof(TopologyState), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Unshare([FromRoute] int id)
-        {
-            TopologyState state = await _mgr.Share(id, true);
-            return Ok(state);
-        }
+        // [HttpGet("api/topology/{id}/share")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Share(int id)
+        // {
+        //     TopologyState state = await _mgr.Share(id, false);
+        //     return Ok(state);
+        // }
 
-        [HttpGet("api/worker/enlist/{code}")]
-        [ProducesResponseType(typeof(bool), 200)]
+        // [HttpGet("api/topology/{id}/unshare")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<TopologyState>> Unshare(int id)
+        // {
+        //     TopologyState state = await _mgr.Share(id, true);
+        //     return Ok(state);
+        // }
+
+        [HttpPost("api/worker/enlist/{code}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Enlist([FromRoute] string code)
+        public async Task<ActionResult<bool>> Enlist(string code)
         {
             return Ok(await _mgr.Enlist(code));
         }
 
-        [HttpDelete("api/worker/delist/{workerId}")]
-        [ProducesResponseType(typeof(bool), 200)]
+        [HttpDelete("api/worker/{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delist([FromRoute] int workerId)
+        public async Task<ActionResult<bool>> Delist(int id)
         {
-            return Ok(await _mgr.Delist(workerId));
+            return Ok(await _mgr.Delist(id));
         }
 
         [HttpGet("api/topology/{id}/isos")]
-        [ProducesResponseType(typeof(VmOptions), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Isos([FromRoute] string id)
+        public async Task<ActionResult<VmOptions>> Isos(string id)
         {
             VmOptions result = await _pod.GetVmIsoOptions(id);
             return Ok(result);
         }
 
         [HttpGet("api/topology/{id}/nets")]
-        [ProducesResponseType(typeof(VmOptions), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Nets([FromRoute] string id)
+        public async Task<ActionResult<VmOptions>> Nets(string id)
         {
             VmOptions result = await _pod.GetVmNetOptions(id);
             return Ok(result);

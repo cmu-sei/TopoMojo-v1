@@ -1,19 +1,19 @@
 import {
     Directive, HostListener, ComponentRef, ViewContainerRef, Input, ComponentFactoryResolver,
     ComponentFactory
-} from "@angular/core";
-import {TooltipContent} from "./tooltip.component";
+} from '@angular/core';
+import {TooltipContentComponent} from './tooltip.component';
 
 @Directive({
-    selector: "[tooltip]"
+    selector: '[tooltip]'
 })
-export class Tooltip {
+export class TooltipDirective {
 
     // -------------------------------------------------------------------------
     // Properties
     // -------------------------------------------------------------------------
 
-    private tooltip: ComponentRef<TooltipContent>;
+    private tooltip: ComponentRef<TooltipContentComponent>;
     private visible: boolean;
 
     // -------------------------------------------------------------------------
@@ -28,33 +28,34 @@ export class Tooltip {
     // Inputs / Outputs
     // -------------------------------------------------------------------------
 
-    @Input("tooltip")
-    content: string|TooltipContent;
+    @Input('tooltip') content: string|TooltipContentComponent;
 
     @Input()
     tooltipDisabled: boolean;
 
     @Input()
-    tooltipAnimation: boolean = true;
+    tooltipAnimation = true;
 
     @Input()
-    tooltipPlacement: "top"|"bottom"|"left"|"right" = "bottom";
+    tooltipPlacement: 'top'|'bottom'|'left'|'right' = 'bottom';
 
     // -------------------------------------------------------------------------
     // Public Methods
     // -------------------------------------------------------------------------
 
-    @HostListener("focusin")
-    @HostListener("mouseenter")
+    @HostListener('focusin')
+    @HostListener('mouseenter')
     show(): void {
-        if (this.tooltipDisabled || this.visible)
+        if (this.tooltipDisabled || this.visible) {
             return;
+        }
 
         this.visible = true;
-        if (typeof this.content === "string") {
-            const factory = this.resolver.resolveComponentFactory(TooltipContent);
-            if (!this.visible)
+        if (typeof this.content === 'string') {
+            const factory = this.resolver.resolveComponentFactory(TooltipContentComponent);
+            if (!this.visible) {
                 return;
+            }
 
             this.tooltip = this.viewContainerRef.createComponent(factory);
             this.tooltip.instance.hostElement = this.viewContainerRef.element.nativeElement;
@@ -62,7 +63,7 @@ export class Tooltip {
             this.tooltip.instance.placement = this.tooltipPlacement;
             this.tooltip.instance.animation = this.tooltipAnimation;
         } else {
-            const tooltip = this.content as TooltipContent;
+            const tooltip = this.content as TooltipContentComponent;
             tooltip.hostElement = this.viewContainerRef.element.nativeElement;
             tooltip.placement = this.tooltipPlacement;
             tooltip.animation = this.tooltipAnimation;
@@ -70,18 +71,21 @@ export class Tooltip {
         }
     }
 
-    @HostListener("focusout")
-    @HostListener("mouseleave")
+    @HostListener('focusout')
+    @HostListener('mouseleave')
     hide(): void {
-        if (!this.visible)
+        if (!this.visible) {
             return;
+        }
 
         this.visible = false;
-        if (this.tooltip)
+        if (this.tooltip) {
             this.tooltip.destroy();
+        }
 
-        if (this.content instanceof TooltipContent)
-            (this.content as TooltipContent).hide();
+        if (this.content instanceof TooltipContentComponent) {
+            (this.content as TooltipContentComponent).hide();
+        }
     }
 
 }

@@ -33,7 +33,7 @@
     <div>
         <h4>Settings</h4>
         <textarea id="settings-input" [(ngModel)]="settings" class="form-control" rows="25"></textarea>
-        <error-div [errors]="errors"></error-div>
+        <app-error-div [errors]="errors"></app-error-div>
         <button (click)="load()" class="btn btn-default">
             <i class="fa fa-refresh"></i>
             <span>Load</span>

@@ -1,7 +1,7 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -38,7 +38,7 @@ namespace TopoMojo.Controllers
             {
                 Id = Context.ConnectionId,
                 ProfileName = Context.User?.Identity.Name,
-                ProfileId = Context.User?.FindFirstValue(JwtClaimTypes.Subject),
+                ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Room = channelId
             };
             _cache.Connections.TryAdd(cc.Id, cc);
@@ -135,7 +135,7 @@ namespace TopoMojo.Controllers
         {
             return new Actor
             {
-                Id = ((ClaimsPrincipal)user).FindFirstValue(JwtClaimTypes.Subject),
+                Id = ((ClaimsPrincipal)user).FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Name = user.Identity.Name
             };
         }

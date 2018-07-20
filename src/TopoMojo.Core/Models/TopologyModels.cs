@@ -56,6 +56,21 @@ namespace TopoMojo.Core.Models
         public bool IsLocked { get; set; }
     }
 
+    public class TopologyStateAction
+    {
+        public int Id { get; set; }
+        public TopologyStateActionType Type { get; set; }
+    }
+
+    public enum TopologyStateActionType
+    {
+        Share,
+        Unshare,
+        Publish,
+        Unpublish,
+        Lock,
+        Unlock
+    }
     public class Worker
     {
         public int Id { get; set; }

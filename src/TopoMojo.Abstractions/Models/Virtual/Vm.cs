@@ -39,6 +39,7 @@ namespace TopoMojo.Models.Virtual
         public string Key { get; set; }
         public string Label { get; set; }
     }
+
     public class VmTask
     {
         public string Id { get; set; }

@@ -73,7 +73,7 @@ namespace TopoMojo.vSphere
                 else
                     if (progress >= 0)
                     {
-                        vm.Task = new VmTask { Name = "initializing", Progress = progress };
+                        vm.Task = new Models.Virtual.VmTask { Name = "initializing", Progress = progress };
                     }
             }
 
@@ -132,6 +132,34 @@ namespace TopoMojo.vSphere
             return vms;
         }
 
+        public async Task<Vm> ChangeState(VmOperation op)
+        {
+            Vm vm = null;
+            switch (op.Type)
+            {
+                case VmOperationType.Start:
+                vm = await Start(op.Id);
+                break;
+
+                case VmOperationType.Stop:
+                vm = await Stop(op.Id);
+                break;
+
+                case VmOperationType.Save:
+                vm = await Save(op.Id);
+                break;
+
+                case VmOperationType.Revert:
+                vm = await Revert(op.Id);
+                break;
+
+                case VmOperationType.Delete:
+                vm = await Delete(op.Id);
+                break;
+            }
+            return vm;
+        }
+
         public async Task<Vm> Start(string id)
         {
             _logger.LogDebug("starting " + id);
@@ -169,7 +197,7 @@ namespace TopoMojo.vSphere
             return vm;
         }
 
-        public async Task<Vm> Change(string id, KeyValuePair change)
+        public async Task<Vm> ChangeConfiguration(string id, KeyValuePair change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
             Vm vm = (await Find(id)).FirstOrDefault();

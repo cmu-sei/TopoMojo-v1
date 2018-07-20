@@ -1,21 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.Webpack;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Services;
-//using TopoMojo.Web;
 
 namespace TopoMojo.Web
 {
@@ -24,15 +26,21 @@ namespace TopoMojo.Web
          public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
         }
 
         public IConfiguration Configuration { get; }
+        public AuthorizationOptions oidcOptions { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
             services.AddMvc(options =>
             {
+                var global = new AuthorizationPolicyBuilder()
+                            .RequireAuthenticatedUser()
+                            .Build();
+
+                options.Filters.Add(new AuthorizeFilter(global));
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
@@ -65,57 +73,71 @@ namespace TopoMojo.Web
 
             #endregion
 
+            #region Configure Authentication
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+            services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = oidcOptions.Authority;
+                options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                options.Audience = oidcOptions.AuthorizationScope;
+                options.SaveToken = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = "name",
+                    RoleClaimType = "role"
+                };
+            });
+            // services.AddAuthentication(
+            //     options =>
+            //     {
+            //         options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+            //         options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+            //     }
+            // )
+            // .AddIdentityServerAuthentication(
+            //     IdentityServerAuthenticationDefaults.AuthenticationScheme,
+            //     options => {
+            //         options.Authority = oidcOptions.Authority;
+            //         options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+            //         options.ApiName = oidcOptions.AuthorizationScope;
+            //     }
+            // );
+
+            #endregion
+
             #region Configure Swagger
             //add swagger
             services.AddSwaggerGen(options =>
             {
-                // if (System.IO.File.Exists(xmlFileName))
-                // {
-                //     options.IncludeXmlComments(xmlFileName);
-                // }
-
                 options.SwaggerDoc("v1", new Info
                 {
                     Title = "TopoMojo",
                     Version = "v1",
-                    Description = "API documentation and interaction for " + "TopoMojo"
+                    Description = "API documentation and interaction"
                 });
 
-                // options.AddSecurityDefinition("oauth2", new OAuth2Scheme
-                // {
-                //     Type = "oauth2",
-                //     Flow = "implicit",
-                //     AuthorizationUrl = _authOptions.AuthorizationUrl,
-                //     Scopes = new Dictionary<string, string>
-                //     {
-                //         { _authOptions.AuthorizationScope, "public api access" }
-                //     }
-                // });
+                options.AddSecurityDefinition("oauth2", new OAuth2Scheme
+                {
+                    Type = "oauth2",
+                    Flow = "implicit",
+                    AuthorizationUrl = oidcOptions.AuthorizationUrl,
+                    Scopes = new Dictionary<string, string>
+                    {
+                        { oidcOptions.AuthorizationScope, "public api access" }
+                    }
+                });
+                options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                {
+                    { "oauth2", new[] { "readAccess", "writeAccess" } }
+                });
                 options.DescribeAllEnumsAsStrings();
-                options.CustomSchemaIds(x => x.FullName);
+                //options.CustomSchemaIds(x => x.FullName);
             });
             #endregion
 
-            #region Configure Authentication
-
-            var oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
-            services.AddAuthentication(
-                options =>
-                {
-                    options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-                }
-            )
-            .AddIdentityServerAuthentication(
-                IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                options => {
-                    options.Authority = oidcOptions.Authority;
-                    options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                    options.ApiName = oidcOptions.AuthorizationScope;
-                }
-            );
-
-            #endregion
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -130,12 +152,12 @@ namespace TopoMojo.Web
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            if (env.IsDevelopment())
-            {
-                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-                    HotModuleReplacement = true
-                });
-            }
+            // if (env.IsDevelopment())
+            // {
+            //     app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
+            //         HotModuleReplacement = true
+            //     });
+            // }
 
             app.UseCors("default");
             app.UseStaticFiles();
@@ -161,18 +183,19 @@ namespace TopoMojo.Web
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "docs/{documentName}/api.json";
+                c.RouteTemplate = "openapi/{documentName}/api.json";
             });
             // app.UseSwaggerUI(c =>
             // {
-            //     c.RoutePrefix = "docs";
-            //     c.SwaggerEndpoint("/docs/v1/api.json", "TopoMojo" + " (v1)");
-            //     c.ConfigureOAuth2(_authOptions.ClientId, _authOptions.ClientSecret, _authOptions.ClientId, _authOptions.ClientName);
+            //     c.RoutePrefix = "openapi";
+            //     c.SwaggerEndpoint("/openapi/v1/api.json", "TopoMojo" + " (v1)");
+            //     c.OAuthClientId(oidcOptions.ClientId);
+            //     c.OAuthClientSecret(oidcOptions.ClientSecret);
+            //     c.OAuthAppName(oidcOptions.ClientName);
             //     c.InjectStylesheet("/css/site.css");
-            //     c.InjectOnCompleteJavaScript("/js/custom-swag.js");
+            //     c.InjectJavascript("/js/custom-swag.js");
             // });
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             app.UseAuthentication();
 
             app.UseSignalR(routes => {
@@ -200,7 +223,4 @@ namespace TopoMojo.Web
 
         }
     }
-
-
-
 }

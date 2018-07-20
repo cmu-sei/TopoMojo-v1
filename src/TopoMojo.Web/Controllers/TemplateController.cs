@@ -33,74 +33,24 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/templates")]
-        [ProducesResponseType(typeof(SearchResult<TemplateSummary>), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromQuery]Search search)
+        public async Task<ActionResult<SearchResult<TemplateSummary>>> List(Search search)
         {
             var result = await _mgr.List(search);
             return Ok(result);
         }
 
         [HttpGet("api/template/{id}")]
-        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Load([FromRoute]int id)
+        public async Task<ActionResult<Template>> Load(int id)
         {
             var result = await _mgr.Load(id);
             return Ok(result);
         }
 
-        [HttpGet("api/template/{id}/detailed")]
-        [ProducesResponseType(typeof(TemplateDetail), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> LoadDetail([FromRoute]int id)
-        {
-            var result = await _mgr.LoadDetail(id);
-            return Ok(result);
-        }
-
-        [HttpPost("api/template/create")]
-        [ProducesResponseType(typeof(TemplateDetail), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Create([FromBody]TemplateDetail model)
-        {
-            var result = await _mgr.Create(model);
-            return Ok(result);
-        }
-
-        [HttpPut("api/template/configure")]
-        [ProducesResponseType(typeof(TemplateDetail), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Configure([FromBody]TemplateDetail template)
-        {
-            var result = await _mgr.Configure(template);
-            return Ok(result);
-        }
-
-        [HttpGet("api/template/{id}/link/{topoId}")]
-        [ProducesResponseType(typeof(Template), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Link([FromRoute]int id, [FromRoute]int topoId)
-        {
-            var result = await _mgr.Link(id, topoId);
-            SendBroadcast(result, "added");
-            return Ok(result);
-        }
-
-        [HttpGet("api/template/{id}/unlink")]
-        [ProducesResponseType(typeof(Template), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> UnLink([FromRoute]int id)
-        {
-            var result = await _mgr.Unlink(id);
-            SendBroadcast(result, "updated");
-            return Ok(result);
-        }
-
         [HttpPut("api/template")]
-        [ProducesResponseType(typeof(Template), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Update([FromBody]ChangedTemplate template)
+        public async Task<ActionResult<Template>> Update([FromBody]ChangedTemplate template)
         {
             var result = await _mgr.Update(template);
             SendBroadcast(result, "updated");
@@ -108,13 +58,57 @@ namespace TopoMojo.Controllers
         }
 
         [HttpDelete("api/template/{id}")]
-        [ProducesResponseType(typeof(bool), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<ActionResult<bool>> Delete(int id)
         {
             var result = await _mgr.Delete(id);
             SendBroadcast(result, "removed");
             return Ok(true);
+        }
+
+        [HttpPost("api/template/link")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<Template>> Link([FromBody]TemplateLink link)
+        {
+            var result = await _mgr.Link(link);
+            SendBroadcast(result, "added");
+            return Ok(result);
+        }
+
+        [HttpPost("api/template/unlink")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<Template>> UnLink([FromBody]TemplateLink link)
+        {
+            var result = await _mgr.Unlink(link);
+            SendBroadcast(result, "updated");
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("api/template/{id}/detailed")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<TemplateDetail>> LoadDetail(int id)
+        {
+            var result = await _mgr.LoadDetail(id);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpPost("api/template/detailed")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
+        {
+            var result = await _mgr.Create(model);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpPut("api/template/detail")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<TemplateDetail>> Configure([FromBody]TemplateDetail template)
+        {
+            var result = await _mgr.Configure(template);
+            return Ok(result);
         }
 
         private void SendBroadcast(Template template, string action)

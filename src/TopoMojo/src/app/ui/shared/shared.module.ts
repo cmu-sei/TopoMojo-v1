@@ -5,15 +5,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SearchBarComponent } from './searchbar.component';
 import { EntityListComponent } from './entity-list.component';
 import { InlineEditorComponent} from './inline-editor.component';
-import { Tooltip } from './tooltip.directive';
-import { TooltipContent } from './tooltip.component';
+import { TooltipDirective } from './tooltip.directive';
+import { TooltipContentComponent } from './tooltip.component';
 import { InlineHelpComponent } from './inline-help.component';
 import { UntaggedStringPipe, FormatErrorPipe, AgedDatePipe } from './pipes';
 import { ConfirmDeleteComponent } from './confirm-delete.component';
-import { NotificationPanelComponent }  from './notification-panel.component';
+import { NotificationPanelComponent } from './notification-panel.component';
 import { ErrorDivComponent} from './error-div.component';
-export * from "./tooltip.directive";
-export * from "./tooltip.component";
+export * from './tooltip.directive';
+export * from './tooltip.component';
 
 
 @NgModule({
@@ -27,8 +27,8 @@ export * from "./tooltip.component";
         EntityListComponent,
         InlineEditorComponent,
         InlineHelpComponent,
-        Tooltip,
-        TooltipContent,
+        TooltipDirective,
+        TooltipContentComponent,
         UntaggedStringPipe,
         FormatErrorPipe,
         AgedDatePipe,
@@ -44,8 +44,8 @@ export * from "./tooltip.component";
         EntityListComponent,
         InlineEditorComponent,
         InlineHelpComponent,
-        Tooltip,
-        TooltipContent,
+        TooltipDirective,
+        TooltipContentComponent,
         UntaggedStringPipe,
         FormatErrorPipe,
         AgedDatePipe,
@@ -57,7 +57,7 @@ export * from "./tooltip.component";
 
     ],
     entryComponents: [
-        TooltipContent
+        TooltipContentComponent
     ]
 })
 export class SharedModule {}

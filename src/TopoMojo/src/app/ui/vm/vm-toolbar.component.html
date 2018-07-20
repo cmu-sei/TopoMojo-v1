@@ -34,7 +34,7 @@
         </ng-template>
     </div>
 </div>
-<error-div [errors]="errors" (onErrorCleared)="errorCleared"></error-div>
+<app-error-div [errors]="errors" (onErrorCleared)="errorCleared"></app-error-div>
 <div *ngIf="!working && vm.question" class="alert alert-warning">
     <p>{{ vm.question.prompt }}</p>
     <button *ngFor="let c of vm.question.choices"

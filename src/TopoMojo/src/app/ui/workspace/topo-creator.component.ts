@@ -1,18 +1,18 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { TopologyService } from '../../api/topology.service';
-import { NewTopology } from '../../api/gen/models';
+import { NewTopology, Topology } from '../../api/gen/models';
 
 @Component({
-    selector: 'topo-creator',
+    selector: 'app-topo-creator',
     templateUrl: './topo-creator.component.html',
     styleUrls: ['./topo-creator.component.css']
 })
-export class TopoCreatorComponent {
+export class TopoCreatorComponent implements OnInit {
     topo: NewTopology = {
-        name : "",
-        description : ""
-    }
+        name : '',
+        description : ''
+    };
     errorMessage: string;
 
     constructor(
@@ -23,14 +23,16 @@ export class TopoCreatorComponent {
 
     errors: Array<Error> = new Array<Error>();
 
-    ngOnInit(): void {
-    };
+    ngOnInit(): void { }
 
     save() {
         this.service.postTopology(this.topo)
-        .subscribe(result => {
-            this.router.navigate(['topo', result.id]);
-        }, (err) => { this.errors.push(err.error) });
+        .subscribe(
+            (topo: Topology) => {
+                this.router.navigate(['topo', topo.id]);
+            },
+            (err) => { this.errors.push(err.error); }
+        );
     }
 }
 

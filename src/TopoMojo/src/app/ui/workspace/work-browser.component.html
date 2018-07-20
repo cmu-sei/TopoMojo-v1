@@ -8,9 +8,9 @@
         </button>
     </div>
     <div class="col-xs-8 col-xs-offset-2">
-        <topo-creator *ngIf="editorVisible"></topo-creator>
+        <app-topo-creator *ngIf="editorVisible"></app-topo-creator>
     </div>
-    <search-bar (onSearch)="termChanged($event)" class="col-xs-12">
+    <search-bar (searched)="termChanged($event)" class="col-xs-12">
         <div *ngFor="let t of topos" class="col-sm-6">
             <div class="card">
             <div class="col-xs-12">

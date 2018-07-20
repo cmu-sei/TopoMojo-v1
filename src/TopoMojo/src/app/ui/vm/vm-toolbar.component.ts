@@ -1,24 +1,24 @@
-import { Component, Input, Output, OnChanges, SimpleChanges, EventEmitter } from '@angular/core';
+import { Component, Input, Output, OnChanges, SimpleChanges, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { VmService } from '../../api/vm.service';
-import { Template, VirtualVm, VirtualVmAnswer } from '../../api/gen/models';
+import { Template, Vm, VmAnswer, VmOperationTypeEnum } from '../../api/gen/models';
 import { NotificationService } from '../../svc/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-    //moduleId: module.id,
-    selector: 'vm-toolbar',
+    // moduleId: module.id,
+    selector: 'app-vm-toolbar',
     templateUrl: 'vm-toolbar.component.html',
     styleUrls: [ 'vm-toolbar.component.css']
 
 })
-export class VmToolbarComponent implements OnChanges {
+export class VmToolbarComponent implements OnInit, OnChanges, OnDestroy {
     @Input() template: Template;
     @Input() isPublished: boolean;
-    @Input() vm: VirtualVm;
-    @Output() onLoaded: EventEmitter<any> = new EventEmitter<any>();
+    @Input() vm: Vm;
+    @Output() loaded: EventEmitter<any> = new EventEmitter<any>();
     status: string;
     timer: any;
-    working: boolean = true;
+    working = true;
     errors: any[] = [];
     subs: Subscription[] = [];
     constructor(
@@ -32,16 +32,16 @@ export class VmToolbarComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes['template']) {
-            this.status = "created";
+            this.status = 'created';
             this.startRefresh();
             this.subs.push(
                 this.notifier.topoEvents.subscribe(
                     (event) => {
-                        if (this.template.name == event.model.name
-                            ||event.model.id == this.vm.id) {
+                        if (this.template.name === event.model.name
+                            || event.model.id === this.vm.id) {
 
                             switch (event.action) {
-                                case "VM.DELETE":
+                                case 'VM.DELETE':
                                 this.vm = null;
                                 break;
 
@@ -67,32 +67,31 @@ export class VmToolbarComponent implements OnChanges {
     }
 
     refresh() {
-        let svc = (this.vm && this.vm.id)
-            ? this.service.loadVm(this.vm.id)
-            : this.service.resolveVm(this.template.id);
+        const svc = (this.vm && this.vm.id)
+            ? this.service.getVm(this.vm.id)
+            : this.service.getTemplateVm(this.template.id);
         svc.subscribe(data => {
             this.vm = data;
-            this.onLoaded.emit(this.vm);
+            this.loaded.emit(this.vm);
             if (this.vm.task && this.vm.task.progress < 100) {
                 this.startRefresh();
-            }
-            else {
+            } else {
                 this.working = false;
-                //setTimeout(() => { this.startRefresh(); }, 10000);
+                // setTimeout(() => { this.startRefresh(); }, 10000);
             }
         }, (err) => { this.onError(err); });
     }
 
     startRefresh() {
         this.working = true;
-        if (this.timer) clearTimeout(this.timer);
+        if (this.timer) { clearTimeout(this.timer); }
         this.timer = setTimeout(() => { this.refresh(); }, 2000);
     }
 
     initialize() {
         this.working = true;
         this.vm.task = { name: 'initializing', progress: 0 };
-        this.service.initVm(this.template.id)
+        this.service.postTemplateDisks(this.template.id)
         .subscribe(() => {
                 this.startRefresh();
             }, (err) => { this.onError(err); });
@@ -100,88 +99,113 @@ export class VmToolbarComponent implements OnChanges {
 
     deploy() {
         this.working = true;
-        this.vm.task = { name: "deploying" };
-        this.service.deployVm(this.template.id)
+        this.vm.task = { name: 'deploying' };
+        this.service.postTemplateDeploy(this.template.id)
         .subscribe(
             data => {
                 this.vm = data;
-                this.onLoaded.emit(this.vm);
-                this.working = false;
+                this.loaded.emit(this.vm);
             },
             (err) => { this.onError(err); },
-            () => {this.working == false;}
+            () => { this.working = false; }
         );
     }
 
     delete() {
-        this.vm.status = "confirm";
+        this.vm.status = 'confirm';
     }
 
     cancelDelete() {
-        this.vm.status = "deployed";
+        this.vm.status = 'deployed';
     }
 
     confirmDelete() {
         this.working = true;
-        this.vm.task = { name: "deleting" };
+        this.vm.task = { name: 'deleting' };
         this.service.deleteVm(this.vm.id)
         .subscribe(() => {
                 this.vm = null;
                 this.startRefresh();
-            }, (err) => { this.onError(err); })
-    }
-
-    start() {
-        this.working = true;
-        this.vm.task = { name: "starting" };
-        this.service.startVm(this.vm.id)
-        .subscribe(data => {
-            this.vm = data;
-            this.onLoaded.emit(this.vm);
-            this.working = false;
-        }, (err) => { this.onError(err); })
-    }
-
-    stop() {
-        this.working = true;
-        this.vm.task = { name: "stopping" };
-        this.service.stopVm(this.vm.id)
-        .subscribe(data => {
-            this.vm = data;
-            this.onLoaded.emit(this.vm);
-            this.working = false;
-        }, (err) => { this.onError(err); })
-    }
-
-    revert() {
-        this.working = true;
-        this.vm.task = { name: "reverting" };
-        this.service.revertVm(this.vm.id)
-        .subscribe(data => {
-            this.vm = data;
-            this.onLoaded.emit(this.vm);
-            this.working = false;
-        }, (err) => { this.onError(err); })
-    }
-
-    save() {
-        this.working = true;
-        this.vm.task = { name: "saving" };
-        this.service.saveVm(this.vm.id, this.template.topologyId)
-        .subscribe(() => {
-                this.startRefresh();
             }, (err) => { this.onError(err); });
     }
 
+    vmaction(type: VmOperationTypeEnum): void {
+        this.working = true;
+        this.vm.task = { name: type.toString() };
+        this.service.postVmAction({
+            id: this.vm.id,
+            type: type,
+            workspaceId: this.template.topologyId
+        }).subscribe(
+            (vm: Vm) => {
+                this.vm = vm;
+                this.loaded.emit(this.vm);
+            },
+            (err) => {
+                this.onError(err);
+            },
+            () => { this.working = false; }
+        );
+    }
+    start() {
+        this.vmaction(VmOperationTypeEnum.start);
+    //     this.working = true;
+    //     this.vm.task = { name: 'starting' };
+    //     this.service.getVmStart(this.vm.id)
+    //     .subscribe(data => {
+    //         this.vm = data;
+    //         this.loaded.emit(this.vm);
+    //         this.working = false;
+    //     }, (err) => { this.onError(err); });
+    }
+
+    stop() {
+        this.vmaction(VmOperationTypeEnum.stop);
+    //     this.working = true;
+    //     this.vm.task = { name: 'stopping' };
+    //     this.service.getVmStop(this.vm.id)
+    //     .subscribe(data => {
+    //         this.vm = data;
+    //         this.loaded.emit(this.vm);
+    //         this.working = false;
+    //     }, (err) => { this.onError(err); });
+    }
+
+    revert() {
+        this.vmaction(VmOperationTypeEnum.revert);
+    //     this.working = true;
+    //     this.vm.task = { name: 'reverting' };
+    //     this.service.getVmRevert(this.vm.id)
+    //     .subscribe(data => {
+    //         this.vm = data;
+    //         this.loaded.emit(this.vm);
+    //         this.working = false;
+    //     }, (err) => { this.onError(err); });
+    }
+
+    save() {
+        this.vmaction(VmOperationTypeEnum.save);
+    //     this.working = true;
+    //     this.vm.task = { name: 'saving' };
+    //     this.service.postVmAction({
+    //         type: 'save',
+    //         id: this.vm.id,
+    //         topoId: this.template.topologyId
+    //     })
+    //     .subscribe(() => {
+    //             this.startRefresh();
+    //         }, (err) => { this.onError(err); });
+    }
+
     answer(c) {
-        this.service.answerVm(this.vm.id, { questionId: this.vm.question.id, choiceKey: c.key } as VirtualVmAnswer)
+        this.service.postVmAnswer(this.vm.id, { questionId: this.vm.question.id, choiceKey: c.key } as VmAnswer)
         .subscribe(data => {
             this.vm = data;
         });
     }
 
     isRunning() {
-        return this.vm.state == 1; //VirtualVmStateEnum.running;
+        return this.vm.state === 1; // VmStateEnum.running;
     }
 
     hasParent() {
@@ -199,7 +223,6 @@ export class VmToolbarComponent implements OnChanges {
     onError(err) {
         this.errors.push(err.error);
         this.working = false;
-        console.debug(err.error.message);
     }
 
 }
