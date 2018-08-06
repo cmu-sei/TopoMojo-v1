@@ -16,7 +16,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   @Output() loaded: EventEmitter<Vm> = new EventEmitter<Vm>();
   vm: Vm = {};
   timer: any;
-  private confirmingDelete = false;
+  confirmingDelete = false;
   errors: Array<Error> = [];
   subs: Array<Subscription> = [];
 

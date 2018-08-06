@@ -24,7 +24,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   private typingSource: Subject<boolean> = new Subject<boolean>();
   private typing$: Observable<boolean> = this.typingSource.asObservable();
   private typingMonitor: any;
-  private key: string;
+  key: string;
   actors: Array<Actor>;
   constructor(
     private service: ChatService,

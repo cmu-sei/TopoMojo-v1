@@ -10,6 +10,7 @@ COPY . /app
 WORKDIR /app/src/TopoMojo.Web
 RUN bower install
 RUN dotnet publish -c Release -o /app/dist
+RUN npm install && ng build --prod -o /app/dist/wwwroot
 CMD ["dotnet", "run"]
 
 #

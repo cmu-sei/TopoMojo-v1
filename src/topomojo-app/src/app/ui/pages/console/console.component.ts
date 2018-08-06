@@ -43,8 +43,8 @@ export class ConsoleComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('consoleCanvas') consoleCanvas: ElementRef;
   subs: Array<Subscription> = [];
   private hotspot = { x: 0, y: 0, w: 20, h: 20 };
-  private isoSource: IsoDataSource;
-  private netSource: VmNetDataSource;
+  isoSource: IsoDataSource;
+  netSource: VmNetDataSource;
 
   constructor(
     private injector: Injector,
