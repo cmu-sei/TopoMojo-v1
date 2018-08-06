@@ -1,0 +1,43 @@
+<!-- <div *ngIf="key" class="wrapper"> -->
+  <div *ngIf="key" class="chat-panel">
+    <div class="presence-div">
+      <span *ngFor="let actor of actors" class="label label-default" [class.online]="actor.online">
+        <mat-icon *ngIf="!actor.typing" inline="true">account_box</mat-icon>
+        <mat-icon *ngIf="actor.typing"  inline="true">keyboard</mat-icon>
+        {{actor.name || "Anonymous"}}
+      </span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="messages-div" #scrollMe (scroll)="onScroll()">
+      <div class="center">
+        <button *ngIf="showHistoryButton" (click)="moreHistory()" mat-raised-button>
+          <mat-icon>history</mat-icon>
+          load history
+        </button>
+      </div>
+
+      <topomojo-chat-message *ngFor="let message of messages" [message]="message"></topomojo-chat-message>
+    </div>
+
+    <!-- <div class="flex-spacer"></div> -->
+
+    <div class="footer">
+      <div *ngIf="typers" class="text text-muted">
+        <small>
+          <mat-icon inline="true">keyboard</mat-icon>
+          <span *ngIf="typers">{{typers}}</span>
+        </small>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="editor">
+      <textarea matInput [(ngModel)]="newMessage" (keyup)="typing()" (keyup.enter)="submitMessage()" class="form-control" placeholder="Write a note..."
+        rows="3" resize="none">
+        </textarea>
+    </div>
+  </div>
+<!-- </div> -->

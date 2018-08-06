@@ -1,0 +1,19 @@
+<mat-drawer-container>
+  <mat-drawer class="editor" position="start" mode="side" opened="true" disableClose="true">
+    <textarea matInput
+      name="editor"
+      type="text"
+      [(ngModel)]="markdown"
+      (keyup)="reRender()"></textarea>
+  </mat-drawer>
+  <mat-drawer #imageDrawer class="images" position="end" disableClose="false">
+    <p>image drawer</p>
+  </mat-drawer>
+  <mat-drawer-content>
+    <div class="markdown" [innerHtml]="rendered"></div>
+  </mat-drawer-content>
+
+
+</mat-drawer-container>
+
+

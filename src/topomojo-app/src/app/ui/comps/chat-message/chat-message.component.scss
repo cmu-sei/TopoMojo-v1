@@ -1,0 +1,21 @@
+.message {
+    padding: 8px 8px 0px 8px;
+
+    .header {
+        .author {
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .time {
+            margin-left: 8px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+    }
+    .text {
+        margin: 0px 8px;
+    }
+}
+
+

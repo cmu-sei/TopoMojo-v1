@@ -1,0 +1,9 @@
+<div *ngIf="message.date" [innerHtml]="dateBreak"></div>
+
+<div *ngIf="message" class="message">
+    <div class="header" *ngIf="message.hdr">
+      <span class="author">{{ message.msg.authorName || 'Anonymous' }}</span>
+      <span class="time">{{ message.time }}</span>
+    </div>
+    <div class="text" [innerHtml]="renderedHtml"></div>
+</div>

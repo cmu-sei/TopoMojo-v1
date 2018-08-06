@@ -1,0 +1,23 @@
+<mat-divider></mat-divider>
+<div>
+  <div class="title">{{summary.name}}</div>
+  <div class="desc">
+    <p>{{summary.description || 'No description available'}}</p>
+    <p>(by: {{summary.author}})</p>
+  </div>
+  <!-- <span class="flex-spacer"></span> -->
+  <div class="tool">
+    <a mat-mini-fab *ngIf="summary.canEdit" color="primary"
+      matTooltip="Build" [routerLink]="['/topo', summary.id]">
+      <mat-icon>build</mat-icon>
+    </a>
+  </div>
+  <div class="tool">
+    <a *ngIf="summary.isPublished"
+      mat-mini-fab color="primary"
+      matTooltip="Preview"
+      [routerLink]="['/mojo', summary.id]">
+      <mat-icon>flash_on</mat-icon>
+    </a>
+  </div>
+</div>

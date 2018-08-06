@@ -1,0 +1,14 @@
+@mixin mix-errormsg-theme($theme) {
+    $warn: map-get($theme, warn);
+
+    .error-msg {
+        background-color: mat-color($warn);
+        font-weight: normal;
+        font-size: small;
+
+        .mat-button {
+            padding: 0 4px;
+            min-width: 44px;
+        }
+    }
+}

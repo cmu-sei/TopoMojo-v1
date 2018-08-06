@@ -1,0 +1,30 @@
+// div {
+//     height: 100%;
+//     width: 100%;
+
+    mat-sidenav-container {
+        height: 100%;
+
+        .main-content {
+            padding-top: 64px;
+        }
+    }
+    mat-sidenav {
+        width: 400px;
+
+        .side-content {
+            position: absolute;
+            top: 64px;
+            bottom: 0px;
+            width: 100%;
+        }
+    }
+
+// }
+topomojo-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+}

@@ -1,0 +1,16 @@
+<div class="wrapper">
+  <div *ngFor="let game of games">
+    <div class="desc">{{ game.whenCreated }}</div>
+    <div class="title">{{ game.name }}</div>
+    <!-- <span class="flex-spacer"></span> -->
+    <div class="tool">
+      <a mat-mini-fab color="accent" matTooltip="Continue" [routerLink]="['/mojo', game.topologyId]">
+        <mat-icon>flash_on</mat-icon>
+      </a>
+    </div>
+    <div class="tool">
+      <topomojo-confirm-button (confirmed)="delete(game.topologyId)" icon="delete" text="End" fab="true"></topomojo-confirm-button>
+    </div>
+  </div>
+  <!-- <mat-divider></mat-divider> -->
+</div>

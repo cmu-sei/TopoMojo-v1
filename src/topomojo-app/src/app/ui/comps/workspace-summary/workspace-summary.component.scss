@@ -1,0 +1,27 @@
+div {
+    display: flex;
+    padding: 20px 0px;
+    align-items: baseline;
+    text-align: start;
+
+    .title {
+        flex: 1;
+        margin-right: 16px;
+    }
+
+    .desc {
+        font-weight: normal;
+        font-size: 14px;
+        text-align: start;
+        flex: 2;
+        margin-right: 16px;
+        display: flex;
+        flex-flow: column nowrap;
+    }
+
+    .tool {
+        a {
+            margin: 0px 4px;
+        }
+    }
+}

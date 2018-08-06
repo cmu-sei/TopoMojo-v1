@@ -1,0 +1,21 @@
+<div class="upload-ui">
+  <label *ngIf="!uploading" htmlFor="fileSelector">
+    <input id="fileSelector" type="file" style="display:none;" [multiple]="multiple" (change)="fileSelectorChanged($event)">
+    <mat-icon inline="true">folder</mat-icon>
+    <span> Browse </span>
+  </label>
+  <div class="uploader">
+    <div class="manifest">
+      <ul *ngFor="let qf of queuedFiles">
+        <li *ngIf="qf.state === 'inprogress'"><mat-progress-spinner mode='determinate' diameter="18" strokeWidth="3" [value]="qf.progress"></mat-progress-spinner></li>
+        <li *ngIf="qf.state !== 'inprogress'">
+          <button mat-icon-button (click)="dequeueFile(qf)"><mat-icon>{{qf.state}}</mat-icon></button>
+        </li>
+        <li><span> {{ qf.name }} </span></li>
+        <li *ngIf="qf.error"> {{qf.error.message}} </li>
+      </ul>
+    </div>
+    <button [disabled]="!canUpload()" (click)="upload()" mat-mini-fab><mat-icon>cloud_upload</mat-icon></button>
+  </div>
+  <topomojo-error-div [errors]="errors"></topomojo-error-div>
+</div>

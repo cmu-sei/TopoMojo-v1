@@ -1,0 +1,45 @@
+<div class="workspace-lobby">
+
+  <div class="search-tools">
+    <div>
+      <mat-button-toggle-group *ngIf="hasProfile()" (change)="filterChanged()" [(ngModel)]="filter">
+        <mat-button-toggle value="public" [checked]="this.filter==='public'">Public</mat-button-toggle>
+        <mat-button-toggle value="private" [checked]="this.filter==='private'">Private</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <div>
+      <mat-button-toggle-group (change)="fetch_fresh()" [(ngModel)]="model.sort">
+        <mat-button-toggle value="age" checked="true">Newest</mat-button-toggle>
+        <mat-button-toggle value="">Alpha</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- <mat-button-toggle-group *ngIf="hasProfile()" multiple (change)="showAdd=!showAdd">
+      <mat-button-toggle><mat-icon>add_circle</mat-icon></mat-button-toggle>
+    </mat-button-toggle-group> -->
+  </div>
+
+  <div *ngIf="!hasProfile()" class="lobby-section">
+    Feel free to preview, but you'll need to login to use the site!
+  </div>
+
+  <div *ngIf="showAdd && hasProfile()" class="lobby-section">
+    <!-- <div class="pad-down"> -->
+      <topomojo-workspace-creator></topomojo-workspace-creator>
+    <!-- </div> -->
+    <!-- <mat-divider></mat-divider> -->
+  </div>
+
+  <div *ngIf="hasProfile()" [class.lobby-section]="showGames">
+    <topomojo-gamespace-lobby (activated)="hasSomeGames($event)"></topomojo-gamespace-lobby>
+    <!-- <topomojo-gamespace-browser (some)="hasSomeGames($event)"></topomojo-gamespace-browser> -->
+    <!-- <mat-divider></mat-divider> -->
+  </div>
+
+  <div class="lobby-section">
+    <topomojo-workspace-summary *ngFor="let item of list" [summary]="item"></topomojo-workspace-summary>
+  </div>
+  <button *ngIf="more" (click)="fetch()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+
+</div>

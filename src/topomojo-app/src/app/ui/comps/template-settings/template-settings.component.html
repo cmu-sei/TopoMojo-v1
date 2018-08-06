@@ -1,0 +1,53 @@
+<div *ngIf="template" class="outer">
+  <form #form [ngFormOptions]="{updateOn: 'blur'}">
+    <input type="hidden" name="id" [ngModel]="template.id">
+    <input type="hidden" name="topologyId" [ngModel]="template.topologyId">
+    <div>
+      <mat-form-field>
+        <input [disabled]="hasVm" matInput required type="text" name="name"
+          matLabel="Template" placeholder="Name"
+          [(ngModel)]="template.name" maxlength="24">
+        <mat-hint>Names should be unique with the workspace!</mat-hint>
+        <mat-hint align="end">{{template.name.length}} / 24</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <textarea [disabled]="hasVm" matInput type="textarea" name="description"
+          placeholder="Description"
+          [(ngModel)]="template.description" maxlength="300"></textarea>
+        <mat-hint align="end">{{(''+template.description).length}} / 300</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <input [disabled]="hasVm" matInput type="text" name="networks"
+        placeholder="Networks"
+        [(ngModel)]="template.networks" maxlength="30">
+        <mat-hint>Space delimited net names</mat-hint>
+        <mat-hint align="end">{{(''+template.networks).length}} / 30</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <input [disabled]="hasVm" matInput type="text" name="iso"
+        placeholder="Iso file"
+        [(ngModel)]="template.iso" maxlength="100">
+        <button [disabled]="hasVm" mat-mini-fab matSuffix (click)="showingIsos=!showingIsos"><mat-icon>list</mat-icon></button>
+        <mat-hint>Space delimited net names</mat-hint>
+        <mat-hint align="end">{{(''+template.iso).length}} / 100</mat-hint>
+      </mat-form-field>
+      <topomojo-select-table *ngIf="showingIsos" [dataSource]="isoSource" (selected)="isoChanged($event)"></topomojo-select-table>
+    </div>
+
+    <div>
+        <mat-slide-toggle [disabled]="hasVm" name="isHidden" [(ngModel)]="template.isHidden" color="primary" labelPosition="before"
+        [ngModelOptions]="{updateOn: 'change'}">Hidden</mat-slide-toggle>
+    </div>
+  </form>
+
+</div>
+

@@ -1,0 +1,22 @@
+.uploader {
+    display: flex;
+    align-items: flex-end;
+
+    div {
+        flex: auto;
+
+        ul {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            list-style: none;
+            width: 80%;
+            font-size: smaller;
+
+            li {
+                flex: default;
+                padding: 0px 8px;
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+<div class="toolbar">
+
+  <div *ngIf="vm.task && vm.task.name">
+    <span>{{vm.task.name}}...</span>
+    <mat-spinner *ngIf="vm.task.progress < 1" mode="determinate" diameter="18" [value]="92"></mat-spinner>
+    <mat-progress-spinner *ngIf="vm.task.progress > 0" mode="determinate" diameter="18" [value]="vm.task.progress"></mat-progress-spinner>
+  </div>
+
+  <div *ngIf="!vm.task && !confirmingDelete">
+    <button (click)="refresh()" matTooltip="refresh" mat-icon-button><mat-icon>refresh</mat-icon></button>
+    <button (click)="initialize()" matTooltip="initialize"
+      *ngIf="vm.status === 'created'"
+      mat-icon-button><mat-icon>settings</mat-icon></button>
+    <button (click)="deploy()" matTooltip="deploy"
+      *ngIf="vm.status === 'initialized'"
+      mat-icon-button><mat-icon>flash_on</mat-icon></button>
+    <button (click)="display()" matTooltip="console"
+      *ngIf="vm.id"
+      mat-icon-button><mat-icon>tv</mat-icon></button>
+    <button (click)="vmaction('start')" matTooltip="start"
+      *ngIf="vm.id && vm.state!==1"
+      mat-icon-button><mat-icon>play_arrow</mat-icon></button>
+    <button (click)="vmaction('stop')" matTooltip="stop"
+      *ngIf="vm.id && vm.state===1"
+      mat-icon-button><mat-icon>stop</mat-icon></button>
+    <button (click)="vmaction('save')" matTooltip="save"
+      *ngIf="canSave()"
+      mat-icon-button><mat-icon>save_alt</mat-icon></button>
+    <button (click)="vmaction('revert')" matTooltip="revert"
+      *ngIf="vm.id"
+      mat-icon-button><mat-icon>restore</mat-icon></button>
+    <button (click)="toggleConfirm()" matTooltip="delete"
+      *ngIf="vm.id"
+      mat-icon-button><mat-icon>delete</mat-icon></button>
+  </div>
+
+  <div *ngIf="confirmingDelete">
+    <span>Confirm?</span>
+    <button (click)="delete()" matTooltip="confirm"
+      mat-icon-button><mat-icon>delete</mat-icon></button>
+    <button (click)="toggleConfirm()" matTooltip="cancel"
+      mat-icon-button><mat-icon>cancel</mat-icon></button>
+  </div>
+
+  <topomojo-error-div [errors]="errors"></topomojo-error-div>
+</div>

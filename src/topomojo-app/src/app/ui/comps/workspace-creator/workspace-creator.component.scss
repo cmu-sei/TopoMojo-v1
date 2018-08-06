@@ -1,0 +1,27 @@
+div {
+    display: flex;
+    align-items: baseline;
+    text-align: start;
+    flex-wrap: wrap;
+
+    .title {
+        flex: 1;
+    }
+
+    .desc {
+        font-weight: normal;
+        text-align: start;
+        flex: 2;
+        margin-right: 16px;
+
+        mat-form-field {
+            width: 100%;
+        }
+    }
+
+    .tool {
+        a {
+            margin: 0px 4px;
+        }
+    }
+}
