@@ -23,6 +23,7 @@ namespace TopoMojo.Data.Entities
         public virtual ICollection<Gamespace> Gamespaces { get; set; } = new List<Gamespace>();
         public virtual ICollection<Template> Templates { get; set; } = new List<Template>();
 
+        [Obsolete]
         [NotMapped]
         public string Document
         {

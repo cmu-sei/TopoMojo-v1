@@ -42,16 +42,16 @@ namespace TopoMojo.Core
         {
             if (search.Take == 0) search.Take = 50;
 
-            string[] allowedFilters = new string[] { "mine", "published", "all" };
+            string[] allowedFilters = new string[] { "private", "public", "detail" };
 
             if (!Profile.IsAdmin)
             {
-                search.Filters = search.Filters.Except(new string[] { "all" }).ToArray();
+                search.Filters = search.Filters.Except(new string[] { "detail" }).ToArray();
             }
 
             if (!search.Filters.Intersect(allowedFilters).Any())
             {
-                search.Filters = new string[] { "mine" };
+                search.Filters = new string[] { "private" };
             }
 
             IQueryable<Topology> q = _repo.List();
@@ -72,12 +72,20 @@ namespace TopoMojo.Core
                 );
             }
 
-            if (search.HasFilter("published"))
+            if (search.HasFilter("public"))
                 q = q.Where(t => t.IsPublished);
 
-            if (search.HasFilter("mine"))
+            if (search.HasFilter("private"))
                 q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
 
+            if (search.Sort == "age")
+            {
+                q = q.OrderByDescending(o => o.WhenCreated);
+            }
+            else
+            {
+                q = q.OrderBy(o => o.Name);
+            }
             return q;
         }
 
@@ -89,7 +97,6 @@ namespace TopoMojo.Core
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.TopologySummary[]>(q
-                .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)
                 .ToArray(), WithActor());
@@ -114,7 +121,6 @@ namespace TopoMojo.Core
             result.Search = search;
             result.Total = await q.CountAsync();
             result.Results =  Mapper.Map<Models.Topology[]>(q
-                .OrderBy(t => t.Name)
                 .Skip(search.Skip)
                 .Take(search.Take)
                 .ToArray(), WithActor());
@@ -299,7 +305,7 @@ namespace TopoMojo.Core
                 .Where(p => p.Id == workerId)
                 .SingleOrDefault();
 
-            if (!Profile.IsAdmin //if you aren't admin, you can remove the last remaining workspace manager
+            if (!Profile.IsAdmin //if you aren't admin, you can't remove the last remaining workspace manager
                 && member.Permission.CanManage()
                 && topology.Workers.Count(w => w.Permission.HasFlag(Permission.Manager)) == 1)
                 throw new InvalidOperationException();

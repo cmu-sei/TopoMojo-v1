@@ -330,6 +330,7 @@ namespace TopoMojo.vSphere
                     Name = vm.Name.Untagged(),
                     TopoId = vm.Name.Tag(),
                     Url = ticket,
+                    IsRunning = vm.State == VmPowerState.Running,
                     Conditions = conditions
                 };
             }

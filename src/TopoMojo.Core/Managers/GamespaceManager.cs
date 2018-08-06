@@ -127,6 +127,11 @@ namespace TopoMojo.Core
             return await LoadState(gamespace, topoId);
         }
 
+        public async Task<Models.GameState> LoadPreview(int topoId)
+        {
+            return await LoadState(null, topoId);
+        }
+
         private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
         {
             Models.GameState state = null;
@@ -138,6 +143,7 @@ namespace TopoMojo.Core
                     throw new InvalidOperationException();
 
                 state = new Models.GameState();
+                state.Name = gamespace?.Name ?? topo.Name;
                 state.TopologyDocument = topo.Document;
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)

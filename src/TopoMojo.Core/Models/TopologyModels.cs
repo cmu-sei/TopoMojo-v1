@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace TopoMojo.Core.Models
@@ -8,7 +9,9 @@ namespace TopoMojo.Core.Models
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        [Obsolete]
         public string Document { get; set; }
+        public string DocumentUrl { get; set; }
         public string ShareCode { get; set; }
         public string Author { get; set; }
         public string WhenCreated { get; set; }
@@ -46,6 +49,8 @@ namespace TopoMojo.Core.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public string Author { get; set; }
+        public bool IsPublished { get; set; }
+        public string DocumentUrl { get; set; }
     }
 
     public class TopologyState

@@ -163,7 +163,7 @@ namespace TopoMojo.vMock
         {
             Vm vm = _vms[id];
             await Delay();
-            vm.State = VmPowerState.running;
+            vm.State = VmPowerState.Running;
             return vm;
         }
 
@@ -171,7 +171,7 @@ namespace TopoMojo.vMock
         {
             Vm vm = _vms[id];
             await Delay();
-            vm.State = VmPowerState.off;
+            vm.State = VmPowerState.Off;
             return vm;
         }
 
@@ -191,7 +191,7 @@ namespace TopoMojo.vMock
         {
             Vm vm = _vms[id];
             await Delay();
-            vm.State = VmPowerState.off;
+            vm.State = VmPowerState.Off;
             return vm;
         }
 
@@ -200,7 +200,7 @@ namespace TopoMojo.vMock
             Vm vm = _vms[id];
             await Delay();
             _vms.Remove(id);
-            vm.State = VmPowerState.off;
+            vm.State = VmPowerState.Off;
             vm.Status = "initialized";
             return vm;
         }
@@ -328,7 +328,9 @@ namespace TopoMojo.vMock
                 Id = id,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag(),
-                Url = ""
+                Url = "",
+                IsRunning = _vms[id].State == VmPowerState.Running,
+                Conditions = "mock"
             };
         }
 

@@ -1,0 +1,18 @@
+<!-- <div class="canvas-wrapper"> -->
+  <div #consoleCanvas id="console-canvas-" class="canvas"
+    [class.mock-console-connected]="showMockConnected()">
+
+    <button *ngIf="isConnected()" class="tool-btn overlay overlay-tl">
+      <i class="fa fa-cog"></i>
+    </button>
+
+    <span class="overlay overlay-tr">{{shadowstate}}</span>
+
+    <button #stateBtn
+      class="state-btn overlay overlay-mm"
+      [class.hidden]="isConnected()"
+      (click)="stateButtonClicked()">
+      <i [ngClass]="stateButtonIcons"></i>
+    </button>
+  </div>
+<!-- </div> -->

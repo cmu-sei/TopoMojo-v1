@@ -7,7 +7,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "genapi": "./src/swagger-ng.js -u http://localhost:5004/openapi/v1/api.json -m TermSkipTakeSortFilters:Search -o ./src/app/api"
   },
   "private": true,
   "dependencies": {
@@ -27,6 +28,7 @@
     "core-js": "^2.5.4",
     "font-awesome": "^4.7.0",
     "jquery": "^3.3.1",
+    "jquery-ui-dist": "^1.12.1",
     "ngx-showdown": "^4.0.2",
     "oidc-client": "^1.5.2",
     "rxjs": "^6.0.0",

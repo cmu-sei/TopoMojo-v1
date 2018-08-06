@@ -4,7 +4,7 @@ import { GamespaceService } from '../../api/gamespace.service';
 import { GameState, VmState } from '../../api/gen/models';
 import { NotificationService } from '../../svc/notification.service';
 import { Converter } from 'showdown/dist/showdown';
-import { SettingsService, SHOWDOWN_OPTS } from '../../svc/settings.service';
+import { SettingsService } from '../../svc/settings.service';
 import { Subscription } from 'rxjs';
 import { LayoutService } from '../../svc/layout.service';
 
@@ -38,8 +38,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
         private settingsSvc: SettingsService,
         private layoutSvc: LayoutService
         ) {
-        this.converter = new Converter(SHOWDOWN_OPTS);
-        this.settingsSvc.changeLayout({ embedded : true });
+        this.converter = new Converter(this.settingsSvc.settings.showdown);
+        this.layoutSvc.changeLayout({ embedded : true });
         this.appName = this.settingsSvc.settings.branding.applicationName || 'TopoMojo';
     }
 
@@ -224,6 +224,13 @@ export class PlayerComponent implements OnInit, OnDestroy {
     //     });
     // }
 
+    consoleSizes: Array<number> = new Array<number>();
+    resizeConsole(i: number): void {
+        this.consoleSizes[i] = ((this.consoleSizes[i] || 0) + 1) % 3;
+    }
+    consoleClass(i: number): string {
+        return `embedded-console embedded-console-${this.consoleSizes[i] || 0}`;
+    }
     onError(err) {
         this.errors.push(err.error);
     }

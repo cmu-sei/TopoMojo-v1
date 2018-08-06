@@ -25,9 +25,14 @@
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/font-awesome/css/font-awesome.min.css",
+              "src/assets/vmware-wmks/css/wmks-all.css",
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/jquery/dist/jquery.js",
+              "node_modules/jquery-ui-dist/jquery-ui.js",
+              "src/assets/vmware-wmks/js/wmks.min.js"
+            ]
           },
           "configurations": {
             "production": {

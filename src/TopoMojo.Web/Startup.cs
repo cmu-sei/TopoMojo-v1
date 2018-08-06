@@ -40,7 +40,7 @@ namespace TopoMojo.Web
                             .RequireAuthenticatedUser()
                             .Build();
 
-                options.Filters.Add(new AuthorizeFilter(global));
+                //options.Filters.Add(new AuthorizeFilter(global));
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 

@@ -14,6 +14,7 @@ import { CoreModule } from './ui/core/core.module';
 import { GamespaceModule } from './ui/gamespace/gamespace.module';
 import { SharedModule } from './ui/shared/shared.module';
 import { WorkspaceModule } from './ui/workspace/workspace.module';
+import { VmModule } from './ui/vm/vm.module';
 
 import { AppComponent } from './app.component';
 
@@ -42,6 +43,7 @@ import { AppComponent } from './app.component';
         CoreModule,
         GamespaceModule,
         WorkspaceModule,
+        VmModule,
         RouterModule.forRoot([
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: '**', redirectTo: 'home/notfound' }

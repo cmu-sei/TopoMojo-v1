@@ -83,7 +83,7 @@ var fspath = require('path');
                             ngService
                                 .replace(/##SVC##/g, svc)
                                 .replace(/##svc##/g, svc.toLowerCase())
-                                .replace(/##REFS##/, meta.types[svc]),
+                                .replace(/##REFS##/, meta.types[svc].join(', ')),
                             (err) => { }
                         );
                     }
@@ -109,7 +109,7 @@ var fspath = require('path');
             svcs.push(sn);
             imports += "import { " + sn + " } from \"./" + svc.toLowerCase() + ".service\";" + crlf;
         }
-        return imports + ngModule.replace(/##SVCS##/, svcs.join("," + crlf + "\t\t"));
+        return imports + ngModule.replace(/##SVCS##/, svcs.join("," + crlf + tab + tab));
     }
 
     function GenerateMetadata(api) {
@@ -167,7 +167,7 @@ var fspath = require('path');
                     type = name.normalizeRef() + p.pascalCase() + "Enum";
                     if (!enums[type]) enums[type] = prop.enum;
                 }
-                text += "\t" + p + "?: " + type + ";" + crlf;
+                text += tab + p + "?: " + type + ";" + crlf;
             }
             text += "}" + crlf + crlf;
         }
@@ -175,7 +175,7 @@ var fspath = require('path');
         for (let e in enums) {
             text += "export enum " + e + " {" + crlf;
             for (let v in enums[e])
-                text += "\t" + enums[e][v] + " = <any>'" + enums[e][v] + "'" + (((+v)<enums[e].length-1) ? "," : "") + crlf;
+                text += tab + enums[e][v] + " = <any>'" + enums[e][v] + "'" + (((+v)<enums[e].length-1) ? "," : "") + crlf;
             text += "}" + crlf + crlf;
         }
 
@@ -191,7 +191,7 @@ var fspath = require('path');
                             type = name.normalizeRef() + p.pascalCase() + "Enum";
                             if (!enums[type]) enums[type] = prop.enum;
                         }
-                        text += "\t" + params[p].name.camelCase() + "?: " + type + ";" + crlf;
+                        text += '\t' + params[p].name.camelCase() + "?: " + type + ";" + crlf;
                     }
                 }
                 text += "}" + crlf + crlf;
@@ -524,11 +524,12 @@ var fspath = require('path');
 })(process.argv);
 
 /* TEMPLATES */
-const crlf = "\r\n";
+const crlf = '\r\n';
+const tab = '    ';
 
 const ngModule = `
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from "@angular/common/http";
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
     imports: [ HttpClientModule ],
@@ -540,45 +541,46 @@ export class ApiModule { }
 `;
 
 const ngBaseService = `
-import { HttpClient } from "@angular/common/http";
+import { HttpClient } from '@angular/common/http';
 
 export class GeneratedService {
 
     constructor(
-        protected http : HttpClient
-    ){ }
+        protected http: HttpClient
+    ) { }
 
-    protected paramify(obj : any) : string {
-        var segments = [];
+    protected paramify(obj: any): string {
+        const segments = [];
         for (let p in obj) {
-            let prop = obj[p];
-            if (prop) {
-                if (Array.isArray(prop)) {
-                    prop.forEach(element => {
-                        segments.push(this.encodeKVP(p, element));
-                    });
-                } else {
-                    segments.push(this.encodeKVP(p, prop));
+            if (obj.hasOwnProperty(p)) {
+                let prop = obj[p];
+                if (prop) {
+                    if (Array.isArray(prop)) {
+                        prop.forEach(element => {
+                            segments.push(this.encodeKVP(p, element));
+                        });
+                    } else {
+                        segments.push(this.encodeKVP(p, prop));
+                    }
                 }
             }
         }
         let qs = segments.join('&');
-        return (qs) ? "?" + qs : "";
+        return (qs) ? '?' + qs : '';
     }
 
     private encodeKVP(key : string, value: string) {
-        return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+        return encodeURIComponent(key) + '=' + encodeURIComponent(value);
     }
 }
-
 `;
 
 const ngGeneratedService = `
-import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
-import { GeneratedService } from "./_service";
-import { ##REFS## } from "./models";
+import { GeneratedService } from './_service';
+import { ##REFS## } from './models';
 
 @Injectable()
 export class Generated##SVC##Service extends GeneratedService {
@@ -591,15 +593,14 @@ export class Generated##SVC##Service extends GeneratedService {
 
 const ngGeneratedServiceTail = `
 }
-
 `;
 
 const ngService = `
-import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Observable } from 'rxjs/Observable';
-import { Generated##SVC##Service } from "./gen/##svc##.service";
-import { ##REFS## } from "./gen/models";
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Generated##SVC##Service } from './gen/##svc##.service';
+import { ##REFS## } from './gen/models';
 
 @Injectable()
 export class ##SVC##Service extends Generated##SVC##Service {

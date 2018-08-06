@@ -50,9 +50,9 @@
     </div>
 
     <div id="content">
-        <div *ngIf="settings.maintMsg" class="alert alert-warning">
+        <!-- <div *ngIf="settings.maintMsg" class="alert alert-warning">
             {{ settings.maintMsg }}
-        </div>
+        </div> -->
 
         <div id="doc-div">
 
@@ -74,6 +74,14 @@
 
     </div>
 
+    <div *ngIf="game.id">
+        <div *ngFor="let vm of game.vms; let vmi = index;">
+            <div><span>{{vm.name}}</span><button (click)="resizeConsole(vmi)">toggle</button></div>
+            <div class="embedded-console" [class]="consoleClass(vmi)" >
+                <app-console [id]="vm.id" [index]="vmi"></app-console>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div *ngIf="showOverlay" class="overlay">

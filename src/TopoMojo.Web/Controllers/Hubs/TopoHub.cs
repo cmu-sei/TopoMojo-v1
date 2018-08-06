@@ -65,7 +65,7 @@ namespace TopoMojo.Controllers
 
         public Task Typing(string channelId, bool val)
         {
-            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
+            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<Message>(Context.User, (val) ? "CHAT.TYPING" : "CHAT.IDLE", null));
         }
 
         // public Task Typed(string channelId)
@@ -89,7 +89,7 @@ namespace TopoMojo.Controllers
         Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
         Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
         Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
-        Task ChatEvent(BroadcastEvent<string> broadcastEvent);
+        Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
         Task PresenceEvent(BroadcastEvent broadcastEvent);
         Task GameEvent(BroadcastEvent<GameState> broadcastEvent);

@@ -24,6 +24,7 @@ namespace TopoMojo.Core.Models
         public string WhenCreated { get; set; }
         public string TopologyDocument { get; set; }
         public string ShareCode { get; set; }
+        public Player[] Players { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
 
     }

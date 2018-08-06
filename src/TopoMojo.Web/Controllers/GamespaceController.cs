@@ -45,6 +45,14 @@ namespace TopoMojo.Controllers
         //     var result = await _mgr.ListAll();
         //     return Ok(result);
         // }
+        [AllowAnonymous]
+        [HttpGet("api/gamespace/{id}/preview")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<GameState>> Preview(int id)
+        {
+            var result = await _mgr.LoadPreview(id);
+            return Ok(result);
+        }
 
         [HttpGet("api/gamespace/{id}")]
         [JsonExceptionFilter]

@@ -78,9 +78,7 @@ export class ImageManagerComponent implements OnInit {
         );
     }
 
-    imagePath(img: ImageFile): string {
-        return '/docs/' + this.id + '/' + img.filename;
-    }
+
 
     list() {
         this.service.getImages(this.id)

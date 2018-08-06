@@ -228,6 +228,7 @@ export interface DisplayInfo {
     topoId?: string;
     name?: string;
     url?: string;
+    isRunning?: boolean;
     conditions?: string;
 }
 

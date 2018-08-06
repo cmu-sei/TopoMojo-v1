@@ -145,11 +145,11 @@
                     </button>
                 </div>
                 <div *ngIf="selectorVisible">
-                    <search-bar (onSearch)="search($event)"></search-bar>
+                    <search-bar (searched)="search($event)"></search-bar>
                     <app-entity-list
                         [entities]="publishedTemplates"
                         [icon]="addIcon"
-                        (onSelected)="onAdded($event)"></app-entity-list>
+                        (selected)="onAdded($event)"></app-entity-list>
                 </div>
             </div>
         </div>

@@ -53,7 +53,7 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult> Add([FromBody]NewMessage model)
         {
             var msg = await _chatService.Add(model);
-            SendBroadcast(msg.RoomId, "added", msg.Text);
+            SendBroadcast(msg.RoomId, "added", msg);
             return CreatedAtAction(nameof(GetMessage), new { id = msg.Id }, msg);
         }
 
@@ -63,7 +63,7 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult<Message>> Update([FromBody]ChangedMessage model)
         {
             var msg = await _chatService.Update(model);
-            SendBroadcast(msg.RoomId, "updated", msg.Text);
+            SendBroadcast(msg.RoomId, "updated", msg);
             return msg;
         }
 
@@ -73,19 +73,19 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult> Delete([FromRoute]int id)
         {
             var msg = await _chatService.Delete(id);
-            SendBroadcast(msg.RoomId, "deleted", id.ToString());
+            SendBroadcast(msg.RoomId, "deleted", msg);
             return Ok();
         }
 
-        private void SendBroadcast(string roomId, string action, string text = "")
+        private void SendBroadcast(string roomId, string action, Message msg)
         {
             _hub.Clients
                 .Group(roomId)
                 .ChatEvent(
-                    new BroadcastEvent<string>(
+                    new BroadcastEvent<Message>(
                         User,
                         "CHAT." + action.ToUpper(),
-                        text
+                        msg
                     )
                 );
         }

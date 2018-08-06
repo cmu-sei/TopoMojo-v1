@@ -1,0 +1,3221 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "TopoMojo",
+        "description": "API documentation and interaction"
+    },
+    "paths": {
+        "/api/admin/getsettings": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminGetsettingsGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/savesettings": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminSavesettingsPost",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "settings",
+                        "in": "query",
+                        "required": false,
+                        "type": "object"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/announce": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminAnnouncePost",
+                "consumes": [
+                    "application/json-patch+json",
+                    "application/json",
+                    "text/json",
+                    "application/*+json"
+                ],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/export": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminExportPost",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "collectionFormat": "multi",
+                        "uniqueItems": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/import": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminImportGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/live": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "operationId": "ApiAdminLiveGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/CachedConnection"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chats/{id}": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "operationId": "ApiChatsByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "marker",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "take",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 25
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Message"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/{id}": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "operationId": "ApiChatByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Chat"
+                ],
+                "operationId": "ApiChatByIdDelete",
+                "consumes": [],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/chat": {
+            "put": {
+                "tags": [
+                    "Chat"
+                ],
+                "operationId": "ApiChatPut",
+                "consumes": [
+                    "application/json-patch+json",
+                    "application/json",
+                    "text/json",
+                    "application/*+json"
+                ],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "model",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ChangedMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "operationId": "ApiChatPost",
+                "consumes": [
+                    "application/json-patch+json",
+                    "application/json",
+                    "text/json",
+                    "application/*+json"
+                ],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "model",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/NewMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/console/{id}/{name}": {
+            "get": {
+                "tags": [
+                    "Console"
+                ],
+                "operationId": "ConsoleByIdByNameGet",
+                "consumes": [],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/document/{guid}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "operationId": "ApiDocumentByGuidPut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "guid",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/images/{guid}": {
+            "get": {
+                "tags": [
+                    "Document"
+                ],
+                "operationId": "ApiImagesByGuidGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "guid",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ImageFile"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/image/{guid}": {
+            "delete": {
+                "tags": [
+                    "Document"
+                ],
+                "operationId": "ApiImageByGuidDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "guid",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filename",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ImageFile"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/file/progress/{id}": {
+            "get": {
+                "tags": [
+                    "File"
+                ],
+                "operationId": "ApiFileProgressByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "format": "int32",
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespaces": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespacesGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Gamespace"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespaces/all": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespacesAllGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Gamespace"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespace/{id}": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespaceByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/GameState"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespaceByIdDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespace/{id}/launch": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespaceByIdLaunchGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/GameState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespace/{id}/state": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespaceByIdStateGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/GameState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/player/enlist/{code}": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiPlayerEnlistByCodeGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/player/delist/{playerId}": {
+            "delete": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiPlayerDelistByPlayerIdDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gamespace/{id}/players": {
+            "get": {
+                "tags": [
+                    "Gamespace"
+                ],
+                "operationId": "ApiGamespaceByIdPlayersGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Player"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profiles": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "operationId": "ApiProfilesGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Term",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Skip",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Take",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Sort",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Filters",
+                        "in": "query",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "uniqueItems": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult[Profile]"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "operationId": "ApiProfileGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Profile"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "operationId": "ApiProfilePut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "GlobalId",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ChangedProfile"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profile/priv": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "operationId": "ApiProfilePrivPut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Id",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "GlobalId",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "IsAdmin",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "WorkspaceLimit",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Profile"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/templates": {
+            "get": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplatesGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Term",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Skip",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Take",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Sort",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Filters",
+                        "in": "query",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "uniqueItems": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult[TemplateSummary]"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/{id}": {
+            "get": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Template"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateByIdDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/{id}/detailed": {
+            "get": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateByIdDetailedGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TemplateDetail"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/create": {
+            "post": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateCreatePost",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Id",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Description",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Networks",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Detail",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "IsPublished",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TemplateDetail"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/configure": {
+            "put": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateConfigurePut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Id",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Description",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Networks",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Detail",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "IsPublished",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TemplateDetail"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/{id}/link/{topoId}": {
+            "get": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateByIdLinkByTopoIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "topoId",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Template"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template/{id}/unlink": {
+            "get": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplateByIdUnlinkGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Template"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/template": {
+            "put": {
+                "tags": [
+                    "Template"
+                ],
+                "operationId": "ApiTemplatePut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Id",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Description",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Networks",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Iso",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "IsHidden",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "TopologyId",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Template"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topologies": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologiesGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Term",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Skip",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Take",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Sort",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Filters",
+                        "in": "query",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "uniqueItems": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult[TopologySummary]"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topologies/all": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologiesAllGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Term",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Skip",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Take",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Sort",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Filters",
+                        "in": "query",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "uniqueItems": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult[Topology]"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology": {
+            "put": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyPut",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Id",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Description",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Author",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyPost",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Name",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Description",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/games": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdGamesGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GameState"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdGamesDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/publish": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdPublishGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/unpublish": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdUnpublishGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/lock": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdLockGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/unlock": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdUnlockGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/share": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdShareGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/unshare": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdUnshareGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/TopologyState"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/worker/enlist/{code}": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiWorkerEnlistByCodeGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/worker/delist/{workerId}": {
+            "delete": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiWorkerDelistByWorkerIdDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "workerId",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/isos": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdIsosGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/VmOptions"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topology/{id}/nets": {
+            "get": {
+                "tags": [
+                    "Topology"
+                ],
+                "operationId": "ApiTopologyByIdNetsGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/VmOptions"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/ticket": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdTicketGet",
+                "consumes": [],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/vms/find": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmsFindGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "uniqueItems": false,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Vm"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/load": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdLoadGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/resolve": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdResolveGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/start": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdStartGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/stop": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdStopGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/save/{topoId}": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdSaveByTopoIdGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "topoId",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/revert": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdRevertGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/delete": {
+            "delete": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdDeleteDelete",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/change": {
+            "post": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdChangePost",
+                "consumes": [
+                    "application/json-patch+json",
+                    "application/json",
+                    "text/json",
+                    "application/*+json"
+                ],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "change",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/KeyValuePair"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/deploy": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdDeployGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/init": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdInitGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/answer": {
+            "post": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdAnswerPost",
+                "consumes": [
+                    "application/json-patch+json",
+                    "application/json",
+                    "text/json",
+                    "application/*+json"
+                ],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "answer",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/VmAnswer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/isos": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdIsosGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vm/{id}/nets": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiVmByIdNetsGet",
+                "consumes": [],
+                "produces": [
+                    "text/plain",
+                    "application/json",
+                    "text/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Vm"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/host/{host}/reload": {
+            "get": {
+                "tags": [
+                    "Vm"
+                ],
+                "operationId": "ApiHostByHostReloadGet",
+                "consumes": [],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "host",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "CachedConnection": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "room": {
+                    "type": "string"
+                },
+                "profileId": {
+                    "type": "string"
+                },
+                "profileName": {
+                    "type": "string"
+                }
+            }
+        },
+        "Message": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "roomId": {
+                    "type": "string"
+                },
+                "authorName": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "whenCreated": {
+                    "type": "string"
+                },
+                "edited": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "NewMessage": {
+            "type": "object",
+            "properties": {
+                "roomId": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "ChangedMessage": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "ImageFile": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                }
+            }
+        },
+        "Gamespace": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "globalId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "whenCreated": {
+                    "type": "string"
+                },
+                "topologyDocument": {
+                    "type": "string"
+                },
+                "topologyId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "players": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Player"
+                    }
+                }
+            }
+        },
+        "Player": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "personId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "personName": {
+                    "type": "string"
+                },
+                "personGlobalId": {
+                    "type": "string"
+                },
+                "canManage": {
+                    "type": "boolean"
+                },
+                "canEdit": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "GameState": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "globalId": {
+                    "type": "string"
+                },
+                "whenCreated": {
+                    "type": "string"
+                },
+                "topologyDocument": {
+                    "type": "string"
+                },
+                "shareCode": {
+                    "type": "string"
+                },
+                "vms": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VmState"
+                    }
+                }
+            }
+        },
+        "VmState": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "templateId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "isRunning": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "SearchResult[Profile]": {
+            "type": "object",
+            "properties": {
+                "search": {
+                    "$ref": "#/definitions/Search"
+                },
+                "total": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "results": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Profile"
+                    }
+                }
+            }
+        },
+        "Search": {
+            "type": "object",
+            "properties": {
+                "term": {
+                    "type": "string"
+                },
+                "skip": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "take": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "sort": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "filters": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Profile": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "globalId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "isAdmin": {
+                    "type": "boolean"
+                },
+                "workspaceLimit": {
+                    "format": "int32",
+                    "type": "integer"
+                }
+            }
+        },
+        "ChangedProfile": {
+            "type": "object",
+            "properties": {
+                "globalId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "SearchResult[TemplateSummary]": {
+            "type": "object",
+            "properties": {
+                "search": {
+                    "$ref": "#/definitions/Search"
+                },
+                "total": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "results": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TemplateSummary"
+                    }
+                }
+            }
+        },
+        "TemplateSummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "topologyId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "topologyName": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "string"
+                },
+                "parentName": {
+                    "type": "string"
+                }
+            }
+        },
+        "Template": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "parentId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "canEdit": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "networks": {
+                    "type": "string"
+                },
+                "iso": {
+                    "type": "string"
+                },
+                "isHidden": {
+                    "type": "boolean"
+                },
+                "topologyId": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "topologyGlobalId": {
+                    "type": "string"
+                }
+            }
+        },
+        "TemplateDetail": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "networks": {
+                    "type": "string"
+                },
+                "detail": {
+                    "type": "string"
+                },
+                "isPublished": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "SearchResult[TopologySummary]": {
+            "type": "object",
+            "properties": {
+                "search": {
+                    "$ref": "#/definitions/Search"
+                },
+                "total": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "results": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TopologySummary"
+                    }
+                }
+            }
+        },
+        "TopologySummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "canManage": {
+                    "type": "boolean"
+                },
+                "canEdit": {
+                    "type": "boolean"
+                },
+                "isPublished": {
+                    "type": "boolean"
+                },
+                "isLocked": {
+                    "type": "boolean"
+                },
+                "author": {
+                    "type": "string"
+                }
+            }
+        },
+        "SearchResult[Topology]": {
+            "type": "object",
+            "properties": {
+                "search": {
+                    "$ref": "#/definitions/Search"
+                },
+                "total": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "results": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Topology"
+                    }
+                }
+            }
+        },
+        "Topology": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "globalId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "document": {
+                    "type": "string"
+                },
+                "shareCode": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "whenCreated": {
+                    "type": "string"
+                },
+                "canManage": {
+                    "type": "boolean"
+                },
+                "canEdit": {
+                    "type": "boolean"
+                },
+                "templateLimit": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "isPublished": {
+                    "type": "boolean"
+                },
+                "isLocked": {
+                    "type": "boolean"
+                },
+                "gamespaceCount": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "workers": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Worker"
+                    }
+                },
+                "templates": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Template"
+                    }
+                }
+            }
+        },
+        "Worker": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "personName": {
+                    "type": "string"
+                },
+                "personGlobalId": {
+                    "type": "string"
+                },
+                "canManage": {
+                    "type": "boolean"
+                },
+                "canEdit": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "TopologyState": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "shareCode": {
+                    "type": "string"
+                },
+                "isPublished": {
+                    "type": "boolean"
+                },
+                "isLocked": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "VmOptions": {
+            "type": "object",
+            "properties": {
+                "iso": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "net": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Vm": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "diskPath": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "groupName": {
+                    "type": "string"
+                },
+                "state": {
+                    "enum": [
+                        "off",
+                        "running",
+                        "suspended"
+                    ],
+                    "type": "string"
+                },
+                "question": {
+                    "$ref": "#/definitions/VmQuestion"
+                },
+                "task": {
+                    "$ref": "#/definitions/VmTask"
+                }
+            }
+        },
+        "VmQuestion": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "defaultChoice": {
+                    "type": "string"
+                },
+                "choices": {
+                    "uniqueItems": false,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VmQuestionChoice"
+                    }
+                }
+            }
+        },
+        "VmTask": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "progress": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "whenCreated": {
+                    "format": "date-time",
+                    "type": "string"
+                }
+            }
+        },
+        "VmQuestionChoice": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "KeyValuePair": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "VmAnswer": {
+            "type": "object",
+            "properties": {
+                "questionId": {
+                    "type": "string"
+                },
+                "choiceKey": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "oauth2": {
+            "flow": "implicit",
+            "scopes": {
+                "sketch-common": "public api access"
+            },
+            "type": "oauth2"
+        }
+    },
+    "security": [
+        {
+            "oauth2": [
+                "readAccess",
+                "writeAccess"
+            ]
+        }
+    ]
+}

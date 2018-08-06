@@ -248,7 +248,15 @@ namespace TopoMojo.Controllers
         {
             Template template  = await _mgr.GetDeployableTemplate(id, null);
             Vm vm = await _pod.Deploy(template);
-            SendBroadcast(vm, "deploy");
+            // SendBroadcast(vm, "deploy");
+            Core.Models.VmState state = new Core.Models.VmState
+            {
+                Id = id.ToString(),
+                Name = vm.Name.Untagged(),
+                IsRunning = vm.State == VmPowerState.Running
+            };
+            await _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM.DEPLOY", state));
+
             return Ok(vm);
         }
 
@@ -309,7 +317,7 @@ namespace TopoMojo.Controllers
             {
                 Id = vm.Id,
                 Name = vm.Name.Untagged(),
-                IsRunning = vm.State == VmPowerState.running
+                IsRunning = vm.State == VmPowerState.Running
             };
             _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
         }
