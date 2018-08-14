@@ -1,16 +1,17 @@
 #
 #multi-stage target: dev
 #
-FROM dockreg.cwd.local/dotnet-sdk:2.1.302 AS dev
+FROM dockreg.cwd.local/dotnet-sdk:2.1.301 AS dev
 
 ENV ASPNETCORE_URLS=http://*:5000 \
     ASPNETCORE_ENVIRONMENT=DEVELOPMENT
 
 COPY . /app
+WORKDIR /app/src/topomojo-app
+RUN npm install && ./node_modules/@angular/cli/bin/ng build --prod --output-path /app/dist/wwwroot
+
 WORKDIR /app/src/TopoMojo.Web
-RUN bower install
 RUN dotnet publish -c Release -o /app/dist
-RUN npm install && ng build --prod --output-path /app/dist/wwwroot
 CMD ["dotnet", "run"]
 
 #

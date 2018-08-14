@@ -1,9 +1,30 @@
-div {
+.card {
     display: flex;
+    flex-flow: row nowrap;
     padding: 20px 0px;
-    align-items: baseline;
-    text-align: start;
+    max-width: 600px;
+    margin: auto;
 
+    .text {
+        flex: 1;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: flex-start;
+        text-align: start;
+
+        h2, p {
+            margin: 2px 0px;
+            font-weight: normal;
+        }
+    }
+
+    .tools {
+        display: flex;
+        flex-flow: row wrap;
+        a {
+            margin: 0px 4px;
+        }
+    }
     .title {
         flex: 1;
         margin-right: 16px;
@@ -20,8 +41,5 @@ div {
     }
 
     .tool {
-        a {
-            margin: 0px 4px;
-        }
     }
 }

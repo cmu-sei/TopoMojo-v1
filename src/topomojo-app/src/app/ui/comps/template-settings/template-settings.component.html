@@ -1,5 +1,5 @@
 <div *ngIf="template" class="outer">
-  <form #form [ngFormOptions]="{updateOn: 'blur'}">
+  <form #form="ngForm" [ngFormOptions]="{updateOn: 'change'}" (ngSubmit)="update()">
     <input type="hidden" name="id" [ngModel]="template.id">
     <input type="hidden" name="topologyId" [ngModel]="template.topologyId">
     <div>
@@ -26,7 +26,7 @@
         <input [disabled]="hasVm" matInput type="text" name="networks"
         placeholder="Networks"
         [(ngModel)]="template.networks" maxlength="30">
-        <mat-hint>Space delimited net names</mat-hint>
+        <mat-hint>Space-delimited network names</mat-hint>
         <mat-hint align="end">{{(''+template.networks).length}} / 30</mat-hint>
       </mat-form-field>
     </div>
@@ -47,7 +47,10 @@
         <mat-slide-toggle [disabled]="hasVm" name="isHidden" [(ngModel)]="template.isHidden" color="primary" labelPosition="before"
         [ngModelOptions]="{updateOn: 'change'}">Hidden</mat-slide-toggle>
     </div>
+
+    <div class="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!form.dirty || !form.valid">Save Settings</button>
+    </div>
   </form>
 
 </div>
-

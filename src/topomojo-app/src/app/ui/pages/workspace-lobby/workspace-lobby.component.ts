@@ -4,6 +4,7 @@ import { TopologyService } from '../../../api/topology.service';
 import { Search, Topology, TopologySearchResult, Profile } from '../../../api/gen/models';
 import { UserService } from '../../../svc/user.service';
 import { SettingsService } from '../../../svc/settings.service';
+import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
 
 @Component({
   templateUrl: './workspace-lobby.component.html',
@@ -15,9 +16,10 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   showAdd = false;
   showGames = false;
   list: Array<Topology> = new Array<Topology>();
-  model: Search = { sort: 'age', take: 25, filters: [ 'public' ] };
-  filter = 'public';
-  private profile: Profile;
+  model: Search = { sort: 'age', take: 25 };
+  filter = '';
+  private profile: Profile = {};
+  hasProfile = false;
 
   constructor(
     private toolbarSvc: ToolbarService,
@@ -27,13 +29,19 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.userSvc.profile$.subscribe(
-      p =>  {
-          this.profile = p;
-          if (p) {
-            this.filter = this.settingsSvc.localSettings.lobbyFilter || 'public';
+    this.userSvc.profile$.pipe(
+      debounceTime(500),
+      map(p => !!p.id))
+      .subscribe(
+        p =>  {
+          this.hasProfile = p;
+
+          const f = p ? 'private' : 'public';
+          if (f != this.filter) {
+            this.filter = f;
+            this.filterChanged({ value: f });
           }
-      }
+        }
     );
 
     this.toolbarSvc.term$.subscribe(
@@ -42,10 +50,6 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         this.fetch_fresh();
       }
     );
-    // this.filter = this.settingsSvc.localSettings.lobbyFilter || 'public';
-    // this.model.filters = [ this.filter ];
-
-    // this.fetch();
 
     this.toolbarSvc.search(true);
     this.toolbarSvc.addButtons([{
@@ -65,6 +69,10 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   }
 
   fetch(): void {
+    if (!this.model.filters || !this.model.filters.length) {
+      return;
+    }
+
     this.workspaceSvc.getTopologySummaries(this.model)
     .subscribe(
       (data: TopologySearchResult) => {
@@ -79,18 +87,19 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
     );
   }
 
-  filterChanged(): void {
-    this.model.filters = [ this.filter ];
-    this.fetch_fresh();
-    this.settingsSvc.updateLobbyFilter(this.filter);
+  filterChanged(e): void {
+    if (e.value) {
+      this.model.filters = [ e.value ];
+      this.fetch_fresh();
+    }
   }
 
   hasSomeGames(v: boolean): void {
     this.showGames = v;
   }
 
-  hasProfile(): boolean {
-    return !!this.profile.id;
-  }
+  // hasProfile(): boolean {
+  //   return !!this.profile.id;
+  // }
 
 }

@@ -29,15 +29,26 @@ export class TemplateSettingsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.form.valueChanges.pipe(debounceTime(1000)).subscribe(
-      (model) => {
-        if (this.form.valid && this.form.touched && model.id) {
-          this.service.putTemplate(model as ChangedTemplate).subscribe(
-            // TODO: animate feedback
-          );
+    // this.form.valueChanges.pipe(debounceTime(1000)).subscribe(
+    //   (model) => {
+    //     if (this.form.valid && this.form.touched && model.id) {
+    //       // this.service.putTemplate(model as ChangedTemplate).subscribe(
+    //       //   // TODO: animate feedback
+    //       // );
+    //     }
+    //   }
+    // );
+  }
+
+  update(form: NgForm) {
+    if (this.form.valid && this.form.value.id) {
+      this.service.putTemplate(this.form.value as ChangedTemplate).subscribe(
+        // TODO: animate feedback
+        (t) => {
+          this.form.reset(this.form.value);
         }
-      }
-    );
+      );
+    }
   }
 
   isoChanged(iso: IsoFile) {

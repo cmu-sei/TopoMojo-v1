@@ -1,5 +1,5 @@
 <div *ngIf="workspace">
-  <form #form="ngForm" [ngFormOptions]="{updateOn: 'blur'}">
+  <form #form="ngForm" (ngSubmit)="update()" [ngFormOptions]="{updateOn: 'change'}">
     <input type="hidden" name="id" [ngModel]="workspace.id">
     <div>
       <mat-form-field>
@@ -41,6 +41,10 @@
     <div>
       <mat-slide-toggle name="isPublished" [(ngModel)]="workspace.isPublished"
       [ngModelOptions]="{updateOn: 'change'}" color="primary" labelPosition="before">Published</mat-slide-toggle>
+    </div>
+
+    <div class="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!form.dirty || !form.valid">Save Settings</button>
     </div>
   </form>
 

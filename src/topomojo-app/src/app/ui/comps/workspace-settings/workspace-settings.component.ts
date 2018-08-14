@@ -34,17 +34,28 @@ export class WorkspaceSettingsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.form.valueChanges.pipe(debounceTime(1000)).subscribe(
-      (model) => {
-        if (this.form.valid && this.form.touched) {
-          this.service.putTopology(model as ChangedTopology).subscribe(
-            // TODO: animate feedback
-          );
-        }
-      }
-    );
+    // this.form.valueChanges.pipe(debounceTime(1000)).subscribe(
+    //   (model) => {
+    //     if (this.form.valid) {
+    //       this.service.putTopology(model as ChangedTopology).subscribe(
+    //         // TODO: animate feedback
+    //       );
+    //     }
+    //   }
+    // );
   }
 
+  update() {
+    if (this.form.valid) {
+      this.service.putTopology(this.form.value as ChangedTopology).subscribe(
+        (t) => {
+          this.form.reset(this.form.value);
+        }
+        // TODO: animate feedback
+
+      );
+    }
+  }
   published(): void {
     const v = !this.workspace.isPublished;
     this.service.postTopologyAction(this.workspace.id, {

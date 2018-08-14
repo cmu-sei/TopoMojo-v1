@@ -72,6 +72,7 @@ import { ChatMessageComponent } from './comps/chat-message/chat-message.componen
 import { EnlistComponent } from './pages/enlist/enlist.component';
 import { DocumentImageManagerComponent } from './comps/document-image-manager/document-image-manager.component';
 import { VmQuestionComponent } from './comps/vm-question/vm-question.component';
+import { AgedDatePipe } from './directives/ago.directive';
 
 const mats = [
   MatFormFieldModule,
@@ -168,7 +169,8 @@ const mats = [
     ChatMessageComponent,
     EnlistComponent,
     DocumentImageManagerComponent,
-    VmQuestionComponent
+    VmQuestionComponent,
+    AgedDatePipe
   ],
   exports: [
     WelcomeComponent,

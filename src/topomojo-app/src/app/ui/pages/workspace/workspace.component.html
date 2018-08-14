@@ -1,9 +1,4 @@
 <div *ngIf="workspace" class="workspace">
-  <!-- <mat-drawer-container>
-    <mat-drawer #drawer mode="side" position="end">
-      <topomojo-chat-panel></topomojo-chat-panel>
-    </mat-drawer>
-    <mat-drawer-content class="workspace"> -->
 
       <h1>{{workspace.name}}</h1>
 
@@ -93,9 +88,4 @@
             <topomojo-workspace-settings [workspace]="workspace" (deleted)="deleted()"></topomojo-workspace-settings>
         </div>
       </div>
-
-      <!-- <topomojo-workspace-gamespacelist></topomojo-workspace-gamespacelist> -->
-
-    <!-- </mat-drawer-content>>
-  </mat-drawer-container> -->
 </div>
