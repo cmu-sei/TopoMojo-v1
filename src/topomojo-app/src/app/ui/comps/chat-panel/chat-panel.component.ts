@@ -1,9 +1,9 @@
 import { Component, OnInit, Input, ViewChild, ElementRef, OnChanges, OnDestroy, AfterViewChecked } from '@angular/core';
 import { NotificationService, HubEvent, Actor } from '../../../svc/notification.service';
 import { Message } from '../../../api/gen/models';
-import { Subscription, Subject, Observable } from '../../../../../node_modules/rxjs';
+import { Subscription, Subject, Observable } from 'rxjs';
 import { ChatService } from '../../../api/chat.service';
-import { distinctUntilChanged } from '../../../../../node_modules/rxjs/operators';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'topomojo-chat-panel',

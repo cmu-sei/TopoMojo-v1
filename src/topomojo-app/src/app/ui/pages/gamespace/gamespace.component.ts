@@ -12,7 +12,7 @@ import { VmService } from '../../../api/vm.service';
 import { ExpiringDialogComponent } from '../../comps/expiring-dialog/expiring-dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ToolbarService, NavbarButton } from '../../svc/toolbar.service';
-import { MatChipEvent } from '../../../../../node_modules/@angular/material/chips';
+import { MatChipEvent } from '@angular/material/chips';
 
 @Component({
   selector: 'topomojo-gamespace',

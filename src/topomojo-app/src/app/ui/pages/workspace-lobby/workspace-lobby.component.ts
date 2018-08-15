@@ -5,6 +5,7 @@ import { Search, Topology, TopologySearchResult, Profile } from '../../../api/ge
 import { UserService } from '../../../svc/user.service';
 import { SettingsService } from '../../../svc/settings.service';
 import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   templateUrl: './workspace-lobby.component.html',
@@ -20,6 +21,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   filter = '';
   private profile: Profile = {};
   hasProfile = false;
+  subs: Array<Subscription> = [];
 
   constructor(
     private toolbarSvc: ToolbarService,
@@ -29,26 +31,28 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.userSvc.profile$.pipe(
-      debounceTime(500),
-      map(p => !!p.id))
-      .subscribe(
-        p =>  {
-          this.hasProfile = p;
+    this.subs.push(
+      this.userSvc.profile$.pipe(
+        debounceTime(500),
+        map(p => !!p.id))
+        .subscribe(
+          p =>  {
+            this.hasProfile = p;
 
-          const f = p ? 'private' : 'public';
-          if (f != this.filter) {
-            this.filter = f;
-            this.filterChanged({ value: f });
+            const f = p ? 'private' : 'public';
+            if (f !== this.filter) {
+              this.filter = f;
+              this.filterChanged({ value: f });
+            }
           }
-        }
-    );
+      ),
 
-    this.toolbarSvc.term$.subscribe(
-      (term: string) => {
-        this.model.term = term;
-        this.fetch_fresh();
-      }
+      this.toolbarSvc.term$.subscribe(
+        (term: string) => {
+          this.model.term = term;
+          this.fetch_fresh();
+        }
+      )
     );
 
     this.toolbarSvc.search(true);
@@ -61,6 +65,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.toolbarSvc.reset();
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   fetch_fresh(): void {

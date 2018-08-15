@@ -21,7 +21,7 @@ export class NavbarComponent implements OnInit {
   profile: Profile = {};
   term$: Observable<string> = this.termSubject.asObservable()
     .pipe(
-      debounceTime(250),
+      debounceTime(500),
       distinctUntilChanged()
     );
 

@@ -3,7 +3,7 @@ import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UserService } from '../../svc/user.service';
 import { Profile } from '../../api/gen/models';
-import { MatSidenav } from '../../../../node_modules/@angular/material/sidenav';
+import { MatSidenav } from '@angular/material/sidenav';
 
 @Injectable({
   providedIn: 'root'

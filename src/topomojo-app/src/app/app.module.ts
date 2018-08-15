@@ -11,7 +11,7 @@ import { ApiModule } from './api/gen/api.module';
 import { SvcModule } from './svc/svc.module';
 import { ExpiringDialogComponent } from './ui/comps/expiring-dialog/expiring-dialog.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatInputModule } from '../../node_modules/@angular/material/input';
+import { MatInputModule } from '@angular/material/input';
 
 @NgModule({
   declarations: [

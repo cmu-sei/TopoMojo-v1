@@ -2,9 +2,9 @@
 <div class="card">
   <div class="text">
     <h2>{{summary.name}}</h2>
-    <p>{{summary.description || '(No description available)'}}</p>
+    <p>{{summary.description || 'No description available'}}</p>
     <p>By: {{summary.author}}</p>
-    <p>{{summary.whenCreated}}</p>
+    <p class="mat-caption">{{summary.whenCreated | ago }} on {{summary.whenCreated | shortdate }}</p>
   </div>
   <div class="tools">
       <a mat-mini-fab *ngIf="summary.canEdit" color="primary"

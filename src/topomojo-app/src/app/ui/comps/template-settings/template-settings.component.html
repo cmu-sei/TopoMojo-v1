@@ -7,7 +7,7 @@
         <input [disabled]="hasVm" matInput required type="text" name="name"
           matLabel="Template" placeholder="Name"
           [(ngModel)]="template.name" maxlength="24">
-        <mat-hint>Names should be unique with the workspace!</mat-hint>
+        <mat-hint>Names should be unique within the workspace!</mat-hint>
         <mat-hint align="end">{{template.name.length}} / 24</mat-hint>
       </mat-form-field>
     </div>

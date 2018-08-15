@@ -16,6 +16,13 @@
             margin: 2px 0px;
             font-weight: normal;
         }
+
+        .ago {
+            font-size: 12px;
+            border-radius: 8px;
+            border-width: 1px;
+            margin-right: 4px;
+        }
     }
 
     .tools {
@@ -25,21 +32,5 @@
             margin: 0px 4px;
         }
     }
-    .title {
-        flex: 1;
-        margin-right: 16px;
-    }
 
-    .desc {
-        font-weight: normal;
-        font-size: 14px;
-        text-align: start;
-        flex: 2;
-        margin-right: 16px;
-        display: flex;
-        flex-flow: column nowrap;
-    }
-
-    .tool {
-    }
 }

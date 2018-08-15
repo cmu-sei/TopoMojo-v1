@@ -35,6 +35,7 @@ namespace TopoMojo.Core.Models
         public bool IsPublished { get; set; }
         public bool IsLocked { get; set; }
         public string Author { get; set; }
+        public string WhenCreated { get; set; }
     }
 
     public class NewTopology
@@ -61,12 +62,14 @@ namespace TopoMojo.Core.Models
         public bool IsLocked { get; set; }
     }
 
+    [Obsolete]
     public class TopologyStateAction
     {
         public int Id { get; set; }
         public TopologyStateActionType Type { get; set; }
     }
 
+    [Obsolete]
     public enum TopologyStateActionType
     {
         Share,

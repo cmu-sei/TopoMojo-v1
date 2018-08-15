@@ -68,6 +68,7 @@ namespace TopoMojo.Core
                 q = q.Where(o =>
                     o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                     || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || o.Author.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                     || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
                 );
             }
@@ -148,6 +149,7 @@ namespace TopoMojo.Core
             Data.Entities.Topology topo = Mapper.Map<Data.Entities.Topology>(model);
             topo.TemplateLimit = _options.WorkspaceTemplateLimit;
             topo.ShareCode = Guid.NewGuid().ToString("N");
+            topo.Author = Profile.Name;
             topo = await _repo.Add(topo);
             topo.Workers.Add(new Worker
             {

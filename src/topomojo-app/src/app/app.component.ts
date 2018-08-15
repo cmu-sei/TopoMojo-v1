@@ -6,7 +6,7 @@ import { ExpiringDialogComponent } from './ui/comps/expiring-dialog/expiring-dia
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ToolbarService } from './ui/svc/toolbar.service';
-import { MatSidenav } from '../../node_modules/@angular/material/sidenav';
+import { MatSidenav } from '@angular/material/sidenav';
 import { SettingsService } from './svc/settings.service';
 
 @Component({

@@ -1,10 +1,10 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { DocumentService } from '../../../api/document.service';
-import { finalize } from '../../../../../node_modules/rxjs/operators';
-import { HttpEventType, HttpResponse } from '../../../../../node_modules/@angular/common/http';
+import { finalize } from 'rxjs/operators';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 import { ImageFile } from '../../../api/gen/models';
 import { SettingsService } from '../../../svc/settings.service';
-import { ActivatedRoute } from '../../../../../node_modules/@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ToolbarService } from '../../svc/toolbar.service';
 import { ClipboardService } from '../../../svc/clipboard.service';
 

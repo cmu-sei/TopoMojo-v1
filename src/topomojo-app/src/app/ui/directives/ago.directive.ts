@@ -3,15 +3,15 @@ import { Pipe, PipeTransform } from '@angular/core';
 @Pipe({name: 'ago'})
 export class AgedDatePipe implements PipeTransform {
     transform(date: any): string {
-        let r = "";
-        let n = new Date();
-        let t = new Date(date); // + " GMT");
-        let tag = [ "s", "m", "h", "d" ];
+        let r = '';
+        const n = new Date();
+        const t = new Date(date); // + " GMT");
+        const tag = [ 's', 'm', 'h', 'd' ];
         // console.log(date);
         // console.log(n);
         // console.log(t);
-        let d : number = n.valueOf() - t.valueOf();
-        let a : number[] = [
+        let d: number = n.valueOf() - t.valueOf();
+        const a: number[] = [
             d / 1000,
             d / 1000 / 60,
             d / 1000 / 60 / 60,
@@ -19,10 +19,19 @@ export class AgedDatePipe implements PipeTransform {
         ];
         for (let i = 0; i < a.length; i++) {
             d = Math.floor(a[i]);
-            if (!!d)
+            if (!!d) {
                 r = d + tag[i];
+            }
         }
-        //console.log(a);
-        return r + " ago";
+        // console.log(a);
+        return r + ' ago';
+    }
+}
+
+@Pipe({name: 'shortdate'})
+export class ShortDatePipe implements PipeTransform {
+    transform(date: any): string {
+        const t = new Date(date);
+        return t.toLocaleString('en-us', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'});
     }
 }

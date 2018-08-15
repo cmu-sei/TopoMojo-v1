@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '../../../../../node_modules/@angular/router';
-import { finalize } from '../../../../../node_modules/rxjs/operators';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 import { TopologyService } from '../../../api/topology.service';
 import { GamespaceService } from '../../../api/gamespace.service';
 
