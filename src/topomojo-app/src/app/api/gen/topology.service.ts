@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiSettings } from '../api-settings';
 import { GeneratedService } from './_service';
-import { ChangedTopology, GameState, NewTopology, Search, Template, Topology, TopologySearchResult, TopologyState, TopologyStateAction, TopologyStateActionTypeEnum, TopologySummary, TopologySummarySearchResult, VmOptions, VmState, Worker } from './models';
+import { ChangedTopology, GameState, NewTopology, Player, Search, Template, Topology, TopologySearchResult, TopologyState, TopologyStateAction, TopologyStateActionTypeEnum, TopologySummary, TopologySummarySearchResult, VmOptions, VmState, Worker } from './models';
 
 @Injectable()
 export class GeneratedTopologyService extends GeneratedService {
@@ -20,8 +20,8 @@ export class GeneratedTopologyService extends GeneratedService {
     public getTopologies(search: Search): Observable<TopologySearchResult> {
         return this.http.get<TopologySearchResult>(this.api.url + '/api/topologies' + this.paramify(search));
     }
-    public putTopology(model: ChangedTopology): Observable<Topology> {
-        return this.http.put<Topology>(this.api.url + '/api/topology', model);
+    public putTopology(model: ChangedTopology): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/topology', model);
     }
     public postTopology(model: NewTopology): Observable<Topology> {
         return this.http.post<Topology>(this.api.url + '/api/topology', model);

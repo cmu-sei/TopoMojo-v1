@@ -23,8 +23,8 @@ export class GeneratedTemplateService extends GeneratedService {
     public deleteTemplate(id: number): Observable<boolean> {
         return this.http.delete<boolean>(this.api.url + '/api/template/' + id);
     }
-    public putTemplate(template: ChangedTemplate): Observable<Template> {
-        return this.http.put<Template>(this.api.url + '/api/template', template);
+    public putTemplate(template: ChangedTemplate): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/template', template);
     }
     public postTemplateLink(link: TemplateLink): Observable<Template> {
         return this.http.post<Template>(this.api.url + '/api/template/link', link);
@@ -38,8 +38,8 @@ export class GeneratedTemplateService extends GeneratedService {
     public postTemplateDetailed(model: TemplateDetail): Observable<TemplateDetail> {
         return this.http.post<TemplateDetail>(this.api.url + '/api/template/detailed', model);
     }
-    public putTemplateDetail(template: TemplateDetail): Observable<TemplateDetail> {
-        return this.http.put<TemplateDetail>(this.api.url + '/api/template/detail', template);
+    public putTemplateDetail(template: TemplateDetail): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/template/detail', template);
     }
 
 }

@@ -59,12 +59,12 @@ namespace TopoMojo.Controllers
 
         [HttpPut("api/topology")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Topology>> Update([FromBody]ChangedTopology model)
+        public async Task<ActionResult> Update([FromBody]ChangedTopology model)
         {
             Topology topo = await _mgr.Update(model);
             // Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
             await _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
-            return Ok(topo);
+            return Ok();
         }
 
         [HttpGet("api/topology/{id}")]
@@ -105,6 +105,7 @@ namespace TopoMojo.Controllers
             return Ok(true);
         }
 
+        [Obsolete]
         [HttpPost("api/topology/{id}/action")]
         [JsonExceptionFilter]
         public async Task<ActionResult<TopologyState>> ChangeState(int id, [FromBody]TopologyStateAction action)

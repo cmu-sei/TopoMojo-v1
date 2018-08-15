@@ -160,6 +160,7 @@ export interface TopologySummary {
     isPublished?: boolean;
     isLocked?: boolean;
     author?: string;
+    whenCreated?: string;
 }
 
 export interface TopologySearchResult {
@@ -174,6 +175,7 @@ export interface Topology {
     name?: string;
     description?: string;
     document?: string;
+    documentUrl?: string;
     shareCode?: string;
     author?: string;
     whenCreated?: string;
@@ -231,8 +233,8 @@ export interface DisplayInfo {
     topoId?: string;
     name?: string;
     url?: string;
-    isRunning?: boolean;
     conditions?: string;
+    isRunning?: boolean;
 }
 
 export interface Vm {

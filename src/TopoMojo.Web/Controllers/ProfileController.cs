@@ -45,19 +45,19 @@ namespace TopoMojo.Controllers
 
         [HttpPut("api/profile")]
         [JsonExceptionFilter]
-        public async Task<ChangedProfile> UpdateProfile([FromBody]ChangedProfile profile)
+        public async Task<IActionResult> UpdateProfile([FromBody]ChangedProfile profile)
         {
             await _mgr.UpdateProfile(profile);
-            return profile;
+            return Ok();
         }
 
         [Authorize(Roles = "admin")]
         [HttpPut("api/profile/priv")]
         [JsonExceptionFilter]
-        public async Task<Profile> PrivilegedUpdate([FromBody]Profile profile)
+        public async Task<IActionResult> PrivilegedUpdate([FromBody]Profile profile)
         {
             await _mgr.PrivilegedUpdate(profile);
-            return profile;
+            return Ok();
 
         }
     }

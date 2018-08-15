@@ -50,11 +50,11 @@ namespace TopoMojo.Controllers
 
         [HttpPut("api/template")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Template>> Update([FromBody]ChangedTemplate template)
+        public async Task<ActionResult> Update([FromBody]ChangedTemplate template)
         {
             var result = await _mgr.Update(template);
             SendBroadcast(result, "updated");
-            return Ok(result);
+            return Ok();
         }
 
         [HttpDelete("api/template/{id}")]
@@ -105,10 +105,10 @@ namespace TopoMojo.Controllers
         [Authorize(Roles = "admin")]
         [HttpPut("api/template/detail")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<TemplateDetail>> Configure([FromBody]TemplateDetail template)
+        public async Task<ActionResult> Configure([FromBody]TemplateDetail template)
         {
             var result = await _mgr.Configure(template);
-            return Ok(result);
+            return Ok();
         }
 
         private void SendBroadcast(Template template, string action)

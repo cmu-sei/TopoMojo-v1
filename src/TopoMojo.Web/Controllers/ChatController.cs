@@ -60,11 +60,11 @@ namespace TopoMojo.Controllers
         [HttpPut("api/chat")]
         [ProducesResponseType(200)]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Message>> Update([FromBody]ChangedMessage model)
+        public async Task<ActionResult> Update([FromBody]ChangedMessage model)
         {
             var msg = await _chatService.Update(model);
             SendBroadcast(msg.RoomId, "updated", msg);
-            return msg;
+            return Ok();
         }
 
         [HttpDelete("api/chat/{id}")]

@@ -14,8 +14,8 @@ export class GeneratedDocumentService extends GeneratedService {
        protected api: ApiSettings
     ) { super(http, api); }
 
-    public putDocument(id: string, text: string): Observable<boolean> {
-        return this.http.put<boolean>(this.api.url + '/api/document/' + id, text);
+    public putDocument(id: string, text: string): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/document/' + id, text);
     }
     public getImages(id: string): Observable<Array<ImageFile>> {
         return this.http.get<Array<ImageFile>>(this.api.url + '/api/images/' + id);

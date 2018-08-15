@@ -35,16 +35,16 @@ namespace TopoMojo.Controllers
 
         [HttpPut("api/document/{id}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Save(string id, [FromBody]string text)
+        public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
             if (await _mgr.CanEdit(id))
             {
                 string path = GetPath("docs");
                 path = System.IO.Path.Combine(path, id+".md");
                 System.IO.File.WriteAllText(path, text);
-                return true;
+                return Ok();
             }
-            return false;
+            return BadRequest();
         }
 
         [HttpGet("api/images/{id}")]

@@ -20,11 +20,11 @@ export class GeneratedProfileService extends GeneratedService {
     public getProfile(): Observable<Profile> {
         return this.http.get<Profile>(this.api.url + '/api/profile');
     }
-    public putProfile(profile: ChangedProfile): Observable<ChangedProfile> {
-        return this.http.put<ChangedProfile>(this.api.url + '/api/profile', profile);
+    public putProfile(profile: ChangedProfile): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/profile', profile);
     }
-    public putProfilePriv(profile: Profile): Observable<Profile> {
-        return this.http.put<Profile>(this.api.url + '/api/profile/priv', profile);
+    public putProfilePriv(profile: Profile): Observable<any> {
+        return this.http.put<any>(this.api.url + '/api/profile/priv', profile);
     }
 
 }
