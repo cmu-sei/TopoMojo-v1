@@ -73,6 +73,7 @@ import { EnlistComponent } from './pages/enlist/enlist.component';
 import { DocumentImageManagerComponent } from './comps/document-image-manager/document-image-manager.component';
 import { VmQuestionComponent } from './comps/vm-question/vm-question.component';
 import { AgedDatePipe, ShortDatePipe } from './directives/ago.directive';
+import { AdminModule } from './admin/admin.module';
 
 const mats = [
   MatFormFieldModule,
@@ -104,6 +105,7 @@ const mats = [
     FormsModule,
     LayoutModule,
     ...mats,
+    AdminModule,
     RouterModule.forChild([
       { path: 'login', component: LoginComponent },
       { path: 'logout', component: LogoutComponent },
