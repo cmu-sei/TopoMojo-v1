@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ToolbarService } from '../../svc/toolbar.service';
 import { TopologyService } from '../../../api/topology.service';
-import { Search, Topology, TopologySearchResult, Profile } from '../../../api/gen/models';
+import { Search, Topology, TopologySearchResult, Profile, TopologySummarySearchResult, TopologySummary } from '../../../api/gen/models';
 import { UserService } from '../../../svc/user.service';
 import { SettingsService } from '../../../svc/settings.service';
 import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
@@ -16,7 +16,8 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   more = false;
   showAdd = false;
   showGames = false;
-  list: Array<Topology> = new Array<Topology>();
+  showLoginMsg = false;
+  list: Array<TopologySummary> = new Array<TopologySummary>();
   model: Search = { sort: 'age', take: 25 };
   filter = '';
   private profile: Profile = {};
@@ -38,6 +39,8 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         .subscribe(
           p =>  {
             this.hasProfile = p;
+            if (p) { this.initToolbar(); }
+            if (!p) { this.showLoginMsg = true; }
 
             const f = p ? 'private' : 'public';
             if (f !== this.filter) {
@@ -56,6 +59,10 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
     );
 
     this.toolbarSvc.search(true);
+
+  }
+
+  initToolbar() {
     this.toolbarSvc.addButtons([{
       icon: 'add_circle',
       text: 'New Workspace',
@@ -80,7 +87,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
 
     this.workspaceSvc.getTopologySummaries(this.model)
     .subscribe(
-      (data: TopologySearchResult) => {
+      (data: TopologySummarySearchResult) => {
         if (this.model.skip > 0) {
           this.list.concat(data.results);
         } else {

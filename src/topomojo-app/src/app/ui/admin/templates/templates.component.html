@@ -1,3 +1,20 @@
-<p>
-  templates works!
-</p>
+<mat-card *ngFor="let template of templates" class="card">
+  <div class="detail">
+    <div>{{template.name}}</div>
+    <div class="mat-caption">{{ template.topologyName || "Stock" }}</div>
+    <div *ngIf="current===template.id">
+      <topomojo-template-detail-form [template]="detail"></topomojo-template-detail-form>
+    </div>
+  </div>
+  <div class="actions">
+    <button matTooltip="View" (click)="select(template)" mat-mini-fab>
+      <mat-icon>create</mat-icon>
+    </button>
+    <a matTooltip="Navigate" [routerLink]="['/topo', template.topologyId]" [disabled]="!template.topologyId" mat-mini-fab>
+      <mat-icon>build</mat-icon>
+    </a>
+  </div>
+</mat-card>
+<div *ngIf="hasMore" class="center">
+  <button (click)="more()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+</div>

@@ -10,13 +10,30 @@ import { GamespacesComponent } from './gamespaces/gamespaces.component';
 import { TemplatesComponent } from './templates/templates.component';
 import { MachinesComponent } from './machines/machines.component';
 import { PeopleComponent } from './people/people.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { SharedModule } from '../shared/shared.module';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { TemplateDetailFormComponent } from './template-detail-form/template-detail-form.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
     CommonModule,
+    FormsModule,
+    SharedModule,
     MatTabsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatInputModule,
+    MatSlideToggleModule,
     RouterModule.forChild([
-      { path: 'admin', component: AdminComponent, canActivate: [AdminGuard, AuthGuard], children: [
+      { path: '', component: AdminComponent, canActivate: [AdminGuard, AuthGuard], children: [
         {path: '', children: [
           { path: 'topo', component: WorkspacesComponent },
           { path: 'mojo', component: GamespacesComponent },
@@ -28,6 +45,6 @@ import { PeopleComponent } from './people/people.component';
       ]}
     ])
   ],
-  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent]
+  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent, TemplateDetailFormComponent]
 })
 export class AdminModule { }

@@ -9,7 +9,7 @@ import { SettingsService } from '../../../svc/settings.service';
 import { UserService } from '../../../svc/user.service';
 import { NotificationService } from '../../../svc/notification.service';
 import { VmService } from '../../../api/vm.service';
-import { ExpiringDialogComponent } from '../../comps/expiring-dialog/expiring-dialog.component';
+import { ExpiringDialogComponent } from '../../shared/expiring-dialog/expiring-dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ToolbarService, NavbarButton } from '../../svc/toolbar.service';
 import { MatChipEvent } from '@angular/material/chips';

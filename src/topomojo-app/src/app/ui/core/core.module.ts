@@ -1,10 +1,8 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LayoutModule } from '@angular/cdk/layout';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { AuthGuard } from '../../svc/auth-guard.service';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -41,39 +39,29 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 
-import { NavbarComponent } from './comps/navbar/navbar.component';
-import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
-import { WorkspaceComponent } from './pages/workspace/workspace.component';
-import { WorkspaceLobbyComponent } from './pages/workspace-lobby/workspace-lobby.component';
-import { WelcomeComponent } from './pages/welcome/welcome.component';
-import { GamespaceLobbyComponent } from './pages/gamespace-lobby/gamespace-lobby.component';
-import { WorkspaceCreatorComponent } from './comps/workspace-creator/workspace-creator.component';
-import { WorkspaceSummaryComponent } from './comps/workspace-summary/workspace-summary.component';
-import { AuthGuard } from '../svc/auth-guard.service';
-import { LoginComponent } from './pages/login/login.component';
-import { ExpiringDialogComponent } from './comps/expiring-dialog/expiring-dialog.component';
-import { OidcSilentComponent } from './pages/oidc-silent/oidc-silent.component';
-import { WorkspaceSettingsComponent } from './comps/workspace-settings/workspace-settings.component';
-import { TemplateSelectorComponent } from './comps/template-selector/template-selector.component';
-import { TemplateComponent } from './comps/template/template.component';
-import { VmControllerComponent } from './comps/vm-controller/vm-controller.component';
-import { ErrorDivComponent } from './comps/error-div/error-div.component';
-import { ConsoleComponent } from './pages/console/console.component';
-import { TemplateSettingsComponent } from './comps/template-settings/template-settings.component';
-import { ConfirmButtonComponent } from './comps/confirm-button/confirm-button.component';
-import { SelectTableComponent } from './comps/select-table/select-table.component';
-import { FileUploaderComponent } from './comps/file-uploader/file-uploader.component';
-import { DocumentEditorComponent } from './pages/document-editor/document-editor.component';
-import { GamespaceComponent } from './pages/gamespace/gamespace.component';
-import { UntaggedStringPipe } from './directives/untagged.directive';
-import { LogoutComponent } from './pages/logout/logout.component';
-import { ChatPanelComponent } from './comps/chat-panel/chat-panel.component';
-import { ChatMessageComponent } from './comps/chat-message/chat-message.component';
-import { EnlistComponent } from './pages/enlist/enlist.component';
-import { DocumentImageManagerComponent } from './comps/document-image-manager/document-image-manager.component';
-import { VmQuestionComponent } from './comps/vm-question/vm-question.component';
-import { AgedDatePipe, ShortDatePipe } from './directives/ago.directive';
-import { AdminModule } from './admin/admin.module';
+import { NavbarComponent } from './navbar/navbar.component';
+import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import { WorkspaceComponent } from './workspace/workspace.component';
+import { WorkspaceLobbyComponent } from './workspace-lobby/workspace-lobby.component';
+import { WelcomeComponent } from './welcome/welcome.component';
+import { GamespaceLobbyComponent } from './gamespace-lobby/gamespace-lobby.component';
+import { WorkspaceCreatorComponent } from './workspace-creator/workspace-creator.component';
+import { WorkspaceSummaryComponent } from './workspace-summary/workspace-summary.component';
+import { LoginComponent } from './login/login.component';
+import { OidcSilentComponent } from './oidc-silent/oidc-silent.component';
+import { WorkspaceSettingsComponent } from './workspace-settings/workspace-settings.component';
+import { TemplateSelectorComponent } from './template-selector/template-selector.component';
+import { TemplateComponent } from './template/template.component';
+import { ConsoleComponent } from './console/console.component';
+import { TemplateSettingsComponent } from './template-settings/template-settings.component';
+import { DocumentEditorComponent } from './document-editor/document-editor.component';
+import { GamespaceComponent } from './gamespace/gamespace.component';
+import { LogoutComponent } from './logout/logout.component';
+import { ChatPanelComponent } from './chat-panel/chat-panel.component';
+import { ChatMessageComponent } from './chat-message/chat-message.component';
+import { EnlistComponent } from './enlist/enlist.component';
+import { DocumentImageManagerComponent } from './document-image-manager/document-image-manager.component';
+import { SharedModule } from '../shared/shared.module';
 
 const mats = [
   MatFormFieldModule,
@@ -99,13 +87,10 @@ const mats = [
 
 @NgModule({
   imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    CommonModule,
+    SharedModule,
     FormsModule,
     LayoutModule,
     ...mats,
-    AdminModule,
     RouterModule.forChild([
       { path: 'login', component: LoginComponent },
       { path: 'logout', component: LogoutComponent },
@@ -117,12 +102,9 @@ const mats = [
           { path: '', component: WorkspaceComponent }
         ]},
         { path: 'doc/:key', children: [
-          // { path: '', children: [
             { path: '', component: DocumentImageManagerComponent, outlet: 'sidenav' },
             { path: '', component: DocumentEditorComponent }
-          // ]},
         ]},
-        // { path: ':id', component: ChatPanelComponent, outlet: 'sidenav' },
         { path: '', component: WorkspaceLobbyComponent }
       ]},
       { path: 'mojo', children: [
@@ -131,13 +113,10 @@ const mats = [
           { path: '', component: ChatPanelComponent, outlet: 'sidenav' },
           { path: '', component: GamespaceComponent }
         ]},
-        // { path: ':id', component: ChatPanelComponent, outlet: 'sidenav' },
         { path: 'enlist/:code', component: EnlistComponent, canActivate: [AuthGuard] },
         { path: '', component: GamespaceLobbyComponent }
       ]},
-      { path: 'console/:id/:name', component: ConsoleComponent, canActivate: [AuthGuard] },
-      // { path: 'images/:key', component: DocumentImageManagerComponent, outlet: 'sidenav' }
-
+      { path: 'console/:id/:name', component: ConsoleComponent, canActivate: [AuthGuard] }
     ])
   ],
   declarations: [
@@ -151,37 +130,26 @@ const mats = [
     WorkspaceCreatorComponent,
     WorkspaceSummaryComponent,
     LoginComponent,
-    ExpiringDialogComponent,
     OidcSilentComponent,
     WorkspaceSettingsComponent,
     TemplateSelectorComponent,
     TemplateComponent,
-    VmControllerComponent,
-    ErrorDivComponent,
     ConsoleComponent,
     TemplateSettingsComponent,
-    ConfirmButtonComponent,
-    SelectTableComponent,
-    FileUploaderComponent,
     DocumentEditorComponent,
     GamespaceComponent,
-    UntaggedStringPipe,
     LogoutComponent,
     ChatPanelComponent,
     ChatMessageComponent,
     EnlistComponent,
     DocumentImageManagerComponent,
-    VmQuestionComponent,
-    AgedDatePipe,
-    ShortDatePipe
   ],
   exports: [
     WelcomeComponent,
     NavbarComponent,
     PageNotFoundComponent,
-    MatSidenavModule,
     ChatPanelComponent,
     DocumentImageManagerComponent
   ]
 })
-export class UiModule { }
+export class CoreModule { }

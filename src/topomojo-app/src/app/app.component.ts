@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { AuthService, AuthTokenState } from './svc/auth.service';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
-import { ExpiringDialogComponent } from './ui/comps/expiring-dialog/expiring-dialog.component';
+import { ExpiringDialogComponent } from './ui/shared/expiring-dialog/expiring-dialog.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ToolbarService } from './ui/svc/toolbar.service';

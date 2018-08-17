@@ -1,9 +1,9 @@
 @import '~@angular/material/theming';
 //@import './cmu-tartan';
 
-@import './ui/pages/welcome/theming';
-@import './ui/comps/error-div/theming';
-@import './ui/comps/chat-panel/theming';
+@import './ui/core/welcome/theming';
+@import './ui/shared/error-div/theming';
+@import './ui/core/chat-panel/theming';
 // @import './styles/api-theme';
 // @import './styles/markdown-theme';
 // @import './styles/svg-theme';

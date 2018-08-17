@@ -1,3 +1,25 @@
-<p>
-  workspaces works!
-</p>
+<mat-card *ngFor="let topo of topos" class="card">
+  <div class="detail">
+    <div>{{topo.name}}</div>
+    <div class="mat-caption">{{topo.globalId}}</div>
+    <div>{{ topo.whenCreated | shortdate }} by {{workers(topo)}}</div>
+    <div *ngIf="current===topo.id">
+      <mat-divider inset="true"></mat-divider>
+      <div *ngFor="let t of topo.templates" class="vm">
+        <div class="name">{{t.name}}</div>
+        <topomojo-vm-controller [template]="t"></topomojo-vm-controller>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <button matTooltip="View" (click)="select(topo)" mat-mini-fab>
+      <mat-icon>tv</mat-icon>
+    </button>
+    <a matTooltip="Navigate" [routerLink]="['/topo', topo.id]" mat-mini-fab>
+      <mat-icon>build</mat-icon>
+    </a>
+  </div>
+</mat-card>
+<div *ngIf="hasMore" class="center">
+  <button (click)="more()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+</div>

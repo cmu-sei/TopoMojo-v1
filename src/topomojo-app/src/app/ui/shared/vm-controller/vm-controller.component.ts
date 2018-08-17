@@ -12,9 +12,9 @@ import { NotificationService } from '../../../svc/notification.service';
 })
 export class VmControllerComponent implements OnInit, OnDestroy {
 
+  @Input() vm: Vm = {};
   @Input() template: Template;
   @Output() loaded: EventEmitter<Vm> = new EventEmitter<Vm>();
-  vm: Vm = {};
   timer: any;
   confirmingDelete = false;
   errors: Array<Error> = [];

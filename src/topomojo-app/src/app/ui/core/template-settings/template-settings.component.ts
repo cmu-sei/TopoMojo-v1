@@ -3,7 +3,7 @@ import { Template, ChangedTemplate, Topology } from '../../../api/gen/models';
 import { NgForm } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { TemplateService } from '../../../api/template.service';
-import { IDataSource, IsoDataSource, IsoFile } from '../../datasources';
+import { IsoDataSource, IsoFile } from '../../datasources';
 import { TopologyService } from '../../../api/topology.service';
 
 @Component({

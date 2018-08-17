@@ -1,7 +1,7 @@
 div {
     display: flex;
     align-items: baseline;
-    text-align: start;
+    text-align: left;
     flex-wrap: wrap;
 
     .title {
@@ -10,7 +10,7 @@ div {
 
     .desc {
         font-weight: normal;
-        text-align: start;
+        text-align: left;
         flex: 2;
         margin-right: 16px;
 

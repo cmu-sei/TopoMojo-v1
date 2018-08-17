@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ToolbarService } from '../../svc/toolbar.service';
 
 @Component({
   templateUrl: './welcome.component.html',
@@ -7,9 +6,7 @@ import { ToolbarService } from '../../svc/toolbar.service';
 })
 export class WelcomeComponent implements OnInit {
 
-  constructor(
-    private toolbarSvc: ToolbarService
-  ) { }
+  constructor() { }
 
   ngOnInit() {
 
