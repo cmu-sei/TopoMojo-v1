@@ -13,7 +13,7 @@ import { NotificationService } from '../../../svc/notification.service';
 export class VmControllerComponent implements OnInit, OnDestroy {
 
   @Input() vm: Vm = {};
-  @Input() template: Template;
+  @Input() template: Template = {};
   @Output() loaded: EventEmitter<Vm> = new EventEmitter<Vm>();
   timer: any;
   confirmingDelete = false;
@@ -26,7 +26,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.refresh();
+    if (!this.vm.id) { this.refresh(); }
 
     this.subs.push(
       this.notifier.vmEvents.subscribe(
@@ -56,6 +56,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   }
 
   load() {
+    if (!this.template.id && !this.vm.id) { return; }
 
     const q = (this.vm && this.vm.id)
       ? this.vmSvc.getVm(this.vm.id)
@@ -136,6 +137,14 @@ export class VmControllerComponent implements OnInit, OnDestroy {
         (err) => { this.onError(err); });
   }
 
+  initialize() {
+    this.setTask('initialize disk');
+    this.vmSvc.postTemplateDisks(this.template.id)
+    .subscribe(() => {
+            this.refresh();
+        }, (err) => { this.onError(err); });
+  }
+
   display() {
     this.vmSvc.openConsole(this.vm.id, this.vm.name);
   }
@@ -149,9 +158,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   }
 
   canSave(): boolean {
-    return (this.template && this.template.parentId)
-      ? false
-      : !!this.vm.id;
+    return !!this.vm.id && !!this.template.id && !this.template.parentId;
   }
 
   onError(e: Error): void {

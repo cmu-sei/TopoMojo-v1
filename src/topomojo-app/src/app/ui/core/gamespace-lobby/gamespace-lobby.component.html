@@ -1,5 +1,5 @@
 <div class="wrapper">
-  <div *ngFor="let game of games">
+  <div *ngFor="let game of games; trackBy: trackById">
     <div class="ago">{{ game.whenCreated | ago }}</div>
     <div class="title">
       {{ game.name }}

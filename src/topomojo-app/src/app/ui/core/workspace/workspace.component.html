@@ -2,7 +2,7 @@
 
       <h1>{{workspace.name}}</h1>
 
-      <topomojo-template *ngFor="let t of workspace.templates" [template]="t" (deleted)="templateRemoved($event)"></topomojo-template>
+      <topomojo-template *ngFor="let t of workspace.templates; trackBy:trackById" [template]="t" (deleted)="templateRemoved($event)" (cloned)="templateCloned($event)"></topomojo-template>
 
       <div *ngIf="workspace.gamespaceCount" class="section">
         <div class="content card">

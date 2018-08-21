@@ -1,6 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { TemplateDetail } from '../../../api/gen/models';
 import { NgForm } from '@angular/forms';
+import { TemplateService } from '../../../api/template.service';
 
 @Component({
   selector: 'topomojo-template-detail-form',
@@ -9,11 +10,28 @@ import { NgForm } from '@angular/forms';
 })
 export class TemplateDetailFormComponent implements OnInit {
   @Input() template: TemplateDetail;
-  form: NgForm;
+  @ViewChild(NgForm) form: NgForm;
+  errors: Array<Error> = [];
 
-  constructor() { }
+  constructor(
+    private templateSvc: TemplateService
+  ) { }
 
   ngOnInit() {
   }
 
+  update() {
+    try {
+        const s = JSON.parse(this.template.detail);
+        this.templateSvc.putTemplateDetail(this.template).subscribe(
+            (data) => {
+                this.form.reset(this.form.value);
+            },
+            (err) => { }
+        );
+    } catch (e) {
+        // this.errorMsg = e.split('\n').reverse().pop();
+        this.errors.push(e);
+    }
+  }
 }

@@ -148,6 +148,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     }
   }
 
+  templateCloned(template: Template) {
+    const i = this.workspace.templates.findIndex((t) => t.id === template.id);
+    if (i >= 0) {
+      this.workspace.templates.splice(i, 1, template);
+    }
+  }
+
   deleted() {
     this.service.deleteTopology(this.workspace.id).subscribe(
       (r: boolean) => {
@@ -175,6 +182,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
 
   atLimit(): boolean {
     return this.workspace.templates.length >= this.workspace.templateLimit;
+  }
+
+  trackById(i: number, item: Template): number {
+    return item.id;
   }
 
   onError(err) {

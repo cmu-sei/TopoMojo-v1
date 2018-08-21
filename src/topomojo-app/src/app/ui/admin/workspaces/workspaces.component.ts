@@ -23,12 +23,13 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-
-    this.toolbar.term$.subscribe(
-      (term: string) => {
-        this.search.term = term;
-        this.fetch();
-      }
+    this.subs.push(
+      this.toolbar.term$.subscribe(
+        (term: string) => {
+          this.search.term = term;
+          this.fetch();
+        }
+      )
     );
     this.toolbar.search(true);
   }
@@ -54,11 +55,20 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
     );
   }
 
+  filterChanged(e) {
+    this.search.filters = [ e.value ];
+    this.fetch();
+  }
+
   workers(topo: Topology): string {
     return topo.workers.map(p => p.personName).join();
   }
 
   select(topo: Topology) {
     this.current = (this.current !== topo.id) ? topo.id : 0;
+  }
+
+  trackById(i: number, item: Topology): number {
+    return item.id;
   }
 }

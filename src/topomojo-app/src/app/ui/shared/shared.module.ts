@@ -17,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { VmControllerComponent } from './vm-controller/vm-controller.component';
 import { VmQuestionComponent } from './vm-question/vm-question.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
 const mats = [
   MatIconModule,
@@ -25,7 +26,8 @@ const mats = [
   MatTableModule,
   MatPaginatorModule,
   MatTooltipModule,
-  MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  MatDialogModule
 ];
 
 const shared = [

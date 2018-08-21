@@ -1,8 +1,17 @@
-<mat-card *ngFor="let topo of topos" class="card">
+<div class="filters">
+  <mat-button-toggle-group (change)="filterChanged($event)">
+    <mat-button-toggle value="all" checked="true" matTooltip="Filter">All</mat-button-toggle>
+    <mat-button-toggle value="public" matTooltip="Filter">Public</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
+<mat-card *ngFor="let topo of topos; trackBy: trackById" class="card">
   <div class="detail">
-    <div>{{topo.name}}</div>
+    <div>{{topo.name}}
+      <mat-icon *ngIf="topo.isPublished">public</mat-icon>
+    </div>
     <div class="mat-caption">{{topo.globalId}}</div>
-    <div>{{ topo.whenCreated | shortdate }} by {{workers(topo)}}</div>
+    <div class="mat-caption">{{ topo.whenCreated | ago }} on {{ topo.whenCreated | shortdate }} by {{workers(topo)}}</div>
     <div *ngIf="current===topo.id">
       <mat-divider inset="true"></mat-divider>
       <div *ngFor="let t of topo.templates" class="vm">

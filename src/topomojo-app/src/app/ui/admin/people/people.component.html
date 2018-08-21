@@ -1,3 +1,38 @@
-<p>
-  people works!
-</p>
+<div class="filters">
+  <mat-button-toggle-group (change)="filterChanged($event)">
+    <mat-button-toggle value="all" checked="true" matTooltip="Filter">All</mat-button-toggle>
+    <mat-button-toggle value="admins" matTooltip="Filter">Admins</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+<mat-card *ngFor="let person of people; trackBy:trackById" class="card">
+  <div class="detail">
+    <div>{{person.name}}
+      <mat-icon *ngIf="person.isAdmin">stars</mat-icon>
+    </div>
+    <div class="mat-caption">{{ person.globalId }}</div>
+    <div *ngIf="current===person.id">
+      <topomojo-profile-settings [profile]="person"></topomojo-profile-settings>
+    </div>
+  </div>
+  <div class="actions">
+    <!-- <div *ngIf="!person.isAdmin">
+      <button (click)="changeLimit(person, -1)" mat-icon-button><mat-icon>remove</mat-icon></button>
+      <span>ws: {{person.workspaceLimit}}</span>
+      <button (click)="changeLimit(person, 1)" mat-icon-button><mat-icon>add</mat-icon></button>
+    </div>
+
+    <button matTooltip="Toggle Privs" (click)="toggleAdmin(person)" mat-mini-fab>
+      <mat-icon>security</mat-icon>
+    </button> -->
+    <button matTooltip="Edit" (click)="select(person)" mat-mini-fab>
+      <mat-icon>create</mat-icon>
+    </button>
+    <!-- <a matTooltip="Navigate" [routerLink]="['/topo', person.topologyId]" [disabled]="!person.topologyId" mat-mini-fab>
+        <mat-icon>build</mat-icon>
+      </a> -->
+  </div>
+</mat-card>
+
+<div *ngIf="hasMore" class="center">
+  <button (click)="more()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+</div>

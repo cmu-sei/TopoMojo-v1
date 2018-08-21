@@ -3,15 +3,15 @@
   <div class="search-tools">
     <div>
       <mat-button-toggle-group *ngIf="hasProfile" (change)="filterChanged($event)" [value]="filter">
-        <mat-button-toggle value="public">Public</mat-button-toggle>
-        <mat-button-toggle value="private">Private</mat-button-toggle>
+        <mat-button-toggle value="public" matTooltip="Filter">Public</mat-button-toggle>
+        <mat-button-toggle value="private" matTooltip="Filter">Private</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 
     <div>
       <mat-button-toggle-group (change)="fetch_fresh()" [(ngModel)]="model.sort">
-        <mat-button-toggle value="age" checked="true">Newest</mat-button-toggle>
-        <mat-button-toggle value="">Alpha</mat-button-toggle>
+        <mat-button-toggle value="age" checked="true" matTooltip="Sort">Newest</mat-button-toggle>
+        <mat-button-toggle value="" matTooltip="Sort">Name</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 
@@ -30,7 +30,7 @@
   </div>
 
   <div class="lobby-section">
-    <topomojo-workspace-summary *ngFor="let item of list" [summary]="item"></topomojo-workspace-summary>
+    <topomojo-workspace-summary *ngFor="let item of list; trackBy: trackById" [summary]="item"></topomojo-workspace-summary>
   </div>
   <button *ngIf="more" (click)="fetch()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
 

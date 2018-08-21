@@ -17,6 +17,7 @@ export class TemplateComponent implements OnInit {
   @Input() template: Template;
   // @Input() workspaceId: string;
   @Output() deleted = new EventEmitter<Template>();
+  @Output() cloned = new EventEmitter<Template>();
   vm: Vm = {};
   private isoSource: IsoDataSource;
 
@@ -38,7 +39,10 @@ export class TemplateComponent implements OnInit {
     this.templateSvc.postTemplateUnlink({
       templateId: this.template.id,
       topologyId: this.template.topologyId
-    }).subscribe(t => this.template = t);
+    }).subscribe(t => {
+      this.template = t;
+      this.cloned.emit(t);
+    });
   }
 
   isoChanged(iso: string) {

@@ -9,7 +9,7 @@
       <button *ngIf="game.id && canManage()" mat-mini-fab matTooltip="Share" (click)="showSharing=!showSharing">
         <mat-icon>share</mat-icon>
       </button>
-      <button *ngIf="!game.id" (click)="launch()" matTooltip="Launch" mat-mini-fab>
+      <button *ngIf="!game.id && !loading" (click)="launch()" matTooltip="Launch" mat-mini-fab>
         <mat-icon>flash_on</mat-icon>
       </button>
       <topomojo-confirm-button *ngIf="game.id" (confirmed)="delete()" icon="delete" fab="true" text="End"></topomojo-confirm-button>

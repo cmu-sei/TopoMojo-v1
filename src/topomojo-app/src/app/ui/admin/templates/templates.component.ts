@@ -11,12 +11,13 @@ import { Subscription } from 'rxjs';
 })
 export class TemplatesComponent implements OnInit, OnDestroy {
 
-  search: Search = { take: 25, filters: [ 'parents' ] }
+  search: Search = { take: 25, filters: [ 'parents' ] };
   hasMore = false;
   current = 0;
   subs: Array<Subscription> = [];
   templates: Array<TemplateSummary> = [];
   detail: TemplateDetail;
+  showCreator = false;
 
   constructor(
     private templateSvc: TemplateService,
@@ -35,6 +36,12 @@ export class TemplatesComponent implements OnInit, OnDestroy {
     );
 
     this.toolbar.search(true);
+    this.toolbar.addButtons([
+      {
+        icon: 'add_circle',
+        clicked: () => this.showCreator = !this.showCreator
+      }
+    ]);
   }
 
   ngOnDestroy() {
@@ -58,6 +65,11 @@ export class TemplatesComponent implements OnInit, OnDestroy {
     );
   }
 
+  filterChanged(e) {
+    this.search.filters = [ e.value ];
+    this.fetch();
+  }
+
   select(template: TemplateSummary) {
     this.current = (this.current !== template.id) ? template.id : 0;
     if (!!this.current) {
@@ -68,5 +80,28 @@ export class TemplatesComponent implements OnInit, OnDestroy {
         }
       );
     }
+  }
+
+  created(template: TemplateDetail) {
+    this.current = template.id;
+    this.detail = template;
+    this.templates.unshift(template as TemplateSummary);
+    this.showCreator = false;
+  }
+
+  delete(template: TemplateSummary) {
+    this.templateSvc.deleteTemplate(template.id).subscribe(
+      () => {
+        if (this.current === template.id) {
+          this.current = 0;
+          this.detail = null;
+        }
+        this.templates.splice(this.templates.indexOf(template), 1);
+      }
+    );
+  }
+
+  trackById(i: number, item: TemplateSummary): number {
+    return item.id;
   }
 }

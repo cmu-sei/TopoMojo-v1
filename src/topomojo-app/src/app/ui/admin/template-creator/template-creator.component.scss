@@ -1,0 +1,11 @@
+div {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: baseline;
+    text-align: left;
+
+    div {
+        margin: 0px 8px;
+    }
+
+}

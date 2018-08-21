@@ -1,0 +1,15 @@
+<div>
+  <div>Add New Template: </div>
+  <div class="title">
+    <mat-form-field>
+      <input matInput required type="text" matLabel="New Template" placeholder="Name" [(ngModel)]="name" maxlength="24">
+      <mat-hint align="end">{{name.length}} / 24</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <div class="tool">
+    <button mat-mini-fab color="primary" (click)="clicked()" [disabled]="!name.length">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div>

@@ -34,4 +34,8 @@ export class GamespaceLobbyComponent implements OnInit {
         this.reload();
     });
   }
+
+  trackById(i: number, item: Gamespace): number {
+    return item.id;
+  }
 }

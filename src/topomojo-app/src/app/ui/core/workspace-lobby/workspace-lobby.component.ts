@@ -114,4 +114,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   //   return !!this.profile.id;
   // }
 
+  trackById(i: number, item: TopologySummary): number {
+    return item.id;
+  }
 }

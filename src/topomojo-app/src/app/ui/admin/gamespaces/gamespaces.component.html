@@ -1,4 +1,4 @@
-<mat-card *ngFor="let game of games" class="card">
+<mat-card *ngFor="let game of games; trackBy:trackById" class="card">
   <div class="detail">
     <div>{{game.name}}</div>
     <div class="mat-caption">{{game.globalId}}</div>

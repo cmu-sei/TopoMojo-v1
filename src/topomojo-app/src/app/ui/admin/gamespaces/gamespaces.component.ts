@@ -20,7 +20,7 @@ export class GamespacesComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.gameSvc.getGamespaces("all").subscribe(
+    this.gameSvc.getGamespaces('all').subscribe(
       (games: Array<Gamespace>) => {
         this.games = games;
       }
@@ -50,5 +50,9 @@ export class GamespacesComponent implements OnInit {
             this.games.splice(this.games.indexOf(game), 1);
         }
     );
+  }
+
+  trackById(i: number, item: Gamespace): number {
+    return item.id;
   }
 }

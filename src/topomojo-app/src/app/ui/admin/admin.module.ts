@@ -19,6 +19,10 @@ import { TemplateDetailFormComponent } from './template-detail-form/template-det
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ProfileSettingsComponent } from './profile-settings/profile-settings.component';
+import { TemplateCreatorComponent } from './template-creator/template-creator.component';
 
 @NgModule({
   imports: [
@@ -29,9 +33,11 @@ import { FormsModule } from '@angular/forms';
     MatCardModule,
     MatIconModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatDividerModule,
     MatInputModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     RouterModule.forChild([
       { path: '', component: AdminComponent, canActivate: [AdminGuard, AuthGuard], children: [
         {path: '', children: [
@@ -45,6 +51,6 @@ import { FormsModule } from '@angular/forms';
       ]}
     ])
   ],
-  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent, TemplateDetailFormComponent]
+  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent, TemplateDetailFormComponent, ProfileSettingsComponent, TemplateCreatorComponent]
 })
 export class AdminModule { }
