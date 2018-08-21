@@ -114,7 +114,7 @@ namespace TopoMojo.Controllers
         private void SendBroadcast(Template template, string action)
         {
             _hub.Clients
-                .Group(template.TopologyGlobalId)
+                .Group(template.TopologyGlobalId ?? Guid.Empty.ToString())
                 .TemplateEvent(
                     new BroadcastEvent<Core.Models.Template>(
                         User,

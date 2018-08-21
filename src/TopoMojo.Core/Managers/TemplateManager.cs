@@ -54,7 +54,7 @@ namespace TopoMojo.Core
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            model.Detail = new TemplateUtility("").ToString();
+            model.Detail = new TemplateUtility("", model.Name).ToString();
             Template t = Mapper.Map<Template>(model);
             await _repo.Add(t);
             return Mapper.Map<Models.TemplateDetail>(t);
@@ -100,7 +100,7 @@ namespace TopoMojo.Core
             Template linked = Mapper.Map<Template>(entity);
             linked.TopologyId = newlink.TopologyId;
             linked.GlobalId = "";
-            linked.Name += new Random().Next(100, 200).ToString();
+            linked.Name += new Random().Next(100, 999).ToString();
             await _repo.Add(linked);
             //TODO: streamline object graph hydration
             linked = await _repo.Load(linked.Id);
@@ -145,7 +145,6 @@ namespace TopoMojo.Core
             foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(deployable.Name+"#"+deployable.IsolationTag))
                 await _pod.Delete(vm.Id);
 
-            // TODO: Enforce only topo disks here?  (vSphere Pod only deletes topo-isolated disks, not stock disks.)
             //if root template, delete disk(s)
             if (template.Parent == null)
                 await _pod.DeleteDisks(deployable);
@@ -219,7 +218,7 @@ namespace TopoMojo.Core
             tu.Name = template.Name;
             tu.Networks = template.Networks ?? "lan";
             tu.Iso = template.Iso;
-            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId;
+            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId ?? Guid.Empty.ToString();
             tu.Id = template.Id.ToString();
             TopoMojo.Models.Virtual.Template result =  tu.AsTemplate();
             result.UseUplinkSwitch = template.Topology?.UseUplinkSwitch ?? false;

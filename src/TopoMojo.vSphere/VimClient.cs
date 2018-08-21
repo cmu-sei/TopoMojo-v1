@@ -538,6 +538,29 @@ namespace TopoMojo.vSphere
             );
         }
 
+        public async Task CreateDisk(Disk disk)
+        {
+            await Connect();
+            await MakeDirectories(disk.Path);
+
+            string adapter = (disk.Controller.HasValue())
+                ? disk.Controller.Replace("lsilogic", "lsiLogic").Replace("buslogic", "busLogic")
+                : "lsiLogic";
+            var task = await _vim.CreateVirtualDisk_TaskAsync(
+                _vdm,
+                disk.Path,
+                _datacenter,
+                new FileBackedVirtualDiskSpec
+                {
+                    diskType = "thin",
+                    adapterType = adapter,
+                    capacityKb = disk.Size * 1000 * 1000,
+                    profile = null
+                }
+            );
+            await WaitForVimTask(task);
+        }
+
         public async Task DeleteDisk(string path)
         {
             await Connect();

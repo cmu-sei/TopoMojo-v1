@@ -359,10 +359,10 @@ namespace TopoMojo.vMock
                 template.Iso = option.IsoStore + template.Iso + ".iso";
             }
 
-            if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
-            {
-                template.Source = option.StockStore + template.Source + ".vmdk";
-            }
+            // if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
+            // {
+            //     template.Source = option.StockStore + template.Source + ".vmdk";
+            // }
 
             foreach (Disk disk in template.Disks)
             {

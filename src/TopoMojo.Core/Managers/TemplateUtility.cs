@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using TopoMojo.Models.Virtual;
 
@@ -8,7 +9,7 @@ namespace TopoMojo.Core
 {
     public class TemplateUtility
     {
-        public TemplateUtility(string detail)
+        public TemplateUtility(string detail, string diskname = "placeholder")
         {
             if (detail.HasValue())
             {
@@ -16,6 +17,7 @@ namespace TopoMojo.Core
             }
             else
             {
+                diskname = Regex.Replace(diskname, @"[^\w\d]", "-").Replace("--", "-").Trim('-').ToLower();
                 _template = new Template
                 {
                     Ram = 4,
@@ -25,9 +27,10 @@ namespace TopoMojo.Core
                     Eth = new Eth[] { new Eth { Net = "lan", Type="e1000" }},
                     Disks = new Disk[] { new Disk
                     {
-                        Path = "[ds] stock/disk.vmdk",
+                        Path = $"[ds] {Guid.Empty.ToString()}/{diskname}.vmdk",
+                        Source = "",
                         Controller = "lsilogic",
-                        Size = 40
+                        Size = 10
                     }}
                 };
             }

@@ -246,6 +246,9 @@ namespace TopoMojo.vSphere
 
         public async Task<int> VerifyDisks(Template template)
         {
+            if (template.Disks.Length == 0)
+                return 100; //show good if no disks to verify
+
             foreach (VimClient vhost in _hostCache.Values)
             {
                 int progress = await vhost.TaskProgress(template.Id);
@@ -253,41 +256,55 @@ namespace TopoMojo.vSphere
                     return progress;
             }
 
-            string pattern = @"blank-(\d+)([^\.]+)";
-            Match match = Regex.Match(template.Disks[0].Path, pattern);
-            if (match.Success)
-            {
-                return 100; //show blank disk as created
-            }
+            // string pattern = @"blank-(\d+)([^\.]+)";
+            // Match match = Regex.Match(template.Disks[0].Path, pattern);
+            // if (match.Success)
+            // {
+            //     return 100; //show blank disk as created
+            // }
 
             VimClient host = FindHostByRandom();
             NormalizeTemplate(template, host.Options);
-            if (template.Disks.Length > 0)
-            {
+            // if (template.Disks.Length > 0)
+            // {
                 _logger.LogDebug(template.Source + " " + template.Disks[0].Path);
                 if (await host.FileExists(template.Disks[0].Path))
                 {
                     return 100;
                 }
-            }
+            // }
             return -1;
         }
 
         public async Task<int> CreateDisks(Template template)
         {
+            if (template.Disks.Length == 0)
+                return -1;
+
             int progress = await VerifyDisks(template);
             if (progress < 0)
             {
                 VimClient host = FindHostByRandom();
-                Task cloneTask = host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
-                progress = 0;
+                if (template.Source.HasValue()) {
+                    Task cloneTask = host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
+                    progress = 0;
+                } else {
+                    await host.CreateDisk(template.Disks[0]);
+                    progress = 100;
+                }
             }
             return progress;
         }
 
         public async Task<int> DeleteDisks(Template template)
         {
+            if (template.Disks.Length == 0)
+                return -1;
+
             int progress = await VerifyDisks(template);
+            if (progress < 0)
+                return -1;
+
             if (progress == 100)
             {
                 VimClient host = FindHostByRandom();
@@ -442,10 +459,10 @@ namespace TopoMojo.vSphere
             //     template.Iso = option.IsoStore + template.Iso + ".iso";
             // }
 
-            if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
-            {
-                //template.Source = option.StockStore + template.Source + ".vmdk";
-            }
+            // if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
+            // {
+            //     //template.Source = option.StockStore + template.Source + ".vmdk";
+            // }
 
             // string prefix = option.DiskStore.Trim();
             // if (!prefix.EndsWith("]") && !prefix.EndsWith("/"))
@@ -454,8 +471,8 @@ namespace TopoMojo.vSphere
             foreach (Disk disk in template.Disks)
             {
                 if (!disk.Path.StartsWith(option.DiskStore)
-                    && !disk.Path.StartsWith(option.StockStore))
-                {
+                    // && !disk.Path.StartsWith(option.StockStore)
+                ) {
                     DatastorePath dspath = new DatastorePath(disk.Path);
                     dspath.Merge(option.DiskStore);
                     // string folder = dspath.FolderPath;
