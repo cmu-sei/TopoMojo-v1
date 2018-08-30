@@ -1,7 +1,0 @@
-<div *ngFor="let e of errors"
-    class="alert alert-danger alert-dismissible" role="alert">
-    <button (click)="clearError(e)" type="button" class="close" data-dismiss="alert">
-        <span>&times;</span>
-    </button>
-    <span translate>{{ e.message | aserror }}</span>
-</div>

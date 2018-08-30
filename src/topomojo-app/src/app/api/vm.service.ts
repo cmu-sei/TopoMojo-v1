@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { ApiSettings } from './api-settings';
 import { GeneratedVmService } from './gen/vm.service';
 import { KeyValuePair, Vm, VmAnswer, VmQuestion, VmStateEnum, VmTask } from './gen/models';
-import { LayoutService } from '../svc/layout.service';
+import { SettingsService } from '../svc/settings.service';
 
 @Injectable()
 export class VmService extends GeneratedVmService {
@@ -13,10 +13,10 @@ export class VmService extends GeneratedVmService {
     constructor(
        protected http: HttpClient,
        protected api: ApiSettings,
-       private layoutSvc: LayoutService
+       private settingSvc: SettingsService
     ) { super(http, api); }
 
     public openConsole(id, name) {
-        this.layoutSvc.showTab('/console/' + id + '/' + name.match(/[^#]*/)[0]);
+        this.settingSvc.showTab('/console/' + id + '/' + name.match(/[^#]*/)[0]);
     }
 }

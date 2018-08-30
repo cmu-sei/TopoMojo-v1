@@ -17,9 +17,6 @@ namespace TopoMojo.Extensions
                 .Configure<ControlOptions>(config.GetSection("Control"))
                 .AddScoped(sp => sp.GetService<IOptionsMonitor<ControlOptions>>().CurrentValue)
 
-                .Configure<ClientSettings>(config.GetSection("ClientSettings"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<ClientSettings>>().CurrentValue)
-
                 .Configure<FileUploadOptions>(config.GetSection("FileUpload"))
                 .AddScoped(sp => sp.GetService<IOptionsMonitor<FileUploadOptions>>().CurrentValue);
 

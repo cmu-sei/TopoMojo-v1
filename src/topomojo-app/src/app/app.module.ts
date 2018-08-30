@@ -27,7 +27,6 @@ import { CommonModule } from '@angular/common';
     CoreModule,
     MatSidenavModule,
     MatInputModule,
-    // UiModule,
     RouterModule.forRoot([
       {
         path: 'admin',

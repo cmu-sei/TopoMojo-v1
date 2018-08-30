@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,7 @@ namespace TopoMojo.Web
 {
     public class Startup
     {
-         public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
@@ -57,18 +58,19 @@ namespace TopoMojo.Web
                 .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
                 .AddScoped<IFileUploadHandler, FileUploadHandler>()
                 .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
-                .AddSingleton<IPodManager>(sp => {
+                .AddSingleton<IPodManager>(sp =>
+                {
                     var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
                     return String.IsNullOrWhiteSpace(options.Url)
-                        ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
-                        : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
+                        ? (IPodManager)new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
+                        : (IPodManager)new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
                 });
 
             #endregion
 
             #region Configure Signalr
 
-            services.AddSignalR(options =>{});
+            services.AddSignalR(options => { });
             services.AddSingleton<HubCache>();
 
             #endregion
@@ -143,24 +145,18 @@ namespace TopoMojo.Web
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
 
-            if (env.IsDevelopment() || Configuration.GetValue<bool>("Control:ShowExceptionDetail"))
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            // if (env.IsDevelopment())
-            // {
-            //     app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-            //         HotModuleReplacement = true
-            //     });
-            // }
-
             app.UseCors("default");
-            app.UseStaticFiles();
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    if (ctx.Context.Request.Path.Value.ToLower() == "/index.html")
+                    {
+                        ctx.Context.Response.Headers.Append("Cache-Control", "no-cache");
+                    }
+                }
+            });
 
             //move any querystring jwt to Auth bearer header
             app.Use(async (context, next) =>
@@ -174,7 +170,7 @@ namespace TopoMojo.Web
                         .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
 
                     if (!String.IsNullOrWhiteSpace(token))
-                        context.Request.Headers.Add("Authorization", new[] {$"Bearer {token}"});
+                        context.Request.Headers.Add("Authorization", new[] { $"Bearer {token}" });
                 }
 
                 await next.Invoke();
@@ -198,27 +194,16 @@ namespace TopoMojo.Web
 
             app.UseAuthentication();
 
-            app.UseSignalR(routes => {
+            app.UseSignalR(routes =>
+            {
                 routes.MapHub<TopologyHub>("/hub");
             });
 
-            app.UseMvc(routes =>
+            app.UseMvc();
+
+            app.Run(async (context) =>
             {
-                routes.MapRoute(
-                    name:"console",
-                    template: "Console/{id}/{name?}");
-
-                routes.MapRoute(
-                    name: "uploads",
-                    template: "File/{action=Index}/{id}");
-
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-
-                routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Home", action = "Index" });
+                context.Response.Redirect("/index.html");
             });
 
         }
