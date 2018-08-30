@@ -30,8 +30,11 @@
   </div>
 
   <div class="lobby-section">
+    <p *ngIf="none">No workspace found</p>
     <topomojo-workspace-summary *ngFor="let item of list; trackBy: trackById" [summary]="item"></topomojo-workspace-summary>
   </div>
-  <button *ngIf="more" (click)="fetch()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+  <div *ngIf="hasMore" class="center">
+    <button (click)="fetch()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+  </div>
 
 </div>

@@ -5,7 +5,7 @@
     </a>
     <div class="flex-spacer"></div>
 
-    <input [hidden]="!searchOpen" type="search" aria-label="search" placeholder="Search" #term (input)="termChanged(term.value)">
+    <input [hidden]="!searchOpen" type="search" aria-label="search" placeholder="Search" [(ngModel)]="term" (input)="termChanged()">
     <button *ngIf="state.search" (click)="searchOpen=!searchOpen" mat-icon-button>
       <mat-icon>search</mat-icon>
     </button>

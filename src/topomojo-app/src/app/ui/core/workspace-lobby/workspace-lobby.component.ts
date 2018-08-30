@@ -13,7 +13,8 @@ import { Subscription } from 'rxjs';
 })
 export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
 
-  more = false;
+  none = false;
+  hasMore = false;
   showAdd = false;
   showGames = false;
   showLoginMsg = false;
@@ -93,8 +94,9 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         } else {
           this.list = data.results;
         }
+        this.none = !!this.list.length;
         this.model.skip += data.results.length;
-        this.more = data.results.length === this.model.take;
+        this.hasMore = data.results.length === this.model.take;
       }
     );
   }

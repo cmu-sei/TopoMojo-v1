@@ -19,6 +19,7 @@ export class NavbarComponent implements OnInit {
   @Input() sidenav = false;
   public termSubject: Subject<string> = new Subject();
   profile: Profile = {};
+  term = '';
   term$: Observable<string> = this.termSubject.asObservable()
     .pipe(
       debounceTime(500),
@@ -42,7 +43,10 @@ export class NavbarComponent implements OnInit {
     this.toolbarSvc.state$.subscribe(
       (state: ToolbarState) => {
         this.state = state;
-        if (!this.state.search) { this.searchOpen = false; }
+        if (!this.state.search) {
+          this.searchOpen = false;
+          this.term = '';
+        }
       }
     );
 
@@ -56,8 +60,8 @@ export class NavbarComponent implements OnInit {
     this.term$.subscribe(term => this.toolbarSvc.termChanged(term));
   }
 
-  termChanged(term: string): void {
-    this.termSubject.next(term);
+  termChanged(): void {
+    this.termSubject.next(this.term);
   }
 
   toggleTheme() {
