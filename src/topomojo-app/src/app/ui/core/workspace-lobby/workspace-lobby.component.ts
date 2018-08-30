@@ -94,7 +94,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         } else {
           this.list = data.results;
         }
-        this.none = !!this.list.length;
+        this.none = !this.list.length;
         this.model.skip += data.results.length;
         this.hasMore = data.results.length === this.model.take;
       }

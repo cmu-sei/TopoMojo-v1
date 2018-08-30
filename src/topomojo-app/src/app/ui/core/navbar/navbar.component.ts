@@ -46,6 +46,7 @@ export class NavbarComponent implements OnInit {
         if (!this.state.search) {
           this.searchOpen = false;
           this.term = '';
+          this.termChanged();
         }
       }
     );
