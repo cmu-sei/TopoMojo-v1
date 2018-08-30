@@ -15,14 +15,11 @@ namespace TopoMojo.Core
     public class ChatService : EntityManager<Data.Entities.Message>
     {
         public ChatService (
-            IProfileRepository pr,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            TopoMojoDbContext db,
-            IProfileCache profileCache
-
-        ) : base (pr, mill, options, profileResolver, profileCache)
+            TopoMojoDbContext db
+        ) : base (mill, options, profileResolver)
         {
             _db = db;
         }
@@ -45,6 +42,15 @@ namespace TopoMojo.Core
                 .ToArrayAsync();
 
             return Mapper.Map<Models.Message[]>(msgs);
+        }
+
+        public async Task<Models.Message> Find(int msgId)
+        {
+            var entity = await _db.Messages.FindAsync(msgId);
+            if (! await IsAllowed(entity.RoomId))
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Models.Message>(entity);
         }
 
         public async Task<Models.Message> Add(NewMessage message)

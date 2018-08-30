@@ -1,0 +1,14 @@
+
+
+
+.smaller {
+    padding: 20px 0px;
+    font-size: smaller;
+    display: flex;
+    align-items: center;
+
+    p {
+        flex: auto;
+        margin-right: 16px;
+    }
+}

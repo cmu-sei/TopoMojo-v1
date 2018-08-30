@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using TopoMojo.Core;
 using TopoMojo.Core.Mappers;
+using TopoMojo.Core.Privileged;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -23,7 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddScoped<ProfileManager>()
                 .AddScoped<ChatService>()
                 .AddScoped<TransferService>()
-                .AddSingleton<IProfileCache, ProfileCache>()
+                .AddScoped<ProfileService>()
                 .AddMappers();
         }
     }

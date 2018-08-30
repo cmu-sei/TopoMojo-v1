@@ -12,6 +12,7 @@ namespace Tests
         {
             using (TestSession test = CreateSession())
             {
+                _options.DefaultWorkspaceLimit = 3;
                 test.AddActor("jam@this.ws");
                 TopologyManager mgr = test.GetTopologyManager();
                 Topology topo = mgr.Create(new NewTopology {

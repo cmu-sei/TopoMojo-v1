@@ -1,0 +1,24 @@
+@import '~@angular/material/theming';
+//@import './cmu-tartan';
+
+@import './ui/core/welcome/theming';
+@import './ui/shared/error-div/theming';
+@import './ui/core/chat-panel/theming';
+// @import './styles/api-theme';
+// @import './styles/markdown-theme';
+// @import './styles/svg-theme';
+// @import './styles/tables-theme';
+
+
+// Styles for the docs app that are based on the current theme.
+@mixin mix-app-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+
+  @include mix-welcome-theme($theme);
+  @include mix-errormsg-theme($theme);
+  @include mix-chatpanel-theme($theme);
+}

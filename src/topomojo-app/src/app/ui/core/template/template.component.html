@@ -1,0 +1,42 @@
+<div *ngIf="template">
+
+  <div class="section">
+    <div class="header">
+      <div class="title">
+        <button (click)="showSettings=!showSettings" mat-button>
+          <mat-icon>expand_{{showSettings ? 'less' : 'more'}}</mat-icon>
+          {{template.name}}
+        </button>
+      </div>
+      <!-- <div class=".flex-spacer"></div> -->
+      <div class="tools">
+        <topomojo-vm-controller [template]="template" (loaded)="vmLoaded($event)"></topomojo-vm-controller>
+      </div>
+    </div>
+
+    <div *ngIf="showSettings" class="content">
+
+      <topomojo-template-settings [template]="template" [hasVm]="vm.id"></topomojo-template-settings>
+
+      <mat-divider inset="true"></mat-divider>
+
+      <!-- Type Clone -->
+      <div *ngIf="template.parentId" class="smaller">
+        <p>
+          This vm is 'linked' to another, so it cannot be changed.  If this vm requires changes,
+          convert it to 'local' before deploying it.
+        </p>
+        <button mat-mini-fab (click)="unlink()" [disabled]="!!vm.id" matTooltip="unlink">
+          <mat-icon>link_off</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider inset="true"></mat-divider>
+
+      <!-- Delete -->
+      <div class="quiet-placard">
+        <topomojo-confirm-button [disabled]="!!vm.id" color="warn" icon="delete" text="Delete Template" (confirmed)="delete()"></topomojo-confirm-button>
+      </div>
+    </div>
+  </div>
+</div>

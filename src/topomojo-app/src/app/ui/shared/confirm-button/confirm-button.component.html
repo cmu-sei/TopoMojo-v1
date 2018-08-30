@@ -1,0 +1,18 @@
+<div *ngIf="!confirming">
+  <button *ngIf="!fab" (click)="confirming=true" [color]="color" [disabled]="disabled" mat-raised-button>
+    <mat-icon>{{icon}}</mat-icon>
+    <span>{{text}}</span>
+  </button>
+  <button *ngIf="fab" (click)="confirming=true" [color]="color" [disabled]="disabled" [matTooltip]="text" mat-mini-fab>
+    <mat-icon>{{icon}}</mat-icon>
+  </button>
+</div>
+<div *ngIf="confirming">
+  <span>Confirm?</span>
+  <button (click)="confirm()" [color]="color" mat-icon-button>
+    <mat-icon>{{icon}}</mat-icon>
+  </button>
+  <button (click)="confirming=false" mat-icon-button>
+    <mat-icon>cancel</mat-icon>
+  </button>
+</div>

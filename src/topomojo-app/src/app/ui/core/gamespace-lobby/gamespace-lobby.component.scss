@@ -1,0 +1,33 @@
+.wrapper {
+    max-width: 600px;
+    margin: auto;
+
+    div {
+        display: flex;
+        flex-flow: row wrap;
+        padding: 10px 0px;
+        align-items: baseline;
+        text-align: left;
+
+        .ago {
+            font-size: 12px;
+            border-radius: 8px;
+            border-width: 1px;
+            margin-right: 4px;
+        }
+
+        .title {
+            flex: 1;
+            margin-right: 16px;
+            font-size: 16px;
+
+        }
+
+        .tool {
+            a,
+            topomojo-confirm-button {
+                margin: 0px 4px;
+            }
+        }
+    }
+}

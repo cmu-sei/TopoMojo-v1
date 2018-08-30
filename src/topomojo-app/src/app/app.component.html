@@ -1,0 +1,17 @@
+<!-- <div [class.alt-theme]="altTheme"> -->
+    <mat-sidenav-container>
+        <mat-sidenav-content>
+            <topomojo-navbar></topomojo-navbar>
+            <div class="main-content">
+                <router-outlet></router-outlet>
+            </div>
+        </mat-sidenav-content>
+        <mat-sidenav position="end" mode="side">
+            <topomojo-navbar sidenav="true"></topomojo-navbar>
+            <div class="side-content">
+                <router-outlet name="sidenav"></router-outlet>
+            </div>
+        </mat-sidenav>
+        <!-- <input matInput type="text"> -->
+    </mat-sidenav-container>
+<!-- </div> -->

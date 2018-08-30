@@ -23,7 +23,7 @@ namespace TopoMojo.Core.Models.Extensions
                 if (vs != null)
                 {
                     vs.Id = vm.Id;
-                    vs.IsRunning = vm.State == VmPowerState.running;
+                    vs.IsRunning = vm.State == VmPowerState.Running;
                 }
             }
         }

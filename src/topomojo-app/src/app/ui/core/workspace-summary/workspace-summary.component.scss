@@ -1,0 +1,36 @@
+.card {
+    display: flex;
+    flex-flow: row nowrap;
+    padding: 20px 0px;
+    max-width: 600px;
+    margin: auto;
+
+    .text {
+        flex: 1;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: flex-start;
+        text-align: left;
+
+        h2, p {
+            margin: 2px 0px;
+            font-weight: normal;
+        }
+
+        .ago {
+            font-size: 12px;
+            border-radius: 8px;
+            border-width: 1px;
+            margin-right: 4px;
+        }
+    }
+
+    .tools {
+        display: flex;
+        flex-flow: row wrap;
+        a {
+            margin: 0px 4px;
+        }
+    }
+
+}

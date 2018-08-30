@@ -1,63 +1,106 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using IdentityModel;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models;
+using TopoMojo.Core.Privileged;
 
 namespace TopoMojo.Services
 {
-    //Transforms IdentityPrincipal to TopoMojo.Core.Models.Profile
+    //Transforms ClaimsPrincipal to TopoMojo.Core.Models.Profile
     //(Once per request, if AddScoped())
-    public class ProfileResolver : IProfileResolver
+    public class ProfileResolver : IProfileResolver, IClaimsTransformation
     {
         public ProfileResolver(
-            IHttpContextAccessor context
+            IHttpContextAccessor context,
+            IMemoryCache cache,
+            ProfileService repo,
+            ControlOptions options
         ){
             _context = context;
+            _cache = cache;
+            _repo = repo;
+            _cacheOptions = new MemoryCacheEntryOptions();
+            _cacheOptions.SetAbsoluteExpiration(
+                TimeSpan.FromSeconds(options.ProfileCacheSeconds)
+            );
         }
 
         private readonly IHttpContextAccessor _context;
+        private readonly IMemoryCache _cache;
+        private readonly ProfileService _repo;
+        private readonly MemoryCacheEntryOptions _cacheOptions;
         private Profile _profile = null;
 
         public Profile Profile {
             get
             {
-                return (_profile != null)
-                    ? _profile
-                    : BuildProfile();
+                if (_profile == null)
+                    _profile = BuildProfileModel(_context.HttpContext.User);
+                return _profile;
             }
         }
 
-        private Profile BuildProfile()
+        private Profile BuildProfileModel(ClaimsPrincipal principal)
         {
-            lock(this)
+            var profile = new Profile();
+            profile.GlobalId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            profile.Name = principal.FindFirst("name")?.Value ?? "Anonymous";
+            profile.IsAdmin = principal.IsInRole("admin");
+
+            if (Int32.TryParse(principal.FindFirst(JwtRegisteredClaimNames.NameId)?.Value, out int id))
+                profile.Id = id;
+
+            if (Int32.TryParse(principal.FindFirst("workspacelimit")?.Value, out int limit))
+                profile.WorkspaceLimit = limit;
+
+            return profile;
+        }
+
+        public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
+        {
+            //if cached, add local claims from cache
+            //else fetch local claims from db (and add to cache)
+            //add local claims to principal
+
+            //only run this once per scope
+            if (_profile != null)
+                return principal;
+
+            string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            if (!_cache.TryGetValue(sub, out List<Claim> claims))
             {
-                if (_profile == null)
+                claims = new List<Claim>();
+                var profile = await _repo.FindByGlobalId(sub);
+                if (profile != null)
                 {
-                    _profile = new Profile();
-                    _profile.GlobalId = _context.HttpContext.User.FindFirst(JwtClaimTypes.Subject)?.Value;
-                    _profile.Name = _context.HttpContext.User.FindFirst(JwtClaimTypes.Name)?.Value ?? "Anonymous";
-                    _profile.IsAdmin = _context.HttpContext.User.IsInRole("admin");
-                    if (Int32.TryParse(_context.HttpContext.User.FindFirst(JwtRegisteredClaimNames.NameId)?.Value, out int id))
+                    if (profile.IsAdmin)
+                        claims.Add(new Claim("role", "admin"));
+
+                    string name = principal.FindFirstValue("name");
+                    if (!String.IsNullOrEmpty(name) && name != profile.Name)
                     {
-                        _profile.Id = id;
+                        profile.Name = name;
+                        await _repo.Update(profile);
                     }
                 }
+                else
+                {
+                    profile = await _repo.Add(BuildProfileModel(principal));
+                }
+                claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
+                claims.Add(new Claim("workspacelimit", profile.WorkspaceLimit.ToString()));
+                _cache.Set(sub, claims, _cacheOptions);
             }
-            return _profile;
+
+            ((ClaimsIdentity)principal.Identity).AddClaims(claims);
+            _profile = BuildProfileModel(principal);
+            return principal;
         }
-    }
-
-    public class DirectProfileResolver : IProfileResolver
-    {
-        public void Init() {}
-
-        public DirectProfileResolver(Profile profile)
-        {
-            Profile = profile;
-        }
-
-        public Profile Profile { get; private set; }
     }
 }

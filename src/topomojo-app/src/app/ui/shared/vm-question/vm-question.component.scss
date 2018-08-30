@@ -1,0 +1,13 @@
+.header {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: center;
+
+    p {
+        flex: 1;
+    }
+    button {
+        margin-left: 8px;
+    }
+}

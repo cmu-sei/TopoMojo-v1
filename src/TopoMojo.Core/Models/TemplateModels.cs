@@ -1,3 +1,5 @@
+using System;
+
 namespace TopoMojo.Core.Models
 {
     public class Template
@@ -55,6 +57,12 @@ namespace TopoMojo.Core.Models
         public string TopologyName { get; set; }
         public string ParentId { get; set; }
         public string ParentName { get; set; }
+        public bool IsPublished { get; set; }
     }
 
+    public class TemplateLink
+    {
+        public int TemplateId { get; set; }
+        public int TopologyId { get; set; }
+    }
 }

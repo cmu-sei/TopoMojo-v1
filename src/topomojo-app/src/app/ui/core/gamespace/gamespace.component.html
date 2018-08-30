@@ -1,0 +1,61 @@
+<div *ngIf="game" class="wrapper">
+  <div class="header">
+    <span>{{ title }}</span>
+    <div class="actions">
+      <button *ngFor="let vm of game.vms" [disabled]="!vm.id" (click)="console(vm)" mat-raised-button>
+        <mat-icon>tv</mat-icon>
+        <span>{{vm.name | untagged }}</span>
+      </button>
+      <button *ngIf="game.id && canManage()" mat-mini-fab matTooltip="Share" (click)="showSharing=!showSharing">
+        <mat-icon>share</mat-icon>
+      </button>
+      <button *ngIf="!game.id && !loading" (click)="launch()" matTooltip="Launch" mat-mini-fab>
+        <mat-icon>flash_on</mat-icon>
+      </button>
+      <topomojo-confirm-button *ngIf="game.id" (confirmed)="delete()" icon="delete" fab="true" text="End"></topomojo-confirm-button>
+      <mat-spinner *ngIf="loading" mode="determinate" value="92" diameter="24"></mat-spinner>
+    </div>
+  </div>
+
+  <div *ngIf="game.id && canManage()">
+    <div *ngIf="showSharing" class="team">
+        <!-- <div>Collaboration</div> -->
+        <label>Members</label>
+        <div class="tool">
+          <!-- <button (click)="generateNewShareUrl()"
+            matTooltip="New Invitation"
+            mat-icon-button>
+            <mat-icon>refresh</mat-icon>
+          </button> -->
+          <!-- <span>Generate New Url</span> -->
+
+          <a href={{shareUrl()}} mat-icon-button matTooltip="Right-Click to Copy Link">
+            <mat-icon>share</mat-icon>
+            <!-- <span>Invitation Url</span> -->
+          </a>
+        </div>
+        <mat-chip-list selectable="false">
+          <mat-chip *ngFor="let p of game.players"
+          disableRipple="true"
+          [removable]="game.canManage"
+          (removed)="removeMember($event)"
+          [value]="p.id"
+          >
+            <span>{{p.personName}}</span>
+            <mat-icon *ngIf="notMe(p)" matChipRemove>remove</mat-icon>
+          </mat-chip>
+        </mat-chip-list>
+
+      </div>
+  </div>
+
+  <div class="content">
+    <topomojo-error-div [errors]="errors"></topomojo-error-div>
+
+    <a *ngIf="dockLink" [href]="dockLink" mat-button>
+      <mat-icon>description</mat-icon>
+      External Document
+    </a>
+    <div *ngIf="renderedDoc" [innerHtml]="renderedDoc"></div>
+  </div>
+</div>

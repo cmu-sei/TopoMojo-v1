@@ -10,59 +10,27 @@ namespace TopoMojo.Core
         where T : class, IEntity, new()
     {
         public EntityManager(
-            IProfileRepository profileRepo,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver,
-            IProfileCache profileCache
+            IProfileResolver profileResolver
         )
         {
-            _profileRepo = profileRepo;
             _logger = mill?.CreateLogger(this.GetType());
             _options = options;
             _profileResolver = profileResolver;
-            _profileCache = profileCache;
         }
 
-        protected readonly IProfileRepository _profileRepo;
-        protected readonly IProfileCache _profileCache;
+        protected readonly ILogger _logger;
+        protected readonly CoreOptions _options;
+
+        protected readonly IProfileResolver _profileResolver;
         private Data.Entities.Profile _user;
         protected Data.Entities.Profile Profile
         {
             get
             {
                 if (_user == null)
-                {
-                    var incoming = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
-                    if (incoming.GlobalId.HasValue())
-                    {
-                        _user = _profileCache.Find(incoming.GlobalId);
-                        if (_user == null)
-                        {
-                            _user = _profileRepo.FindByGlobalId(incoming.GlobalId).Result;
-                            if (_user == null)
-                            {
-                                //if empty, check db for emptiness
-                                if (_profileCache.IsEmpty)
-                                    _profileCache.IsEmpty = _profileRepo.IsEmpty().Result;
-
-                                //if empty, make this profile an admin
-                                incoming.IsAdmin = (_profileCache.IsEmpty) ? true : incoming.IsAdmin;
-                                incoming.WorkspaceLimit = _options.DefaultWorkspaceLimit;
-                                _user = _profileRepo.Add(incoming).Result;
-
-                                //set cache to !empty
-                                if (_profileCache.IsEmpty)
-                                    _profileCache.IsEmpty = false;
-                            }
-                            _profileCache.Add(_user);
-                        }
-                    }
-                    else
-                    {
-                        _user = incoming;
-                    }
-                }
+                    _user = Mapper.Map<Data.Entities.Profile>(_profileResolver.Profile);
                 return _user;
             }
         }
@@ -71,10 +39,6 @@ namespace TopoMojo.Core
         {
             return opts => { opts.Items["ActorId"] = Profile.Id; };
         }
-
-        protected readonly ILogger _logger;
-        protected readonly IProfileResolver _profileResolver;
-        protected readonly CoreOptions _options;
 
     }
 }

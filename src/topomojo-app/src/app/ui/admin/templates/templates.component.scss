@@ -1,0 +1,20 @@
+.card {
+    display: flex;
+    flex-flow: row nowrap;
+    margin: 8px 0px;
+
+    .detail {
+        flex: auto;
+    }
+    .actions {
+        flex: none;
+    }
+}
+
+.filters {
+    text-align: right;
+}
+
+.center {
+    text-align: center;
+}

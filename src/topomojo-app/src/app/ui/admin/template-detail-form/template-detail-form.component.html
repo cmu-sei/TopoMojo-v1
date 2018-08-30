@@ -1,0 +1,51 @@
+<div *ngIf="template" class="outer">
+  <mat-divider></mat-divider>
+  <form #form="ngForm" [ngFormOptions]="{updateOn: 'change'}" (ngSubmit)="update()">
+    <input type="hidden" name="id" [ngModel]="template.id">
+    <input type="hidden" name="name" [ngModel]="template.name">
+
+    <div>
+      <mat-slide-toggle name="isPublished" [(ngModel)]="template.isPublished" color="primary" labelPosition="before"
+        [ngModelOptions]="{updateOn: 'change'}">Published</mat-slide-toggle>
+    </div>
+
+  <!-- <div>
+      <mat-form-field>
+        <input matInput required type="text" name="name" matLabel="Template" placeholder="Name" [(ngModel)]="template.name"
+          maxlength="24">
+        <mat-hint>Names should be unique within the workspace!</mat-hint>
+        <mat-hint align="end">{{template.name.length}} / 24</mat-hint>
+      </mat-form-field>
+    </div> -->
+
+    <div>
+      <mat-form-field>
+        <textarea matInput type="textarea" name="description" placeholder="Description" [(ngModel)]="template.description"
+          maxlength="300"></textarea>
+        <mat-hint align="end">{{(''+template.description).length}} / 300</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <input matInput type="text" name="networks" placeholder="Networks" [(ngModel)]="template.networks" maxlength="30">
+        <mat-hint>Space-delimited network names</mat-hint>
+        <mat-hint align="end">{{(''+template.networks).length}} / 30</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div spellcheck="false">
+      <mat-form-field>
+        <textarea matInput type="textarea" rows="20" class="json" name="detail" placeholder="Detail" [(ngModel)]="template.detail"></textarea>
+        <mat-error>{{errorMsg}}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!form.dirty || !form.valid">Save Settings</button>
+    </div>
+
+    <topomojo-error-div [errors]="errors"></topomojo-error-div>
+  </form>
+
+</div>

@@ -14,7 +14,7 @@ namespace TopoMojo.Models
         public string VmStore { get; set; }
         public string DiskStore { get; set; }
         public string IsoStore { get; set; }
-        public string StockStore { get; set; }
+        // public string StockStore { get; set; }
         public string DisplayMethod { get; set; }
         public string DisplayUrl { get; set; }
         public string TicketUrlHandler { get; set; }  = "none"; //"local-app", "external-domain", "host-map", "none"

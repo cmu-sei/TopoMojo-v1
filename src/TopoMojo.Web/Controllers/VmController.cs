@@ -13,7 +13,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class VmController : _Controller
     {
         public VmController(
@@ -41,7 +41,7 @@ namespace TopoMojo.Controllers
 
         // [AllowAnonymous]
         // [HttpGet("/[controller]/[action]/{id}")]
-        // public async Task<IActionResult> Console([FromRoute] string id)
+        // public async Task<ActionResult<>> Console(string id)
         // {
         //     //await HttpContext.Authentication.SignInAsync("Cookies", HttpContext.User);
         //     return View("wmks", new DisplayInfo { Id = id });
@@ -49,7 +49,7 @@ namespace TopoMojo.Controllers
 
         [HttpGet("api/vm/{id}/ticket")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Ticket([FromRoute] string id)
+        public async Task<ActionResult<DisplayInfo>> Ticket(string id)
         {
             await AuthorizeAction(id, "ticket");
             DisplayInfo info = await _pod.Display(id);
@@ -95,10 +95,9 @@ namespace TopoMojo.Controllers
             return Ok(info);
         }
 
-        [HttpGet("api/vms/find")]
-        [ProducesResponseType(typeof(Vm[]), 200)]
+        [HttpGet("api/vms")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Find([FromQuery] string tag)
+        public async Task<ActionResult<Vm[]>> Find(string tag)
         {
             Vm[] vms = new Vm[]{};
             if (_profile.IsAdmin) //)
@@ -112,79 +111,73 @@ namespace TopoMojo.Controllers
             return Ok(vms.OrderBy(v => v.GroupName).ThenBy(v => v.Name).ToArray());
         }
 
-        [HttpGet("api/vm/{id}/load")]
-        [ProducesResponseType(typeof(Vm), 200)]
+        [HttpGet("api/vm/{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Load(string id)
+        public async Task<ActionResult<Vm>> Load(string id)
         {
             await AuthorizeAction(id, "load");
             Vm vm = await _pod.Load(id);
             return Ok(vm);
         }
 
-        [HttpGet("api/vm/{id}/resolve")]
-        [ProducesResponseType(typeof(Vm), 200)]
+        [HttpPost("api/vm/action")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Resolve(int id)
+        public async Task<ActionResult<Vm>> ChangeVm([FromBody]VmOperation op)
         {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
-            Vm vm = await _pod.Refresh(template);
-            if (vm != null)
-                await AuthorizeAction(vm, "resolve");
-            //Vm vm = await _pod.Load(id);
-            return Ok(vm);
-        }
+            string opType = op.Type.ToString().ToLower();
+            await AuthorizeAction(op.Id, opType);
 
-        [HttpGet("api/vm/{id}/start")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Start(string id)
-        {
-            await AuthorizeAction(id, "start");
-            Vm vm = await _pod.Start(id);
-            SendBroadcast(vm, "start");
-            return Ok(vm);
-        }
-
-        [HttpGet("api/vm/{id}/stop")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Stop(string id)
-        {
-            await AuthorizeAction(id, "stop");
-            Vm vm = await _pod.Stop(id);
-            SendBroadcast(vm, "stop");
-            return Ok(vm);
-        }
-
-        [HttpGet("api/vm/{id}/save/{topoId}")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Save(string id, int topoId)
-        {
-            await AuthorizeAction(id, "save");
-            if (await _topoMgr.HasGames(topoId))
+            if (op.Type == VmOperationType.Save && await _topoMgr.HasGames(op.WorkspaceId))
                 throw new Core.WorkspaceNotIsolatedException();
-            Vm vm = await _pod.Save(id);
-            SendBroadcast(vm, "save");
+
+            Vm vm = await _pod.ChangeState(op);
+            SendBroadcast(vm, opType);
             return Ok(vm);
         }
 
-        [HttpGet("api/vm/{id}/revert")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Revert(string id)
-        {
-            await AuthorizeAction(id, "revert");
-            Vm vm = await _pod.Revert(id);
-            SendBroadcast(vm, "revert");
-            return Ok(vm);
-        }
+        // [HttpPut("api/vm/{id}/start")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<Vm>> Start(string id)
+        // {
+        //     await AuthorizeAction(id, "start");
+        //     Vm vm = await _pod.Start(id);
+        //     SendBroadcast(vm, "start");
+        //     return Ok(vm);
+        // }
 
-        [HttpDelete("api/vm/{id}/delete")]
-        [ProducesResponseType(typeof(Vm), 200)]
+        // [HttpPut("api/vm/{id}/stop")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<Vm>> Stop(string id)
+        // {
+        //     await AuthorizeAction(id, "stop");
+        //     Vm vm = await _pod.Stop(id);
+        //     SendBroadcast(vm, "stop");
+        //     return Ok(vm);
+        // }
+
+        // [HttpPut("api/vm/{id}/save/{topoId}")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<Vm>> Save(string id, int topoId)
+        // {
+        //     await AuthorizeAction(id, "save");
+        //     Vm vm = await _pod.Save(id);
+        //     SendBroadcast(vm, "save");
+        //     return Ok(vm);
+        // }
+
+        // [HttpPut("api/vm/{id}/revert")]
+        // [JsonExceptionFilter]
+        // public async Task<ActionResult<Vm>> Revert(string id)
+        // {
+        //     await AuthorizeAction(id, "revert");
+        //     Vm vm = await _pod.Revert(id);
+        //     SendBroadcast(vm, "revert");
+        //     return Ok(vm);
+        // }
+
+        [HttpDelete("api/vm/{id}")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Delete([FromRoute]string id)
+        public async Task<ActionResult<Vm>> Delete(string id)
         {
             await AuthorizeAction(id, "delete");
             Vm vm = await _pod.Delete(id);
@@ -193,40 +186,18 @@ namespace TopoMojo.Controllers
         }
 
         [HttpPost("api/vm/{id}/change")]
-        [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Change([FromRoute]string id, [FromBody] KeyValuePair change)
+        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair change)
         {
             await AuthorizeAction(id, "change");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
             SendBroadcast(vm, "change");
-            return Ok(await _pod.Change(id, change));
-        }
-
-        [HttpGet("api/vm/{id}/deploy")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Deploy([FromRoute]int id)
-        {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
-            Vm vm = await _pod.Deploy(template);
-            SendBroadcast(vm, "deploy");
-            return Ok(vm);
-        }
-
-        [HttpGet("api/vm/{id}/init")]
-        [ProducesResponseType(typeof(Vm), 200)]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> Initialize([FromRoute]int id)
-        {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
-            return Ok(await _pod.CreateDisks(template));
+            return Ok(await _pod.ChangeConfiguration(id, change));
         }
 
         [HttpPost("api/vm/{id}/answer")]
-        [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> Answer([FromRoute]string id, [FromBody] VmAnswer answer)
+        public async Task<ActionResult<Vm>> Answer(string id, [FromBody] VmAnswer answer)
         {
             await AuthorizeAction(id, "answer");
             Vm vm = await _pod.Answer(id, answer);
@@ -235,9 +206,8 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/vm/{id}/isos")]
-        [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> IsoOptions([FromRoute]string id)
+        public async Task<ActionResult<VmOptions>> IsoOptions(string id)
         {
             await AuthorizeAction(id, "isooptions");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
@@ -249,9 +219,8 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/vm/{id}/nets")]
-        [ProducesResponseType(typeof(Vm), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> NetOptions([FromRoute]string id)
+        public async Task<ActionResult<VmOptions>> NetOptions(string id)
         {
             await AuthorizeAction(id, "netoptions");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
@@ -262,8 +231,45 @@ namespace TopoMojo.Controllers
             return Ok(await _pod.GetVmNetOptions(tag));
         }
 
-        [HttpGet("api/host/{host}/reload")]
-        public async Task<IActionResult> ReloadHost([FromRoute]string host)
+        [HttpGet("api/template/{id}/vm")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<Vm>> Resolve(int id)
+        {
+            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            Vm vm = await _pod.Refresh(template);
+            if (vm != null)
+                await AuthorizeAction(vm, "resolve");
+            return Ok(vm);
+        }
+
+        [HttpPost("api/template/{id}/deploy")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<Vm>> Deploy(int id)
+        {
+            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            Vm vm = await _pod.Deploy(template);
+            // SendBroadcast(vm, "deploy");
+            Core.Models.VmState state = new Core.Models.VmState
+            {
+                Id = id.ToString(),
+                Name = vm.Name.Untagged(),
+                IsRunning = vm.State == VmPowerState.Running
+            };
+            await _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM.DEPLOY", state));
+
+            return Ok(vm);
+        }
+
+        [HttpPost("api/template/{id}/disks")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult<Vm>> Initialize(int id)
+        {
+            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            return Ok(await _pod.CreateDisks(template));
+        }
+
+        [HttpPost("api/host/{host}/reload")]
+        public async Task<ActionResult> ReloadHost(string host)
         {
             if (_profile.IsAdmin)
             {
@@ -291,9 +297,9 @@ namespace TopoMojo.Controllers
             if (String.IsNullOrEmpty(instanceId))
                 throw new InvalidOperationException();
 
-            bool result = await _profileManager.CanEditSpace(instanceId);
+            bool canManage = await _profileManager.CanEditSpace(instanceId);
 
-            if (!result) {
+            if (!canManage) {
                 throw new InvalidOperationException();
                 //_logger.LogDebug("checking if {0} can edit {1} -- {2}", _profile.Name, instanceId, result);
             }
@@ -303,7 +309,7 @@ namespace TopoMojo.Controllers
                 Log(method, vm);
                 //_logger.LogInformation($"vm-action {method} {id}");
             }
-            return result;
+            return canManage;
         }
         private void SendBroadcast(Vm vm, string action)
         {
@@ -311,9 +317,8 @@ namespace TopoMojo.Controllers
             {
                 Id = vm.Id,
                 Name = vm.Name.Untagged(),
-                IsRunning = vm.State == VmPowerState.running
+                IsRunning = vm.State == VmPowerState.Running
             };
-            //Broadcast(vm.Name.Tag(), new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
             _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
         }
     }

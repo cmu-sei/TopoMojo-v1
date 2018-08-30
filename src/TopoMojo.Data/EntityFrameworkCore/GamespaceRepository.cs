@@ -26,6 +26,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
                 .Include(g => g.Players)
+                    .ThenInclude(w => w.Person)
                 .Where(g => g.Id == id)
                 .SingleOrDefaultAsync();
         }

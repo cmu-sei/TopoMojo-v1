@@ -1,0 +1,28 @@
+<div>
+  <div class="title">
+    <mat-form-field>
+      <input matInput required type="text" matLabel="New Workplace" placeholder="Name" [(ngModel)]="name" maxlength="100">
+      <!-- <mat-hint>You can change this later</mat-hint> -->
+      <!-- <mat-hint *ngIf="formErrors.name" align="start"><span class="text-danger">{{ formErrors.name }}</span></mat-hint> -->
+      <mat-hint align="end">{{name.length}} / 100</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <div class="desc">
+    <mat-form-field>
+      <textarea matInput type="textarea" placeholder="Description" [(ngModel)]="description" maxlength="300"></textarea>
+      <mat-hint>You can change this later</mat-hint>
+      <mat-hint align="end">{{description.length}} / 300</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <div class="tool">
+    <button mat-mini-fab color="primary" (click)="clicked()" [disabled]="!name.length">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div>
+
+<div>
+  {{errorMessage}}
+</div>

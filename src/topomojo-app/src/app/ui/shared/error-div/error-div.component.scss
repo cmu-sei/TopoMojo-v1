@@ -1,0 +1,11 @@
+.error-msg {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-align: left;
+    max-width: 400px;
+    display: flex;
+
+    span {
+        flex: 1;
+    }
+}

@@ -1,0 +1,88 @@
+<div *ngIf="workspace">
+  <form #form="ngForm" (ngSubmit)="update()" [ngFormOptions]="{updateOn: 'change'}">
+    <input type="hidden" name="id" [ngModel]="workspace.id">
+    <div>
+      <mat-form-field>
+        <input matInput required type="text" name="name"
+          matLabel="New Workplace" placeholder="Name"
+          [(ngModel)]="workspace.name" maxlength="100">
+        <mat-hint align="end">{{workspace.name.length}} / 100</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <textarea matInput type="textarea" name="description"
+          placeholder="Description"
+          [(ngModel)]="workspace.description" maxlength="300"></textarea>
+        <mat-hint align="end">{{(workspace.description+'').length}} / 300</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <input matInput type="text" name="author"
+        placeholder="Author"
+        [(ngModel)]="workspace.author" maxlength="50">
+        <mat-hint align="end">{{(workspace.author+'').length}} / 50</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-form-field>
+        <input matInput type="text" name="documentUrl"
+        placeholder="External Doc Url"
+        [(ngModel)]="workspace.documentUrl" maxlength="100">
+        <mat-hint>Leave blank if using TopoMojo doc.</mat-hint>
+        <mat-hint align="end">{{(workspace.documentUrl+'').length}} / 100</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-slide-toggle name="isPublished" [(ngModel)]="workspace.isPublished"
+      [ngModelOptions]="{updateOn: 'change'}" color="primary" labelPosition="before">Published</mat-slide-toggle>
+    </div>
+
+    <div class="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!form.dirty || !form.valid">Save Settings</button>
+    </div>
+  </form>
+
+  <mat-divider></mat-divider>
+
+  <div class="team">
+    <!-- <div>Collaboration</div> -->
+    <label>Members</label>
+    <mat-chip-list selectable="false">
+      <mat-chip *ngFor="let w of workspace.workers"
+      disableRipple="true"
+      [removable]="workspace.canManage"
+      (removed)="removeMember($event)"
+      [value]="w.id"
+      >
+        <span>{{w.personName}}</span>
+        <mat-icon *ngIf="w.personGlobalId !== profile.globalId" matChipRemove>cancel</mat-icon>
+      </mat-chip>
+    </mat-chip-list>
+
+    <div class="tool">
+      <button (click)="generateNewShareUrl()"
+        matTooltip="New Invitation"
+        mat-icon-button>
+        <mat-icon>refresh</mat-icon>
+        <!-- <span>Generate New Url</span> -->
+      </button>
+
+      <a href={{shareUrl()}} mat-icon-button matTooltip="Right-Click to Copy Link">
+        <mat-icon>share</mat-icon>
+        <!-- <span>Invitation Url</span> -->
+      </a>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+  <!-- Delete -->
+  <div class="quiet-placard">
+    <topomojo-confirm-button [disabled]="false" color="warn" icon="delete" text="Delete Workspace" (confirmed)="onDelete()"></topomojo-confirm-button>
+  </div>
+</div>

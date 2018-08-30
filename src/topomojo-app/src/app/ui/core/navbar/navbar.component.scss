@@ -1,0 +1,27 @@
+.mat-toolbar {
+
+  .title {
+    font-size: 24px;
+    font-weight: normal;
+  }
+
+  input {
+    padding: 5px 16px;
+    border-radius: 100px;
+    border: none;
+    margin-left: 8px;
+    height: 50%;
+    width: 180px;
+    max-width: 240px;
+    letter-spacing: .3px;
+    font-size: 14px;
+  }
+  button {
+    font-weight: normal;
+  }
+
+
+  .hack {
+    width: 0px;
+  }
+}

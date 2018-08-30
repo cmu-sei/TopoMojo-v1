@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace TopoMojo.Core.Models
@@ -8,7 +9,9 @@ namespace TopoMojo.Core.Models
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        [Obsolete]
         public string Document { get; set; }
+        public string DocumentUrl { get; set; }
         public string ShareCode { get; set; }
         public string Author { get; set; }
         public string WhenCreated { get; set; }
@@ -32,6 +35,7 @@ namespace TopoMojo.Core.Models
         public bool IsPublished { get; set; }
         public bool IsLocked { get; set; }
         public string Author { get; set; }
+        public string WhenCreated { get; set; }
     }
 
     public class NewTopology
@@ -46,6 +50,8 @@ namespace TopoMojo.Core.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public string Author { get; set; }
+        public bool IsPublished { get; set; }
+        public string DocumentUrl { get; set; }
     }
 
     public class TopologyState
@@ -56,6 +62,23 @@ namespace TopoMojo.Core.Models
         public bool IsLocked { get; set; }
     }
 
+    [Obsolete]
+    public class TopologyStateAction
+    {
+        public int Id { get; set; }
+        public TopologyStateActionType Type { get; set; }
+    }
+
+    [Obsolete]
+    public enum TopologyStateActionType
+    {
+        Share,
+        Unshare,
+        Publish,
+        Unpublish,
+        Lock,
+        Unlock
+    }
     public class Worker
     {
         public int Id { get; set; }

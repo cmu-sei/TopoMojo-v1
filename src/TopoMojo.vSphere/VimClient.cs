@@ -80,14 +80,14 @@ namespace TopoMojo.vSphere
             await Connect();
             Vm vm = _vmCache[id];
             _logger.LogDebug($"Starting vm {vm.Name}");
-            if (vm.State != VmPowerState.running)
+            if (vm.State != VmPowerState.Running)
             {
                 ManagedObjectReference task = await _vim.PowerOnVM_TaskAsync(vm.AsVim(), null);
                 TaskInfo info = await WaitForVimTask(task);
                 vm.State = (info.state == TaskInfoState.success)
-                    ? VmPowerState.running
+                    ? VmPowerState.Running
                     : vm.State;
-                if (vm.State != VmPowerState.running)
+                if (vm.State != VmPowerState.Running)
                     throw new Exception(info.error.localizedMessage);
 
                 //apply guestinfo for annotations
@@ -104,14 +104,14 @@ namespace TopoMojo.vSphere
             await Connect();
             Vm vm = _vmCache[id];
             _logger.LogDebug($"Stopping vm {vm.Name}");
-            if (vm.State == VmPowerState.running)
+            if (vm.State == VmPowerState.Running)
             {
                 ManagedObjectReference task = await _vim.PowerOffVM_TaskAsync(vm.AsVim());
                 TaskInfo info = await WaitForVimTask(task);
                 vm.State = (info.state == TaskInfoState.success)
-                    ? VmPowerState.off
+                    ? VmPowerState.Off
                     : vm.State;
-                if (vm.State == VmPowerState.running)
+                if (vm.State == VmPowerState.Running)
                     throw new Exception(info.error.localizedMessage);
             }
             _vmCache.TryUpdate(vm.Id, vm, vm);
@@ -177,7 +177,7 @@ namespace TopoMojo.vSphere
             ManagedObjectReference task = await _vim.RevertToCurrentSnapshot_TaskAsync(
                 vm.AsVim(), null, false);
             TaskInfo info = await WaitForVimTask(task);
-            if (vm.State == VmPowerState.running)
+            if (vm.State == VmPowerState.Running)
                 await Start(id);
             _vmCache.TryUpdate(vm.Id, vm, vm);
             return vm;
@@ -194,7 +194,7 @@ namespace TopoMojo.vSphere
 
             _logger.LogDebug($"Delete: stopping vm {vm.Name}");
             await Stop(id);
-            vm.State = VmPowerState.off;
+            vm.State = VmPowerState.Off;
 
             _logger.LogDebug($"Delete: unregistering vm {vm.Name}");
             await _netman.Unprovision(vm.AsVim());
@@ -355,7 +355,7 @@ namespace TopoMojo.vSphere
                     if (newvalue.HasValue() && !newvalue.EndsWith("\n"))
                         newvalue += "\n";
                     vmcs.annotation = config.annotation + newvalue;
-                    if (vm.State == VmPowerState.running && vmcs.annotation.HasValue())
+                    if (vm.State == VmPowerState.Running && vmcs.annotation.HasValue())
                         vmcs.AddGuestInfo(Regex.Split(vmcs.annotation, "\r\n|\r|\n"));
                     break;
 
@@ -536,6 +536,29 @@ namespace TopoMojo.vSphere
                     profile = null
                 }
             );
+        }
+
+        public async Task CreateDisk(Disk disk)
+        {
+            await Connect();
+            await MakeDirectories(disk.Path);
+
+            string adapter = (disk.Controller.HasValue())
+                ? disk.Controller.Replace("lsilogic", "lsiLogic").Replace("buslogic", "busLogic")
+                : "lsiLogic";
+            var task = await _vim.CreateVirtualDisk_TaskAsync(
+                _vdm,
+                disk.Path,
+                _datacenter,
+                new FileBackedVirtualDiskSpec
+                {
+                    diskType = "thin",
+                    adapterType = adapter,
+                    capacityKb = disk.Size * 1000 * 1000,
+                    profile = null
+                }
+            );
+            await WaitForVimTask(task);
         }
 
         public async Task DeleteDisk(string path)
@@ -1124,8 +1147,8 @@ namespace TopoMojo.vSphere
                         //vm.IpAddress = summary.guest.ipAddress;
                         //vm.Os = summary.guest.guestId;
                         vm.State = (summary.runtime.powerState == VirtualMachinePowerState.poweredOn)
-                            ? VmPowerState.running
-                            : VmPowerState.off;
+                            ? VmPowerState.Running
+                            : VmPowerState.Off;
 
                         //vm.IsPoweredOn = (summary.runtime.powerState == VirtualMachinePowerState.poweredOn);
                         vm.Reference = summary.vm.AsString(); //summary.vm.type + "|" + summary.vm.Value;

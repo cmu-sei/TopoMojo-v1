@@ -1,0 +1,40 @@
+<div class="filters">
+  <mat-button-toggle-group (change)="filterChanged($event)">
+    <mat-button-toggle value="parents" checked="true" matTooltip="Filter">Base</mat-button-toggle>
+    <mat-button-toggle value="all" matTooltip="Filter">All</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
+<topomojo-template-creator *ngIf="showCreator" (created)="created($event)"></topomojo-template-creator>
+
+<mat-card *ngFor="let template of templates; trackBy: trackById" class="card">
+  <div class="detail">
+    <div>{{template.name}} <span *ngIf="template.parentName">({{template.parentName}})</span>
+      <mat-icon *ngIf="template.isPublished">public</mat-icon>
+    </div>
+    <div class="mat-caption">{{ template.topologyName || "Stock" }}</div>
+    <div *ngIf="current===template.id">
+      <p *ngIf="!template.topologyId" class="mat-caption">
+        Note: there is no isolation checking outside of a workspace.
+        So take care when managing stock templates.  Ideally, this vm
+        controller should only be used for new (unpublished) templates, or when you otherwise know
+        there are no child templates deployed.
+      </p>
+      <topomojo-vm-controller [template]="template"></topomojo-vm-controller>
+      <topomojo-template-detail-form [template]="detail"></topomojo-template-detail-form>
+    </div>
+  </div>
+  <div class="actions">
+    <button matTooltip="Edit" (click)="select(template)" mat-mini-fab>
+      <mat-icon>create</mat-icon>
+    </button>
+    <a matTooltip="Navigate" [routerLink]="['/topo', template.topologyId]" [disabled]="!template.topologyId" mat-mini-fab>
+      <mat-icon>build</mat-icon>
+    </a>
+    <topomojo-confirm-button (confirmed)="delete(template)" fab="true"></topomojo-confirm-button>
+  </div>
+</mat-card>
+
+<div *ngIf="hasMore" class="center">
+  <button (click)="more()" mat-button color="primary"><mat-icon>search</mat-icon>More</button>
+</div>

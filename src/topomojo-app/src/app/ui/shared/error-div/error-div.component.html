@@ -1,0 +1,7 @@
+<div *ngFor="let e of errors" class="error-msg">
+  <span>{{e.message}}</span>
+  <!-- <span translate>{{ e.message | aserror }}</span> -->
+  <button (click)="clearError(e)" type="button" class="" mat-button>
+      <mat-icon>close</mat-icon>
+  </button>
+</div>

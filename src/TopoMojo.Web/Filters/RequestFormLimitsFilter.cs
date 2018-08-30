@@ -2,7 +2,7 @@ using System;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     /// <summary>
     /// Filter to set size limits for request form data

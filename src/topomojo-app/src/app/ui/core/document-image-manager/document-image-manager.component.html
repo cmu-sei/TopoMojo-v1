@@ -1,0 +1,36 @@
+<div class="wrapper">
+    <div class="uploader">
+      <div class="header">
+        <label *ngIf="!uploading" htmlFor="fileSelector">
+          <input id="fileSelector" type="file" style="display:none;" [multiple]="multiple" (change)="fileSelectorChanged($event)">
+          <mat-icon inline="true">folder</mat-icon>
+          <span> Browse </span>
+        </label>
+        <button [disabled]="!canUpload()" (click)="upload()" mat-mini-fab><mat-icon>cloud_upload</mat-icon></button>
+      </div>
+      <!-- <div class="queue"> -->
+        <div *ngFor="let qf of queuedFiles" class="queued-item">
+          <mat-progress-spinner *ngIf="qf.state === 'inprogress'" mode='determinate' diameter="18" strokeWidth="3" [value]="qf.progress"></mat-progress-spinner>
+          <button *ngIf="qf.state !== 'inprogress'" mat-icon-button (click)="dequeueFile(qf)"><mat-icon>{{qf.state}}</mat-icon></button>
+          <span> {{ qf.name }} </span>
+          <span *ngIf="qf.error"> {{qf.error.message}} </span>
+        </div>
+      <!-- </div> -->
+      <topomojo-error-div [errors]="errors"></topomojo-error-div>
+    </div>
+
+    <div *ngIf="images" class="browser">
+        <div *ngFor="let img of images" class="thumb">
+          <!-- <button mat-icon-button (click)="genMd(img)">
+              <mat-icon>note_add</mat-icon>
+          </button> -->
+          <button mat-icon-button (click)="delete(img)">
+            <mat-icon>remove_circle</mat-icon>
+          </button>
+          <img [src]="imageUrl(img)" (click)="genMd(img)" [title]="img.filename"/>
+          <mat-icon *ngIf="currentClip === img.filename">note_add</mat-icon>
+        </div>
+    </div>
+</div>
+
+

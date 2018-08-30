@@ -18,7 +18,7 @@ namespace TopoMojo.Models.Virtual
         public VmTask Task { get; set; }
     }
 
-    public enum VmPowerState { off, running, suspended}
+    public enum VmPowerState { Off, Running, Suspended}
 
     public class VmQuestion
     {
@@ -39,6 +39,7 @@ namespace TopoMojo.Models.Virtual
         public string Key { get; set; }
         public string Label { get; set; }
     }
+
     public class VmTask
     {
         public string Id { get; set; }
@@ -54,6 +55,7 @@ namespace TopoMojo.Models.Virtual
         public string Name { get; set; }
         public string Url { get; set; }
         public string Conditions { get; set; }
+        public bool IsRunning { get; set; }
     }
 
 }

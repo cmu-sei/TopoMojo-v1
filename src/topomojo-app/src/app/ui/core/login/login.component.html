@@ -1,0 +1,4 @@
+<div class="login">
+  <button *ngIf="!authfrag" mat-raised-button color="primary" (click)="login()">Login at {{authority}}</button>
+  <p *ngIf="authfrag">{{ authmsg }}</p>
+</div>

@@ -86,5 +86,11 @@ namespace TopoMojo.Data.EntityFrameworkCore
             DbContext.Messages.RemoveRange(messages);
             await DbContext.SaveChangesAsync();
         }
+
+        public async Task<int> GetWorkspaceCount(int profileId)
+        {
+            return await DbContext.Workers
+                .CountAsync(w => w.PersonId == profileId && w.Permission.HasFlag(Permission.Manager));
+        }
     }
 }

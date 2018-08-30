@@ -1,0 +1,91 @@
+<div *ngIf="workspace" class="workspace">
+
+      <h1>{{workspace.name}}</h1>
+
+      <topomojo-template *ngFor="let t of workspace.templates; trackBy:trackById" [template]="t" (deleted)="templateRemoved($event)" (cloned)="templateCloned($event)"></topomojo-template>
+
+      <div *ngIf="workspace.gamespaceCount" class="section">
+        <div class="content card">
+          <p>
+            There are gamespaces running from this workspace.  Changes to machines cannot be saved in this situation.
+            <mat-spinner *ngIf="deletingGames" mode="determinate" diameter="24" value="92"></mat-spinner>
+          </p>
+          <topomojo-confirm-button (confirmed)="deletingGames=!deletingGames; deleteGamespaces()" icon="delete" [text]="deleteGamesText()"></topomojo-confirm-button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="header">
+          <div class="title">
+            <button (click)="selectorOpened=!selectorOpened" mat-button>
+              <mat-icon>expand_{{selectorOpened ? 'less' : 'more'}}</mat-icon>
+              Template Selector
+            </button>
+          </div>
+          <div class="tools">
+          </div>
+        </div>
+        <div *ngIf="selectorOpened" class="content">
+          <topomojo-template-selector *ngIf="!atLimit()" (selected)="templateAdded($event)"></topomojo-template-selector>
+          <p *ngIf="atLimit()">This workspace has reached it's template limit. [{{workspace.templateLimit}}]</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="header">
+          <div class="title">
+            <button (click)="uploaderOpened=!uploaderOpened" mat-button>
+              <mat-icon>expand_{{uploaderOpened ? 'less' : 'more'}}</mat-icon>
+              File Uploader
+            </button>
+          </div>
+          <div class="tools">
+          </div>
+        </div>
+        <div *ngIf="uploaderOpened" class="content">
+            <h4>File Upload</h4>
+            <p>An uploaded file will be available as a cd-rom disk for your machines. (If it isn't an *.iso file, it will wrap your file in an iso.)</p>
+            <topomojo-file-uploader [bucketId]="workspace.globalId"></topomojo-file-uploader>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="header">
+          <div class="title">
+            <button (click)="docOpened=!docOpened" mat-button>
+              <mat-icon>expand_{{docOpened ? 'less' : 'more'}}</mat-icon>
+              Lab Document
+            </button>
+          </div>
+          <div class="tools">
+            <!-- <a [routerLink]="['/topo', 'doc', this.workspace.globalId]" matTooltip="Edit Doc" mat-icon-button>
+              <mat-icon>description</mat-icon>
+            </a> -->
+          </div>
+        </div>
+        <div *ngIf="docOpened" class="content">
+          <p>
+            To reference an external document, add the url in Settings.  To edit a lab doc here, follow the link:
+            <a [routerLink]="['/topo', 'doc', this.workspace.globalId]" matTooltip="Edit Doc" mat-icon-button>
+              <mat-icon>description</mat-icon>
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="header">
+          <div class="title">
+            <button (click)="settingsOpened=!settingsOpened" mat-button>
+              <mat-icon>expand_{{settingsOpened ? 'less' : 'more'}}</mat-icon>
+              Workspace Settings
+            </button>
+          </div>
+          <div class="tools">
+          </div>
+        </div>
+        <div *ngIf="settingsOpened" class="content">
+            <topomojo-workspace-settings [workspace]="workspace" (deleted)="deleted()"></topomojo-workspace-settings>
+        </div>
+      </div>
+</div>

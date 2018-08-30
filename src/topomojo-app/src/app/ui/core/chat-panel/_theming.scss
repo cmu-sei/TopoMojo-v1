@@ -1,0 +1,16 @@
+@mixin mix-chatpanel-theme($theme) {
+    $primary: map-get($theme, primary);
+    $accent: map-get($theme, accent);
+
+    .online {
+        background-color: mat-color($accent, A400);
+        color: white;
+    }
+
+    .alt-theme {
+        .online {
+            background-color: mat-color($accent, A700);
+            color: white;
+        }
+    }
+}

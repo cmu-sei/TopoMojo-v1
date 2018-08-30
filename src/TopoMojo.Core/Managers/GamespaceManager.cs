@@ -23,15 +23,13 @@ namespace TopoMojo.Core
     public class GamespaceManager : EntityManager<Gamespace>
     {
         public GamespaceManager(
-            IProfileRepository pr,
             IGamespaceRepository repo,
             ITopologyRepository topos,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager,
-            IProfileCache profileCache
-        ) : base (pr, mill, options, profileResolver, profileCache)
+            IPodManager podManager
+        ) : base (mill, options, profileResolver)
         {
             _pod = podManager;
             _repo = repo;
@@ -42,8 +40,12 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
 
-        public async Task<Models.Gamespace[]> List()
+        public async Task<Models.Gamespace[]> List(string filter)
         {
+            if (filter == "all")
+            {
+                return await ListAll();
+            }
             var list = await _repo.ListByProfile(Profile.Id).ToArrayAsync();
             return Mapper.Map<Models.Gamespace[]>(list);
         }
@@ -125,6 +127,11 @@ namespace TopoMojo.Core
             return await LoadState(gamespace, topoId);
         }
 
+        public async Task<Models.GameState> LoadPreview(int topoId)
+        {
+            return await LoadState(null, topoId);
+        }
+
         private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
         {
             Models.GameState state = null;
@@ -136,6 +143,7 @@ namespace TopoMojo.Core
                     throw new InvalidOperationException();
 
                 state = new Models.GameState();
+                state.Name = gamespace?.Name ?? topo.Name;
                 state.TopologyDocument = topo.Document;
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)

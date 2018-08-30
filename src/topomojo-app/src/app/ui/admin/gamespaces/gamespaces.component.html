@@ -1,0 +1,20 @@
+<mat-card *ngFor="let game of games; trackBy:trackById" class="card">
+  <div class="detail">
+    <div>{{game.name}}</div>
+    <div class="mat-caption">{{game.globalId}}</div>
+    <div>{{ game.whenCreated | ago }} by {{players(game)}}</div>
+    <div *ngIf="current===game.id">
+      <mat-divider inset="true"></mat-divider>
+      <div *ngFor="let vm of vms" class="vm">
+        <div class="name">{{vm.name | untagged }}</div>
+        <topomojo-vm-controller [vm]="vm"></topomojo-vm-controller>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <button matTooltip="View" (click)="select(game)" mat-mini-fab>
+      <mat-icon>tv</mat-icon>
+    </button>
+    <topomojo-confirm-button (confirmed)="delete(game)" icon="delete" text="End" fab="true"></topomojo-confirm-button>
+  </div>
+</mat-card>

@@ -1,7 +1,7 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (
@@ -24,6 +24,12 @@ namespace TopoMojo.Controllers
         private readonly ILogger<TopologyHub> _logger;
         private readonly HubCache _cache;
 
+        public override async Task OnDisconnectedAsync(Exception ex)
+        {
+            _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
+            await base.OnDisconnectedAsync(ex);
+        }
+
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
@@ -32,11 +38,11 @@ namespace TopoMojo.Controllers
             {
                 Id = Context.ConnectionId,
                 ProfileName = Context.User?.Identity.Name,
-                ProfileId = Context.User?.FindFirstValue(JwtClaimTypes.Subject),
+                ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Room = channelId
             };
             _cache.Connections.TryAdd(cc.Id, cc);
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
         public Task Leave(string channelId)
@@ -44,12 +50,12 @@ namespace TopoMojo.Controllers
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
             Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
             _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 
         public Task Greet(string channelId)
         {
-            return Clients.Group(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
+            return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
         }
 
         // public Task Post(string channelId, string text)
@@ -59,7 +65,7 @@ namespace TopoMojo.Controllers
 
         public Task Typing(string channelId, bool val)
         {
-            return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPING", (val) ? "true" : ""));
+            return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<Message>(Context.User, (val) ? "CHAT.TYPING" : "CHAT.IDLE", null));
         }
 
         // public Task Typed(string channelId)
@@ -73,7 +79,7 @@ namespace TopoMojo.Controllers
         // }
 
         public Task TemplateMessage(string action, Core.Models.Template model){
-            return Clients.Group(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
+            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
         }
 
     }
@@ -83,7 +89,7 @@ namespace TopoMojo.Controllers
         Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
         Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
         Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
-        Task ChatEvent(BroadcastEvent<string> broadcastEvent);
+        Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
         Task PresenceEvent(BroadcastEvent broadcastEvent);
         Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
@@ -129,7 +135,7 @@ namespace TopoMojo.Controllers
         {
             return new Actor
             {
-                Id = ((ClaimsPrincipal)user).FindFirstValue(JwtClaimTypes.Subject),
+                Id = ((ClaimsPrincipal)user).FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Name = user.Identity.Name
             };
         }

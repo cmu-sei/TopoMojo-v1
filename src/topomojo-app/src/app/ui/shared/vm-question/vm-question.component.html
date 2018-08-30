@@ -1,0 +1,17 @@
+<div class="header">
+  <p>
+    If the machine becomes unresponsive, it may need a question answered.
+  </p>
+  <button mat-mini-fab (click)="refresh()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>
+<div>
+  <mat-spinner *ngIf="!msg" mode="determinate" diameter="18" value="92"></mat-spinner>
+  {{ msg }}
+</div>
+<div *ngIf="msg && vm.question">
+  <button mat-raised-button *ngFor="let c of vm.question.choices" (click)="answer(c)">
+    {{ label(c) }}
+  </button>
+</div>

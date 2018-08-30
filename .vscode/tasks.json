@@ -17,15 +17,8 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "webpack",
-            "command": "dotnet msbuild src/TopoMojo.Web/TopoMojo.Web.csproj /t:WebpackDev",
-            "type": "shell",
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
             "label": "api-gen",
-            "command": "node src/TopoMojo.Web/swagger-ng.js -u http://localhost:5004/docs/v1/api.json -o src/TopoMojo.Web/ClientApp/app/api -m TermSkipTakeSortFilters:Search",
+            "command": "node src/topomojo-app/swagger-ng.js -u http://localhost:5004/openapi/v1/api.json -o src/topomojo-app/src/app/api -m TermSkipTakeSortFilters:Search",
             "type": "shell",
             "group": "build",
             "problemMatcher": "$tsc"

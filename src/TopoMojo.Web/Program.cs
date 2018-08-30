@@ -3,7 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using TopoMojo.Extensions;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     public class Program
     {
@@ -11,14 +11,14 @@ namespace TopoMojo
         {
             Console.Title = "TopoMojo";
 
-            BuildWebHost(args)
-            .InitializeDatabase()
-            .Run();
+            CreateWebHostBuilder(args)
+                .Build()
+                .InitializeDatabase()
+                .Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .Build();
+                .UseStartup<Startup>();
     }
 }

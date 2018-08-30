@@ -1,0 +1,39 @@
+.header {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: baseline;
+    margin-bottom: 8px;
+
+    span {
+        flex: auto;
+        font-weight: normal;
+        padding: 4px 8px;
+    }
+    button {
+        margin: 0px 4px;
+    }
+}
+
+mat-spinner {
+    margin: 8px;
+    display: inline-block;
+}
+
+.team {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 16px 0px;
+
+    // mat-chip-list {
+    //     flex: 1 1 auto;
+    // }
+    label {
+        padding-right: 8px;
+    }
+}
+
+.content {
+    padding: 48px;
+}

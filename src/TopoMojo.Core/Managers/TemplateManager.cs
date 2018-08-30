@@ -17,14 +17,12 @@ namespace TopoMojo.Core
     public class TemplateManager : EntityManager<Template>
     {
         public TemplateManager(
-            IProfileRepository profileRepository,
             ITemplateRepository repo,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
-            IPodManager podManager,
-            IProfileCache profileCache
-        ) : base(profileRepository, mill, options, profileResolver, profileCache)
+            IPodManager podManager
+        ) : base(mill, options, profileResolver)
         {
             _repo = repo;
             _pod = podManager;
@@ -56,7 +54,7 @@ namespace TopoMojo.Core
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
 
-            model.Detail = new TemplateUtility("").ToString();
+            model.Detail = new TemplateUtility("", model.Name).ToString();
             Template t = Mapper.Map<Template>(model);
             await _repo.Add(t);
             return Mapper.Map<Models.TemplateDetail>(t);
@@ -90,28 +88,28 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Template>(entity);
         }
 
-        public async Task<Models.Template> Link(int templateId, int topoId)
+        public async Task<Models.Template> Link(Models.TemplateLink newlink)
         {
-            Template entity = await _repo.Load(templateId);
+            Template entity = await _repo.Load(newlink.TemplateId);
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
-            if (await _repo.AtTemplateLimit(topoId))
+            if (await _repo.AtTemplateLimit(newlink.TopologyId))
                 throw new WorkspaceTemplateLimitException();
 
             Template linked = Mapper.Map<Template>(entity);
-            linked.TopologyId = topoId;
+            linked.TopologyId = newlink.TopologyId;
             linked.GlobalId = "";
-            linked.Name += new Random().Next(100, 200).ToString();
+            linked.Name += new Random().Next(100, 999).ToString();
             await _repo.Add(linked);
             //TODO: streamline object graph hydration
             linked = await _repo.Load(linked.Id);
             return Mapper.Map<Models.Template>(linked, WithActor());
         }
 
-        public async Task<Models.Template> Unlink(int id) //CLONE
+        public async Task<Models.Template> Unlink(Models.TemplateLink link) //CLONE
         {
-            Template entity = await _repo.Load(id);
+            Template entity = await _repo.Load(link.TemplateId);
             if (entity == null)
                 throw new InvalidOperationException();
 
@@ -147,7 +145,6 @@ namespace TopoMojo.Core
             foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(deployable.Name+"#"+deployable.IsolationTag))
                 await _pod.Delete(vm.Id);
 
-            // TODO: Enforce only topo disks here?  (vSphere Pod only deletes topo-isolated disks, not stock disks.)
             //if root template, delete disk(s)
             if (template.Parent == null)
                 await _pod.DeleteDisks(deployable);
@@ -221,7 +218,7 @@ namespace TopoMojo.Core
             tu.Name = template.Name;
             tu.Networks = template.Networks ?? "lan";
             tu.Iso = template.Iso;
-            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId;
+            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId ?? Guid.Empty.ToString();
             tu.Id = template.Id.ToString();
             TopoMojo.Models.Virtual.Template result =  tu.AsTemplate();
             result.UseUplinkSwitch = template.Topology?.UseUplinkSwitch ?? false;

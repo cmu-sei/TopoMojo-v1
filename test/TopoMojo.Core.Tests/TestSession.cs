@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models;
+using TopoMojo.Core.Privileged;
 using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.EntityFrameworkCore;
@@ -24,17 +26,18 @@ namespace Tests
             _coreOptions = new CoreOptions();
             _mill = mill;
 
-            _proman = new ProfileManager(
-                new ProfileRepository(_ctx),
-                _mill,
-                _coreOptions,
-                new ProfileResolver(new Profile
-                {
-                    Name = "admin@test",
-                    IsAdmin = true
-                }),
-                new ProfileCache()
-            );
+            _proman = new ProfileService(new ProfileRepository(_ctx));
+            // _proman = new ProfileManager(
+            //     new ProfileRepository(_ctx),
+            //     _mill,
+            //     _coreOptions,
+            //     new ProfileResolver(new Profile
+            //     {
+            //         Name = "admin@test",
+            //         IsAdmin = true
+            //     }),
+            // //     new MemoryCache()
+            // );
             AddUser("tester@test", true, true);
         }
 
@@ -42,7 +45,7 @@ namespace Tests
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
         private IProfileResolver _ur;
-        private readonly ProfileManager _proman;
+        private readonly ProfileService _proman;
         private Profile _actor;
         public Profile Actor
         {
@@ -90,6 +93,7 @@ namespace Tests
             {
                 mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
                     new TopologyRepository(_ctx),
+                    new GamespaceRepository(_ctx),
                     _mill, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
@@ -104,7 +108,7 @@ namespace Tests
             {
                 mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
                     new TemplateRepository(_ctx),
-                    _mill, _coreOptions, _ur);
+                    _mill, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
             return mgr as TemplateManager;

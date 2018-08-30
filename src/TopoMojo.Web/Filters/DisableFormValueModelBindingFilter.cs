@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]

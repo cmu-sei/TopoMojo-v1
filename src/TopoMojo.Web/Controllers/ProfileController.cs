@@ -13,43 +13,51 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = "IdSrv,Bearer")]
+    [Authorize]
     public class ProfileController : _Controller
     {
         public ProfileController(
             ProfileManager profileManager,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _mgr = profileManager;
         }
 
         private readonly ProfileManager _mgr;
 
+        [Authorize(Roles = "admin")]
         [HttpGet("api/profiles")]
-        [ProducesResponseType(typeof(SearchResult<Profile>), 200)]
         [JsonExceptionFilter]
-        public async Task<IActionResult> List([FromQuery]Search search)
+        public async Task<ActionResult<SearchResult<Profile>>> List(Search search)
         {
             var result = await _mgr.List(search);
             return Ok(result);
         }
 
-        [HttpPost("api/profile")]
-        [ProducesResponseType(typeof(ChangedProfile), 200)]
+        [HttpGet("api/profile")]
         [JsonExceptionFilter]
-        public async Task<ChangedProfile> UpdateProfile([FromBody]ChangedProfile profile)
+        public async Task<ActionResult<Profile>> GetProfile()
         {
-            await _mgr.UpdateProfile(profile);
-            return profile;
+            var result = await _mgr.FindByGlobalId("");
+            return Ok(result);
         }
 
-        [HttpPost("api/profile/priv")]
-        [ProducesResponseType(typeof(Profile), 200)]
+        [HttpPut("api/profile")]
         [JsonExceptionFilter]
-        public async Task<Profile> PrivilegedUpdate([FromBody]Profile profile)
+        public async Task<IActionResult> UpdateProfile([FromBody]ChangedProfile profile)
+        {
+            await _mgr.UpdateProfile(profile);
+            return Ok();
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpPut("api/profile/priv")]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> PrivilegedUpdate([FromBody]Profile profile)
         {
             await _mgr.PrivilegedUpdate(profile);
-            return profile;
+            return Ok();
 
         }
     }

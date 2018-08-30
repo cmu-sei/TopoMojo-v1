@@ -1,0 +1,27 @@
+.card {
+    display: flex;
+    flex-flow: row nowrap;
+    margin: 8px 0px;
+
+    .detail {
+        flex: auto;
+    }
+}
+
+.vm {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+
+    .name {
+        flex: auto;
+    }
+}
+
+.filters {
+    text-align: right;
+}
+
+.center {
+    text-align: center;
+}

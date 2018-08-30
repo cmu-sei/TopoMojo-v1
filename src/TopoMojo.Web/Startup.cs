@@ -1,209 +1,162 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Text;
-using IdentityModel;
-using Jam.Accounts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SpaServices.Webpack;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
-using TopoMojo.Core.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Services;
-using TopoMojo.Web;
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     public class Startup
     {
-         public Startup(IConfiguration configuration, IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Env = env;
+            oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
         }
 
         public IConfiguration Configuration { get; }
-        public IHostingEnvironment Env { get; }
+        public AuthorizationOptions oidcOptions { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions()
-
-                .Configure<ControlOptions>(Configuration.GetSection("Control"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<ControlOptions>>().CurrentValue)
-
-                .Configure<ClientSettings>(Configuration.GetSection("ClientSettings"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<ClientSettings>>().CurrentValue)
-
-                .Configure<MessagingOptions>(Configuration.GetSection("Messaging"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<MessagingOptions>>().CurrentValue)
-
-                .Configure<FileUploadOptions>(Configuration.GetSection("FileUpload"))
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<FileUploadOptions>>().CurrentValue);
-
-            // add specified db provider
-            services.AddDbProvider(Configuration);
-
-            // add Account services
-            services.AddJamAccounts()
-                .WithConfiguration(() => Configuration.GetSection("Account"), opt => opt.RootPath = Env.ContentRootPath)
-                .WithDefaultRepository(builder => builder.UseConfiguredDatabase(Configuration))
-                .WithProfileService(builder => builder.AddScoped<IProfileService, ProfileService>());
-
-            // add TopoMojo
-            services
-                .AddTopoMojo(() => Configuration.GetSection("Core"))
-                .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration));
-
-            // Add framework services.
             services.AddMvc(options =>
             {
+                var global = new AuthorizationPolicyBuilder()
+                            .RequireAuthenticatedUser()
+                            .Build();
+
+                //options.Filters.Add(new AuthorizeFilter(global));
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
-            });
-            // .AddJsonOptions(options =>
-            // {
-            //     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            //     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            // });
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
 
-            services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddTransient<ISmsSender, AuthMessageSender>();
-            services.AddScoped<IProfileResolver, ProfileResolver>();
-            services.AddScoped<IFileUploadHandler, FileUploadHandler>();
-            services.AddSingleton<IFileUploadMonitor, FileUploadMonitor>();
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<HubCache>();
+            services.AddDbProvider(() => Configuration.GetSection("Database"));
 
-            // add pod manager
-            services.AddSingleton<IPodManager>(sp => {
-                var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
-                return String.IsNullOrWhiteSpace(options.Url)
-                    ? (IPodManager) new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
-                    : (IPodManager) new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
-            });
+            #region Configure TopoMojo
+
+            services
+                .AddApplicationOptions(Configuration)
+                .AddProfileResolver()
+                .AddTopoMojo(() => Configuration.GetSection("Core"))
+                .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
+                .AddScoped<IFileUploadHandler, FileUploadHandler>()
+                .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
+                .AddSingleton<IPodManager>(sp =>
+                {
+                    var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
+                    return String.IsNullOrWhiteSpace(options.Url)
+                        ? (IPodManager)new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
+                        : (IPodManager)new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
+                });
+
+            #endregion
 
             #region Configure Signalr
 
-            services.AddSignalR(options =>{});
+            services.AddSignalR(options => { });
+            services.AddSingleton<HubCache>();
 
-            // services.AddSingleton(_ => new JsonSerializer
+            #endregion
+
+            #region Configure Authentication
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+            services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = oidcOptions.Authority;
+                options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                options.Audience = oidcOptions.AuthorizationScope;
+                options.SaveToken = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = "name",
+                    RoleClaimType = "role"
+                };
+            });
+            // services.AddAuthentication(
+            //     options =>
             //     {
-            //         ContractResolver = new SignalRContractResolver(),
-            //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            //         options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+            //         options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+            //     }
+            // )
+            // .AddIdentityServerAuthentication(
+            //     IdentityServerAuthenticationDefaults.AuthenticationScheme,
+            //     options => {
+            //         options.Authority = oidcOptions.Authority;
+            //         options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+            //         options.ApiName = oidcOptions.AuthorizationScope;
             //     }
             // );
+
             #endregion
 
             #region Configure Swagger
             //add swagger
             services.AddSwaggerGen(options =>
             {
-                // if (System.IO.File.Exists(xmlFileName))
-                // {
-                //     options.IncludeXmlComments(xmlFileName);
-                // }
-
                 options.SwaggerDoc("v1", new Info
                 {
                     Title = "TopoMojo",
                     Version = "v1",
-                    Description = "API documentation and interaction for " + "TopoMojo"
+                    Description = "API documentation and interaction"
                 });
 
-                // options.AddSecurityDefinition("oauth2", new OAuth2Scheme
-                // {
-                //     Type = "oauth2",
-                //     Flow = "implicit",
-                //     AuthorizationUrl = _authOptions.AuthorizationUrl,
-                //     Scopes = new Dictionary<string, string>
-                //     {
-                //         { _authOptions.AuthorizationScope, "public api access" }
-                //     }
-                // });
+                options.AddSecurityDefinition("oauth2", new OAuth2Scheme
+                {
+                    Type = "oauth2",
+                    Flow = "implicit",
+                    AuthorizationUrl = oidcOptions.AuthorizationUrl,
+                    Scopes = new Dictionary<string, string>
+                    {
+                        { oidcOptions.AuthorizationScope, "public api access" }
+                    }
+                });
+                options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                {
+                    { "oauth2", new[] { "readAccess", "writeAccess" } }
+                });
                 options.DescribeAllEnumsAsStrings();
-                options.CustomSchemaIds(x => x.FullName);
+                //options.CustomSchemaIds(x => x.FullName);
             });
             #endregion
 
-            #region Configure Authentication
-            // add authentication
-            AccountOptions accountOptions = Configuration.GetSection("Account").Get<AccountOptions>();
-            TokenOptions tokenOptions = accountOptions.Token;
-
-            var authBuilder = services.AddAuthentication(
-                options =>
-                {
-                    options.DefaultScheme = tokenOptions.Scheme;
-                    options.DefaultChallengeScheme = tokenOptions.Scheme;
-                }
-            )
-            .AddJwtBearer(
-                tokenOptions.Scheme,
-                options => {
-                    options.RequireHttpsMetadata = false; //tokenOptions.RequireHttpsMetadata;
-                    options.TokenValidationParameters =  new TokenValidationParameters
-                    {
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenOptions.Key)),
-                        ValidIssuer = tokenOptions.Issuer,
-                        ValidAudience = tokenOptions.Audience,
-                        NameClaimType = JwtClaimTypes.Name,
-                        RoleClaimType = JwtClaimTypes.Role
-                    };
-                }
-            );
-
-            var oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
-            if (oidcOptions.Enabled)
-            {
-                authBuilder.AddIdentityServerAuthentication(
-                    "IdSrv", //IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                    options => {
-                        options.Authority = oidcOptions.Authority;
-                        options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                        options.ApiName = oidcOptions.AuthorizationScope;
-                    }
-                );
-            }
-            else
-            {
-                authBuilder.AddJwtBearer("IdSrv", options => {});
-            }
-            #endregion
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
 
-            if (env.IsDevelopment() || Configuration.GetValue<bool>("Control:ShowExceptionDetail"))
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            if (env.IsDevelopment())
-            {
-                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
-                    HotModuleReplacement = true
-                });
-            }
-
             app.UseCors("default");
-            app.UseStaticFiles();
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    if (ctx.Context.Request.Path.Value.ToLower() == "/index.html")
+                    {
+                        ctx.Context.Response.Headers.Append("Cache-Control", "no-cache");
+                    }
+                }
+            });
 
             //move any querystring jwt to Auth bearer header
             app.Use(async (context, next) =>
@@ -217,7 +170,7 @@ namespace TopoMojo
                         .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
 
                     if (!String.IsNullOrWhiteSpace(token))
-                        context.Request.Headers.Add("Authorization", new[] {$"Bearer {token}"});
+                        context.Request.Headers.Add("Authorization", new[] { $"Bearer {token}" });
                 }
 
                 await next.Invoke();
@@ -226,46 +179,33 @@ namespace TopoMojo
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "docs/{documentName}/api.json";
+                c.RouteTemplate = "openapi/{documentName}/api.json";
             });
             // app.UseSwaggerUI(c =>
             // {
-            //     c.RoutePrefix = "docs";
-            //     c.SwaggerEndpoint("/docs/v1/api.json", "TopoMojo" + " (v1)");
-            //     c.ConfigureOAuth2(_authOptions.ClientId, _authOptions.ClientSecret, _authOptions.ClientId, _authOptions.ClientName);
+            //     c.RoutePrefix = "openapi";
+            //     c.SwaggerEndpoint("/openapi/v1/api.json", "TopoMojo" + " (v1)");
+            //     c.OAuthClientId(oidcOptions.ClientId);
+            //     c.OAuthClientSecret(oidcOptions.ClientSecret);
+            //     c.OAuthAppName(oidcOptions.ClientName);
             //     c.InjectStylesheet("/css/site.css");
-            //     c.InjectOnCompleteJavaScript("/js/custom-swag.js");
+            //     c.InjectJavascript("/js/custom-swag.js");
             // });
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             app.UseAuthentication();
 
-            app.UseSignalR(routes => {
+            app.UseSignalR(routes =>
+            {
                 routes.MapHub<TopologyHub>("/hub");
             });
 
-            app.UseMvc(routes =>
+            app.UseMvc();
+
+            app.Run(async (context) =>
             {
-                routes.MapRoute(
-                    name:"console",
-                    template: "Console/{id}/{name?}");
-
-                routes.MapRoute(
-                    name: "uploads",
-                    template: "File/{action=Index}/{id}");
-
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-
-                routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Home", action = "Index" });
+                context.Response.Redirect("/index.html");
             });
 
         }
     }
-
-
-
 }

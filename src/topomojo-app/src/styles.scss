@@ -1,0 +1,90 @@
+/* You can add global styles to this file, and also import other style files */
+// @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
+@import '~@angular/material/theming';
+@import './cmu-tartan.theme';
+@import './app/theming';
+// @import './styles/api';
+// @import './styles/markdown';
+// @import './styles/tables';
+// @import './styles/general';
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Open Sans', sans-serif; font-size: 16px}
+.flex-spacer { flex-grow: 1; }
+.quiet-placard {
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+    font-weight: normal;
+}
+.section {
+    max-width: 800px;
+    margin: 8px auto;
+
+    .header {
+        display: flex;
+        align-items: center;
+        min-height: 48px;
+        .title {
+            flex: auto;
+            .mat-button {
+                font-size: 20px;
+                font-weight: normal;
+            }
+        }
+        .tools {
+            padding: 4px 8px;
+        }
+    }
+    .content {
+        max-width: 600px;
+        margin: auto;
+    }
+}
+
+.reader {
+    max-width: 800px;
+    margin: auto;
+    padding: 4px;
+
+    h1 {
+        font-size: 36px;
+        font-weight: normal;
+    }
+}
+.post {
+    font-size: 14px;
+    // letter-spacing: .1em;
+    p { margin: 0px; font-weight: normal; }
+    h1,h2,h3,h4,h5 { margin: 0px; font-weight: normal; }
+    pre,code { padding: 4px; background-color: lightgray; border-radius: 4px; color: black; font-weight: normal; }
+}
+.post.date {
+    text-align: center;
+    hr { width: 80%; margin-top: 16px;}
+    span {
+        border-radius: 8px;
+        padding: 4px 8px;
+    }
+}
+
+// Include material core styles.
+$custom-typography: mat-typography-config(
+  $font-family: '"Open Sans", sans-serif'
+);
+@include angular-material-typography($custom-typography);
+@include mat-core($custom-typography);
+
+$primary: mat-palette($mat-cmu-tartan);
+$accent:  mat-palette($mat-cmu-tartan, A400, A200, A700);
+$theme: cmu-dark-theme($primary, $accent, mat-palette($mat-amber));
+@include angular-material-theme($theme);
+@include mix-app-theme($theme);
+
+$alt: cmu-light-theme($primary, $accent, mat-palette($mat-amber));
+.alt-theme {
+    @include angular-material-theme($alt);
+    @include mix-app-theme($alt);
+}

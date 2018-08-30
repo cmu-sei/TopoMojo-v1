@@ -11,10 +11,10 @@ namespace TopoMojo.Data.Entities
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public DateTime WhenCreated { get; set; }
-        public string Description { get; set; }
-        public string DocumentUrl { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string DocumentUrl { get; set; } = string.Empty;
         public string ShareCode { get; set; }
-        public string Author { get; set; }
+        public string Author { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
         public bool IsLocked { get; set; }
         public int TemplateLimit { get; set; }
@@ -23,6 +23,7 @@ namespace TopoMojo.Data.Entities
         public virtual ICollection<Gamespace> Gamespaces { get; set; } = new List<Gamespace>();
         public virtual ICollection<Template> Templates { get; set; } = new List<Template>();
 
+        [Obsolete]
         [NotMapped]
         public string Document
         {

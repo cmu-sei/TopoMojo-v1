@@ -1,0 +1,18 @@
+<mat-card *ngFor="let vm of vms; trackBy:trackById" class="card">
+  <div class="detail">
+    <div>{{vm.name}}</div>
+    <div class="mat-caption">{{vm.groupName}}</div>
+    <!-- <div>{{ vm.whenCreated | shortdate }} by {{workers(vm)}}</div> -->
+    <!-- <div *ngIf="current===vm.id">
+    </div> -->
+  </div>
+  <div class="actions">
+    <topomojo-vm-controller [vm]="vm" (loaded)="vmRefreshed(vm, $event)"></topomojo-vm-controller>
+    <!-- <button matTooltip="View" (click)="select(vm)" mat-mini-fab>
+      <mat-icon>tv</mat-icon>
+    </button>
+    <a matTooltip="Navigate" [routerLink]="['/vm', vm.id]" mat-mini-fab>
+      <mat-icon>build</mat-icon>
+    </a> -->
+  </div>
+</mat-card>
