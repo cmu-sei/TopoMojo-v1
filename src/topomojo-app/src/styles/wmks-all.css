@@ -45,7 +45,7 @@
 
 /* Touch feedback indicator */
 .ui-touch-feedback-icon {
-   background-image: url('/assets/wmks/touch_sprite_feedback.png');
+   background-image: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png');
    width: 300px;
    height: 120px;
    position: absolute;
@@ -61,31 +61,31 @@
 }
 
 .feedback-container.cursor-icon {
-   background: url('/assets/wmks/touch_sprite_feedback.png') -260px -15px no-repeat;
+   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -260px -15px no-repeat;
    width: 17px;
    height: 23px;
 }
 
 .feedback-container.tap-icon {
-   background: url('/assets/wmks/touch_sprite_feedback.png') -300px -15px no-repeat;
+   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -300px -15px no-repeat;
    width: 36px;
    height: 36px;
 }
 
 .feedback-container.drag-icon {
-   background: url('/assets/wmks/touch_sprite_feedback.png') -10px -10px no-repeat;
+   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -10px -10px no-repeat;
    width: 100px;
    height: 100px;
 }
 
 .feedback-container.pulse-icon {
-   background: url('/assets/wmks/touch_sprite_feedback.png') -111px -10px no-repeat;
+   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -111px -10px no-repeat;
    width: 100px;
    height: 100px;
 }
 
 .feedback-container.scroll-icon {
-   background: url('/assets/wmks/touch_sprite_feedback.png') -212px -10px no-repeat;
+   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -212px -10px no-repeat;
    width: 27px;
    height: 100px;
 }
@@ -105,17 +105,7 @@
    -ms-animation-duration: 350ms;
 }
 
-@-webkit-keyframes showfadeout {
-   0%    { opacity: 1; }
-   100%  { opacity: 0; }
-}
-
-@-moz-keyframes showfadeout {
-   0%    { opacity: 1; }
-   100%  { opacity: 0; }
-}
-
-@-ms-keyframes showfadeout {
+@keyframes showfadeout {
    0%    { opacity: 1; }
    100%  { opacity: 0; }
 }
@@ -133,26 +123,13 @@
    -ms-animation-duration: 400ms;
 }
 
-@-webkit-keyframes showdoublefadeout {
+@keyframes showdoublefadeout {
    0%    { opacity: 1; }
    40%   { opacity: 0; }
    70%   { opacity: 1; }
    100%  { opacity: 0; }
 }
 
-@-moz-keyframes showdoublefadeout {
-   0%    { opacity: 1; }
-   40%   { opacity: 0; }
-   70%   { opacity: 1; }
-   100%  { opacity: 0; }
-}
-
-@-ms-keyframes showdoublefadeout {
-   0%    { opacity: 1; }
-   40%   { opacity: 0; }
-   70%   { opacity: 1; }
-   100%  { opacity: 0; }
-}
 /******************************************************************************
  * Copyright 2013 VMware, Inc.  All rights reserved.
  *****************************************************************************/
@@ -202,7 +179,7 @@
 .trackpad-wrapper  .ui-dialog-titlebar-close .ui-icon,
 .trackpad-wrapper  .ui-dialog-titlebar .ui-dialog-title,
 .touch-sprite {
-   background-image: url('/assets/wmks/touch_sprite.png');
+   background-image: url('node_modules/vmware-wmks/img/img/touch_sprite.png');
 }
 
 /* Replace jquery ui title bar close icon. */

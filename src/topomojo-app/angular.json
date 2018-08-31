@@ -22,7 +22,10 @@
               "src/assets"
             ],
             "styles": [
-              "src/assets/wmks/wmks-all.css",
+              // "node_modules_altered/material-design-icons/material-icons.css",
+              "src/styles/material-icons.css",
+              "src/styles/open-sans.css",
+              "src/styles/wmks-all.css",
               "src/styles.scss"
             ],
             "scripts": [
