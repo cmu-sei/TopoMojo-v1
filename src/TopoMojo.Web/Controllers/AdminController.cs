@@ -47,6 +47,13 @@ namespace TopoMojo.Controllers
         private readonly FileUploadOptions _fileUploadOptions;
         private readonly HubCache _hubCache;
 
+        [AllowAnonymous]
+        [HttpGet("api/version")]
+        public string CommitVersion()
+        {
+            return Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided";
+        }
+
         [HttpGet("/api/admin/getsettings")]
         [JsonExceptionFilter]
         public ActionResult<string> Settings()

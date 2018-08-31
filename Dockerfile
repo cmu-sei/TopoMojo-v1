@@ -18,6 +18,8 @@ CMD ["dotnet", "run"]
 #multi-stage target: prod
 #
 FROM dockreg.cwd.local/dotnet:2.1 AS prod
+ARG commit
+ENV COMMIT=$commit
 COPY --from=dev /app/dist /app
 WORKDIR /app
 EXPOSE 5000
