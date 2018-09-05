@@ -12,16 +12,3 @@ Building 'TopoMojo.Web' *should* be automatic, but some notes if you run into tr
 
 *   TopoMojo.Web needs a non-standard nuget feed.  See the Nuget.Config in the solution root.  (Nuget clients *should* respect that as it cascades configuration.)
 *   TopoMojo.vSphere needs vmware-api-6.0.2 from https://nuget.cwd.local/v3/index.json
-
-
-If running in Visual Studio and Kestrel is desired, add the following to the launchSettings.json file in the TopoMojo.Web project:
-```
-    "Kestrel": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "http://localhost:5004",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    }
-```

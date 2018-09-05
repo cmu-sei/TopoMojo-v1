@@ -1,7 +1,7 @@
 #
 #multi-stage target: dev
 #
-FROM dockreg.cwd.local/dotnet-sdk:2.1.301 AS dev
+FROM dockreg.cwd.local/dotnet-sdk:2.1 AS dev
 
 ENV ASPNETCORE_URLS=http://*:5000 \
     ASPNETCORE_ENVIRONMENT=DEVELOPMENT
