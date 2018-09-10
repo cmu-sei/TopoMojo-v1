@@ -411,15 +411,16 @@ namespace TopoMojo.vSphere
             VimClient host = FindHostByRandom();
             List<string> isos = new List<string>();
 
+            isos.AddRange(
+                (await host.GetFiles(host.Options.IsoStore + id + "/*.iso", false))
+            );
+            isos.AddRange(
+                (await host.GetFiles(host.Options.IsoStore + Guid.Empty.ToString() + "/*.iso", false)).ToArray()
+            );
+
             //translate actual path to display path
-            isos.AddRange(
-                (await host.GetFiles(host.Options.IsoStore + "/*.iso", false))
-                .Select(x => "public/" + System.IO.Path.GetFileName(x)).ToArray());
-            isos.AddRange(
-                (await host.GetFiles(host.Options.DiskStore + id + "/*.iso", false))
-                .Select(x => x.Replace(host.Options.DiskStore, "")));
-                //.Select(x => System.IO.Path.GetFileName(x)));
-            isos.Sort();
+            isos = isos.Select(x => x.Replace(host.Options.IsoStore, "").Trim()).ToList();
+            // isos.Sort();
             return new VmOptions {
                 Iso = isos.ToArray()
             };
@@ -444,41 +445,19 @@ namespace TopoMojo.vSphere
         {
             if (!template.Iso.HasValue())
             {
+                // need to have a backing file to add the cdrom device
                 template.Iso = option.IsoStore + "null.iso";
             }
-            else
-            {
-                template.Iso = (template.Iso.StartsWith("public"))
-                    ? template.Iso = option.IsoStore + System.IO.Path.GetFileName(template.Iso)
-                    : template.Iso = option.DiskStore + template.Iso;
-                    //: template.Iso = option.DiskStore + template.IsolationTag + "/" + System.IO.Path.GetFileName(template.Iso);
-            }
-
-            // if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
-            // {
-            //     template.Iso = option.IsoStore + template.Iso + ".iso";
-            // }
-
-            // if (template.Source.HasValue() && !template.Source.StartsWith(option.StockStore))
-            // {
-            //     //template.Source = option.StockStore + template.Source + ".vmdk";
-            // }
-
-            // string prefix = option.DiskStore.Trim();
-            // if (!prefix.EndsWith("]") && !prefix.EndsWith("/"))
-            //     prefix += "/";
+            var isopath = new DatastorePath(template.Iso);
+            isopath.Merge(option.IsoStore);
+            template.Iso = isopath.ToString();
 
             foreach (Disk disk in template.Disks)
             {
                 if (!disk.Path.StartsWith(option.DiskStore)
-                    // && !disk.Path.StartsWith(option.StockStore)
                 ) {
                     DatastorePath dspath = new DatastorePath(disk.Path);
                     dspath.Merge(option.DiskStore);
-                    // string folder = dspath.FolderPath;
-                    // if (folder.Trim().HasValue())
-                    //     folder += "/";
-                    // disk.Path = String.Format("{0}{1}/{2}", prefix, folder, dspath.File);
                     disk.Path = dspath.ToString();
                 }
             }

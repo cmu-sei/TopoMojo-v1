@@ -15,6 +15,7 @@ export class FileUploaderComponent implements OnInit {
   pendingFiles: any[] = [];
   loading: boolean;
   uploading: boolean;
+  publicId = '00000000-0000-0000-0000-000000000000';
   errorMessage: string;
   errors: Array<Error> = [];
 
@@ -31,9 +32,11 @@ export class FileUploaderComponent implements OnInit {
     for (let i = 0; i < e.srcElement.files.length; i++) {
       const file = e.srcElement.files[i];
       this.queuedFiles.push({
+        bucketId: this.bucketId,
         key: this.bucketId + '-' + file.name,
         name: file.name,
         file: file,
+        public: false,
         progress: -1,
         state: 'remove_circle',
         error: ''
@@ -62,12 +65,13 @@ export class FileUploaderComponent implements OnInit {
 
   private uploadFile(qf): void {
     qf.state = 'inprogress';
-    this.fileSvc.uploadIso(this.bucketId, qf.key, qf.file).pipe(
+    this.fileSvc.uploadIso(qf.bucketId, qf.file).pipe(
       finalize(() => this.finished(qf))
     ).subscribe(
         (event) => {
           if (event.type === HttpEventType.UploadProgress) {
             qf.progress = Math.round(100 * event.loaded / event.total);
+            // TODO: broadcast notifaction to workspace at some interval
           } else if (event instanceof HttpResponse) {
             // if (!qf.name.match(/.*\.iso/)) { qf.name += '.iso'; }
             qf.progress = 100;
@@ -84,5 +88,10 @@ export class FileUploaderComponent implements OnInit {
     // this.queuedFiles.splice(this.queuedFiles.indexOf(qf), 1);
     this.uploading = this.queuedFiles.filter(f => f.state === 'inprogress').length > 0;
     console.log(this.uploading);
+  }
+
+  toggleScope(qf): void {
+    qf.public = !qf.public;
+    qf.bucketId = (qf.public) ? this.publicId : this.bucketId;
   }
 }

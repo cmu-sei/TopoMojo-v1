@@ -93,7 +93,7 @@ namespace TopoMojo.Services
                             FileUploadStatus status = new FileUploadStatus
                             {
                                 Metadata = metadata,
-                                Key = metadata["monitor-key"],
+                                Key = metadata["monitor-key"] ?? $"{metadata["group-key"]}-{metadata["original-name"]}",
                                 Size = Int64.Parse(metadata["size"] ?? "1E9")
                             };
 
