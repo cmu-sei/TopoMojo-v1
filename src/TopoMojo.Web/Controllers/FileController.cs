@@ -61,24 +61,20 @@ namespace TopoMojo.Controllers
             await _uploader.Process(
                 Request,
                 metadata => {
-
+                    string publicTarget = Guid.Empty.ToString();
                     string original = metadata["original-name"];
                     string filename = metadata["name"] ?? original;
                     string key = metadata["group-key"];
-                    string scope = metadata["scope"];
                     long size = Int64.Parse(metadata["size"] ?? "0");
 
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (scope == "public" && !_profile.IsAdmin)
-                        throw new InvalidOperationException();
-
-                    if (scope == "private" && !_topoManager.CanEdit(key).Result)
+                    if (key != publicTarget && !_topoManager.CanEdit(key).Result)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);
-                    string dest = BuildDestinationPath(filename, key, scope);
+                    string dest = BuildDestinationPath(filename, key);
                     metadata.Add("destination-path", dest);
                     Log("uploading", null, dest);
 
@@ -138,29 +134,11 @@ namespace TopoMojo.Controllers
             return p;
         }
 
-        private string BuildDestinationPath(string filename, string key, string scope)
+        private string BuildDestinationPath(string filename, string key)
         {
+            string path = SanitizeFilePath(Path.Combine(_config.IsoRoot, key));
             string fn = SanitizeFileName(filename);
-            string path = "";
-
-            switch (scope)
-            {
-                case "public":
-                    path = _config.IsoRoot;
-                    break;
-
-                case "private":
-                    path = Path.Combine(_config.TopoRoot, key);
-                    break;
-
-                default:
-                    throw new Exception("Invalid file scope.");
-
-            }
-
-            path = SanitizeFilePath(path);
-            path = Path.Combine(path, fn);
-            return path;
+            return Path.Combine(path, fn);
         }
 
         public IActionResult Error()

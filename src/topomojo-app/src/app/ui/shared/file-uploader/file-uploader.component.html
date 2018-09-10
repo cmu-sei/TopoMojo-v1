@@ -12,6 +12,9 @@
           <button mat-icon-button (click)="dequeueFile(qf)"><mat-icon>{{qf.state}}</mat-icon></button>
         </li>
         <li><span> {{ qf.name }} </span></li>
+        <li>
+          Public <mat-slide-toggle [checked]="qf.public" (change)="toggleScope(qf)"></mat-slide-toggle>
+        </li>
         <li *ngIf="qf.error"> {{qf.error.message}} </li>
       </ul>
     </div>
