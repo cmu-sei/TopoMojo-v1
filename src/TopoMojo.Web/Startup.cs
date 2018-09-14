@@ -148,6 +148,7 @@ namespace TopoMojo.Web
 
             app.UseCors("default");
 
+            app.UseStaticGzipCompression();
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = ctx =>

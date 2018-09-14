@@ -23,7 +23,8 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="7.0.1" />
     <PackageReference Include="DiscUtils.Iso9660" Version="0.13.0-alpha" />
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.2"/>
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.2" />
+    <PackageReference Include="StaticGzipCompression" Version="1.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />
   </ItemGroup>
 </Project>
