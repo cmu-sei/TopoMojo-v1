@@ -1,8 +1,9 @@
-div {
+.form {
     display: flex;
     align-items: baseline;
     text-align: left;
     flex-wrap: wrap;
+    margin-bottom: 8px;
 
     .title {
         flex: 1;
