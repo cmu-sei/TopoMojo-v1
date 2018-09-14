@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -201,9 +202,19 @@ namespace TopoMojo.Web
 
             app.UseMvc();
 
+            // Default route return client app
             app.Run(async (context) =>
             {
-                context.Response.Redirect("/index.html");
+                string indexFile = Path.Combine(env.WebRootPath, "index.html");
+                var fileInfo = new System.IO.FileInfo(indexFile);
+                context.Response.StatusCode = 200;
+                context.Response.ContentLength = fileInfo.Length;
+                context.Response.Headers.Append("Content-Type", "text/html");
+
+                using (FileStream fs = File.OpenRead(indexFile))
+                {
+                    await fs.CopyToAsync(context.Response.Body);
+                }
             });
 
         }
