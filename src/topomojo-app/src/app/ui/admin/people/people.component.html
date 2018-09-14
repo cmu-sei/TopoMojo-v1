@@ -6,12 +6,14 @@
 </div>
 <mat-card *ngFor="let person of people; trackBy:trackById" class="card">
   <div class="detail">
-    <div>{{person.name}}
+    <div>
+      {{person.name}}
       <mat-icon *ngIf="person.isAdmin">stars</mat-icon>
     </div>
+    <div class="mat-caption">since {{person.whenCreated.substring(0,10)}}</div>
     <div class="mat-caption">{{ person.globalId }}</div>
     <div *ngIf="current===person.id">
-      <topomojo-profile-settings [profile]="person"></topomojo-profile-settings>
+      <topomojo-profile-settings [profile]="person" (deleted)="onDeleted($event)"></topomojo-profile-settings>
     </div>
   </div>
   <div class="actions">

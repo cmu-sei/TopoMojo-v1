@@ -85,6 +85,7 @@ export interface Profile {
     name?: string;
     isAdmin?: boolean;
     workspaceLimit?: number;
+    whenCreated?: string;
 }
 
 export interface ChangedProfile {
@@ -310,4 +311,3 @@ export enum VmOperationTypeEnum {
     revert = <any>'revert',
     delete = <any>'delete'
 }
-

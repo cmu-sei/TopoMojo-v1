@@ -26,5 +26,8 @@ export class GeneratedProfileService extends GeneratedService {
     public putProfilePriv(profile: Profile): Observable<any> {
         return this.http.put<any>(this.api.url + '/api/profile/priv', profile);
     }
+    public deleteProfile(id: number): Observable<any> {
+        return this.http.delete<any>(this.api.url + '/api/profile/' + id);
+    }
 
 }

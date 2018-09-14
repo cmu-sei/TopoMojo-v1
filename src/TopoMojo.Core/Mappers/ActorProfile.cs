@@ -6,7 +6,9 @@ namespace TopoMojo.Core.Mappers
     {
         public ActorProfile()
         {
-            CreateMap<Data.Entities.Profile, Models.Profile>().ReverseMap();
+            CreateMap<Data.Entities.Profile, Models.Profile>()
+                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
+            .ReverseMap();
             CreateMap<Models.ChangedProfile, Data.Entities.Profile>();
         }
     }
