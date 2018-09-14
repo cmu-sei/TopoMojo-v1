@@ -104,6 +104,15 @@ namespace TopoMojo.Core
             return true;
         }
 
+        public async Task DeleteProfile(int id)
+        {
+            var entity = await _profileRepo.Load(id);
+
+            if (entity == null || (!Profile.IsAdmin && Profile.GlobalId != entity.GlobalId))
+                throw new InvalidOperationException();
+
+            await _profileRepo.Remove(entity);
+        }
 
     }
 }

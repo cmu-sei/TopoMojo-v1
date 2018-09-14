@@ -10,6 +10,7 @@ namespace TopoMojo.Core.Models
         public string Name { get; set; }
         public bool IsAdmin { get; set; }
         public int WorkspaceLimit { get; set; }
+        public string WhenCreated { get; set; }
     }
 
     public class ChangedProfile

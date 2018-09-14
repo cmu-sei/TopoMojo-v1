@@ -68,4 +68,8 @@ export class PeopleComponent implements OnInit, OnDestroy {
   trackById(i: number, item: Profile): number {
     return item.id;
   }
+
+  onDeleted(p: Profile) {
+    this.people.splice(this.people.indexOf(p),1);
+  }
 }

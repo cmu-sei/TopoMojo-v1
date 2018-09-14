@@ -28,4 +28,8 @@
     <topomojo-error-div [errors]="errors"></topomojo-error-div>
   </form>
 
+  <mat-divider></mat-divider>
+  <div class="quiet-placard">
+    <topomojo-confirm-button [disabled]="false" color="warn" icon="delete" text="Delete Profile" (confirmed)="delete()"></topomojo-confirm-button>
+  </div>
 </div>

@@ -60,6 +60,15 @@ namespace TopoMojo.Controllers
             return Ok();
 
         }
+
+        [HttpDelete("api/profile/{id}")]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> DeleteProfile(int id)
+        {
+            await _mgr.DeleteProfile(id);
+            return Ok();
+        }
+
     }
 
 }

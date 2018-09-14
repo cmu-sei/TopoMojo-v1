@@ -1,6 +1,7 @@
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, Output, EventEmitter } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ProfileService } from '../../../api/profile.service';
+import { Profile } from '../../../api/gen/models';
 
 @Component({
   selector: 'topomojo-profile-settings',
@@ -8,7 +9,8 @@ import { ProfileService } from '../../../api/profile.service';
   styleUrls: ['./profile-settings.component.scss']
 })
 export class ProfileSettingsComponent implements OnInit {
-  @Input() profile;
+  @Input() profile: Profile;
+  @Output() deleted = new EventEmitter<Profile>();
   @ViewChild(NgForm) form;
 
   constructor(
@@ -26,4 +28,11 @@ export class ProfileSettingsComponent implements OnInit {
     );
   }
 
+  delete() {
+    this.profileSvc.deleteProfile(this.profile.id).subscribe(
+      () => {
+        this.deleted.emit(this.profile);
+      }
+    );
+  }
 }
