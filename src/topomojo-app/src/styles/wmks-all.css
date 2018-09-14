@@ -45,7 +45,7 @@
 
 /* Touch feedback indicator */
 .ui-touch-feedback-icon {
-   background-image: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png');
+   background-image: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png');
    width: 300px;
    height: 120px;
    position: absolute;
@@ -61,31 +61,31 @@
 }
 
 .feedback-container.cursor-icon {
-   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -260px -15px no-repeat;
+   background: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -260px -15px no-repeat;
    width: 17px;
    height: 23px;
 }
 
 .feedback-container.tap-icon {
-   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -300px -15px no-repeat;
+   background: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -300px -15px no-repeat;
    width: 36px;
    height: 36px;
 }
 
 .feedback-container.drag-icon {
-   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -10px -10px no-repeat;
+   background: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -10px -10px no-repeat;
    width: 100px;
    height: 100px;
 }
 
 .feedback-container.pulse-icon {
-   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -111px -10px no-repeat;
+   background: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -111px -10px no-repeat;
    width: 100px;
    height: 100px;
 }
 
 .feedback-container.scroll-icon {
-   background: url('node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -212px -10px no-repeat;
+   background: url('../../node_modules/vmware-wmks/img/img/touch_sprite_feedback.png') -212px -10px no-repeat;
    width: 27px;
    height: 100px;
 }
@@ -179,7 +179,7 @@
 .trackpad-wrapper  .ui-dialog-titlebar-close .ui-icon,
 .trackpad-wrapper  .ui-dialog-titlebar .ui-dialog-title,
 .touch-sprite {
-   background-image: url('node_modules/vmware-wmks/img/img/touch_sprite.png');
+   background-image: url('../../node_modules/vmware-wmks/img/img/touch_sprite.png');
 }
 
 /* Replace jquery ui title bar close icon. */

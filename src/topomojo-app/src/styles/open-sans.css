@@ -2,19 +2,19 @@
   font-family: 'Open Sans';
   font-weight: 300;
   font-style: normal;
-  src: url('node_modules/npm-font-open-sans/fonts/Light/OpenSans-Light.woff2') format('woff2')
+  src: url('../../node_modules/npm-font-open-sans/fonts/Light/OpenSans-Light.woff2') format('woff2')
 }
 
 @font-face {
   font-family: 'Open Sans';
   font-weight: normal;
   font-style: normal;
-  src: url('node_modules/npm-font-open-sans/fonts/Regular/OpenSans-Regular.woff2') format('woff2')
+  src: url('../../node_modules/npm-font-open-sans/fonts/Regular/OpenSans-Regular.woff2') format('woff2')
 }
 
 @font-face {
   font-family: 'Open Sans';
   font-weight: 600;
   font-style: normal;
-  src: url('node_modules/npm-font-open-sans/fonts/Semibold/OpenSans-Semibold.woff2') format('woff2')
+  src: url('../../node_modules/npm-font-open-sans/fonts/Semibold/OpenSans-Semibold.woff2') format('woff2')
 }
