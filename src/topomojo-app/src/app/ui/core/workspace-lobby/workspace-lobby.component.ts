@@ -24,6 +24,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   private profile: Profile = {};
   hasProfile = false;
   subs: Array<Subscription> = [];
+  firstQuery = true;
 
   constructor(
     private toolbarSvc: ToolbarService,
@@ -45,7 +46,6 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
 
             const f = p ? 'private' : 'public';
             if (f !== this.filter) {
-              this.filter = f;
               this.filterChanged({ value: f });
             }
           }
@@ -97,12 +97,19 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         this.none = !this.list.length;
         this.model.skip += data.results.length;
         this.hasMore = data.results.length === this.model.take;
+        if (this.firstQuery && this.none && this.model.filters.indexOf('private') >= 0 && !this.model.term) {
+          setTimeout(() => {
+            this.filterChanged({value: 'public'});
+          }, 100);
+        }
+        this.firstQuery = false;
       }
     );
   }
 
   filterChanged(e): void {
     if (e.value) {
+      this.filter = e.value;
       this.model.filters = [ e.value ];
       this.fetch_fresh();
     }

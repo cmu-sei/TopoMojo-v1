@@ -1,4 +1,4 @@
-<div>
+<div class="form">
   <div class="title">
     <mat-form-field>
       <input matInput required type="text" matLabel="New Workplace" placeholder="Name" [(ngModel)]="name" maxlength="100">
@@ -23,6 +23,4 @@
   </div>
 </div>
 
-<div>
-  {{errorMessage}}
-</div>
+<topomojo-error-div [errors]="errors"></topomojo-error-div>
