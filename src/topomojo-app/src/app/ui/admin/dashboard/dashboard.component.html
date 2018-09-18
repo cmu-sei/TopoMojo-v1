@@ -1,0 +1,19 @@
+<div>
+  <div class="input">
+    <mat-form-field>
+      <textarea matInput type="textarea" placeholder="Announcement" [(ngModel)]="announcement"></textarea>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="announce()" [disabled]="!announcement.length">
+      <mat-icon>send</mat-icon> Announce
+    </button>
+  </div>
+
+  <div class="submit">
+  </div>
+</div>
+
+<div>
+  <h4>Active Users</h4>
+  <div *ngIf="connections.length === 0">None</div>
+  <div *ngFor="let c of connections; trackBy:trackById">{{c.profileName}}</div>
+</div>

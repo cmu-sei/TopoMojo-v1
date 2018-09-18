@@ -68,6 +68,13 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
     this.current = (this.current !== topo.id) ? topo.id : 0;
   }
 
+  delete(topo: Topology) {
+    this.topoSvc.deleteTopology(topo.id).subscribe(
+      () => {
+        this.topos.splice(this.topos.indexOf(topo), 1);
+      }
+    )
+  }
   trackById(i: number, item: Topology): number {
     return item.id;
   }

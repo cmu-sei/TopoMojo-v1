@@ -23,6 +23,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProfileSettingsComponent } from './profile-settings/profile-settings.component';
 import { TemplateCreatorComponent } from './template-creator/template-creator.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 @NgModule({
   imports: [
@@ -41,6 +42,7 @@ import { TemplateCreatorComponent } from './template-creator/template-creator.co
     RouterModule.forChild([
       { path: '', component: AdminComponent, canActivate: [AdminGuard, AuthGuard], children: [
         {path: '', children: [
+          { path: 'dash', component: DashboardComponent },
           { path: 'topo', component: WorkspacesComponent },
           { path: 'mojo', component: GamespacesComponent },
           { path: 'tempo', component: TemplatesComponent },
@@ -51,6 +53,6 @@ import { TemplateCreatorComponent } from './template-creator/template-creator.co
       ]}
     ])
   ],
-  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent, TemplateDetailFormComponent, ProfileSettingsComponent, TemplateCreatorComponent]
+  declarations: [AdminComponent, WorkspacesComponent, GamespacesComponent, TemplatesComponent, MachinesComponent, PeopleComponent, TemplateDetailFormComponent, ProfileSettingsComponent, TemplateCreatorComponent, DashboardComponent]
 })
 export class AdminModule { }

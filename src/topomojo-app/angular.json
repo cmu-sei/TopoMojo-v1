@@ -22,7 +22,6 @@
               "src/assets"
             ],
             "styles": [
-              // "node_modules_altered/material-design-icons/material-icons.css",
               "src/styles/material-icons.css",
               "src/styles/open-sans.css",
               "src/styles/wmks-all.css",

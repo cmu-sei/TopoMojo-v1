@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRouteSnapshot, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'topomojo-admin',
@@ -7,15 +9,22 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AdminComponent implements OnInit {
   navLinks: Array<NavLink> = [
+    { label: 'Dashboard', path: 'dash' },
     { label: 'Gamespace', path: 'mojo' },
     { label: 'Workspace', path: 'topo' },
     { label: 'Template', path: 'tempo' },
     { label: 'Machines', path: 'vms' },
     { label: 'People', path: 'people' }
   ];
-  constructor() { }
+  showDefault = true;
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit() {
+    this.router.navigate(['admin', 'dash']);
   }
 
 }

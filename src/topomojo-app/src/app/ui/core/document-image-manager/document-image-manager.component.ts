@@ -68,11 +68,11 @@ export class DocumentImageManagerComponent implements OnInit {
     });
   }
 
-  private fileSelectorChanged(e) {
+  fileSelectorChanged(e) {
     // console.log(e.srcElement.files);
     this.queuedFiles = [];
-    for (let i = 0; i < e.srcElement.files.length; i++) {
-      const file = e.srcElement.files[i];
+    for (let i = 0; i < e.target.files.length; i++) {
+      const file = e.target.files[i];
       this.queuedFiles.push({
         key: this.bucketId + '-' + file.name,
         name: file.name,

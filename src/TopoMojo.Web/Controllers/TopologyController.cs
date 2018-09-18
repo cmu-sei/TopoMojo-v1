@@ -81,7 +81,7 @@ namespace TopoMojo.Controllers
         {
             Topology topo = await _mgr.Delete(id);
             Log("deleted", topo);
-            //Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
+            await _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Topology>(User, "TOPO.DELETED", topo));
             return Ok(true);
         }
 

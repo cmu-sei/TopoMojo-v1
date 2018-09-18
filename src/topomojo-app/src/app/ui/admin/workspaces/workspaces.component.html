@@ -27,6 +27,7 @@
     <a matTooltip="Navigate" [routerLink]="['/topo', topo.id]" mat-mini-fab>
       <mat-icon>build</mat-icon>
     </a>
+    <topomojo-confirm-button (confirmed)="delete(topo)" fab="true"></topomojo-confirm-button>
   </div>
 </mat-card>
 <div *ngIf="hasMore" class="center">

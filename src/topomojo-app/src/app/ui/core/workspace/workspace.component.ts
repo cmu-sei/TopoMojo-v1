@@ -8,6 +8,9 @@ import { Subscription } from 'rxjs';
 import { ToolbarService, NavbarButton } from '../../svc/toolbar.service';
 import { MatDrawer, MatSidenav } from '@angular/material/sidenav';
 import { TemplateService } from '../../../api/template.service';
+import { ExpiringDialogComponent } from '../../shared/expiring-dialog/expiring-dialog.component';
+import { MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { VmControllerComponent } from '../../shared/vm-controller/vm-controller.component';
 
 @Component({
   templateUrl: './workspace.component.html',
@@ -26,6 +29,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     description: 'Collaborate',
     clicked: () => { this.toolbar.toggleSide(); }
   };
+  private dialogRef: MatDialogRef<ExpiringDialogComponent>;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -33,7 +38,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     private templateSvc: TemplateService,
     private notifier: NotificationService,
     private settingsSvc: SettingsService,
-    private toolbar: ToolbarService
+    private toolbar: ToolbarService,
+    private dialogSvc: MatDialog
   ) { }
 
   ngOnInit() {
@@ -72,7 +78,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
                   break;
 
                   case 'TOPO.DELETED':
-                  // TODO: this.showOverlay = true;
+                  this.dialogRef = this.dialogSvc.open(ExpiringDialogComponent, {
+                    disableClose: true,
+                    closeOnNavigation: true,
+                    data: { title: 'Workspace Deleted', button: 'Continue' }
+                  });
+                  this.subs.push(
+                    this.dialogRef.afterClosed().subscribe(
+                      () => {
+                        this.router.navigate(['/topo']);
+                      }
+                    )
+                  );
                   break;
               }
           }
@@ -92,13 +109,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
                   this.templateRemoved(event.model);
                   break;
               }
-          }
-      ),
-      this.notifier.chatEvents.subscribe(
-          (event) => {
-              // if (event.action === 'CHAT.MESSAGE' && !this.collaborationVisible) {
-              //     TODO: this.messageCount += 1;
-              // }
           }
       )
     );

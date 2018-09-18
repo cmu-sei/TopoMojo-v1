@@ -54,6 +54,7 @@ namespace TopoMojo.Controllers
         [HttpPost("api/file/upload")]
         [JsonExceptionFilter]
         [DisableFormValueModelBinding]
+        [DisableRequestSizeLimit]
         // [ApiExplorerSettings(IgnoreApi=true)]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult<bool>> Upload()
