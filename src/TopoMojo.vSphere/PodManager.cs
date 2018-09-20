@@ -457,6 +457,12 @@ namespace TopoMojo.vSphere
                     dspath.Merge(option.DiskStore);
                     disk.Path = dspath.ToString();
                 }
+                if (disk.Source.HasValue() && !disk.Source.StartsWith(option.DiskStore)
+                ) {
+                    DatastorePath dspath = new DatastorePath(disk.Source);
+                    dspath.Merge(option.DiskStore);
+                    disk.Source = dspath.ToString();
+                }
             }
 
             if (template.IsolationTag.HasValue())

@@ -69,7 +69,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
         this.taskRunning = this.vm.task && this.vm.task.progress < 100;
         if (this.taskRunning) {
           if (this.timer) { clearTimeout(this.timer); }
-          this.timer = setTimeout(() => { this.load(); }, 2000);
+          this.timer = setTimeout(() => { this.load(); }, 3000);
         } else {
           this.vm.task = null;
           this.loaded.emit(this.vm);
