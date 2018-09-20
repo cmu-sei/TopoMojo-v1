@@ -35,14 +35,8 @@
     <div>
       <label>Iso</label>
       <span *ngIf="template.iso" class="isoname">{{template.iso.substring(template.iso.lastIndexOf('/')+1)}}</span>
-      <!-- <mat-form-field> -->
-        <!-- <input [disabled]="hasVm" matInput type="text" name="iso"
-        placeholder="Iso file"
-        [(ngModel)]="template.iso" maxlength="100"> -->
-        <button *ngIf="template.iso" [disabled]="hasVm" mat-icon-button matSuffix (click)="template.iso = ''"><mat-icon>remove_circle</mat-icon></button>
-        <button type="button" [disabled]="hasVm" mat-icon-button matSuffix (click)="showingIsos=!showingIsos"><mat-icon>edit</mat-icon></button>
-        <!-- <mat-hint align="end">{{(''+template.iso).length}} / 100</mat-hint> -->
-      <!-- </mat-form-field> -->
+      <button *ngIf="template.iso" [disabled]="hasVm" mat-icon-button matSuffix (click)="isoChanged({})"><mat-icon>remove_circle</mat-icon></button>
+      <button type="button" [disabled]="hasVm" mat-icon-button matSuffix (click)="showingIsos=!showingIsos"><mat-icon>edit</mat-icon></button>
       <topomojo-select-table *ngIf="showingIsos" [dataSource]="isoSource" (selected)="isoChanged($event)"></topomojo-select-table>
     </div>
 
@@ -52,7 +46,7 @@
     </div>
 
     <div class="submit">
-      <button mat-raised-button color="primary" type="submit" [disabled]="!form.dirty || !form.valid">Save Settings</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!needSaving()">Save Settings</button>
     </div>
   </form>
 

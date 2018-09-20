@@ -393,7 +393,27 @@ namespace TopoMojo.vMock
             await Task.Delay(0);
             VmOptions opt = new VmOptions()
             {
-                Iso = new string[] { "test1.iso", "really-long-iso-name-that-needs-to-wrap-1.0.0.test2.iso" },
+                Iso = new string[] {
+                    "test1.iso",
+                    "test2.iso",
+                    "test3.iso",
+                    "test4.iso",
+                    "test5.iso",
+                    "test6.iso",
+                    "test7.iso",
+                    "test8.iso",
+                    "test9.iso",
+                    "test10.iso",
+                    "test11.iso",
+                    "test12.iso",
+                    "test13.iso",
+                    "test14.iso",
+                    "test15.iso",
+                    "test16.iso",
+                    "test17.iso",
+                    "test18.iso",
+                    "really-long-iso-name-that-needs-to-wrap-1.0.0.test2.iso"
+                },
             };
             return opt;
         }

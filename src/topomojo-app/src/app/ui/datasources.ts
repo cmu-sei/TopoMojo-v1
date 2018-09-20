@@ -94,14 +94,17 @@ export class IsoDataSource implements IDataSource<IsoFile> {
         this.subject.next(
             this.filterCache(search)
             .sort((a, b) => a.name.localeCompare(b.name))
-            .slice(search.skip, search.take)
+            .slice(search.skip, search.skip + search.take)
        );
     }
 
     filterCache(search: Search): Array<IsoFile> {
-        return (search.term)
+        const r = (search.term)
         ? this.cache.filter(i => i.name.match(search.term))
         : this.cache;
+
+        this.total = r.length;
+        return r;
     }
 }
 

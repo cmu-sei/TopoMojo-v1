@@ -17,6 +17,7 @@ export class TemplateSettingsComponent implements OnInit, AfterViewInit {
   // @Input() workspaceId: string;
   @ViewChild(NgForm) form: NgForm;
   isoSource: IsoDataSource;
+  isoDirty = false;
   showingIsos = false;
 
   constructor(
@@ -43,15 +44,20 @@ export class TemplateSettingsComponent implements OnInit, AfterViewInit {
   update(form: NgForm) {
     if (this.form.valid && this.form.value.id) {
       this.service.putTemplate(this.form.value as ChangedTemplate).subscribe(
-        // TODO: animate feedback
         (t) => {
           this.form.reset(this.form.value);
+          this.isoDirty = false;
         }
       );
     }
   }
 
+  needSaving(): boolean {
+    return ((this.form && this.form.dirty) || this.isoDirty) && this.form.valid;
+  }
+
   isoChanged(iso: IsoFile) {
+    this.isoDirty = this.template.iso !== iso.path;
     this.template.iso = iso.path;
     this.showingIsos = false;
   }
