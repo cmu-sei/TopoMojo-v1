@@ -100,7 +100,7 @@ namespace TopoMojo.Core
             Template linked = Mapper.Map<Template>(entity);
             linked.TopologyId = newlink.TopologyId;
             linked.GlobalId = "";
-            linked.Name += new Random().Next(100, 999).ToString();
+            linked.Name += "-" + new Random().Next(100, 999).ToString();
             await _repo.Add(linked);
             //TODO: streamline object graph hydration
             linked = await _repo.Load(linked.Id);

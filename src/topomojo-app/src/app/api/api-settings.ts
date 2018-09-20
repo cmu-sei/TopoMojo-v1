@@ -9,7 +9,9 @@ export class ApiSettings {
         settingsSvc: SettingsService
     ) {
         this.url = settingsSvc.settings.urls.apiUrl;
+        this.docUrl = settingsSvc.settings.urls.docUrl;
     }
 
     url: string;
+    docUrl: string;
 }

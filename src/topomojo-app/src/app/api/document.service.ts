@@ -15,7 +15,7 @@ export class DocumentService extends GeneratedDocumentService {
     ) { super(http, api); }
 
     public getDocument(guid: string): Observable<string> {
-        return this.http.get('/docs/' + guid + '.md?ts=' + Date.now(), { responseType: 'text'});
+        return this.http.get(this.api.docUrl + '/docs/' + guid + '.md?ts=' + Date.now(), { responseType: 'text'});
     }
 
     public uploadImage(guid: string, file: File): Observable<HttpEvent<ImageFile>> {
