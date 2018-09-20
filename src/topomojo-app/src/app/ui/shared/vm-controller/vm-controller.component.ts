@@ -47,6 +47,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.forEach(s => s.unsubscribe());
+    if (this.timer) { clearTimeout(this.timer); }
   }
 
   vmStatus(): string {
