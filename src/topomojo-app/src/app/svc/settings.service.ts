@@ -84,22 +84,29 @@ export class SettingsService {
     }
 
     updateTheme(v: boolean) {
-        this.localSettings.altTheme = v;
-        this.storeLocal(this.localSettings);
+        if (this.localSettings.altTheme !== v) {
+            this.localSettings.altTheme = v;
+            this.storeLocal(this.localSettings);
+        }
     }
     updateLobbyFilter(f: string) {
-        this.localSettings.lobbyFilter = f;
-        this.storeLocal(this.localSettings);
+        if (this.localSettings.lobbyFilter !== f) {
+            this.localSettings.lobbyFilter = f;
+            this.storeLocal(this.localSettings);
+        }
     }
     updateLobbySort(s: string) {
-        this.localSettings.lobbySort = s;
-        this.storeLocal(this.localSettings);
+        if (this.localSettings.lobbySort !== s) {
+            this.localSettings.lobbySort = s;
+            this.storeLocal(this.localSettings);
+        }
     }
 
     storeLocal(model: LocalAppSettings) {
         try {
             window.localStorage[this.storageKey] = JSON.stringify(model);
-        } catch (e) { }
+        } catch (e) {
+        }
 
         // this.onThemeUpdate.emit(theme);
     }

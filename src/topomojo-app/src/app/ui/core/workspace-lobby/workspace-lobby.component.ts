@@ -44,7 +44,11 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
             if (p) { this.initToolbar(); }
             if (!p) { this.showLoginMsg = true; }
 
-            const f = p ? 'private' : 'public';
+            this.model.sort = this.settingsSvc.localSettings.lobbySort || 'age';
+            const f = !!this.settingsSvc.localSettings.lobbyFilter
+              ? this.settingsSvc.localSettings.lobbyFilter
+              : p ? 'private' : 'public';
+
             if (f !== this.filter) {
               this.filterChanged({ value: f });
             }
@@ -97,7 +101,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
         this.none = !this.list.length;
         this.model.skip += data.results.length;
         this.hasMore = data.results.length === this.model.take;
-        if (this.firstQuery && this.none && this.model.filters.indexOf('private') >= 0 && !this.model.term) {
+        if (this.firstQuery && this.none && this.model.filters.indexOf('private') >= 0) {
           setTimeout(() => {
             this.filterChanged({value: 'public'});
           }, 100);
@@ -109,10 +113,16 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
 
   filterChanged(e): void {
     if (e.value) {
+      this.settingsSvc.updateLobbyFilter(e.value);
       this.filter = e.value;
       this.model.filters = [ e.value ];
       this.fetch_fresh();
     }
+  }
+
+  sortChanged(e): void {
+    this.settingsSvc.updateLobbySort(e.value);
+    this.fetch_fresh();
   }
 
   hasSomeGames(v: boolean): void {
