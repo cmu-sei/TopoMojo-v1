@@ -206,23 +206,15 @@ namespace TopoMojo.vSphere
 
             VimClient host = FindHostByVm(id);
             VmOptions vmo = null;
-            //sanitze inputs
+            //sanitize inputs
             if (change.Key == "iso")
             {
-                vmo = await GetVmIsoOptions(vm.Name.Tag());
-                if (!vmo.Iso.Contains(change.Value))
-                    throw new InvalidOperationException();
-
-                //translate display path back to actual path
-                if (change.Value.StartsWith("public"))
-                {
-                    change.Value = host.Options.IsoStore + System.IO.Path.GetFileName(change.Value);
-                }
-                else
-                {
-                    change.Value = host.Options.DiskStore + vm.Name.Tag() + "/" + System.IO.Path.GetFileName(change.Value);
-                }
-
+                // vmo = await GetVmIsoOptions(vm.Name.Tag());
+                // if (!vmo.Iso.Contains(change.Value))
+                //     throw new InvalidOperationException();
+                var isopath = new DatastorePath(change.Value);
+                isopath.Merge(host.Options.IsoStore);
+                change.Value = isopath.ToString();
             }
 
             if (change.Key == "net")
@@ -285,7 +277,7 @@ namespace TopoMojo.vSphere
             if (progress < 0)
             {
                 VimClient host = FindHostByRandom();
-                if (template.Source.HasValue()) {
+                if (template.Disks[0].Source.HasValue()) {
                     Task cloneTask = host.CloneDisk(template.Id, template.Disks[0].Source, template.Disks[0].Path);
                     progress = 0;
                 } else {
@@ -410,12 +402,17 @@ namespace TopoMojo.vSphere
         {
             VimClient host = FindHostByRandom();
             List<string> isos = new List<string>();
+            string publicFolder = Guid.Empty.ToString();
 
             isos.AddRange(
                 (await host.GetFiles(host.Options.IsoStore + id + "/*.iso", false))
+                // .Select(x => x.Substring(x.LastIndexOf("/") + 1))
+                // .ToArray()
             );
             isos.AddRange(
-                (await host.GetFiles(host.Options.IsoStore + Guid.Empty.ToString() + "/*.iso", false)).ToArray()
+                (await host.GetFiles(host.Options.IsoStore + publicFolder + "/*.iso", false))
+                // .Select(x => "public/" + x.Substring(x.LastIndexOf("/") + 1))
+                // .ToArray()
             );
 
             //translate actual path to display path

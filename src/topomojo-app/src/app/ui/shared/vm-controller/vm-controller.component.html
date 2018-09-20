@@ -1,6 +1,6 @@
 <div class="toolbar">
 
-  <div *ngIf="vm.task && vm.task.name">
+  <div *ngIf="vm.task && vm.task.progress < 100">
     <span>{{vm.task.name}}...</span>
     <mat-spinner *ngIf="vm.task.progress < 1" mode="determinate" diameter="18" [value]="92"></mat-spinner>
     <mat-progress-spinner *ngIf="vm.task.progress > 0" mode="determinate" diameter="18" [value]="vm.task.progress"></mat-progress-spinner>

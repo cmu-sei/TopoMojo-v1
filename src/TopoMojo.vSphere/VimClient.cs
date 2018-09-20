@@ -123,7 +123,7 @@ namespace TopoMojo.vSphere
             await Connect();
             Vm vm = _vmCache[id];
 
-            //protect stock disks; only save a disk if it is local to the topology
+            //protect stock disks; only save a disk if it is local to the workspace
             //i.e. the disk folder matches the topologyId
             if (vm.Name.Tag().HasValue() && !vm.DiskPath.Contains(vm.Name.Tag()))
                 throw new InvalidOperationException("External templates must be cloned into local templates in order to be saved.");
@@ -1280,12 +1280,15 @@ namespace TopoMojo.vSphere
                                 t.Progress = info.progress;
                                 break;
                         }
-                        Vm vm = _vmCache[key];
-                        if (vm.Task == null)
-                            vm.Task = new VmTask();
-                        vm.Task.Progress = t.Progress;
-                        vm.Task.Name = t.Action;
-                        _vmCache.TryUpdate(key, vm, vm);
+                        if (_vmCache.ContainsKey(key))
+                        {
+                            Vm vm = _vmCache[key];
+                            if (vm.Task == null)
+                                vm.Task = new VmTask();
+                            vm.Task.Progress = t.Progress;
+                            vm.Task.Name = t.Action;
+                            _vmCache.TryUpdate(key, vm, vm);
+                        }
                     }
                 }
                 catch (Exception ex)

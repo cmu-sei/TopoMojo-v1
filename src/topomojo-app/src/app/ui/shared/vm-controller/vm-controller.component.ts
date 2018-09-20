@@ -19,6 +19,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   confirmingDelete = false;
   errors: Array<Error> = [];
   subs: Array<Subscription> = [];
+  taskRunning = false;
 
   constructor(
     private vmSvc: VmService,
@@ -62,14 +63,16 @@ export class VmControllerComponent implements OnInit, OnDestroy {
       ? this.vmSvc.getVm(this.vm.id)
       : this.vmSvc.getTemplateVm(this.template.id);
 
-      q.pipe(
-        finalize(() => this.vm.task = null)
-      ).subscribe(
+      q.subscribe(
       (vm: Vm) => {
         this.vm = vm;
-        this.loaded.emit(this.vm);
-        if (this.vm.task && this.vm.task.progress < 100) {
-            this.refresh();
+        this.taskRunning = this.vm.task && this.vm.task.progress < 100;
+        if (this.taskRunning) {
+          if (this.timer) { clearTimeout(this.timer); }
+          this.timer = setTimeout(() => { this.load(); }, 2000);
+        } else {
+          this.vm.task = null;
+          this.loaded.emit(this.vm);
         }
       },
       (err) => { this.onError(err); }
@@ -101,22 +104,16 @@ export class VmControllerComponent implements OnInit, OnDestroy {
         id: this.vm.id,
         type: type,
         workspaceId: this.template.topologyId
-    }).pipe(
-      // catchError((err) => {
-      //   this.onError(err);
-      //   return of({});
-      // }),
-      finalize(() => this.vm.task = null)
-    ).subscribe(
-        (vm: Vm) => {
-          this.vm = vm;
-          // this.loaded.emit(this.vm);
-        },
-        (err) => {
-          console.log(err);
-          this.onError(err.error || err);
-        },
-        () => { this.vm.task = null; }
+    }).subscribe(
+      (vm: Vm) => {
+        this.vm = vm;
+        if (this.vm.task && this.vm.task.name) {
+          this.load();
+        }
+      },
+      (err) => {
+        this.onError(err.error || err);
+      }
     );
   }
 
@@ -138,10 +135,10 @@ export class VmControllerComponent implements OnInit, OnDestroy {
   }
 
   initialize() {
-    this.setTask('initialize disk');
+    this.setTask('initializing');
     this.vmSvc.postTemplateDisks(this.template.id)
     .subscribe(() => {
-            this.refresh();
+            this.load();
         }, (err) => { this.onError(err); });
   }
 
@@ -155,6 +152,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
 
   setTask(task: string): void {
     this.vm.task = { name: task, progress: -1 };
+    this.taskRunning = true;
   }
 
   canSave(): boolean {

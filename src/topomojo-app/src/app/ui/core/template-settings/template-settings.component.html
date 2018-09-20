@@ -2,6 +2,7 @@
   <form #form="ngForm" [ngFormOptions]="{updateOn: 'change'}" (ngSubmit)="update()">
     <input type="hidden" name="id" [ngModel]="template.id">
     <input type="hidden" name="topologyId" [ngModel]="template.topologyId">
+    <input type="hidden" name="iso" [ngModel]="template.iso">
     <div>
       <mat-form-field>
         <input [disabled]="hasVm" matInput required type="text" name="name"
@@ -32,14 +33,16 @@
     </div>
 
     <div>
-      <mat-form-field>
-        <input [disabled]="hasVm" matInput type="text" name="iso"
+      <label>Iso</label>
+      <span *ngIf="template.iso" class="isoname">{{template.iso.substring(template.iso.lastIndexOf('/')+1)}}</span>
+      <!-- <mat-form-field> -->
+        <!-- <input [disabled]="hasVm" matInput type="text" name="iso"
         placeholder="Iso file"
-        [(ngModel)]="template.iso" maxlength="100">
-        <button [disabled]="hasVm" mat-mini-fab matSuffix (click)="showingIsos=!showingIsos"><mat-icon>list</mat-icon></button>
-        <mat-hint>Space delimited net names</mat-hint>
-        <mat-hint align="end">{{(''+template.iso).length}} / 100</mat-hint>
-      </mat-form-field>
+        [(ngModel)]="template.iso" maxlength="100"> -->
+        <button *ngIf="template.iso" [disabled]="hasVm" mat-icon-button matSuffix (click)="template.iso = ''"><mat-icon>remove_circle</mat-icon></button>
+        <button type="button" [disabled]="hasVm" mat-icon-button matSuffix (click)="showingIsos=!showingIsos"><mat-icon>edit</mat-icon></button>
+        <!-- <mat-hint align="end">{{(''+template.iso).length}} / 100</mat-hint> -->
+      <!-- </mat-form-field> -->
       <topomojo-select-table *ngIf="showingIsos" [dataSource]="isoSource" (selected)="isoChanged($event)"></topomojo-select-table>
     </div>
 

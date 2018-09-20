@@ -40,7 +40,7 @@ namespace TopoMojo.Models
     public class VlanOptions
     {
         public string Range { get; set; }
-        public Vlan[] Reservations { get; set; }
+        public Vlan[] Reservations { get; set; } = new Vlan[] {};
     }
 
     public class Vlan

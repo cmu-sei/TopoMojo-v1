@@ -92,9 +92,16 @@ export class IsoDataSource implements IDataSource<IsoFile> {
 
     emitResults(search: Search) {
         this.subject.next(
-            this.cache.filter(i => i.name.match(search.term))
+            this.filterCache(search)
+            .sort((a, b) => a.name.localeCompare(b.name))
             .slice(search.skip, search.take)
        );
+    }
+
+    filterCache(search: Search): Array<IsoFile> {
+        return (search.term)
+        ? this.cache.filter(i => i.name.match(search.term))
+        : this.cache;
     }
 }
 
