@@ -7,13 +7,25 @@
       <mat-icon>send</mat-icon> Announce
     </button>
   </div>
-
-  <div class="submit">
-  </div>
 </div>
+
+<mat-divider></mat-divider>
 
 <div>
   <h4>Active Users</h4>
   <div *ngIf="connections.length === 0">None</div>
   <div *ngFor="let c of connections; trackBy:trackById">{{c.profileName}}</div>
 </div>
+
+<mat-divider></mat-divider>
+
+<div>
+    <div class="input">
+      <mat-form-field>
+        <input matInput type="text" placeholder="Topo Id list" [(ngModel)]="exportIds">
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="export()" [disabled]="!exportIds.length">
+        <mat-icon>export</mat-icon> Export
+      </button>
+    </div>
+  </div>

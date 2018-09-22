@@ -11,6 +11,7 @@ export class DashboardComponent implements OnInit {
 
   connections = new Array<CachedConnection>();
   announcement = '';
+  exportIds = '';
 
   constructor(
     private adminSvc: AdminService
@@ -34,6 +35,14 @@ export class DashboardComponent implements OnInit {
         this.announcement = '';
       }
     );
+  }
+
+  export() {
+    const ids = this.exportIds.split(/[,\ ]/).map(v => +v);
+    console.log(ids);
+    this.adminSvc.postAdminExport(
+      ids
+    ).subscribe();
   }
 
   trackById(i: number, item: CachedConnection): string {

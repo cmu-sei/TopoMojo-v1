@@ -30,6 +30,16 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .SingleOrDefaultAsync();
         }
 
+        public async Task<Topology> LoadAdminTopo()
+        {
+            var topo = new Topology();
+            topo.GlobalId = Guid.Empty.ToString();
+            topo.Templates = await DbContext.Templates
+                .Where(t => t.TopologyId == 0)
+                .ToArrayAsync();
+            return topo;
+        }
+
         public async Task<Topology> FindByShareCode(string code)
         {
             return await DbContext.Topologies

@@ -17,9 +17,11 @@ namespace TopoMojo.Core
             IProfileResolver profileResolver,
             IProfileRepository profileRepo,
             ITopologyRepository topoRepo,
+            ITemplateRepository templateRepository,
             ILogger<TransferService> logger
         ) {
             _topoRepo = topoRepo;
+            _templateRepo = templateRepository;
             _profileRepo = profileRepo;
             _profileResolver = profileResolver;
             _logger = logger;
@@ -34,11 +36,12 @@ namespace TopoMojo.Core
         private readonly IProfileResolver _profileResolver;
         private readonly IProfileRepository _profileRepo;
         private readonly ITopologyRepository _topoRepo;
+        private readonly ITemplateRepository _templateRepo;
         private readonly ILogger<TransferService> _logger;
         private Data.Entities.Profile _user;
         private JsonSerializerSettings jsonSerializerSettings;
 
-        public async Task Export(int[] ids, string dest, string docPath)
+        public async Task Export(int[] ids, string src, string dest)
         {
             if (!Profile.IsAdmin)
                 throw new InvalidOperationException();
@@ -51,11 +54,21 @@ namespace TopoMojo.Core
                     list.Add(topo);
             }
 
+            if (ids.Contains(0))
+            {
+                list.Add(await _topoRepo.LoadAdminTopo());
+            }
+
             if (list.Count < 1)
                 return;
 
+            string docSrc = Path.Combine(src, "_docs");
+            string docDest = Path.Combine(dest, "_docs");
             if (!Directory.Exists(dest))
                 Directory.CreateDirectory(dest);
+            if (!Directory.Exists(docDest))
+                Directory.CreateDirectory(docDest);
+
 
             foreach (var topo in list)
             {
@@ -84,15 +97,18 @@ namespace TopoMojo.Core
                 );
 
                 //export doc
-                CopyFile(
-                    Path.Combine(docPath, topo.GlobalId) + ".md",
-                    Path.Combine(folder, "topo.md")
-                );
+                try
+                {
+                    CopyFile(
+                        Path.Combine(docSrc, topo.GlobalId) + ".md",
+                        Path.Combine(docDest, topo.GlobalId) + ".md"
+                    );
 
-                CopyFolder(
-                    Path.Combine(docPath, topo.GlobalId),
-                    Path.Combine(folder, "topo.md.images")
-                );
+                    CopyFolder(
+                        Path.Combine(docSrc, topo.GlobalId),
+                        Path.Combine(docDest, topo.GlobalId)
+                    );
+                } catch {}
 
                 //export disk-list
                 var disks = new List<string>();
@@ -113,8 +129,8 @@ namespace TopoMojo.Core
                         disks.Distinct()
                     );
                 }
-
             }
+
         }
 
         public async Task<IEnumerable<string>> Import(string repoPath, string docPath)
@@ -128,7 +144,7 @@ namespace TopoMojo.Core
             foreach (string file in files)
             {
                 //skip any staged exports
-                if (file.Contains("_exports"))
+                if (file.Contains("_export"))
                     continue;
 
                 try
@@ -149,20 +165,30 @@ namespace TopoMojo.Core
                     if (found != null)
                         throw new Exception("Duplicate GlobalId");
 
-                    await _topoRepo.Add(topo);
+                    if (topo.GlobalId == Guid.Empty.ToString())
+                    {
+                        foreach (var t in topo.Templates)
+                        {
+                            await _templateRepo.Add(t);
+                        }
+                    }
+                    else
+                    {
+                        await _topoRepo.Add(topo);
+                    }
 
-                    //import doc
-                    CopyFile(
-                        Path.Combine(folder, "topo.md"),
-                        Path.Combine(docPath, topo.GlobalId) + ".md",
-                        false
-                    );
+                    // //import doc
+                    // CopyFile(
+                    //     Path.Combine(folder, "topo.md"),
+                    //     Path.Combine(docPath, topo.GlobalId) + ".md",
+                    //     false
+                    // );
 
-                    CopyFolder(
-                        Path.Combine(folder, "topo.md.images"),
-                        Path.Combine(docPath, topo.GlobalId),
-                        false
-                    );
+                    // CopyFolder(
+                    //     Path.Combine(folder, "topo.md.images"),
+                    //     Path.Combine(docPath, topo.GlobalId),
+                    //     false
+                    // );
 
                     results.Add($"Success: {topo.Name}");
 

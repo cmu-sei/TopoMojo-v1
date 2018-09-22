@@ -115,20 +115,16 @@ namespace TopoMojo.Controllers
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
         [JsonExceptionFilter]
-        public async Task<ActionResult<string[]>> Export(int[] ids)
+        public async Task<ActionResult> Export([FromBody] int[] ids)
         {
+            string srcPath = _fileUploadOptions.TopoRoot;
             string destPath = Path.Combine(
                 _fileUploadOptions.TopoRoot,
-                "_exports",
-                DateTime.Now.ToString("s").Replace(":", "")
+                "_export"
             );
-            string docPath = Path.Combine(_env.WebRootPath, "docs");
-            await _transferSvc.Export(ids, destPath, docPath);
-            string[] results = new string[] {
-                "Make note of your backend export folder:",
-                destPath
-            };
-            return Ok(results);
+            await _transferSvc.Export(ids, srcPath, destPath);
+
+            return Ok();
         }
 
         [HttpGet("api/admin/import")]
@@ -136,7 +132,7 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult<string[]>> Import()
         {
             string destPath = _fileUploadOptions.TopoRoot;
-            string docPath = Path.Combine(_env.WebRootPath, "docs");
+            string docPath = Path.Combine(_env.WebRootPath, "_docs");
             return Ok(await _transferSvc.Import(destPath, docPath));
         }
 
