@@ -8,6 +8,6 @@ namespace TopoMojo.Data.Abstractions
         Task<Topology> FindByShareCode(string code);
         Task<Topology> FindByWorker(int id);
         Task<int> GetWorkspaceCount(int profileId);
-        Task<Topology> LoadAdminTopo();
+        Task<Topology> LoadWithParents(int id);
     }
 }

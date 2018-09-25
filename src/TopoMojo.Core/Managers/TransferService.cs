@@ -49,15 +49,15 @@ namespace TopoMojo.Core
             var list = new List<Data.Entities.Topology>();
             foreach (int id in ids)
             {
-                var topo = await _topoRepo.Load(id);
+                var topo = await _topoRepo.LoadWithParents(id);
                 if (topo != null)
                     list.Add(topo);
             }
 
-            if (ids.Contains(0))
-            {
-                list.Add(await _topoRepo.LoadAdminTopo());
-            }
+            // if (ids.Contains(0))
+            // {
+            //     list.Add(await _topoRepo.LoadAdminTopo());
+            // }
 
             if (list.Count < 1)
                 return;
@@ -114,7 +114,7 @@ namespace TopoMojo.Core
                 var disks = new List<string>();
                 foreach (var template in topo.Templates)
                 {
-                    var tu = new TemplateUtility(template.Detail);
+                    var tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
                     var t = tu.AsTemplate();
                     foreach (var disk in t.Disks)
                         disks.Add(disk.Path);
@@ -163,32 +163,26 @@ namespace TopoMojo.Core
                     //enforce uniqueness :(
                     var found = await _topoRepo.FindByGlobalId(topo.GlobalId);
                     if (found != null)
-                        throw new Exception("Duplicate GlobalId");
+                        continue;
+                        // throw new Exception("Duplicate GlobalId");
 
-                    if (topo.GlobalId == Guid.Empty.ToString())
+                    // map parentid to new parentId
+                    foreach (var template in topo.Templates)
                     {
-                        foreach (var t in topo.Templates)
+                        if (template.Parent != null)
                         {
-                            await _templateRepo.Add(t);
+                            var pt = await _templateRepo.FindByGlobalId(template.Parent.GlobalId);
+                            if (pt == null)
+                            {
+                                template.ParentId = 0;
+                                template.TopologyId = 0;
+                                pt = await _templateRepo.Add(template.Parent);
+                            }
+                            template.ParentId = pt.Id;
+                            template.Parent = null;
                         }
                     }
-                    else
-                    {
-                        await _topoRepo.Add(topo);
-                    }
-
-                    // //import doc
-                    // CopyFile(
-                    //     Path.Combine(folder, "topo.md"),
-                    //     Path.Combine(docPath, topo.GlobalId) + ".md",
-                    //     false
-                    // );
-
-                    // CopyFolder(
-                    //     Path.Combine(folder, "topo.md.images"),
-                    //     Path.Combine(docPath, topo.GlobalId),
-                    //     false
-                    // );
+                    await _topoRepo.Add(topo);
 
                     results.Add($"Success: {topo.Name}");
 

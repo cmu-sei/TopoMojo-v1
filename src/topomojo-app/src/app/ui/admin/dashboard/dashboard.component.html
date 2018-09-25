@@ -20,12 +20,23 @@
 <mat-divider></mat-divider>
 
 <div>
-    <div class="input">
-      <mat-form-field>
-        <input matInput type="text" placeholder="Topo Id list" [(ngModel)]="exportIds">
-      </mat-form-field>
-      <button mat-raised-button color="primary" (click)="export()" [disabled]="!exportIds.length">
-        <mat-icon>export</mat-icon> Export
-      </button>
-    </div>
+  <h4>Export (Beta)</h4>
+  <div class="input">
+    <mat-form-field>
+      <input matInput type="text" placeholder="Topo Id list" [(ngModel)]="exportIds">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="export()" [disabled]="!exportIds.length">
+      <mat-icon>export</mat-icon> Export
+    </button>
   </div>
+</div>
+
+<div>
+  <h4>Import (Beta)</h4>
+  <div class="input">
+    <button mat-raised-button color="primary" (click)="import()">
+      <mat-icon>import</mat-icon> Import
+    </button>
+    <p *ngFor="let r of importResult">{{r}}</p>
+  </div>
+</div>
