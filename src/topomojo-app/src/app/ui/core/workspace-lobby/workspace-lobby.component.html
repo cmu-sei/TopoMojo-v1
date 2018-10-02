@@ -21,6 +21,10 @@
     Feel free to preview, but you'll need to login to use the site!
   </div>
 
+  <div *ngIf="fetching" class="center">
+    <p class="spin"><mat-spinner mode="determinate" diameter="48" value="92"></mat-spinner></p>
+  </div>
+
   <div *ngIf="showAdd && hasProfile" class="lobby-section">
       <topomojo-workspace-creator></topomojo-workspace-creator>
   </div>

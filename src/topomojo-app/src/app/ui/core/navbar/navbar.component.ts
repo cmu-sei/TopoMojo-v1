@@ -14,7 +14,7 @@ import { SettingsService } from '../../../svc/settings.service';
 })
 export class NavbarComponent implements OnInit {
   state: ToolbarState;
-  searchOpen = false;
+  searchOpen = true;
   altTheme = false;
   @Input() sidenav = false;
   public termSubject: Subject<string> = new Subject();
@@ -43,11 +43,6 @@ export class NavbarComponent implements OnInit {
     this.toolbarSvc.state$.subscribe(
       (state: ToolbarState) => {
         this.state = state;
-        if (!this.state.search) {
-          this.searchOpen = false;
-          this.term = '';
-          this.termChanged();
-        }
       }
     );
 
@@ -69,5 +64,11 @@ export class NavbarComponent implements OnInit {
     this.altTheme = !this.altTheme;
     this.settingsSvc.updateTheme(this.altTheme);
     this.toolbarSvc.themeChanged(this.altTheme);
+  }
+
+  toggleSearchInput() {
+    this.searchOpen = !this.searchOpen;
+    this.term = '';
+    this.termChanged();
   }
 }
