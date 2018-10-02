@@ -4,7 +4,7 @@ import { TopologyService } from '../../../api/topology.service';
 import { Search, Topology, TopologySearchResult, Profile, TopologySummarySearchResult, TopologySummary } from '../../../api/gen/models';
 import { UserService } from '../../../svc/user.service';
 import { SettingsService } from '../../../svc/settings.service';
-import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
+import { distinctUntilChanged, debounceTime, map, finalize, delay } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -18,6 +18,7 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
   showAdd = false;
   showGames = false;
   showLoginMsg = false;
+  fetching = false;
   list: Array<TopologySummary> = new Array<TopologySummary>();
   model: Search = { sort: 'age', take: 25 };
   filter = '';
@@ -90,7 +91,11 @@ export class WorkspaceLobbyComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.fetching = true;
     this.workspaceSvc.getTopologySummaries(this.model)
+    .pipe(
+      finalize(() => this.fetching = false)
+    )
     .subscribe(
       (data: TopologySummarySearchResult) => {
         if (this.model.skip > 0) {
