@@ -13,4 +13,8 @@ export class AdminService extends GeneratedAdminService {
        protected http: HttpClient,
        protected api: ApiSettings
     ) { super(http, api); }
+
+    public postAdminExport(ids: Array<number>): Observable<Array<string>> {
+        return this.http.post<Array<string>>(this.api.url + '/api/admin/export', ids);
+    }
 }

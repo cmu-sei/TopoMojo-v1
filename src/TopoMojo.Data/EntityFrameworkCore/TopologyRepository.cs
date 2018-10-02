@@ -30,6 +30,15 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 .SingleOrDefaultAsync();
         }
 
+        public async Task<Topology> LoadWithParents(int id)
+        {
+            return await DbContext.Topologies
+                .Include(t => t.Templates)
+                .ThenInclude(o => o.Parent)
+                .Where(t => t.Id == id)
+                .SingleOrDefaultAsync();
+        }
+
         public async Task<Topology> FindByShareCode(string code)
         {
             return await DbContext.Topologies
