@@ -5,6 +5,7 @@ using System.Text;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
+using Cwd.vSphereApi;
 
 namespace TopoMojo.vSphere
 {

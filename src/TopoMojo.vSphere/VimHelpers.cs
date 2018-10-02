@@ -1,4 +1,5 @@
 using System;
+using Cwd.vSphereApi;
 
 namespace TopoMojo.vSphere.Helpers
 {

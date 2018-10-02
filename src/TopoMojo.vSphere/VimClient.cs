@@ -7,6 +7,7 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using Cwd.vSphereApi;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
