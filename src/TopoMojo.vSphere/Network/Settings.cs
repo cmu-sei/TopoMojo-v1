@@ -1,3 +1,5 @@
+using Cwd.vSphereApi;
+
 namespace TopoMojo.vSphere.Network
 {
     public class Settings

@@ -1,9 +1,10 @@
 using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Cwd.vSphereApi;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
-using System.Linq;
 using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere
