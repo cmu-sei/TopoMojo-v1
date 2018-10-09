@@ -22,7 +22,7 @@ namespace TopoMojo.vSphere
             vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other") + "Guest";
             if (datastore.HasValue())
                 vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
-            vmcs.extraConfig = GetExtraConfig();
+            vmcs.extraConfig = GetExtraConfig(template.Name.Tag());
             vmcs.annotation = (template.GuestSettings.IsNotEmpty())
                 ? String.Join("\n", template.GuestSettings
                     .Select(o=> String.Format("{0} = {1}", o.Key, o.Value)))
@@ -246,13 +246,14 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        public static OptionValue[] GetExtraConfig()
+        public static OptionValue[] GetExtraConfig(string tag = "")
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
             options.Add(new OptionValue { key = "isolation.tools.copy.disable", value = "false" });
             options.Add(new OptionValue { key = "isolation.tools.paste.disable", value = "false" });
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
+            options.Add(new OptionValue { key = "guestinfo.isolationTag", value = tag });
 
             return options.ToArray();
         }
