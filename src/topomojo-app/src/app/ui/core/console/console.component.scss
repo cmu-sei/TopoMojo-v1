@@ -23,6 +23,7 @@ mat-drawer {
 .overlay {
     position: absolute;
     z-index: 200;
+    text-shadow: 1px 0 16px lightgray;
 }
 .overlay-tr {
     top: 0px;
@@ -72,4 +73,9 @@ span.overlay {
 
 .mock-console-connected {
     background-color: black;
+}
+
+.cog {
+    min-width: 32px;
+    padding: 0 4px;
 }

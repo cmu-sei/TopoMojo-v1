@@ -84,7 +84,7 @@ export class WmksConsoleService implements ConsoleService {
   }
 
   refresh(): void {
-    if (this.wmks) {
+    if (this.wmks && this.options.rescale) {
       this.wmks.updateScreen();
     }
   }
