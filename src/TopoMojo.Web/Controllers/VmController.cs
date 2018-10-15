@@ -127,7 +127,7 @@ namespace TopoMojo.Controllers
             string opType = op.Type.ToString().ToLower();
             await AuthorizeAction(op.Id, opType);
 
-            if (op.Type == VmOperationType.Save && await _topoMgr.HasGames(op.WorkspaceId))
+            if (op.Type == VmOperationType.Save && op.WorkspaceId > 0 && await _topoMgr.HasGames(op.WorkspaceId))
                 throw new Core.WorkspaceNotIsolatedException();
 
             Vm vm = await _pod.ChangeState(op);
