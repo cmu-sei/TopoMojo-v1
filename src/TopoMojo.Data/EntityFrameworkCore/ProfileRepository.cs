@@ -49,6 +49,7 @@ namespace TopoMojo.Data.EntityFrameworkCore
                 if (topology != null)
                 {
                     result = await DbContext.Workers
+                    .Include(w => w.Topology)
                     .Where(p => p.TopologyId == topology.Id
                         && p.PersonId == profile.Id
                         && p.Permission.HasFlag(Permission.Editor)
@@ -63,11 +64,14 @@ namespace TopoMojo.Data.EntityFrameworkCore
                     .Where(t => t.GlobalId == globalId)
                     .SingleOrDefaultAsync();
 
-                result = await DbContext.Players
-                .Where(p => p.GamespaceId == gamespace.Id
-                    && p.PersonId == profile.Id
-                    && p.Permission.HasFlag(Permission.Editor))
-                .AnyAsync();
+                if (gamespace != null)
+                {
+                    result = await DbContext.Players
+                    .Where(p => p.GamespaceId == gamespace.Id
+                        && p.PersonId == profile.Id
+                        && p.Permission.HasFlag(Permission.Editor))
+                    .AnyAsync();
+                }
             }
 
             return result;

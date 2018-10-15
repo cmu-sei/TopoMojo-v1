@@ -76,7 +76,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
           this.loaded.emit(this.vm);
         }
       },
-      (err) => { this.onError(err); }
+      (err) => { this.onError(err.error || err); }
     );
   }
 
@@ -94,7 +94,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
             this.vm = data;
             this.loaded.emit(this.vm);
         },
-        (err) => { this.onError(err); },
+        (err) => { this.onError(err.error || err); },
         () => { this.vm.task = null; }
     );
   }
@@ -132,7 +132,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
             this.loaded.emit(this.vm);
             this.refresh();
         },
-        (err) => { this.onError(err); });
+        (err) => { this.onError(err.error || err); });
   }
 
   initialize() {
@@ -140,7 +140,7 @@ export class VmControllerComponent implements OnInit, OnDestroy {
     this.vmSvc.postTemplateDisks(this.template.id)
     .subscribe(() => {
             this.load();
-        }, (err) => { this.onError(err); });
+        }, (err) => { this.onError(err.error || err); });
   }
 
   display() {
@@ -162,6 +162,6 @@ export class VmControllerComponent implements OnInit, OnDestroy {
 
   onError(e: Error): void {
     this.errors.push(e);
-    console.log(e);
+    this.vm.task = null;
   }
 }
