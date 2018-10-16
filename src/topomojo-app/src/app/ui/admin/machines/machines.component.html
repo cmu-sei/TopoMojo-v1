@@ -1,6 +1,6 @@
 <mat-card *ngFor="let vm of vms; trackBy:trackById" class="card">
   <div class="detail">
-    <div>{{vm.name}}</div>
+    <div>{{vm.name}} ({{vm.host.split('.').reverse().pop()}})</div>
     <div class="mat-caption">{{vm.groupName}}</div>
     <!-- <div>{{ vm.whenCreated | shortdate }} by {{workers(vm)}}</div> -->
     <!-- <div *ngIf="current===vm.id">

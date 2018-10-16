@@ -65,11 +65,13 @@ namespace TopoMojo.Core
 
             if (search.Term.HasValue())
             {
+                //TODO: Revist this when searching gets slow!
+                string term = $"%{search.Term}%";  // leading % causes full table scan
                 q = q.Where(o =>
-                    o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.Author.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    EF.Functions.Like(o.Name, term)
+                    || EF.Functions.Like(o.Description, term)
+                    || EF.Functions.Like(o.Author, term)
+                    || EF.Functions.Like(o.GlobalId, term)
                 );
             }
 
@@ -173,6 +175,20 @@ namespace TopoMojo.Core
             Mapper.Map<Models.ChangedTopology, Data.Entities.Topology>(model, entity);
             await _repo.Update(entity);
             return Mapper.Map<Models.Topology>(entity, WithActor());
+        }
+
+        public async Task<Models.Topology> UpdatePrivilegedChanges(Models.PrivilegedWorkspaceChanges model)
+        {
+            if (!Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            Data.Entities.Topology entity = await _repo.Load(model.Id);
+            if (entity == null)
+                throw new InvalidOperationException();
+
+            Mapper.Map<Models.PrivilegedWorkspaceChanges, Data.Entities.Topology>(model, entity);
+            await _repo.Update(entity);
+            return Mapper.Map<Models.Topology>(entity);
         }
 
         public async Task<Models.Topology> Delete(int id)

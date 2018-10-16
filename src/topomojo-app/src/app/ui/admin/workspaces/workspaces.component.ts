@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TopologyService } from '../../../api/topology.service';
 import { Topology, TopologySearchResult, Search } from '../../../api/gen/models';
 import { ToolbarService } from '../../svc/toolbar.service';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'topomojo-workspaces',
@@ -16,7 +17,8 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
   search: Search = {take: 26};
   hasMore = false;
   subs: Array<Subscription> = [];
-
+  changedTopo = new Subject<Topology>();
+  changedTopo$ = this.changedTopo.asObservable();
   constructor(
     private topoSvc: TopologyService,
     private toolbar: ToolbarService
@@ -29,7 +31,13 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
           this.search.term = term;
           this.fetch();
         }
-      )
+      ),
+
+      this.changedTopo$.pipe(
+        debounceTime(500)
+      ).subscribe((topo) => {
+        this.topoSvc.putTopologyPriv(topo).subscribe();
+      })
     );
     this.toolbar.search(true);
   }
@@ -73,9 +81,15 @@ export class WorkspacesComponent implements OnInit, OnDestroy {
       () => {
         this.topos.splice(this.topos.indexOf(topo), 1);
       }
-    )
+    );
   }
+
   trackById(i: number, item: Topology): number {
     return item.id;
+  }
+
+  changeLimit(topo: Topology, count: number) {
+    topo.templateLimit += count;
+    this.changedTopo.next(topo);
   }
 }

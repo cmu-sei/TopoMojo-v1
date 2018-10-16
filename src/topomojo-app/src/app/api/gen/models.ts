@@ -212,6 +212,11 @@ export interface ChangedTopology {
     documentUrl?: string;
 }
 
+export interface PrivilegedWorkspaceChanges {
+    id?: number;
+    templateLimit?: number;
+}
+
 export interface TopologyStateAction {
     id?: number;
     type?: TopologyStateActionTypeEnum;

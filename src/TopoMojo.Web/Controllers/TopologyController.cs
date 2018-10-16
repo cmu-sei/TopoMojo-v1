@@ -67,6 +67,17 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "admin")]
+        [HttpPut("api/topology/priv")]
+        [JsonExceptionFilter]
+        public async Task<ActionResult> UpdatePrivilegedChanges([FromBody] PrivilegedWorkspaceChanges model)
+        {
+            Topology topo = await _mgr.UpdatePrivilegedChanges(model);
+            // Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
+            await _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
+            return Ok();
+        }
+
         [HttpGet("api/topology/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult<Topology>> Load(int id)
