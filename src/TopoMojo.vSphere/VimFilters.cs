@@ -7,7 +7,7 @@ namespace TopoMojo.vSphere
     public static class FilterFactory
     {
 
-        public static PropertyFilterSpec[] VmFilter(ManagedObjectReference mor, string props = "summary layout resourcePool")
+        public static PropertyFilterSpec[] VmFilter(ManagedObjectReference mor, string props = "summary layout")
         {
             props += " resourcePool";
             PropertySpec prop = new PropertySpec {

@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace TopoMojo.Extensions
 {
@@ -72,16 +73,18 @@ namespace TopoMojo.Extensions
             return s.Trim();
         }
 
+        // returns first token following #
         public static string Tag(this string s)
         {
             if (s.HasValue())
             {
                 int x = s.IndexOf("#");
                 if (x >= 0)
-                    return s.Substring(x+1);
+                    return s.Substring(x+1).Split(' ').First();
             }
             return "";
         }
+
         //strips hashtag+ from string
         public static string Untagged(this string s)
         {
