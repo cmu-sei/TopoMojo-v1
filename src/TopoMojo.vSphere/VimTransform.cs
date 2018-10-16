@@ -19,25 +19,19 @@ namespace TopoMojo.vSphere
             List<VirtualDeviceConfigSpec> devices = new List<VirtualDeviceConfigSpec>();
 
             vmcs.name = template.Name;
-            vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other") + "Guest";
+            vmcs.extraConfig = GetExtraConfig(template);
+            vmcs.AddRam(template.Ram);
+            vmcs.AddCpu(template.Cpu);
+            vmcs.AddBootOption(Math.Max(template.Delay, 10));
+            vmcs.version = (template.Version.HasValue()) ? template.Version : null;
+            vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other");
+            if (!vmcs.guestId.EndsWith("Guest")) vmcs.guestId += "Guest";
             if (datastore.HasValue())
                 vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
-            vmcs.extraConfig = GetExtraConfig(template.Name.Tag());
             vmcs.annotation = (template.GuestSettings.IsNotEmpty())
                 ? String.Join("\n", template.GuestSettings
                     .Select(o=> String.Format("{0} = {1}", o.Key, o.Value)))
                 : "";
-            vmcs.AddRam(template.Ram);
-            vmcs.AddCpu(template.Cpu);
-            vmcs.AddBootOption(10);
-            //vmcs.AddBootOption(template.Delay);
-            vmcs.version = (template.Version.HasValue()) ? template.Version : "vmx-08";
-
-            // //vmci device
-            // count = 0;
-            // Int32.TryParse(template.FindOne("vmci").Value(), out count);
-            // if (count > 0 && vmcs.version != "vmx-04")
-            //     devices.Add(GetVMCIAdapter(ref key, count));
 
             //video card
             devices.Add(GetVideoController(ref key, template.VideoRam));
@@ -246,14 +240,15 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        public static OptionValue[] GetExtraConfig(string tag = "")
+        public static OptionValue[] GetExtraConfig(Template template)
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
             options.Add(new OptionValue { key = "isolation.tools.copy.disable", value = "false" });
             options.Add(new OptionValue { key = "isolation.tools.paste.disable", value = "false" });
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
-            options.Add(new OptionValue { key = "guestinfo.isolationTag", value = tag });
+            options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
+            options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
 
             return options.ToArray();
         }
