@@ -180,8 +180,8 @@ namespace TopoMojo.Core
             IQueryable<Template> q = _repo.List();
 
             if (search.Term.HasValue())
-                q = q.Where(t => t.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1
-                || (t.Description!=null && t.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase)>-1));
+                q = q.Where(t => EF.Functions.Like(t.Name, search.Term + "%")
+                || EF.Functions.Like(t.Description, search.Term + "%"));
 
             if (search.HasFilter("parents"))
                 q = q.Where(t => t.ParentId == null || t.ParentId == 0);

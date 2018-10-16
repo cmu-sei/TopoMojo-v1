@@ -65,11 +65,13 @@ namespace TopoMojo.Core
 
             if (search.Term.HasValue())
             {
+                //TODO: Revist this when searching gets slow!
+                string term = $"%{search.Term}%";  // leading % causes full table scan
                 q = q.Where(o =>
-                    o.Name.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.Description.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.Author.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || o.GlobalId.IndexOf(search.Term, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    EF.Functions.Like(o.Name, term)
+                    || EF.Functions.Like(o.Description, term)
+                    || EF.Functions.Like(o.Author, term)
+                    || EF.Functions.Like(o.GlobalId, term)
                 );
             }
 
