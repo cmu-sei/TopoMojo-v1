@@ -175,6 +175,20 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.Topology>(entity, WithActor());
         }
 
+        public async Task<Models.Topology> UpdatePrivilegedChanges(Models.PrivilegedWorkspaceChanges model)
+        {
+            if (!Profile.IsAdmin)
+                throw new InvalidOperationException();
+
+            Data.Entities.Topology entity = await _repo.Load(model.Id);
+            if (entity == null)
+                throw new InvalidOperationException();
+
+            Mapper.Map<Models.PrivilegedWorkspaceChanges, Data.Entities.Topology>(model, entity);
+            await _repo.Update(entity);
+            return Mapper.Map<Models.Topology>(entity);
+        }
+
         public async Task<Models.Topology> Delete(int id)
         {
             if (! await _repo.CanEdit(id, Profile))

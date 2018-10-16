@@ -33,6 +33,7 @@ namespace TopoMojo.Core.Mappers
             CreateMap<Models.NewTopology, Data.Entities.Topology>();
 
             CreateMap<Models.ChangedTopology, Data.Entities.Topology>();
+            CreateMap<Models.PrivilegedWorkspaceChanges, Data.Entities.Topology>();
 
             CreateMap<Data.Entities.Worker, Models.Worker>()
                 .ForMember(d => d.CanManage, opt => opt.ResolveUsing((s) => s.CanManage()))

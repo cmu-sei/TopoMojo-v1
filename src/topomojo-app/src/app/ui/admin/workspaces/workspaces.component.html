@@ -13,6 +13,11 @@
     <div class="mat-caption">{{topo.globalId}}</div>
     <div class="mat-caption">{{ topo.whenCreated | ago }} on {{ topo.whenCreated | shortdate }} by {{workers(topo)}}</div>
     <div *ngIf="current===topo.id">
+      <div>
+        <button mat-icon-button (click)="changeLimit(topo, -1)" matTooltip="decrement"><mat-icon>remove</mat-icon></button>
+        <span>Template Limit: {{topo.templateLimit}}</span>
+        <button mat-icon-button (click)="changeLimit(topo, 1)" matTooltip="increment"><mat-icon>add</mat-icon></button>
+      </div>
       <mat-divider inset="true"></mat-divider>
       <div *ngFor="let t of topo.templates" class="vm">
         <div class="name">{{t.name}}</div>

@@ -54,6 +54,12 @@ namespace TopoMojo.Core.Models
         public string DocumentUrl { get; set; }
     }
 
+    public class PrivilegedWorkspaceChanges
+    {
+        public int Id { get; set; }
+        public int TemplateLimit { get; set; }
+    }
+
     public class TopologyState
     {
         public int Id { get; set; }
