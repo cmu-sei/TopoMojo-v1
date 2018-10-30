@@ -27,11 +27,9 @@ namespace TopoMojo.vSphere
             vmcs.guestId = (template.Guest.HasValue() ? template.Guest : "other");
             if (!vmcs.guestId.EndsWith("Guest")) vmcs.guestId += "Guest";
             if (datastore.HasValue())
+            {
                 vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
-            vmcs.annotation = (template.GuestSettings.IsNotEmpty())
-                ? String.Join("\n", template.GuestSettings
-                    .Select(o=> String.Format("{0} = {1}", o.Key, o.Value)))
-                : "";
+            }
 
             //video card
             devices.Add(GetVideoController(ref key, template.VideoRam));
@@ -249,7 +247,10 @@ namespace TopoMojo.vSphere
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
             options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
             options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
-
+            foreach (var setting in template.GuestSettings)
+            {
+                options.Add(new OptionValue { key = setting.Key, value = setting.Value });
+            }
             return options.ToArray();
         }
 
