@@ -247,9 +247,12 @@ namespace TopoMojo.vSphere
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
             options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
             options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
-            foreach (var setting in template.GuestSettings)
+            if (template.GuestSettings.IsNotEmpty())
             {
-                options.Add(new OptionValue { key = setting.Key, value = setting.Value });
+                foreach (var setting in template.GuestSettings)
+                {
+                    options.Add(new OptionValue { key = setting.Key, value = setting.Value });
+                }
             }
             return options.ToArray();
         }
