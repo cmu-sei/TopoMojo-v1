@@ -79,11 +79,11 @@ $custom-typography: mat-typography-config(
 
 $primary: mat-palette($mat-cmu-tartan);
 $accent:  mat-palette($mat-cmu-tartan, A400, A200, A700);
-$theme: cmu-dark-theme($primary, $accent, mat-palette($mat-amber));
+$theme: cmu-light-theme($primary, $accent, mat-palette($mat-amber));
 @include angular-material-theme($theme);
 @include mix-app-theme($theme);
 
-$alt: cmu-light-theme($primary, $accent, mat-palette($mat-amber));
+$alt: cmu-dark-theme($primary, $accent, mat-palette($mat-amber));
 .alt-theme {
     @include angular-material-theme($alt);
     @include mix-app-theme($alt);
