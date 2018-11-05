@@ -32,7 +32,8 @@ namespace TopoMojo.vSphere
             }
 
             //can't actually be applied via ExtraConfig
-            if (template.GuestSettings.Any(s => s.Key == "vhv.enable" && s.Value == "true"))
+            if (template.GuestSettings.IsNotEmpty()
+                && template.GuestSettings.Any(s => s.Key == "vhv.enable" && s.Value == "true"))
             {
                 vmcs.nestedHVEnabled = true;
                 vmcs.nestedHVEnabledSpecified = true;
