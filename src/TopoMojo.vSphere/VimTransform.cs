@@ -31,6 +31,13 @@ namespace TopoMojo.vSphere
                 vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
             }
 
+            //can't actually be applied via ExtraConfig
+            if (template.GuestSettings.Any(s => s.Key == "vhv.enable" && s.Value == "true"))
+            {
+                vmcs.nestedHVEnabled = true;
+                vmcs.nestedHVEnabledSpecified = true;
+            }
+
             //video card
             devices.Add(GetVideoController(ref key, template.VideoRam));
 
@@ -112,6 +119,9 @@ namespace TopoMojo.vSphere
 
             if (nic.Type == "vmx3")
                 eth = new VirtualVmxnet3();
+
+            if (nic.Type == "e1000e")
+                eth = new VirtualE1000e();
 
             // VirtualEthernetCardNetworkBackingInfo ethbacking = new VirtualEthernetCardNetworkBackingInfo();
             // ethbacking.deviceName = nic.Net;
