@@ -13,21 +13,19 @@ namespace TopoMojo.Core.Mappers
                 .ForMember(d => d.Author, opt =>
                     opt.ResolveUsing((s, d, m, r) => s.Author ?? s.Workers.FirstOrDefault()?.Person?.Name))
                 .ForMember(d => d.CanManage, opt =>
-                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanManage())))
+                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())))
+                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))))
                 .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.GamespaceCount, opt => opt.ResolveUsing(s => s.Gamespaces.Count))
                 .ReverseMap();
 
             CreateMap<Data.Entities.Topology, Models.TopologySummary>()
-                // .ForMember(d => d.Author, opt =>
-                //     opt.ResolveUsing((s, d, m, r) => s.Author ?? s.Workers.FirstOrDefault()?.Person?.Name))
                 .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.CanManage, opt =>
-                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanManage())))
+                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.ResolveUsing((s, d, m, r) => s.Workers.Any(w => w.PersonId == r.GetActorId() && w.CanEdit())));
+                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))));
 
             CreateMap<Data.Entities.Topology, Models.TopologyState>();
             CreateMap<Models.NewTopology, Data.Entities.Topology>();

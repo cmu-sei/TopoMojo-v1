@@ -37,7 +37,9 @@ namespace TopoMojo.Core
 
         protected Action<IMappingOperationOptions> WithActor()
         {
-            return opts => { opts.Items["ActorId"] = Profile.Id; };
+            return opts => {
+                opts.Items["Actor"] = Profile;
+            };
         }
 
     }

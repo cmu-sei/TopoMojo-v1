@@ -5,13 +5,12 @@ namespace TopoMojo.Core.Mappers
  {
     public static class ResolutionContextExtensions
     {
-        public static int GetActorId(this AutoMapper.ResolutionContext res)
+        public static Data.Entities.Profile GetActor(this AutoMapper.ResolutionContext res)
         {
-            int id = 0;
-            if (res.Items.ContainsKey("ActorId"))
-                int.TryParse(Convert.ToString(res.Items["ActorId"]), out id);
+            if (res.Items.ContainsKey("Actor"))
+                return res.Items["Actor"] as Data.Entities.Profile;
 
-            return id;
+            return new Data.Entities.Profile();
         }
     }
  }
