@@ -17,11 +17,11 @@ CMD ["dotnet", "run"]
 #
 #multi-stage target: prod
 #
-FROM dockreg.cwd.local/dotnet:2.1 AS prod
+FROM microsoft/dotnet:2.1-aspnetcore-runtime AS prod
 ARG commit
 ENV COMMIT=$commit
 COPY --from=dev /app/dist /app
 WORKDIR /app
-EXPOSE 5000
-ENV ASPNETCORE_URLS=http://*:5000
+EXPOSE 80
+ENV ASPNETCORE_URLS=http://*:80
 CMD [ "dotnet", "TopoMojo.Web.dll" ]
