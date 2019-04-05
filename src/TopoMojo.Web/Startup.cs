@@ -93,21 +93,6 @@ namespace TopoMojo.Web
                     RoleClaimType = "role"
                 };
             });
-            // services.AddAuthentication(
-            //     options =>
-            //     {
-            //         options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-            //         options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-            //     }
-            // )
-            // .AddIdentityServerAuthentication(
-            //     IdentityServerAuthenticationDefaults.AuthenticationScheme,
-            //     options => {
-            //         options.Authority = oidcOptions.Authority;
-            //         options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-            //         options.ApiName = oidcOptions.AuthorizationScope;
-            //     }
-            // );
 
             #endregion
 
@@ -137,7 +122,6 @@ namespace TopoMojo.Web
                     { "oauth2", new[] { "readAccess", "writeAccess" } }
                 });
                 options.DescribeAllEnumsAsStrings();
-                //options.CustomSchemaIds(x => x.FullName);
             });
             #endregion
 
@@ -148,7 +132,6 @@ namespace TopoMojo.Web
 
             app.UseCors("default");
 
-            app.UseStaticGzipCompression();
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = ctx =>
@@ -158,25 +141,6 @@ namespace TopoMojo.Web
                         ctx.Context.Response.Headers.Append("Cache-Control", "no-cache");
                     }
                 }
-            });
-
-            //move any querystring jwt to Auth bearer header
-            app.Use(async (context, next) =>
-            {
-                if (string.IsNullOrWhiteSpace(context.Request.Headers["Authorization"])
-                    && context.Request.QueryString.HasValue)
-                {
-                    string token = context.Request.QueryString.Value
-                        .Substring(1)
-                        .Split('&')
-                        .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
-
-                    if (!String.IsNullOrWhiteSpace(token))
-                        context.Request.Headers.Add("Authorization", new[] { $"Bearer {token}" });
-                }
-
-                await next.Invoke();
-
             });
 
             app.UseSwagger(c =>
@@ -194,6 +158,7 @@ namespace TopoMojo.Web
             //     c.InjectJavascript("/js/custom-swag.js");
             // });
 
+            app.UseQuerystringBearerToken();
             app.UseAuthentication();
 
             app.UseSignalR(routes =>
@@ -202,22 +167,6 @@ namespace TopoMojo.Web
             });
 
             app.UseMvc();
-
-            // Default route return client app
-            app.Run(async (context) =>
-            {
-                string indexFile = Path.Combine(env.WebRootPath, "index.html");
-                var fileInfo = new System.IO.FileInfo(indexFile);
-                context.Response.StatusCode = 200;
-                context.Response.ContentLength = fileInfo.Length;
-                context.Response.Headers.Append("Content-Type", "text/html");
-
-                using (FileStream fs = File.OpenRead(indexFile))
-                {
-                    await fs.CopyToAsync(context.Response.Body);
-                }
-            });
-
         }
     }
 }

@@ -91,7 +91,19 @@ namespace TopoMojo.Services
                 }
                 else
                 {
-                    profile = await _repo.Add(BuildProfileModel(principal));
+                    try
+                    {
+                       profile = await _repo.Add(BuildProfileModel(principal));
+                    }
+                    catch (Exception ex)
+                    {
+                        // try again
+                        profile = await _repo.FindByGlobalId(sub);
+                        if (profile == null)
+                        {
+                            throw ex;
+                        }
+                    }
                 }
                 claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
                 claims.Add(new Claim("workspacelimit", profile.WorkspaceLimit.ToString()));

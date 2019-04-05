@@ -11,21 +11,21 @@ namespace TopoMojo.Core.Mappers
         {
             CreateMap<Data.Entities.Topology, Models.Topology>()
                 .ForMember(d => d.Author, opt =>
-                    opt.ResolveUsing((s, d, m, r) => s.Author ?? s.Workers.FirstOrDefault()?.Person?.Name))
+                    opt.MapFrom((s, d, m, r) => s.Author ?? s.Workers.FirstOrDefault()?.Person?.Name))
                 .ForMember(d => d.CanManage, opt =>
-                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
+                    opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))))
-                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
-                .ForMember(d => d.GamespaceCount, opt => opt.ResolveUsing(s => s.Gamespaces.Count))
+                    opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))))
+                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
+                .ForMember(d => d.GamespaceCount, opt => opt.MapFrom(s => s.Gamespaces.Count))
                 .ReverseMap();
 
             CreateMap<Data.Entities.Topology, Models.TopologySummary>()
-                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
+                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.CanManage, opt =>
-                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
+                    opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanManage()))))
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))));
+                    opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Workers.Any(w => w.PersonId == r.GetActor().Id && w.CanEdit()))));
 
             CreateMap<Data.Entities.Topology, Models.TopologyState>();
             CreateMap<Models.NewTopology, Data.Entities.Topology>();
@@ -34,8 +34,8 @@ namespace TopoMojo.Core.Mappers
             CreateMap<Models.PrivilegedWorkspaceChanges, Data.Entities.Topology>();
 
             CreateMap<Data.Entities.Worker, Models.Worker>()
-                .ForMember(d => d.CanManage, opt => opt.ResolveUsing((s) => s.CanManage()))
-                .ForMember(d => d.CanEdit, opt => opt.ResolveUsing((s) => s.CanEdit()));
+                .ForMember(d => d.CanManage, opt => opt.MapFrom((s) => s.CanManage()))
+                .ForMember(d => d.CanEdit, opt => opt.MapFrom((s) => s.CanEdit()));
 
         }
     }
