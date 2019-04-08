@@ -11,21 +11,24 @@ namespace TopoMojo.Middleware
     {
         public QuerystringBearerTokenMiddleware(
             RequestDelegate next,
-            ILogger<HeaderInspectionMiddleware> logger
+            ILogger<HeaderInspectionMiddleware> logger,
+            string tokenName = "access_token"
         ){
             _next = next;
             _logger = logger;
+            _tokenName = tokenName;
         }
 
+        private readonly string _tokenName;
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
 
         public async Task Invoke(HttpContext context)
         {
             if (string.IsNullOrWhiteSpace(context.Request.Headers["Authorization"])
-                && context.Request.Query["bearer"].Any())
+                && context.Request.Query[_tokenName].Any())
             {
-                string token = context.Request.Query["bearer"].FirstOrDefault();
+                string token = context.Request.Query[_tokenName].FirstOrDefault();
 
                 if (!String.IsNullOrWhiteSpace(token))
                     context.Request.Headers.Add("Authorization", new[] { $"Bearer {token}" });

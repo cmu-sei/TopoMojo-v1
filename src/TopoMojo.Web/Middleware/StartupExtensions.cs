@@ -11,10 +11,11 @@ namespace Microsoft.AspNetCore.Builder
         }
 
         public static IApplicationBuilder UseQuerystringBearerToken (
-            this IApplicationBuilder builder
+            this IApplicationBuilder builder,
+            string tokenName = "access_token"
         )
         {
-            return builder.UseMiddleware<TopoMojo.Middleware.QuerystringBearerTokenMiddleware>();
+            return builder.UseMiddleware<TopoMojo.Middleware.QuerystringBearerTokenMiddleware>(tokenName);
         }
     }
 }
