@@ -7,8 +7,6 @@ ENV ASPNETCORE_URLS=http://*:5000 \
     ASPNETCORE_ENVIRONMENT=DEVELOPMENT
 
 COPY . /app
-WORKDIR /app/src/topomojo-app
-RUN npm install && ./node_modules/@angular/cli/bin/ng build --prod --output-path /app/dist/wwwroot
 
 WORKDIR /app/src/TopoMojo.Web
 RUN dotnet publish -c Release -o /app/dist
