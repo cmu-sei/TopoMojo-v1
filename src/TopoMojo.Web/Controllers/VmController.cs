@@ -47,6 +47,59 @@ namespace TopoMojo.Controllers
         //     return View("wmks", new DisplayInfo { Id = id });
         // }
 
+        ///
+        // This endpoint is a temporary to support an authless demo
+        [HttpGet("api/vmdemo/{id}/{code}")]
+        [JsonExceptionFilter]
+        [AllowAnonymous]
+        public async Task<ActionResult<DisplayInfo>> Demo(string id, string code)
+        {
+            if (!code.HasValue() || code != _options.DemoCode)
+                throw new InvalidOperationException();
+
+            DisplayInfo info = await _pod.Display(id);
+
+            if (info.Url.HasValue())
+            {
+                _logger.LogDebug("ticket url: {0}", info.Url);
+                var src = new Uri(info.Url);
+                string target = "";
+                string qs = "";
+                string internalHost = src.Host.Split('.').First();
+                string domain = Request.Host.Value.IndexOf(".") >= 0
+                            ? Request.Host.Value.Substring(Request.Host.Value.IndexOf(".")+1)
+                            : Request.Host.Value;
+
+                switch (_pod.Options.TicketUrlHandler.ToLower())
+                {
+                    case "querystring":
+                        qs = $"?vmhost={src.Host}";
+                        target = _pod.Options.DisplayUrl;
+                    break;
+
+                    case "local-app":
+                        target = $"{Request.Host.Value}/{internalHost}";
+                    break;
+
+                    case "external-domain":
+                        target = $"{internalHost}.{domain}";
+                    break;
+
+                    case "host-map":
+                        var map = _pod.Options.TicketUrlHostMap;
+                        if (map.ContainsKey(src.Host))
+                            target = map[src.Host];
+                    break;
+                }
+
+                if (target.HasValue())
+                    info.Url = info.Url.Replace(src.Host, target);
+
+                info.Url += qs;
+            }
+            return Ok(info);
+        }
+
         [HttpGet("api/vm/{id}/ticket")]
         [JsonExceptionFilter]
         public async Task<ActionResult<DisplayInfo>> Ticket(string id)
