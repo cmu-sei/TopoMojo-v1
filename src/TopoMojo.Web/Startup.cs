@@ -47,7 +47,6 @@ namespace TopoMojo.Web
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
-
             services.AddDbProvider(() => Configuration.GetSection("Database"));
 
             #region Configure TopoMojo
@@ -78,21 +77,20 @@ namespace TopoMojo.Web
 
             #region Configure Authentication
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
             services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.Authority = oidcOptions.Authority;
-                options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                options.Audience = oidcOptions.AuthorizationScope;
-                options.SaveToken = false;
-                options.TokenValidationParameters = new TokenValidationParameters
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    NameClaimType = "name",
-                    RoleClaimType = "role"
-                };
-            });
+                    options.Authority = oidcOptions.Authority;
+                    options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                    options.Audience = oidcOptions.AuthorizationScope;
+                    options.SaveToken = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        NameClaimType = "name",
+                        RoleClaimType = "role"
+                    };
+                });
 
             #endregion
 
@@ -119,7 +117,7 @@ namespace TopoMojo.Web
                 });
                 options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
                 {
-                    { "oauth2", new[] { "readAccess", "writeAccess" } }
+                    { "oauth2", new[] { oidcOptions.AuthorizationScope } }
                 });
                 options.DescribeAllEnumsAsStrings();
             });
@@ -129,7 +127,6 @@ namespace TopoMojo.Web
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-
             app.UseCors("default");
 
             app.UseStaticFiles(new StaticFileOptions
@@ -145,27 +142,23 @@ namespace TopoMojo.Web
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "openapi/{documentName}/api.json";
+                c.RouteTemplate = "api/{documentName}/swagger.json";
             });
-            // app.UseSwaggerUI(c =>
-            // {
-            //     c.RoutePrefix = "openapi";
-            //     c.SwaggerEndpoint("/openapi/v1/api.json", "TopoMojo" + " (v1)");
-            //     c.OAuthClientId(oidcOptions.ClientId);
-            //     c.OAuthClientSecret(oidcOptions.ClientSecret);
-            //     c.OAuthAppName(oidcOptions.ClientName);
-            //     c.InjectStylesheet("/css/site.css");
-            //     c.InjectJavascript("/js/custom-swag.js");
-            // });
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "api";
+                c.SwaggerEndpoint("/api/v1/swagger.json", "TopoMojo" + " (v1)");
+                c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
+                c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName);
+                c.OAuthClientSecret(oidcOptions.SwaggerClient?.ClientSecret);
+            });
 
             app.UseQuerystringBearerToken();
             app.UseAuthentication();
-
             app.UseSignalR(routes =>
             {
                 routes.MapHub<TopologyHub>("/hub");
             });
-
             app.UseMvc();
         }
     }
