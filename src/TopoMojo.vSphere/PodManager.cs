@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,7 +35,6 @@ namespace TopoMojo.vSphere
             //InitVlans();
             _vlanman = new VlanManager(_options.Vlan);
 
-            InitHost(_options.Url);
         }
 
         private readonly PodConfiguration _options;
@@ -57,6 +57,21 @@ namespace TopoMojo.vSphere
         {
             string host = "https://" + hostname + "/sdk";
             await AddHost(host);
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            InitHost(_options.Url);
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            foreach (var host in _hostCache.Values)
+            {
+                host.Disconnect().Wait();
+            }
+            return Task.CompletedTask;
         }
 
         //TODO: refactor this as InitializationProgress

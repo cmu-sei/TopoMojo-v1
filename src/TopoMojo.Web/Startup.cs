@@ -44,7 +44,7 @@ namespace TopoMojo.Web
 
                 //options.Filters.Add(new AuthorizeFilter(global));
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
             services.AddDbProvider(() => Configuration.GetSection("Database"));
@@ -64,7 +64,8 @@ namespace TopoMojo.Web
                     return String.IsNullOrWhiteSpace(options.Url)
                         ? (IPodManager)new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
                         : (IPodManager)new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
-                });
+                })
+                .AddHostedService<ServiceHostWrapper<IPodManager>>();
 
             #endregion
 
