@@ -47,7 +47,6 @@ namespace TopoMojo.Web
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
-
             services.AddDbProvider(() => Configuration.GetSection("Database"));
 
             #region Configure TopoMojo
@@ -78,36 +77,20 @@ namespace TopoMojo.Web
 
             #region Configure Authentication
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
             services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.Authority = oidcOptions.Authority;
-                options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                options.Audience = oidcOptions.AuthorizationScope;
-                options.SaveToken = false;
-                options.TokenValidationParameters = new TokenValidationParameters
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    NameClaimType = "name",
-                    RoleClaimType = "role"
-                };
-            });
-            // services.AddAuthentication(
-            //     options =>
-            //     {
-            //         options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-            //         options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-            //     }
-            // )
-            // .AddIdentityServerAuthentication(
-            //     IdentityServerAuthenticationDefaults.AuthenticationScheme,
-            //     options => {
-            //         options.Authority = oidcOptions.Authority;
-            //         options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-            //         options.ApiName = oidcOptions.AuthorizationScope;
-            //     }
-            // );
+                    options.Authority = oidcOptions.Authority;
+                    options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
+                    options.Audience = oidcOptions.AuthorizationScope;
+                    options.SaveToken = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        NameClaimType = "name",
+                        RoleClaimType = "role"
+                    };
+                });
 
             #endregion
 
@@ -134,10 +117,9 @@ namespace TopoMojo.Web
                 });
                 options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
                 {
-                    { "oauth2", new[] { "readAccess", "writeAccess" } }
+                    { "oauth2", new[] { oidcOptions.AuthorizationScope } }
                 });
                 options.DescribeAllEnumsAsStrings();
-                //options.CustomSchemaIds(x => x.FullName);
             });
             #endregion
 
@@ -145,10 +127,8 @@ namespace TopoMojo.Web
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-
             app.UseCors("default");
 
-            app.UseStaticGzipCompression();
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = ctx =>
@@ -160,64 +140,26 @@ namespace TopoMojo.Web
                 }
             });
 
-            //move any querystring jwt to Auth bearer header
-            app.Use(async (context, next) =>
-            {
-                if (string.IsNullOrWhiteSpace(context.Request.Headers["Authorization"])
-                    && context.Request.QueryString.HasValue)
-                {
-                    string token = context.Request.QueryString.Value
-                        .Substring(1)
-                        .Split('&')
-                        .SingleOrDefault(x => x.StartsWith("bearer="))?.Split('=')[1];
-
-                    if (!String.IsNullOrWhiteSpace(token))
-                        context.Request.Headers.Add("Authorization", new[] { $"Bearer {token}" });
-                }
-
-                await next.Invoke();
-
-            });
-
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "openapi/{documentName}/api.json";
+                c.RouteTemplate = "api/{documentName}/swagger.json";
             });
-            // app.UseSwaggerUI(c =>
-            // {
-            //     c.RoutePrefix = "openapi";
-            //     c.SwaggerEndpoint("/openapi/v1/api.json", "TopoMojo" + " (v1)");
-            //     c.OAuthClientId(oidcOptions.ClientId);
-            //     c.OAuthClientSecret(oidcOptions.ClientSecret);
-            //     c.OAuthAppName(oidcOptions.ClientName);
-            //     c.InjectStylesheet("/css/site.css");
-            //     c.InjectJavascript("/js/custom-swag.js");
-            // });
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "api";
+                c.SwaggerEndpoint("/api/v1/swagger.json", "TopoMojo" + " (v1)");
+                c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
+                c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName);
+                c.OAuthClientSecret(oidcOptions.SwaggerClient?.ClientSecret);
+            });
 
+            app.UseQuerystringBearerToken();
             app.UseAuthentication();
-
             app.UseSignalR(routes =>
             {
                 routes.MapHub<TopologyHub>("/hub");
             });
-
             app.UseMvc();
-
-            // Default route return client app
-            app.Run(async (context) =>
-            {
-                string indexFile = Path.Combine(env.WebRootPath, "index.html");
-                var fileInfo = new System.IO.FileInfo(indexFile);
-                context.Response.StatusCode = 200;
-                context.Response.ContentLength = fileInfo.Length;
-                context.Response.Headers.Append("Content-Type", "text/html");
-
-                using (FileStream fs = File.OpenRead(indexFile))
-                {
-                    await fs.CopyToAsync(context.Response.Body);
-                }
-            });
-
         }
     }
 }

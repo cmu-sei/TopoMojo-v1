@@ -8,14 +8,14 @@ namespace TopoMojo.Core.Mappers
         public GamespaceProfile()
         {
             CreateMap<Data.Entities.Gamespace, Models.Gamespace>()
-                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")));
+                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")));
             CreateMap<Data.Entities.Gamespace, Models.GameState>()
-                .ForMember(d => d.WhenCreated, opt => opt.ResolveUsing(s => s.WhenCreated.ToString("u")))
-                .ForMember(d => d.Name, opt => opt.ResolveUsing(s => s.Topology.Name));
+                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
+                .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Topology.Name));
 
             CreateMap<Data.Entities.Player, Models.Player>()
-                .ForMember(d => d.CanManage, opt => opt.ResolveUsing((s) => s.Permission.CanManage()))
-                .ForMember(d => d.CanEdit, opt => opt.ResolveUsing((s) => s.Permission.CanEdit()));
+                .ForMember(d => d.CanManage, opt => opt.MapFrom((s) => s.Permission.CanManage()))
+                .ForMember(d => d.CanEdit, opt => opt.MapFrom((s) => s.Permission.CanEdit()));
 
         }
     }

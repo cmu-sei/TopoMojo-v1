@@ -19,7 +19,7 @@ namespace TopoMojo.Core.Mappers
             CreateMap<Data.Entities.Template, Models.TemplateSummary>();
             CreateMap<Data.Entities.Template, Models.Template>()
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.ResolveUsing((s, d, m, r) => r.GetActor().IsAdmin || (s.Topology != null && s.Topology.Workers.Any(w => w.PersonId == r.GetActor().Id))))
+                    opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Topology != null && s.Topology.Workers.Any(w => w.PersonId == r.GetActor().Id))))
                 .ReverseMap();
 
             CreateMap<Models.NewTemplateDetail, Data.Entities.Template>();
