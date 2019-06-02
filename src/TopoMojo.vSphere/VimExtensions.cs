@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Cwd.vSphereApi;
+using NetVimClient;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 using TopoMojo.Extensions;

@@ -1,4 +1,4 @@
-using Cwd.vSphereApi;
+using NetVimClient;
 
 namespace TopoMojo.vSphere.Network
 {

@@ -5,7 +5,7 @@ using System.Text;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
-using Cwd.vSphereApi;
+using NetVimClient;
 
 namespace TopoMojo.vSphere
 {

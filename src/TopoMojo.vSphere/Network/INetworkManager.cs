@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Cwd.vSphereApi;
+using NetVimClient;
 using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
 

@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using Cwd.vSphereApi;
+using NetVimClient;
 
 namespace TopoMojo.vSphere
 {
