@@ -40,7 +40,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpGet("api/topologies")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<Topology>>> ListDetail(Search search)
@@ -67,7 +67,7 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/topology/priv")]
         [JsonExceptionFilter]
         public async Task<ActionResult> UpdatePrivilegedChanges([FromBody] PrivilegedWorkspaceChanges model)

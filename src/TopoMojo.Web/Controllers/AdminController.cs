@@ -1,25 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Administrator")]
     public class AdminController : _Controller
     {
         public AdminController(

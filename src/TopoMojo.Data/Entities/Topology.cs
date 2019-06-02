@@ -11,6 +11,7 @@ namespace TopoMojo.Data.Entities
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public DateTime WhenCreated { get; set; }
+        public DateTime? WhenPublished { get; set; }
         public string Description { get; set; } = string.Empty;
         public string DocumentUrl { get; set; } = string.Empty;
         public string ShareCode { get; set; }
@@ -19,11 +20,13 @@ namespace TopoMojo.Data.Entities
         public bool IsLocked { get; set; }
         public int TemplateLimit { get; set; }
         public bool UseUplinkSwitch { get; set; }
+        public int LaunchCount { get; set; }
+        public DateTime LastLaunch { get; set; }
+        public bool IsEvergreen { get; set; }
         public virtual ICollection<Worker> Workers { get; set; } = new List<Worker>();
         public virtual ICollection<Gamespace> Gamespaces { get; set; } = new List<Gamespace>();
         public virtual ICollection<Template> Templates { get; set; } = new List<Template>();
 
-        [Obsolete]
         [NotMapped]
         public string Document
         {

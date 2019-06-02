@@ -11,13 +11,6 @@ namespace TopoMojo.Data.Entities
         public int PersonId { get; set; }
         public virtual Profile Person { get; set; }
         public Permission Permission { get; set; }
+        public DateTime? LastSeen { get; set; }
     }
-
-
-    // public enum EntityType
-    // {
-    //     None,
-    //     Simulation,
-    //     Topology
-    // }
 }

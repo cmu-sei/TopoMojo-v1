@@ -1,3 +1,4 @@
+using System;
 using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data.Entities
@@ -10,5 +11,6 @@ namespace TopoMojo.Data.Entities
         public int PersonId { get; set; }
         public virtual Profile Person { get; set; }
         public Permission Permission { get; set; }
+        public DateTime? LastSeen { get; set; }
     }
 }

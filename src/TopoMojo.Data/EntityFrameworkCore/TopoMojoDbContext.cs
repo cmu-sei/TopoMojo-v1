@@ -28,5 +28,6 @@ namespace TopoMojo.Data.EntityFrameworkCore
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Activity> History { get; set; }
     }
 }

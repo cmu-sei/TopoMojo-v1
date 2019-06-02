@@ -90,6 +90,7 @@ namespace TopoMojo.Core
                     {
                         PersonId = Profile.Id,
                         Permission = Permission.Manager,
+                        LastSeen = DateTime.UtcNow
                     }
                 );
                 await _repo.Add(game);
@@ -152,6 +153,10 @@ namespace TopoMojo.Core
             }
             else
             {
+                var player = gamespace.Players.Where(p => p.PersonId == Profile.Id).Single();
+                player.LastSeen = DateTime.UtcNow;
+                await _repo.Update(gamespace);
+
                 state = Mapper.Map<Models.GameState>(gamespace);
                 state.Vms = gamespace.Topology.Templates
                     .Where(t => !t.IsHidden)
