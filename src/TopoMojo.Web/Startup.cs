@@ -151,7 +151,7 @@ namespace TopoMojo.Web
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "api";
-                c.SwaggerEndpoint("/api/v1/swagger.json", "TopoMojo" + " (v1)");
+                c.SwaggerEndpoint("/api/v1/swagger.json", Configuration["Control:ApplicationName"]??"TopoMojo" + " (v1)");
                 c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
                 c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName);
                 c.OAuthClientSecret(oidcOptions.SwaggerClient?.ClientSecret);
