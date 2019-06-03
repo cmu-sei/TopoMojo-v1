@@ -87,7 +87,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpGet("api/template/{id}/detailed")]
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> LoadDetail(int id)
@@ -96,7 +96,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPost("api/template/detailed")]
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
@@ -105,7 +105,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/template/detail")]
         [JsonExceptionFilter]
         public async Task<ActionResult> Configure([FromBody]TemplateDetail template)

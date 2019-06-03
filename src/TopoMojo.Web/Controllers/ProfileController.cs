@@ -49,7 +49,7 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/profile/priv")]
         [JsonExceptionFilter]
         public async Task<IActionResult> PrivilegedUpdate([FromBody]Profile profile)

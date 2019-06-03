@@ -40,7 +40,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        // [Authorize(Roles = "admin")]
+        // [Authorize(Roles = "Administrator")]
         // [HttpGet("api/gamespaces/all")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<Gamespace[]>> ListAll()
