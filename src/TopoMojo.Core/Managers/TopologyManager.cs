@@ -1,5 +1,5 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
-// Licensed under the MIT (SEI) License. See LICENSE.md in the project root for license information.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -70,10 +70,10 @@ namespace TopoMojo.Core
             {
                 //TODO: Convert to search tags
                 q = q.Where(o =>
-                    String.Compare(o.Name, search.Term, true) > 0
-                    || String.Compare(o.Description, search.Term, true) > 0
-                    || String.Compare(o.Author, search.Term, true) > 0
-                    || String.Compare(o.GlobalId, search.Term, true) > 0
+                    o.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.Author.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.GlobalId.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
                 );
             }
 
