@@ -190,5 +190,10 @@ namespace TopoMojo.vSphere.Network
             //return the task info
             return info;
         }
+
+        public string Resolve(string net)
+        {
+            return _pgAllocation[net]?.Key.AsReference().Value ?? "notfound";
+        }
     }
 }

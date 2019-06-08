@@ -331,8 +331,10 @@ namespace TopoMojo.vSphere
                         if (card.backing is VirtualEthernetCardNetworkBackingInfo)
                             ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
 
-                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
-                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = newvalue;
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo) {
+                            string netMorName = _netman.Resolve(newvalue);
+                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = netMorName;
+                        }
 
                         card.connectable = new VirtualDeviceConnectInfo()
                         {
