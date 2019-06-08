@@ -1,28 +1,69 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 ﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
+namespace TopoMojo.Data.Sqlite.Migrations.TopoMojoDb
 {
-    public partial class topomojoschema : Migration
+    public partial class InitialSchema : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "History",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ActorId = table.Column<int>(nullable: false),
+                    AssetId = table.Column<int>(nullable: false),
+                    Action = table.Column<int>(nullable: false),
+                    At = table.Column<DateTime>(nullable: false),
+                    Actor = table.Column<string>(nullable: true),
+                    Asset = table.Column<string>(nullable: true),
+                    Annotation = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_History", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RoomId = table.Column<string>(nullable: true),
+                    Text = table.Column<string>(nullable: true),
+                    Edited = table.Column<bool>(nullable: false),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    AuthorId = table.Column<int>(nullable: false),
+                    AuthorName = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Profiles",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    GlobalId = table.Column<string>(nullable: true),
-                    IsAdmin = table.Column<bool>(nullable: false),
+                    GlobalId = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    IsAdmin = table.Column<bool>(nullable: false),
+                    WorkspaceLimit = table.Column<int>(nullable: false),
+                    Role = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Profiles", x => x.Id);
+                    table.UniqueConstraint("AK_Profiles_GlobalId", x => x.GlobalId);
                 });
 
             migrationBuilder.CreateTable(
@@ -31,17 +72,26 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    GlobalId = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    WhenPublished = table.Column<DateTime>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DocumentUrl = table.Column<string>(nullable: true),
-                    GlobalId = table.Column<string>(nullable: true),
-                    IsPublished = table.Column<bool>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
                     ShareCode = table.Column<string>(nullable: true),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    Author = table.Column<string>(nullable: true),
+                    IsPublished = table.Column<bool>(nullable: false),
+                    IsLocked = table.Column<bool>(nullable: false),
+                    TemplateLimit = table.Column<int>(nullable: false),
+                    UseUplinkSwitch = table.Column<bool>(nullable: false),
+                    LaunchCount = table.Column<int>(nullable: false),
+                    LastLaunch = table.Column<DateTime>(nullable: false),
+                    IsEvergreen = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Topologies", x => x.Id);
+                    table.UniqueConstraint("AK_Topologies_GlobalId", x => x.GlobalId);
                 });
 
             migrationBuilder.CreateTable(
@@ -50,15 +100,16 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    GlobalId = table.Column<string>(nullable: true),
+                    GlobalId = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
                     ShareCode = table.Column<string>(nullable: true),
-                    TopologyId = table.Column<int>(nullable: false),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    TopologyId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Gamespaces", x => x.Id);
+                    table.UniqueConstraint("AK_Gamespaces_GlobalId", x => x.GlobalId);
                     table.ForeignKey(
                         name: "FK_Gamespaces_Topologies_TopologyId",
                         column: x => x.TopologyId,
@@ -73,21 +124,22 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    GlobalId = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
                     Description = table.Column<string>(nullable: true),
-                    Detail = table.Column<string>(nullable: true),
-                    GlobalId = table.Column<string>(nullable: true),
+                    Iso = table.Column<string>(nullable: true),
+                    Networks = table.Column<string>(nullable: true),
                     IsHidden = table.Column<bool>(nullable: false),
                     IsPublished = table.Column<bool>(nullable: false),
-                    Iso = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    Networks = table.Column<string>(nullable: true),
+                    Detail = table.Column<string>(nullable: true),
                     ParentId = table.Column<int>(nullable: true),
-                    TopologyId = table.Column<int>(nullable: true),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    TopologyId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Templates", x => x.Id);
+                    table.UniqueConstraint("AK_Templates_GlobalId", x => x.GlobalId);
                     table.ForeignKey(
                         name: "FK_Templates_Templates_ParentId",
                         column: x => x.ParentId,
@@ -108,9 +160,10 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Permission = table.Column<int>(nullable: false),
+                    TopologyId = table.Column<int>(nullable: false),
                     PersonId = table.Column<int>(nullable: false),
-                    TopologyId = table.Column<int>(nullable: false)
+                    Permission = table.Column<int>(nullable: false),
+                    LastSeen = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -136,8 +189,9 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     GamespaceId = table.Column<int>(nullable: false),
+                    PersonId = table.Column<int>(nullable: false),
                     Permission = table.Column<int>(nullable: false),
-                    PersonId = table.Column<int>(nullable: false)
+                    LastSeen = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -160,6 +214,11 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
                 name: "IX_Gamespaces_TopologyId",
                 table: "Gamespaces",
                 column: "TopologyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_RoomId",
+                table: "Messages",
+                column: "RoomId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Players_GamespaceId",
@@ -194,6 +253,12 @@ namespace TopoMojo.Data.Sqlite.Migrations.TopoMojo
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "History");
+
+            migrationBuilder.DropTable(
+                name: "Messages");
+
             migrationBuilder.DropTable(
                 name: "Players");
 

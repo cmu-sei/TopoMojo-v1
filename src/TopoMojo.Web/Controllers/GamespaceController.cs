@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -37,7 +40,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        // [Authorize(Roles = "admin")]
+        // [Authorize(Roles = "Administrator")]
         // [HttpGet("api/gamespaces/all")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<Gamespace[]>> ListAll()

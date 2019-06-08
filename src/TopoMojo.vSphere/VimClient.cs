@@ -1,4 +1,6 @@
-using Microsoft.Extensions.Logging;
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -7,7 +9,8 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-using Cwd.vSphereApi;
+using Microsoft.Extensions.Logging;
+using NetVimClient;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
@@ -56,6 +59,7 @@ namespace TopoMojo.vSphere
         int _taskMonitorInterval = 3000;
         bool _disposing;
         string _hostPrefix = "";
+        DateTime _lastAction;
 
         public string Name
         {
@@ -327,8 +331,10 @@ namespace TopoMojo.vSphere
                         if (card.backing is VirtualEthernetCardNetworkBackingInfo)
                             ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
 
-                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
-                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = newvalue;
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo) {
+                            string netMorName = _netman.Resolve(newvalue);
+                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = netMorName;
+                        }
 
                         card.connectable = new VirtualDeviceConnectInfo()
                         {
@@ -744,6 +750,7 @@ namespace TopoMojo.vSphere
 
         private async Task<TaskInfo> GetVimTaskInfo(ManagedObjectReference task)
         {
+            await Connect();
             TaskInfo info = new TaskInfo();
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
                 _props,
@@ -757,6 +764,7 @@ namespace TopoMojo.vSphere
 
         private async Task Connect()
         {
+            _lastAction = DateTime.UtcNow;
             await Task.Delay(0);
             if (_vim != null && _vim.State == CommunicationState.Opened)
                 return;
@@ -1092,7 +1100,7 @@ namespace TopoMojo.vSphere
             }
 
             List<string> active = list.Select(o => o.Id).ToList();
-            //_logger.LogDebug($"refreshing cache [{_config.Host}] existing: {existing.Count} active: {active.Count}");
+            _logger.LogDebug($"refreshing cache [{_config.Host}] existing: {existing.Count} active: {active.Count}");
 
             foreach (string key in existing.Except(active))
             {
@@ -1231,13 +1239,21 @@ namespace TopoMojo.vSphere
         {
             _logger.LogDebug($"{_config.Host}: starting cache loop");
             await Task.Delay(0);
+            await Connect();
 
-            while (!_disposing)
+            while (true)
             {
                 try
                 {
-                    await Connect();
-                    await ReloadVmCache();
+                    if (_vim != null && DateTime.UtcNow.AddMinutes(-_config.ConnectionKeepAliveTimeoutMinutes).CompareTo(_lastAction) > 0)
+                    {
+                        await Disconnect();
+                    }
+
+                    if (_vim != null && _vim.State == CommunicationState.Opened)
+                    {
+                        await ReloadVmCache();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1248,13 +1264,13 @@ namespace TopoMojo.vSphere
                     await Task.Delay(_syncInterval);
                 }
             }
-            _logger.LogDebug("sessionMonitor ended.");
+            // _logger.LogDebug("sessionMonitor ended.");
         }
 
         private async Task MonitorTasks()
         {
             _logger.LogDebug($"{_config.Host}: starting task monitor");
-            while (!_disposing)
+            while (true)
             {
                 try
                 {
@@ -1301,7 +1317,7 @@ namespace TopoMojo.vSphere
                     await Task.Delay(_taskMonitorInterval);
                 }
             }
-            _logger.LogDebug("taskMonitor ended.");
+            // _logger.LogDebug("taskMonitor ended.");
         }
     }
 

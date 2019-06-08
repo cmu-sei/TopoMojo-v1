@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -180,8 +183,10 @@ namespace TopoMojo.Core
             IQueryable<Template> q = _repo.List();
 
             if (search.Term.HasValue())
-                q = q.Where(t => EF.Functions.Like(t.Name, search.Term + "%")
-                || EF.Functions.Like(t.Description, search.Term + "%"));
+                q = q.Where(t =>
+                    t.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    // || t.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                );
 
             if (search.HasFilter("parents"))
                 q = q.Where(t => t.ParentId == null || t.ParentId == 0);

@@ -1,8 +1,11 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Cwd.vSphereApi;
+using NetVimClient;
 using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
 
@@ -59,7 +62,7 @@ namespace TopoMojo.vSphere.Network
             List<VmNetwork> result = new List<VmNetwork>();
             RetrievePropertiesResponse response = await _client.vim.RetrievePropertiesAsync(
                 _client.props,
-                FilterFactory.VmFilter(mor, "name config"));
+                FilterFactory.VmFilter(mor, "name config.hardware"));
             ObjectContent[] oc = response.returnval;
             foreach (ObjectContent obj in oc)
             {
@@ -67,8 +70,8 @@ namespace TopoMojo.vSphere.Network
                 //     continue;
 
                 string vmName = obj.GetProperty("name").ToString();
-                VirtualMachineConfigInfo config = obj.GetProperty("config") as VirtualMachineConfigInfo;
-                foreach (VirtualEthernetCard card in config.hardware.device.OfType<VirtualEthernetCard>())
+                VirtualHardware hardware = obj.GetProperty("config.hardware") as VirtualHardware;
+                foreach (VirtualEthernetCard card in hardware.device.OfType<VirtualEthernetCard>())
                 {
                     result.Add(new VmNetwork
                     {

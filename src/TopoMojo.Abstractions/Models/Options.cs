@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System.Collections.Generic;
 
 namespace TopoMojo.Models
@@ -20,6 +23,7 @@ namespace TopoMojo.Models
         public string TicketUrlHandler { get; set; }  = "none"; //"local-app", "external-domain", "host-map", "none"
         public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
         public VlanOptions Vlan { get; set; }
+        public int ConnectionKeepAliveTimeoutMinutes { get; set; } = 10;
     }
 
     public class TemplateOptions {

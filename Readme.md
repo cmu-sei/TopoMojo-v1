@@ -2,13 +2,42 @@
 
 A virtual lab builder and player
 
-## Build notes
+## Overview
+TopoMojo is an ASP.NET CORE application for creating training content,
+or "Labs", and publishing those labs so others can consume them.
 
-The 'TopoMojo.Web' project is the api server and can be run with VSCode or Visual Studio.  The 'topomojo-app' project is the angular cli and can be run with 'npm start' or 'ng serve' from that folder.
+"Topo" is short for "topology", as in a network topology of
+computer hosts.  "Mojo" is the magic of deploying and accessing
+those resources on demand.
 
-These are dependent on IdentityServer, so fire that up locally as well.
+Great for use in a classroom or training environment where hands-
+on skill building is desired.
 
-Building 'TopoMojo.Web' *should* be automatic, but some notes if you run into trouble:
+Goals:
+* Abstract the infrastructure concerns from content producers.
+* One-click access for content consumers.
 
-*   TopoMojo.Web needs a non-standard nuget feed.  See the Nuget.Config in the solution root.  (Nuget clients *should* respect that as it cascades configuration.)
-*   TopoMojo.vSphere needs vmware-api-6.0.2 from https://nuget.cwd.local/v3/index.json
+## Getting Started
+
+Build with Docker, or:
+1. Install .Net Core SDK 2.2
+2. `dotnet run`
+3. Browse to `http://localhost:5000/api`
+
+*NOTE*: The separate `topomojo-ui` repository holds the user interface
+for this api.
+
+By default, TopoMojo starts with a "Mock" hypervisor manager so you
+can investigate it without having to connect it to your hypervisors.
+When ready for that you'll need to edit the "Pod" fields in `appsettings.json`, (or rather in an `appsettings.Development.json`
+copy of it.)
+
+*TODO:* More info
+
+It also starts with a sqlite database; not recommended for production,
+but nice for quick startup.  Use the appsettings file to switch to
+PostgreSQL or SqlServer.
+
+## Roadmap
+* Add Administrator documentation
+* Support oVirt/kvm hypervisor

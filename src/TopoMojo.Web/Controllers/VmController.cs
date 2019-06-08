@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,15 +42,6 @@ namespace TopoMojo.Controllers
         private readonly Core.ProfileManager _profileManager;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
-        // [AllowAnonymous]
-        // [HttpGet("/[controller]/[action]/{id}")]
-        // public async Task<ActionResult<>> Console(string id)
-        // {
-        //     //await HttpContext.Authentication.SignInAsync("Cookies", HttpContext.User);
-        //     return View("wmks", new DisplayInfo { Id = id });
-        // }
-
-        ///
         // This endpoint is a temporary to support an authless demo
         [HttpGet("api/vmdemo/{id}/{code}")]
         [JsonExceptionFilter]
@@ -187,46 +181,6 @@ namespace TopoMojo.Controllers
             SendBroadcast(vm, opType);
             return Ok(vm);
         }
-
-        // [HttpPut("api/vm/{id}/start")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Vm>> Start(string id)
-        // {
-        //     await AuthorizeAction(id, "start");
-        //     Vm vm = await _pod.Start(id);
-        //     SendBroadcast(vm, "start");
-        //     return Ok(vm);
-        // }
-
-        // [HttpPut("api/vm/{id}/stop")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Vm>> Stop(string id)
-        // {
-        //     await AuthorizeAction(id, "stop");
-        //     Vm vm = await _pod.Stop(id);
-        //     SendBroadcast(vm, "stop");
-        //     return Ok(vm);
-        // }
-
-        // [HttpPut("api/vm/{id}/save/{topoId}")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Vm>> Save(string id, int topoId)
-        // {
-        //     await AuthorizeAction(id, "save");
-        //     Vm vm = await _pod.Save(id);
-        //     SendBroadcast(vm, "save");
-        //     return Ok(vm);
-        // }
-
-        // [HttpPut("api/vm/{id}/revert")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Vm>> Revert(string id)
-        // {
-        //     await AuthorizeAction(id, "revert");
-        //     Vm vm = await _pod.Revert(id);
-        //     SendBroadcast(vm, "revert");
-        //     return Ok(vm);
-        // }
 
         [HttpDelete("api/vm/{id}")]
         [JsonExceptionFilter]
@@ -375,6 +329,4 @@ namespace TopoMojo.Controllers
             _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
         }
     }
-
-
 }

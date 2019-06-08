@@ -1,7 +1,7 @@
 #
 #multi-stage target: dev
 #
-FROM dockreg.cwd.local/dotnet-sdk:2.2 AS dev
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS dev
 
 ENV ASPNETCORE_URLS=http://*:5000 \
     ASPNETCORE_ENVIRONMENT=DEVELOPMENT
@@ -15,7 +15,7 @@ CMD ["dotnet", "run"]
 #
 #multi-stage target: prod
 #
-FROM microsoft/dotnet:2.2-aspnetcore-runtime AS prod
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS prod
 ARG commit
 ENV COMMIT=$commit
 COPY --from=dev /app/dist /app

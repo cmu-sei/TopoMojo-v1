@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +31,11 @@ namespace TopoMojo.Data.EntityFrameworkCore
             profile.Name = (name.HasValue()) ? name : "Anonymous";
             profile.GlobalId = (profile.GlobalId.HasValue()) ? profile.GlobalId : Guid.NewGuid().ToString();
             profile.WhenCreated = DateTime.UtcNow;
+            if (!(await DbContext.Profiles.AnyAsync()))
+            {
+                profile.IsAdmin = true;
+                profile.Role = ProfileRole.Administrator;
+            }
             DbContext.Profiles.Add(profile);
             await DbContext.SaveChangesAsync();
             return profile;

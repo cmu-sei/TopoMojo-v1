@@ -1,8 +1,11 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Cwd.vSphereApi;
+using NetVimClient;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 using TopoMojo.Extensions;

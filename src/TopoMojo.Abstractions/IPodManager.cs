@@ -1,10 +1,14 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 ﻿using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Abstractions
 {
-    public interface IPodManager
+    public interface IPodManager : IHostedService
     {
         Task<Vm> Load(string id);
         Task<Vm> Start(string id);

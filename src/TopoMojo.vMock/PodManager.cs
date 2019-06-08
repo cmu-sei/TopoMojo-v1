@@ -1,7 +1,11 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
@@ -34,6 +38,16 @@ namespace TopoMojo.vMock
         private Dictionary<string, Models.Virtual.VmTask> _tasks;
 
         public PodConfiguration Options { get { return _optPod; } }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
 
         public async Task<Vm> Refresh(Template template)
         {

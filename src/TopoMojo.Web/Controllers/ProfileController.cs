@@ -1,12 +1,10 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
 using TopoMojo.Web;
@@ -26,7 +24,7 @@ namespace TopoMojo.Controllers
 
         private readonly ProfileManager _mgr;
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpGet("api/profiles")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<Profile>>> List(Search search)
@@ -51,7 +49,7 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/profile/priv")]
         [JsonExceptionFilter]
         public async Task<IActionResult> PrivilegedUpdate([FromBody]Profile profile)

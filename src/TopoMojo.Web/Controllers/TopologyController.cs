@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,7 +43,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpGet("api/topologies")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<Topology>>> ListDetail(Search search)
@@ -67,7 +70,7 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/topology/priv")]
         [JsonExceptionFilter]
         public async Task<ActionResult> UpdatePrivilegedChanges([FromBody] PrivilegedWorkspaceChanges model)

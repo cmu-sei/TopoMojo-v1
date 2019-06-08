@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -44,7 +47,7 @@ namespace TopoMojo.Web
 
                 //options.Filters.Add(new AuthorizeFilter(global));
                 options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
             services.AddDbProvider(() => Configuration.GetSection("Database"));
@@ -64,7 +67,8 @@ namespace TopoMojo.Web
                     return String.IsNullOrWhiteSpace(options.Url)
                         ? (IPodManager)new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
                         : (IPodManager)new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
-                });
+                })
+                .AddHostedService<ServiceHostWrapper<IPodManager>>();
 
             #endregion
 
@@ -147,7 +151,7 @@ namespace TopoMojo.Web
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "api";
-                c.SwaggerEndpoint("/api/v1/swagger.json", "TopoMojo" + " (v1)");
+                c.SwaggerEndpoint("/api/v1/swagger.json", Configuration["Control:ApplicationName"]??"TopoMojo" + " (v1)");
                 c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
                 c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName);
                 c.OAuthClientSecret(oidcOptions.SwaggerClient?.ClientSecret);

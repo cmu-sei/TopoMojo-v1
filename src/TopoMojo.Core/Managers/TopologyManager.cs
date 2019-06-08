@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,13 +68,12 @@ namespace TopoMojo.Core
 
             if (search.Term.HasValue())
             {
-                //TODO: Revist this when searching gets slow!
-                string term = $"%{search.Term}%";  // leading % causes full table scan
+                //TODO: Convert to search tags
                 q = q.Where(o =>
-                    EF.Functions.Like(o.Name, term)
-                    || EF.Functions.Like(o.Description, term)
-                    || EF.Functions.Like(o.Author, term)
-                    || EF.Functions.Like(o.GlobalId, term)
+                    o.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.Author.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    || o.GlobalId.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
                 );
             }
 
@@ -136,6 +138,13 @@ namespace TopoMojo.Core
             if (topo == null)
                 throw new InvalidOperationException();
 
+            var worker = topo.Workers.Where(w => w.PersonId == Profile.Id).SingleOrDefault();
+            if (worker != null)
+            {
+                worker.LastSeen = DateTime.UtcNow;
+                await _repo.Update(topo);
+            }
+
             return Mapper.Map<Models.Topology>(topo, WithActor());
         }
 
@@ -152,11 +161,13 @@ namespace TopoMojo.Core
             topo.TemplateLimit = _options.WorkspaceTemplateLimit;
             topo.ShareCode = Guid.NewGuid().ToString("N");
             topo.Author = Profile.Name;
+            topo.LastLaunch = DateTime.MinValue;
             topo = await _repo.Add(topo);
             topo.Workers.Add(new Worker
             {
                 PersonId = Profile.Id,
-                Permission = Permission.Manager
+                Permission = Permission.Manager,
+                LastSeen = DateTime.UtcNow
             });
             await _repo.Update(topo);
 
@@ -272,6 +283,10 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             topology.IsPublished = !revoke;
+            if (topology.IsPublished && topology.WhenPublished is null)
+            {
+                topology.WhenPublished = DateTime.UtcNow;
+            }
             await _repo.Update(topology);
             return Mapper.Map<Models.TopologyState>(topology);
         }
@@ -302,7 +317,8 @@ namespace TopoMojo.Core
                 topology.Workers.Add(new Worker
                 {
                     PersonId = Profile.Id,
-                    Permission = Permission.Editor
+                    Permission = Permission.Editor,
+                    LastSeen = DateTime.UtcNow
                 });
                 await _repo.Update(topology);
             }

@@ -1,5 +1,8 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System.Threading.Tasks;
-using Cwd.vSphereApi;
+using NetVimClient;
 using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
 
@@ -20,5 +23,6 @@ namespace TopoMojo.vSphere.Network
         Task Provision(Template template);
         Task Unprovision(ManagedObjectReference vmMOR);
         Task Clean();
+        string Resolve(string net);
     }
 }

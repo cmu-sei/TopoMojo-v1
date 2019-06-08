@@ -12,7 +12,7 @@ fi
 context=$1
 name=$2
 folder=`echo $context | sed s,Context,,`
-declare -a providers=("Sqlite", "SqlServer" "PostgreSQL")
+declare -a providers=("Sqlite" "SqlServer" "PostgreSQL")
 
 for provider in "${providers[@]}"; do
     export Database__Provider=$provider

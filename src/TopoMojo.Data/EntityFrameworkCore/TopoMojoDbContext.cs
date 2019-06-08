@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using Microsoft.EntityFrameworkCore;
 using TopoMojo.Data.Entities;
 
@@ -28,5 +31,6 @@ namespace TopoMojo.Data.EntityFrameworkCore
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Activity> History { get; set; }
     }
 }

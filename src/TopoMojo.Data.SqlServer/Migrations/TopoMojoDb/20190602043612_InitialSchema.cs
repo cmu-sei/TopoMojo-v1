@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
+﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
 
 namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
 {
@@ -10,17 +12,36 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "History",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    ActorId = table.Column<int>(nullable: false),
+                    AssetId = table.Column<int>(nullable: false),
+                    Action = table.Column<int>(nullable: false),
+                    At = table.Column<DateTime>(nullable: false),
+                    Actor = table.Column<string>(nullable: true),
+                    Asset = table.Column<string>(nullable: true),
+                    Annotation = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_History", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Messages",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    AuthorId = table.Column<int>(nullable: false),
-                    AuthorName = table.Column<string>(nullable: true),
-                    Edited = table.Column<bool>(nullable: false),
                     RoomId = table.Column<string>(nullable: true),
                     Text = table.Column<string>(nullable: true),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    Edited = table.Column<bool>(nullable: false),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    AuthorId = table.Column<int>(nullable: false),
+                    AuthorName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -34,10 +55,11 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     GlobalId = table.Column<string>(nullable: false),
-                    IsAdmin = table.Column<bool>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     WhenCreated = table.Column<DateTime>(nullable: false),
-                    WorkspaceLimit = table.Column<int>(nullable: false)
+                    IsAdmin = table.Column<bool>(nullable: false),
+                    WorkspaceLimit = table.Column<int>(nullable: false),
+                    Role = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,17 +73,21 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Author = table.Column<string>(nullable: true),
+                    GlobalId = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    WhenPublished = table.Column<DateTime>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DocumentUrl = table.Column<string>(nullable: true),
-                    GlobalId = table.Column<string>(nullable: false),
-                    IsLocked = table.Column<bool>(nullable: false),
-                    IsPublished = table.Column<bool>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
                     ShareCode = table.Column<string>(nullable: true),
+                    Author = table.Column<string>(nullable: true),
+                    IsPublished = table.Column<bool>(nullable: false),
+                    IsLocked = table.Column<bool>(nullable: false),
                     TemplateLimit = table.Column<int>(nullable: false),
                     UseUplinkSwitch = table.Column<bool>(nullable: false),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    LaunchCount = table.Column<int>(nullable: false),
+                    LastLaunch = table.Column<DateTime>(nullable: false),
+                    IsEvergreen = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -77,9 +103,9 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     GlobalId = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
                     ShareCode = table.Column<string>(nullable: true),
-                    TopologyId = table.Column<int>(nullable: false),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    TopologyId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -99,17 +125,17 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Description = table.Column<string>(nullable: true),
-                    Detail = table.Column<string>(nullable: true),
                     GlobalId = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    WhenCreated = table.Column<DateTime>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    Iso = table.Column<string>(nullable: true),
+                    Networks = table.Column<string>(nullable: true),
                     IsHidden = table.Column<bool>(nullable: false),
                     IsPublished = table.Column<bool>(nullable: false),
-                    Iso = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    Networks = table.Column<string>(nullable: true),
+                    Detail = table.Column<string>(nullable: true),
                     ParentId = table.Column<int>(nullable: true),
-                    TopologyId = table.Column<int>(nullable: true),
-                    WhenCreated = table.Column<DateTime>(nullable: false)
+                    TopologyId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -135,9 +161,10 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Permission = table.Column<int>(nullable: false),
+                    TopologyId = table.Column<int>(nullable: false),
                     PersonId = table.Column<int>(nullable: false),
-                    TopologyId = table.Column<int>(nullable: false)
+                    Permission = table.Column<int>(nullable: false),
+                    LastSeen = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -163,8 +190,9 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     GamespaceId = table.Column<int>(nullable: false),
+                    PersonId = table.Column<int>(nullable: false),
                     Permission = table.Column<int>(nullable: false),
-                    PersonId = table.Column<int>(nullable: false)
+                    LastSeen = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -226,6 +254,9 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "History");
+
             migrationBuilder.DropTable(
                 name: "Messages");
 

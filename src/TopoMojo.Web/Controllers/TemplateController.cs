@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,7 +87,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpGet("api/template/{id}/detailed")]
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> LoadDetail(int id)
@@ -93,7 +96,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPost("api/template/detailed")]
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
@@ -102,7 +105,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Administrator")]
         [HttpPut("api/template/detail")]
         [JsonExceptionFilter]
         public async Task<ActionResult> Configure([FromBody]TemplateDetail template)

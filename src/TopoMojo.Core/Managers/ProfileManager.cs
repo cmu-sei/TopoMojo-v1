@@ -1,3 +1,6 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -5,11 +8,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models.Extensions;
-using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 
@@ -72,7 +72,7 @@ namespace TopoMojo.Core
         {
             IQueryable<Data.Entities.Profile> q = _profileRepo.List();
             if (search.Term.HasValue())
-                q = q.Where(p => EF.Functions.Like(p.Name, search.Term + "%"));
+                q = q.Where(p => p.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0);
 
             if (search.HasFilter("admins"))
                 q = q.Where(p => p.IsAdmin);

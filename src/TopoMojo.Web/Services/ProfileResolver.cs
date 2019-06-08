@@ -1,7 +1,11 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -36,6 +40,7 @@ namespace TopoMojo.Services
         private readonly ProfileService _repo;
         private readonly MemoryCacheEntryOptions _cacheOptions;
         private Profile _profile = null;
+        static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1,1);
 
         public Profile Profile {
             get
@@ -51,7 +56,8 @@ namespace TopoMojo.Services
             var profile = new Profile();
             profile.GlobalId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             profile.Name = principal.FindFirst("name")?.Value ?? "Anonymous";
-            profile.IsAdmin = principal.IsInRole("admin");
+            profile.IsAdmin = principal.IsInRole("Administrator");
+            profile.Role = principal.FindFirst("role")?.Value ?? "User";
 
             if (Int32.TryParse(principal.FindFirst(JwtRegisteredClaimNames.NameId)?.Value, out int id))
                 profile.Id = id;
@@ -72,46 +78,58 @@ namespace TopoMojo.Services
             if (_profile != null)
                 return principal;
 
-            string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            if (!_cache.TryGetValue(sub, out List<Claim> claims))
+            //Asynchronously wait to enter the Semaphore. If no-one has been granted access to the Semaphore, code execution will proceed, otherwise this thread waits here until the semaphore is released
+            await semaphoreSlim.WaitAsync();
+            try
             {
-                claims = new List<Claim>();
-                var profile = await _repo.FindByGlobalId(sub);
-                if (profile != null)
+                string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                if (!_cache.TryGetValue(sub, out List<Claim> claims))
                 {
-                    if (profile.IsAdmin)
-                        claims.Add(new Claim("role", "admin"));
 
-                    string name = principal.FindFirstValue("name");
-                    if (!String.IsNullOrEmpty(name) && name != profile.Name)
+                    claims = new List<Claim>();
+                    var profile = await _repo.FindByGlobalId(sub);
+                    if (profile != null)
                     {
-                        profile.Name = name;
-                        await _repo.Update(profile);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                       profile = await _repo.Add(BuildProfileModel(principal));
-                    }
-                    catch (Exception ex)
-                    {
-                        // try again
-                        profile = await _repo.FindByGlobalId(sub);
-                        if (profile == null)
+                        string name = principal.FindFirstValue("name");
+                        if (!String.IsNullOrEmpty(name) && name != profile.Name)
                         {
-                            throw ex;
+                            profile.Name = name;
+                            await _repo.Update(profile);
                         }
                     }
+                    else
+                    {
+                        try
+                        {
+                            profile = await _repo.Add(BuildProfileModel(principal));
+                        }
+                        catch (Exception ex)
+                        {
+                            // try again
+                            profile = await _repo.FindByGlobalId(sub);
+                            if (profile == null)
+                            {
+                                throw ex;
+                            }
+                        }
+                    }
+
+                    claims.Add(new Claim("role", profile.Role));
+                    claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
+                    claims.Add(new Claim("workspacelimit", profile.WorkspaceLimit.ToString()));
+                    _cache.Set(sub, claims, _cacheOptions);
                 }
-                claims.Add(new Claim(JwtRegisteredClaimNames.NameId, profile.Id.ToString()));
-                claims.Add(new Claim("workspacelimit", profile.WorkspaceLimit.ToString()));
-                _cache.Set(sub, claims, _cacheOptions);
+
+                ((ClaimsIdentity)principal.Identity).AddClaims(claims);
+                _profile = BuildProfileModel(principal);
+            }
+            finally
+            {
+                //When the task is ready, release the semaphore. It is vital to ALWAYS release the semaphore when we are ready, or else we will end up with a Semaphore that is forever locked.
+                //This is why it is important to do the Release within a try...finally clause; program execution may crash or take a different path, this way you are guaranteed execution
+                semaphoreSlim.Release();
             }
 
-            ((ClaimsIdentity)principal.Identity).AddClaims(claims);
-            _profile = BuildProfileModel(principal);
             return principal;
         }
     }
