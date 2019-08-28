@@ -32,9 +32,9 @@ namespace TopoMojo.Controllers
 
         [HttpPost("api/engine/{id}/{topoId}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<GameState>> Launch(string id, int topoId)
+        public async Task<ActionResult<GameState>> Launch([FromBody] NewGamespace model)
         {
-            var result = await _mgr.Launch(topoId, id);
+            var result = await _mgr.Launch(model.WorkspaceId, model.Id);
             Log("launched", result);
             return Ok(result);
         }
@@ -60,6 +60,12 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult<string>> Test()
         {
             return Ok("Test output.");
+        }
+
+        public class NewGamespace
+        {
+            public string Id { get; set; }
+            public int WorkspaceId { get; set; }
         }
     }
 }
