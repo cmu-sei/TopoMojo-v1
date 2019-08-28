@@ -30,7 +30,7 @@ namespace TopoMojo.Controllers
         private readonly EngineService _mgr;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
-        [HttpPost("api/engine/{id}/{topoId}")]
+        [HttpPost("api/engine")]
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Launch([FromBody] NewGamespace model)
         {
@@ -50,7 +50,7 @@ namespace TopoMojo.Controllers
 
         [HttpGet("api/engine/ticket/{vmId}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<string>> Ticket(string vmId)
+        public async Task<ActionResult<Models.Virtual.DisplayInfo>> Ticket(string vmId)
         {
             return Ok(await _mgr.Ticket(vmId));
         }

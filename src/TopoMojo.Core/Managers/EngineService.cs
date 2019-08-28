@@ -125,16 +125,15 @@ namespace TopoMojo.Core
             return Mapper.Map<Models.GameState>(gamespace);
         }
 
-        public async Task<string> Ticket(string vmId)
+        public async Task<TopoMojo.Models.Virtual.DisplayInfo> Ticket(string vmId)
         {
             var info = await _pod.Display(vmId);
             if (info.Url.HasValue())
             {
                 var src = new Uri(info.Url);
-                info.Url = info.Url.Replace(src.Host, _options.ConsoleHost);
-                return $"{info.Url}?vmhost={src.Host}";
+                info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
             }
-            throw new InvalidOperationException();
+            return info;
         }
     }
 }
