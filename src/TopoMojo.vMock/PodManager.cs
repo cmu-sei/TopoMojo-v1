@@ -342,7 +342,7 @@ namespace TopoMojo.vMock
                 Id = id,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag(),
-                Url = "",
+                Url = "https://mock.topomojo.local/ticket/12345678",
                 IsRunning = _vms[id].State == VmPowerState.Running,
                 Conditions = "mock"
             };

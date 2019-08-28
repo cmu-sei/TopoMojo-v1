@@ -1,0 +1,14 @@
+@url = http://localhost:5004/api/engine
+@key = X-API-KEY: jamtest
+###
+
+POST {{url}}/a859f648-e6ab-4b3c-a0e5-3ba36509fb13/213
+{{key}}
+
+###
+GET {{url}}/ticket/a9c05715-feb4-4bf4-b60e-bfd375f645c0
+{{key}}
+
+###
+DELETE {{url}}/a859f648-e6ab-4b3c-a0e5-3ba36509fb13
+{{key}}

@@ -32,7 +32,9 @@ namespace TopoMojo.Web
         {
             Configuration = configuration;
             oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
+            _engineApiKey = Configuration["Core:EngineKey"];
         }
+        private string _engineApiKey = Guid.NewGuid().ToString();
 
         public IConfiguration Configuration { get; }
         public AuthorizationOptions oidcOptions { get; set; }
@@ -163,6 +165,19 @@ namespace TopoMojo.Web
             {
                 routes.MapHub<TopologyHub>("/hub");
             });
+
+            app.Use(async (context, next) => {
+                if (context.Request.Path.Value.StartsWith("/api/engine"))
+                {
+                   if (context.Request.Headers["X-API-KEY"] != _engineApiKey)
+                   {
+                       context.Response.StatusCode = 401;
+                       return;
+                   }
+                }
+                await next();
+            });
+
             app.UseMvc();
         }
     }
