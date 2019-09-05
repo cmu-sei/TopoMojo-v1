@@ -65,10 +65,14 @@ namespace TopoMojo.Core
             List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
             foreach (Template template in gamespace.Topology.Templates)
             {
+                string iso = String.IsNullOrEmpty(template.Iso)
+                    ? $"{_pod.Options.IsoStore}/{gamespace.GlobalId}.iso"
+                    : template.Iso;
+
                 TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
                 tu.Name = template.Name;
                 tu.Networks = template.Networks;
-                tu.Iso = template.Iso;
+                tu.Iso = iso;
                 tu.IsolationTag = gamespace.GlobalId;
                 tu.Id = template.Id.ToString();
                 tasks.Add(_pod.Deploy(tu.AsTemplate()));
