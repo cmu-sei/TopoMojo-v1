@@ -7,11 +7,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
+using TopoMojo.Extensions;
 
 namespace TopoMojo.Core
 {
@@ -35,13 +37,13 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
 
-        public async Task<Models.GameState> Launch(int topoId, string IsolationId)
+        public async Task<Models.GameState> Launch(Models.WorkspaceSpec spec, string IsolationId)
         {
             Gamespace game = await _repo.FindByGlobalId(IsolationId);
 
             if (game == null)
             {
-                Topology topology = await _topos.Load(topoId);
+                Topology topology = await _topos.Load(spec.Id);
                 if (topology == null)
                     throw new InvalidOperationException();
 
@@ -49,20 +51,25 @@ namespace TopoMojo.Core
                 {
                     GlobalId = IsolationId,
                     Name = topology.Name,
-                    TopologyId = topoId,
+                    TopologyId = spec.Id,
                     ShareCode = Guid.NewGuid().ToString("N")
                 };
 
                 await _repo.Add(game);
             }
 
-            return await Deploy(await _repo.Load(game.Id));
+            return await Deploy(await _repo.Load(game.Id), spec);
 
         }
 
-        private async Task<Models.GameState> Deploy(Gamespace gamespace)
+        private async Task<Models.GameState> Deploy(Gamespace gamespace, Models.WorkspaceSpec spec)
         {
             List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+
+            ExpandTemplates(gamespace.Topology.Templates, spec);
+
+            AddNetworkServer(gamespace.Topology.Templates, spec);
+
             foreach (Template template in gamespace.Topology.Templates)
             {
                 string iso = String.IsNullOrEmpty(template.Iso)
@@ -80,6 +87,34 @@ namespace TopoMojo.Core
             Task.WaitAll(tasks.ToArray());
 
             return await LoadState(gamespace, gamespace.TopologyId);
+        }
+
+        private void AddNetworkServer(object templates, Models.WorkspaceSpec spec)
+        {
+            // throw new NotImplementedException();
+        }
+
+        private void ExpandTemplates(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
+        {
+            if (String.IsNullOrEmpty(spec.Templates))
+                return;
+
+            templates.Clear();
+            List<Data.Entities.Template> ts = JsonConvert.DeserializeObject<List<Data.Entities.Template>>(spec.Templates);
+            foreach (var t in ts)
+            {
+                templates.Add(t);
+                var vmspec = spec.Vms.SingleOrDefault(v => v.Name == t.Name);
+                if (vmspec != null && vmspec.Replicas > 1)
+                {
+                    for (int i = 1; i < vmspec.Replicas - 1; i++)
+                    {
+                        var tt = t.Map<Data.Entities.Template>();
+                        tt.Name += $"_{i}";
+                        templates.Add(tt);
+                    }
+                }
+            }
         }
 
         private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
@@ -138,6 +173,12 @@ namespace TopoMojo.Core
                 info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
             }
             return info;
+        }
+
+        public async Task<string> GetTemplates(int topoId)
+        {
+            Data.Entities.Topology topo = await _topos.Load(topoId);
+            return JsonConvert.SerializeObject(topo.Templates);
         }
     }
 }
