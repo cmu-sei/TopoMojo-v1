@@ -23,8 +23,8 @@ namespace TopoMojo.Core.Models
 
     public class NetworkSpec
     {
-        public string[] Dns { get; set; }
-        public string DhcpIp { get; set; }
-        public string DhcpRange { get; set; }
+        public string[] Hosts { get; set; }
+        public string NewIp { get; set; }
+        public string[] Dnsmasq { get; set; }
     }
 }

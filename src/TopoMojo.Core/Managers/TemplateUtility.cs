@@ -95,6 +95,12 @@ namespace TopoMojo.Core
             set { _template.Iso = value; }
         }
 
+        public TopoMojo.Models.KeyValuePair[] GuestSettings
+        {
+            get { return _template.GuestSettings; }
+            set { _template.GuestSettings = value; }
+        }
+
         public void LocalizeDiskPaths(string topologyKey, string templateKey)
         {
             if (!topologyKey.HasValue() || !templateKey.HasValue())

@@ -14,6 +14,7 @@ using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 using TopoMojo.Extensions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Core
 {
@@ -22,6 +23,7 @@ namespace TopoMojo.Core
         public EngineService(
             IGamespaceRepository repo,
             ITopologyRepository topos,
+            ITemplateRepository templateRepository,
             ILoggerFactory mill,
             CoreOptions options,
             IProfileResolver profileResolver,
@@ -31,12 +33,13 @@ namespace TopoMojo.Core
             _pod = podManager;
             _repo = repo;
             _topos = topos;
+            _templates = templateRepository;
         }
 
         private readonly IPodManager _pod;
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
-
+        private readonly ITemplateRepository _templates;
         public async Task<Models.GameState> Launch(Models.WorkspaceSpec spec, string IsolationId)
         {
             Gamespace game = await _repo.FindByGlobalId(IsolationId);
@@ -89,9 +92,21 @@ namespace TopoMojo.Core
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
-        private void AddNetworkServer(object templates, Models.WorkspaceSpec spec)
+        private async Task AddNetworkServer(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
         {
-            // throw new NotImplementedException();
+            if (spec.Network == null)
+                return;
+
+            List<TopoMojo.Models.KeyValuePair> settings = new List<TopoMojo.Models.KeyValuePair>();
+            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "newip", Value = spec.Network.NewIp });
+            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "hosts", Value = String.Join(";", spec.Network.Hosts) });
+            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "dhcp", Value = String.Join(";", spec.Network.Dnsmasq) });
+            var t = await _templates.Load(_options.DefaultNetServerTemplateId);
+            var nettemplate = t.Map<Template>();
+            TemplateUtility tu = new TemplateUtility(nettemplate.Detail);
+            tu.GuestSettings = settings.ToArray();
+            nettemplate.Detail = tu.ToString();
+            templates.Add(nettemplate);
         }
 
         private void ExpandTemplates(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
@@ -178,7 +193,9 @@ namespace TopoMojo.Core
         public async Task<string> GetTemplates(int topoId)
         {
             Data.Entities.Topology topo = await _topos.Load(topoId);
-            return JsonConvert.SerializeObject(topo.Templates);
+            return (topo != null)
+                ? JsonConvert.SerializeObject(topo.Templates)
+                : "";
         }
     }
 }
