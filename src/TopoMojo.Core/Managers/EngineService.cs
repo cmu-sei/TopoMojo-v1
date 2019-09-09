@@ -71,13 +71,13 @@ namespace TopoMojo.Core
 
             ExpandTemplates(gamespace.Topology.Templates, spec);
 
-            AddNetworkServer(gamespace.Topology.Templates, spec);
+            await AddNetworkServer(gamespace.Topology.Templates, spec);
 
             foreach (Template template in gamespace.Topology.Templates)
             {
-                string iso = String.IsNullOrEmpty(template.Iso)
-                    ? $"{_pod.Options.IsoStore}/{gamespace.GlobalId}.iso"
-                    : template.Iso;
+                string iso = template.Iso;
+                if (!String.IsNullOrEmpty(spec.Iso) && String.IsNullOrEmpty(template.Iso))
+                    iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
 
                 TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
                 tu.Name = template.Name;
@@ -111,18 +111,18 @@ namespace TopoMojo.Core
 
         private void ExpandTemplates(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
         {
-            if (String.IsNullOrEmpty(spec.Templates))
-                return;
+            List<Data.Entities.Template> ts = String.IsNullOrEmpty(spec.Templates)
+                ? templates.ToList()
+                : JsonConvert.DeserializeObject<List<Data.Entities.Template>>(spec.Templates);
 
             templates.Clear();
-            List<Data.Entities.Template> ts = JsonConvert.DeserializeObject<List<Data.Entities.Template>>(spec.Templates);
             foreach (var t in ts)
             {
                 templates.Add(t);
                 var vmspec = spec.Vms.SingleOrDefault(v => v.Name == t.Name);
                 if (vmspec != null && vmspec.Replicas > 1)
                 {
-                    for (int i = 1; i < vmspec.Replicas - 1; i++)
+                    for (int i = 1; i < vmspec.Replicas; i++)
                     {
                         var tt = t.Map<Data.Entities.Template>();
                         tt.Name += $"_{i}";
@@ -194,7 +194,7 @@ namespace TopoMojo.Core
         {
             Data.Entities.Topology topo = await _topos.Load(topoId);
             return (topo != null)
-                ? JsonConvert.SerializeObject(topo.Templates)
+                ? JsonConvert.SerializeObject(topo.Templates, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore})
                 : "";
         }
     }

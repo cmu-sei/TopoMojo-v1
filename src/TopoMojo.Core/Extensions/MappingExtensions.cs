@@ -7,7 +7,7 @@ namespace TopoMojo.Extensions
         public static T Map<T>(this object obj)
         {
             return JsonConvert.DeserializeObject<T>(
-                JsonConvert.SerializeObject(obj)
+                JsonConvert.SerializeObject(obj, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore})
             );
         }
 

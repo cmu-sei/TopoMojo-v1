@@ -13,6 +13,7 @@ namespace TopoMojo.Core.Models
         public VmSpec[] Vms { get; set; }
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }
+        public string Iso { get; set; }
     }
 
     public class VmSpec
