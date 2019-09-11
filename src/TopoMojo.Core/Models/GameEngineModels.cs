@@ -10,7 +10,7 @@ namespace TopoMojo.Core.Models
     {
         public int Id { get; set; }
         public NetworkSpec Network { get; set; }
-        public VmSpec[] Vms { get; set; }
+        public VmSpec[] Vms { get; set; } = new VmSpec[] {};
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }
         public string Iso { get; set; }
@@ -24,8 +24,8 @@ namespace TopoMojo.Core.Models
 
     public class NetworkSpec
     {
-        public string[] Hosts { get; set; }
+        public string[] Hosts { get; set; } = new string[] {};
         public string NewIp { get; set; }
-        public string[] Dnsmasq { get; set; }
+        public string[] Dnsmasq { get; set; } = new string[] {};
     }
 }
