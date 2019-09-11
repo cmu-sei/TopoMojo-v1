@@ -69,26 +69,32 @@ namespace TopoMojo.Core
         {
             List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
 
-            ExpandTemplates(gamespace.Topology.Templates, spec);
-
-            await AddNetworkServer(gamespace.Topology.Templates, spec);
-
-            foreach (Template template in gamespace.Topology.Templates)
+            try
             {
-                string iso = template.Iso;
-                if (!String.IsNullOrEmpty(spec.Iso) && String.IsNullOrEmpty(template.Iso))
-                    iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
+                ExpandTemplates(gamespace.Topology.Templates, spec);
 
-                TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
-                tu.Name = template.Name;
-                tu.Networks = template.Networks;
-                tu.Iso = iso;
-                tu.IsolationTag = gamespace.GlobalId;
-                tu.Id = template.Id.ToString();
-                tasks.Add(_pod.Deploy(tu.AsTemplate()));
+                await AddNetworkServer(gamespace.Topology.Templates, spec);
+
+                foreach (Template template in gamespace.Topology.Templates)
+                {
+                    string iso = template.Iso;
+                    if (!String.IsNullOrEmpty(spec.Iso) && String.IsNullOrEmpty(template.Iso))
+                        iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
+
+                    TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
+                    tu.Name = template.Name;
+                    tu.Networks = template.Networks;
+                    tu.Iso = iso;
+                    tu.IsolationTag = gamespace.GlobalId;
+                    tu.Id = template.Id.ToString();
+                    tasks.Add(_pod.Deploy(tu.AsTemplate()));
+                }
+                Task.WaitAll(tasks.ToArray());
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deploying Engine mojo");
+                throw ex;
             }
-            Task.WaitAll(tasks.ToArray());
-
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
@@ -119,7 +125,7 @@ namespace TopoMojo.Core
             foreach (var t in ts)
             {
                 templates.Add(t);
-                var vmspec = spec.Vms.SingleOrDefault(v => v.Name == t.Name);
+                var vmspec = spec.Vms?.SingleOrDefault(v => v.Name == t.Name);
                 if (vmspec != null && vmspec.Replicas > 1)
                 {
                     for (int i = 1; i < vmspec.Replicas; i++)
