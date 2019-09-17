@@ -18,7 +18,8 @@ namespace TopoMojo.Abstractions
         Task<Vm> Delete(string id);
         Task<Vm> ChangeState(VmOperation op);
         Task<Vm> ChangeConfiguration(string id, KeyValuePair change);
-        Task<Vm> Deploy(Template template);
+        Task<Vm> Deploy(Template template, bool start = true);
+        Task CreateAffinityRule(string isolationTag, string[] references, Vm[] machines, bool start);
         Task<Vm> Refresh(Template template);
         Task<Vm[]> Find(string searchText);
         Task<int> CreateDisks(Template template);

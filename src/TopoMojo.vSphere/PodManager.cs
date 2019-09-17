@@ -98,7 +98,7 @@ namespace TopoMojo.vSphere
             //include task
             return vm;
         }
-        public async Task<Vm> Deploy(Template template)
+        public async Task<Vm> Deploy(Template template, bool start)
         {
 
             Vm[] vms = await Find(template.Name + "#" + template.IsolationTag);
@@ -122,7 +122,13 @@ namespace TopoMojo.vSphere
             _vlanman.ReserveVlans(template, host.Options.IsVCenter);
 
             _logger.LogDebug("deploy: " + template.Name + " " + host.Name);
-            return await host.Deploy(template);
+            return await host.Deploy(template, start);
+        }
+
+        public async Task CreateAffinityRule(string isolationTag, string[] references, Vm[] machines, bool start)
+        {
+            VimClient host = FindHostByAffinity(isolationTag);
+            await host.SetAffinity(isolationTag, references, machines, start);
         }
 
         public async Task<Vm> Load(string id)
