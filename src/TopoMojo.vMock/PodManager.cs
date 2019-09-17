@@ -124,7 +124,7 @@ namespace TopoMojo.vMock
             return vm;
         }
 
-        public async Task CreateAffinityRule(string isolationTag, string[] references, Vm[] machines, bool start)
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
         }
 

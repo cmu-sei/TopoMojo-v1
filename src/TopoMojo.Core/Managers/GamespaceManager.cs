@@ -116,7 +116,7 @@ namespace TopoMojo.Core
             }
             Task.WaitAll(tasks.ToArray());            
 
-            await _pod.CreateAffinityRule(gamespace.GlobalId, tasks.Select(t => t.Result.Reference).ToArray(), tasks.Select(t => t.Result).ToArray(), true);
+            await _pod.SetAffinity(gamespace.GlobalId, tasks.Select(t => t.Result).ToArray(), true);
 
             return await LoadState(gamespace, gamespace.TopologyId);
         }

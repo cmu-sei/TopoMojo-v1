@@ -272,20 +272,13 @@ namespace TopoMojo.vSphere
             return vm;
         }
 
-        public async Task SetAffinity(string isolationTag, string[] references, Vm[] machines, bool start)
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
             var configSpec = new ClusterConfigSpec();
             var affinityRuleSpec = new ClusterAffinityRuleSpec();
-            var clusterRuleSpec = new ClusterRuleSpec();
-            
-            List<ManagedObjectReference> vms = new List<ManagedObjectReference>();
-            foreach (string reference in references)
-            {
-                var mor = reference.AsReference();
-                vms.Add(mor);
-            }
+            var clusterRuleSpec = new ClusterRuleSpec();        
 
-            affinityRuleSpec.vm = vms.ToArray();
+            affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
             affinityRuleSpec.name = $"Affinity#{isolationTag}";
             affinityRuleSpec.enabled = true;
             affinityRuleSpec.enabledSpecified = true;
@@ -302,7 +295,7 @@ namespace TopoMojo.vSphere
             if (start)
             {
                 List<Task<Vm>> tasks = new List<Task<Vm>>();
-                foreach (Vm vm in machines)
+                foreach (Vm vm in vms)
                 {
                     tasks.Add(Start(vm.Id));
                 }

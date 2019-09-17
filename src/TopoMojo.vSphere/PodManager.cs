@@ -125,10 +125,10 @@ namespace TopoMojo.vSphere
             return await host.Deploy(template, start);
         }
 
-        public async Task CreateAffinityRule(string isolationTag, string[] references, Vm[] machines, bool start)
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
             VimClient host = FindHostByAffinity(isolationTag);
-            await host.SetAffinity(isolationTag, references, machines, start);
+            await host.SetAffinity(isolationTag, vms, start);
         }
 
         public async Task<Vm> Load(string id)
