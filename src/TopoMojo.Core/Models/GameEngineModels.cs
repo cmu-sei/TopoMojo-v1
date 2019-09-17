@@ -14,6 +14,7 @@ namespace TopoMojo.Core.Models
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }
         public string Iso { get; set; }
+        public bool HostAffinity { get; set; }
     }
 
     public class VmSpec

@@ -290,6 +290,7 @@ namespace TopoMojo.vSphere
 
             configSpec.rulesSpec = new ClusterRuleSpec [] { clusterRuleSpec };
 
+            _logger.LogDebug("setaffinity: reconfiguring cluster ");
             await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
 
             if (start)

@@ -127,7 +127,10 @@ namespace TopoMojo.vSphere
 
         public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
+            _logger.LogDebug("setaffinity: find host ");
             VimClient host = FindHostByAffinity(isolationTag);
+
+            _logger.LogDebug("setaffinity: setting affinity ");
             await host.SetAffinity(isolationTag, vms, start);
         }
 
