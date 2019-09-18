@@ -274,9 +274,12 @@ namespace TopoMojo.vSphere
 
         public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
+            if (!_config.IsVCenter)
+                return;
+
             var configSpec = new ClusterConfigSpec();
             var affinityRuleSpec = new ClusterAffinityRuleSpec();
-            var clusterRuleSpec = new ClusterRuleSpec();        
+            var clusterRuleSpec = new ClusterRuleSpec();
 
             affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
             affinityRuleSpec.name = $"Affinity#{isolationTag}";
@@ -288,7 +291,7 @@ namespace TopoMojo.vSphere
             clusterRuleSpec.operation = ArrayUpdateOperation.add;
             clusterRuleSpec.info = affinityRuleSpec;
 
-            configSpec.rulesSpec = new ClusterRuleSpec [] { clusterRuleSpec };
+            configSpec.rulesSpec = new ClusterRuleSpec[] { clusterRuleSpec };
 
             _logger.LogDebug("setaffinity: reconfiguring cluster ");
             await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
@@ -301,7 +304,7 @@ namespace TopoMojo.vSphere
                     tasks.Add(Start(vm.Id));
                 }
 
-                Task.WaitAll(tasks.ToArray());   
+                Task.WaitAll(tasks.ToArray());
             }
         }
 
