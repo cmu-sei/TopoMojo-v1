@@ -87,9 +87,15 @@ namespace TopoMojo.Core
                     tu.Iso = iso;
                     tu.IsolationTag = gamespace.GlobalId;
                     tu.Id = template.Id.ToString();
-                    tasks.Add(_pod.Deploy(tu.AsTemplate()));
+                    tasks.Add(_pod.Deploy(tu.AsTemplate(), !spec.HostAffinity));
                 }
+
                 Task.WaitAll(tasks.ToArray());
+
+                if (spec.HostAffinity)
+                {
+                    await _pod.SetAffinity(gamespace.GlobalId, tasks.Select(t => t.Result).ToArray(), true);
+                }
             } catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deploying Engine mojo");

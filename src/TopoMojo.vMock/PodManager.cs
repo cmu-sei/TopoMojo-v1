@@ -89,7 +89,7 @@ namespace TopoMojo.vMock
             }
         }
 
-        public async Task<Vm> Deploy(Template template)
+        public async Task<Vm> Deploy(Template template, bool start)
         {
             NormalizeTemplate(template, _optPod);
             string key = template.Name;
@@ -122,6 +122,10 @@ namespace TopoMojo.vMock
                 _logger.LogDebug($"vm {vm.Name} already deployed");
             }
             return vm;
+        }
+
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
+        {
         }
 
         public async Task<Vm> Load(string id)

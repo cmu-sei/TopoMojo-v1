@@ -227,7 +227,7 @@ namespace TopoMojo.vSphere
             return $"wss://{ticket.host ?? _config.Host}{port}/ticket/{ticket.ticket}";
         }
 
-        public async Task<Vm> Deploy(Template template)
+        public async Task<Vm> Deploy(Template template, bool start = true)
         {
             Vm vm = null;
             await Connect();
@@ -259,7 +259,7 @@ namespace TopoMojo.vSphere
                     "Created by TopoMojo Deploy at " + DateTime.UtcNow.ToString("s") + "Z",
                     false, false);
                 info = await WaitForVimTask(task);
-                if (info.state == TaskInfoState.success)
+                if (start && info.state == TaskInfoState.success)
                 {
                     _logger.LogDebug("deploy: start vm...");
                     vm = await Start(vm.Id);
@@ -270,6 +270,39 @@ namespace TopoMojo.vSphere
                 throw new Exception(info.error.localizedMessage);
             }
             return vm;
+        }
+
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
+        {
+            var configSpec = new ClusterConfigSpec();
+            var affinityRuleSpec = new ClusterAffinityRuleSpec();
+            var clusterRuleSpec = new ClusterRuleSpec();        
+
+            affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
+            affinityRuleSpec.name = $"Affinity#{isolationTag}";
+            affinityRuleSpec.enabled = true;
+            affinityRuleSpec.enabledSpecified = true;
+            affinityRuleSpec.mandatory = true;
+            affinityRuleSpec.mandatorySpecified = true;
+
+            clusterRuleSpec.operation = ArrayUpdateOperation.add;
+            clusterRuleSpec.info = affinityRuleSpec;
+
+            configSpec.rulesSpec = new ClusterRuleSpec [] { clusterRuleSpec };
+
+            _logger.LogDebug("setaffinity: reconfiguring cluster ");
+            await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
+
+            if (start)
+            {
+                List<Task<Vm>> tasks = new List<Task<Vm>>();
+                foreach (Vm vm in vms)
+                {
+                    tasks.Add(Start(vm.Id));
+                }
+
+                Task.WaitAll(tasks.ToArray());   
+            }
         }
 
         public async Task<Vm> Change(string id, KeyValuePair change)

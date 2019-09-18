@@ -254,7 +254,7 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult<Vm>> Deploy(int id)
         {
             Template template  = await _mgr.GetDeployableTemplate(id, null);
-            Vm vm = await _pod.Deploy(template);
+            Vm vm = await _pod.Deploy(template, true);
             // SendBroadcast(vm, "deploy");
             Core.Models.VmState state = new Core.Models.VmState
             {

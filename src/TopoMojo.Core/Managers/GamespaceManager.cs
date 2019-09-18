@@ -112,9 +112,9 @@ namespace TopoMojo.Core
                 tu.Iso = template.Iso;
                 tu.IsolationTag = gamespace.GlobalId;
                 tu.Id = template.Id.ToString();
-                tasks.Add(_pod.Deploy(tu.AsTemplate()));
+                tasks.Add(_pod.Deploy(tu.AsTemplate(), true));
             }
-            Task.WaitAll(tasks.ToArray());
+            Task.WaitAll(tasks.ToArray());            
 
             return await LoadState(gamespace, gamespace.TopologyId);
         }
