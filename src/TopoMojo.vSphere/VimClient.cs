@@ -274,27 +274,26 @@ namespace TopoMojo.vSphere
 
         public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
         {
-            if (!_config.IsVCenter)
-                return;
+            if (_config.IsVCenter)
+            {
+                var configSpec = new ClusterConfigSpec();
+                var affinityRuleSpec = new ClusterAffinityRuleSpec();
+                var clusterRuleSpec = new ClusterRuleSpec();
 
-            var configSpec = new ClusterConfigSpec();
-            var affinityRuleSpec = new ClusterAffinityRuleSpec();
-            var clusterRuleSpec = new ClusterRuleSpec();
+                affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
+                affinityRuleSpec.name = $"Affinity#{isolationTag}";
+                affinityRuleSpec.enabled = true;
+                affinityRuleSpec.enabledSpecified = true;
+                affinityRuleSpec.mandatory = true;
+                affinityRuleSpec.mandatorySpecified = true;
 
-            affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
-            affinityRuleSpec.name = $"Affinity#{isolationTag}";
-            affinityRuleSpec.enabled = true;
-            affinityRuleSpec.enabledSpecified = true;
-            affinityRuleSpec.mandatory = true;
-            affinityRuleSpec.mandatorySpecified = true;
+                clusterRuleSpec.operation = ArrayUpdateOperation.add;
+                clusterRuleSpec.info = affinityRuleSpec;
 
-            clusterRuleSpec.operation = ArrayUpdateOperation.add;
-            clusterRuleSpec.info = affinityRuleSpec;
-
-            configSpec.rulesSpec = new ClusterRuleSpec[] { clusterRuleSpec };
-
-            _logger.LogDebug("setaffinity: reconfiguring cluster ");
-            await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
+                configSpec.rulesSpec = new ClusterRuleSpec[] { clusterRuleSpec };
+                _logger.LogDebug("setaffinity: reconfiguring cluster ");
+                await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
+            }
 
             if (start)
             {
@@ -367,7 +366,8 @@ namespace TopoMojo.vSphere
                         if (card.backing is VirtualEthernetCardNetworkBackingInfo)
                             ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
 
-                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo) {
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+                        {
                             string netMorName = _netman.Resolve(newvalue);
                             ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = netMorName;
                         }
@@ -445,7 +445,8 @@ namespace TopoMojo.vSphere
                                 progress = _taskMap[id].progress;
                                 break;
                         }
-                    } catch
+                    }
+                    catch
                     {
                         //if checking on a task that has expired, clear it.
                         _taskMap.Remove(id);
