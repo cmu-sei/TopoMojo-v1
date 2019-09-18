@@ -256,6 +256,7 @@ namespace TopoMojo.vSphere
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
+            options.Add(new OptionValue { key = "isolation.tools.setGUIOptions.enable", value = "true" });
             options.Add(new OptionValue { key = "isolation.tools.copy.disable", value = "false" });
             options.Add(new OptionValue { key = "isolation.tools.paste.disable", value = "false" });
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
