@@ -224,6 +224,23 @@ namespace TopoMojo.vSphere
             return vm;
         }
 
+        public async Task DeleteMatches(string target)
+        {
+            _logger.LogDebug("deleting all matching " + target);
+            var tasks = new List<Task>();
+            var vms = _vmCache.Values.Where(v => v.Name.Contains(target)).ToArray();
+            foreach (var vm in vms)
+            {
+                VimClient host = FindHostByVm(vm.Id);
+                tasks.Add(host.Delete(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+
         public async Task<Vm> ChangeConfiguration(string id, KeyValuePair change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);

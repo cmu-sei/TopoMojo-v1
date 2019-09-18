@@ -181,11 +181,11 @@ namespace TopoMojo.Core
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
-            foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
-                tasks.Add(_pod.Delete(vm.Id));
-            Task.WaitAll(tasks.ToArray());
-            //TODO: _pod.DeleteMatches(gamespace.GlobalId);
+            // List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            // foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
+            //     tasks.Add(_pod.Delete(vm.Id));
+            // Task.WaitAll(tasks.ToArray());
+            await _pod.DeleteMatches(gamespace.GlobalId);
 
             await _repo.Remove(gamespace);
             return Mapper.Map<Models.GameState>(gamespace);
