@@ -134,6 +134,7 @@ namespace TopoMojo.Core
                 var vmspec = spec.Vms?.SingleOrDefault(v => v.Name == t.Name);
                 if (vmspec != null && vmspec.Replicas > 1)
                 {
+                    t.Name += "_0";
                     for (int i = 1; i < vmspec.Replicas; i++)
                     {
                         var tt = t.Map<Data.Entities.Template>();
