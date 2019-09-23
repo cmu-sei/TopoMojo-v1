@@ -41,7 +41,7 @@ namespace TopoMojo.Controllers
 
         [HttpDelete("api/engine/{id}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Destroy(string id)
+        public async Task<ActionResult<bool>> Destroy([FromRoute]string id)
         {
             var result = await _mgr.Destroy(id);
             Log("destroyed", result);
@@ -50,21 +50,21 @@ namespace TopoMojo.Controllers
 
         [HttpGet("api/engine/ticket/{vmId}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Models.Virtual.DisplayInfo>> Ticket(string vmId)
+        public async Task<ActionResult<Models.Virtual.DisplayInfo>> Ticket([FromRoute]string vmId)
         {
             return Ok(await _mgr.Ticket(vmId));
         }
 
         [HttpGet("api/engine/topo/{id}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<string>> Templates(int id)
+        public async Task<ActionResult<string>> Templates([FromRoute]int id)
         {
             return Ok(await _mgr.GetTemplates(id));
         }
 
         [HttpPut("api/engine/vmaction")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> ChangeVm(VmAction vmAction)
+        public async Task<IActionResult> ChangeVm([FromBody] VmAction vmAction)
         {
             return Ok(await _mgr.ChangeVm(vmAction));
         }
