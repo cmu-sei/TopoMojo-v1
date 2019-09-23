@@ -29,4 +29,11 @@ namespace TopoMojo.Core.Models
         public string NewIp { get; set; }
         public string[] Dnsmasq { get; set; } = new string[] {};
     }
+
+    public class VmAction
+    {
+        public string Id { get; set; }
+        public string Type { get; set; }
+        public string Message { get; set; }
+    }
 }

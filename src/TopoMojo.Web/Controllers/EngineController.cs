@@ -62,6 +62,13 @@ namespace TopoMojo.Controllers
             return Ok(await _mgr.GetTemplates(id));
         }
 
+        [HttpPut("api/engine/vmaction")]
+        [JsonExceptionFilter]
+        public async Task<IActionResult> ChangeVm(VmAction vmAction)
+        {
+            return Ok(await _mgr.ChangeVm(vmAction));
+        }
+
         [HttpGet("api/engine")]
         [JsonExceptionFilter]
         public async Task<ActionResult<string>> Test()

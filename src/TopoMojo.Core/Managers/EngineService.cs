@@ -209,5 +209,30 @@ namespace TopoMojo.Core
                 ? JsonConvert.SerializeObject(topo.Templates, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore})
                 : "";
         }
+
+        public async Task<bool> ChangeVm(Models.VmAction vmAction)
+        {
+            bool result = false;
+
+            switch (vmAction.Type)
+            {
+                case "start":
+                case "restart":
+
+                try
+                {
+                    await _pod.Stop(vmAction.Id);
+                } catch {}
+
+                try
+                {
+                    await _pod.Start(vmAction.Id);
+                } catch {}
+                result = true;
+                break;
+
+            }
+            return result;
+        }
     }
 }
