@@ -196,6 +196,7 @@ namespace TopoMojo.vSphere
             //delete the vm.
             await Connect();
             Vm vm = _vmCache[id];
+            string tag = vm.Name.Tag();
 
             _logger.LogDebug($"Delete: stopping vm {vm.Name}");
             await Stop(id);
@@ -211,7 +212,7 @@ namespace TopoMojo.vSphere
 
             _vmCache.TryRemove(vm.Id, out vm);
 
-            await _netman.Clean();
+            await _netman.Clean(tag);
 
             vm.Status = "initialized";
             return vm;
