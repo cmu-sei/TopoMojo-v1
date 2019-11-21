@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core.Models;
-using TopoMojo.Models.Virtual;
+using TopoMojo.Models;
 using TopoMojo.Services;
 
 namespace TopoMojo.Controllers

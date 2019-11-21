@@ -18,7 +18,7 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Core
 {
-    public class EngineService : EntityManager<Gamespace>
+    public class EngineService : EntityManager<Data.Entities.Gamespace>
     {
         public EngineService(
             IGamespaceRepository repo,
@@ -40,9 +40,15 @@ namespace TopoMojo.Core
         private readonly IGamespaceRepository _repo;
         private readonly ITopologyRepository _topos;
         private readonly ITemplateRepository _templates;
-        public async Task<Models.GameState> Launch(Models.WorkspaceSpec spec, string IsolationId)
+
+        public async Task<GameState> Launch(int workspaceId, string isolationId)
         {
-            Gamespace game = await _repo.FindByGlobalId(IsolationId);
+            return await Launch(new WorkspaceSpec{ Id = workspaceId }, isolationId);
+        }
+
+        public async Task<GameState> Launch(WorkspaceSpec spec, string isolationId)
+        {
+            var game = await _repo.FindByGlobalId(isolationId);
 
             if (game == null)
             {
@@ -50,9 +56,9 @@ namespace TopoMojo.Core
                 if (topology == null)
                     throw new InvalidOperationException();
 
-                game = new Gamespace
+                game = new Data.Entities.Gamespace
                 {
-                    GlobalId = IsolationId,
+                    GlobalId = isolationId,
                     Name = topology.Name,
                     TopologyId = spec.Id,
                     ShareCode = Guid.NewGuid().ToString("N")
@@ -65,7 +71,7 @@ namespace TopoMojo.Core
 
         }
 
-        private async Task<Models.GameState> Deploy(Gamespace gamespace, Models.WorkspaceSpec spec)
+        private async Task<GameState> Deploy(Data.Entities.Gamespace gamespace, WorkspaceSpec spec)
         {
             List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
 
@@ -104,7 +110,7 @@ namespace TopoMojo.Core
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
-        private async Task AddNetworkServer(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
+        private async Task AddNetworkServer(ICollection<Data.Entities.Template> templates, WorkspaceSpec spec)
         {
             if (spec.Network == null)
                 return;
@@ -121,7 +127,7 @@ namespace TopoMojo.Core
             templates.Add(nettemplate);
         }
 
-        private void ExpandTemplates(ICollection<Data.Entities.Template> templates, Models.WorkspaceSpec spec)
+        private void ExpandTemplates(ICollection<Data.Entities.Template> templates, WorkspaceSpec spec)
         {
             List<Data.Entities.Template> ts = String.IsNullOrEmpty(spec.Templates)
                 ? templates.ToList()
@@ -145,9 +151,9 @@ namespace TopoMojo.Core
             }
         }
 
-        private async Task<Models.GameState> LoadState(Gamespace gamespace, int topoId)
+        private async Task<GameState> LoadState(Data.Entities.Gamespace gamespace, int topoId)
         {
-            Models.GameState state = null;
+            GameState state = null;
 
             if (gamespace == null)
             {
@@ -155,20 +161,20 @@ namespace TopoMojo.Core
                 if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
 
-                state = new Models.GameState();
+                state = new GameState();
                 state.Name = gamespace?.Name ?? topo.Name;
                 state.TopologyDocument = topo.Document;
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)
-                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
+                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
             }
             else
             {
-                state = Mapper.Map<Models.GameState>(gamespace);
+                state = Mapper.Map<GameState>(gamespace);
                 state.Vms = gamespace.Topology.Templates
                     .Where(t => !t.IsHidden)
-                    .Select(t => new Models.VmState { Name = t.Name, TemplateId = t.Id})
+                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
                 state.MergeVms(await _pod.Find(gamespace.GlobalId));
             }
@@ -176,20 +182,16 @@ namespace TopoMojo.Core
             return state;
         }
 
-        public async Task<Models.GameState> Destroy(string globalId)
+        public async Task<GameState> Destroy(string globalId)
         {
-            Gamespace gamespace = await _repo.FindByGlobalId(globalId);
+            var gamespace = await _repo.FindByGlobalId(globalId);
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            // List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
-            // foreach (TopoMojo.Models.Virtual.Vm vm in await _pod.Find(gamespace.GlobalId))
-            //     tasks.Add(_pod.Delete(vm.Id));
-            // Task.WaitAll(tasks.ToArray());
-            await _pod.DeleteMatches(gamespace.GlobalId);
+            await _pod.DeleteAll(gamespace.GlobalId);
 
             await _repo.Remove(gamespace);
-            return Mapper.Map<Models.GameState>(gamespace);
+            return Mapper.Map<GameState>(gamespace);
         }
 
         public async Task<TopoMojo.Models.Virtual.DisplayInfo> Ticket(string vmId)
@@ -211,29 +213,48 @@ namespace TopoMojo.Core
                 : "";
         }
 
-        public async Task<bool> ChangeVm(Models.VmAction vmAction)
+        public async Task<bool> ChangeVm(VmAction vmAction)
         {
             bool result = false;
 
+            if (!Guid.TryParse(vmAction.Id, out Guid guid))
+            {
+                vmAction.Id = (await _pod.Find(vmAction.Id)).FirstOrDefault()?.Id ?? Guid.Empty.ToString();
+            }
+
             switch (vmAction.Type)
             {
+                case "stop":
+                    try
+                    {
+                        await _pod.StopAll(vmAction.Id);
+                    } catch {}
+                    break;
+
                 case "start":
                 case "restart":
 
-                try
-                {
-                    await _pod.Stop(vmAction.Id);
-                } catch {}
+                    try
+                    {
+                        await _pod.StopAll(vmAction.Id);
+                    } catch {}
 
-                try
-                {
-                    await _pod.Start(vmAction.Id);
-                } catch {}
-                result = true;
-                break;
+                    try
+                    {
+                        await _pod.StartAll(vmAction.Id);
+                    } catch {}
+                    result = true;
+                    break;
+
+                case "iso":
+                    await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair { Key = "iso", Value = vmAction.Message });
+                    result = true;
+                    break;
 
             }
+
             return result;
         }
+
     }
 }

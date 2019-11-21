@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TopoMojo.Core.Models
+namespace TopoMojo.Models
 {
     public class Gamespace
     {
@@ -40,4 +40,14 @@ namespace TopoMojo.Core.Models
         public bool IsRunning { get; set; }
     }
 
+    public class Player
+    {
+        public int Id { get; set; }
+        public int PersonId { get; set; }
+        public string PersonName { get; set; }
+        public string PersonGlobalId { get; set; }
+        public bool CanManage { get; set; }
+        public bool CanEdit { get; set; }
+        //public bool Online { get; set; }
+    }
 }

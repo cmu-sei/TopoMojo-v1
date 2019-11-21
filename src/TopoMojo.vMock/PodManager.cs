@@ -458,13 +458,23 @@ namespace TopoMojo.vMock
             await Task.Delay(0);
         }
 
-        public async Task DeleteMatches(string target)
+        public async Task DeleteAll(string target)
         {
             foreach (var vm in _vms.Values.Where(v => v.Name.Contains(target)).ToArray())
             {
                 await Task.Delay(50);
                 _vms.Remove(vm.Id);
             }
+        }
+
+        public Task StartAll(string target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StopAll(string target)
+        {
+            throw new NotImplementedException();
         }
     }
 

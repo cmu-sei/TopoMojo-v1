@@ -5,6 +5,7 @@
     <DebugType>portable</DebugType>
     <AssemblyName>TopoMojo.Abstractions</AssemblyName>
     <PackageId>TopoMojo.Abstractions</PackageId>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

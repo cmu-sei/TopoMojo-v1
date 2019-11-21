@@ -224,12 +224,40 @@ namespace TopoMojo.vSphere
             return vm;
         }
 
-        public async Task DeleteMatches(string target)
+        public async Task StartAll(string target)
+        {
+            _logger.LogDebug("starting all matching " + target);
+            var tasks = new List<Task>();
+            foreach (var vm in await Find(target))
+            {
+                tasks.Add(Start(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+        public async Task StopAll(string target)
+        {
+            _logger.LogDebug("stopping all matching " + target);
+            var tasks = new List<Task>();
+            foreach (var vm in await Find(target))
+            {
+                tasks.Add(Stop(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+
+        public async Task DeleteAll(string target)
         {
             _logger.LogDebug("deleting all matching " + target);
             var tasks = new List<Task>();
-            var vms = _vmCache.Values.Where(v => v.Name.Contains(target)).ToArray();
-            foreach (var vm in vms)
+            foreach (var vm in await Find(target))
             {
                 VimClient host = FindHostByVm(vm.Id);
                 tasks.Add(host.Delete(vm.Id));

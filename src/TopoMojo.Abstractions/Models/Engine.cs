@@ -1,4 +1,4 @@
-namespace TopoMojo.Core.Models
+namespace TopoMojo.Models
 {
     public class NewGamespace
     {
@@ -33,7 +33,23 @@ namespace TopoMojo.Core.Models
     public class VmAction
     {
         public string Id { get; set; }
+        public string IsolationId { get; set; }
         public string Type { get; set; }
         public string Message { get; set; }
+    }
+
+     public class IsoSpec
+    {
+        public string Name { get; set; }
+        public string Hash { get; set; }
+        public string[] Files { get; set; }
+    }
+
+    public class ConsoleSummary
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Url { get; set; }
+        public bool IsRunning { get; set; }
     }
 }

@@ -256,13 +256,13 @@ namespace TopoMojo.Controllers
             Template template  = await _mgr.GetDeployableTemplate(id, null);
             Vm vm = await _pod.Deploy(template, true);
             // SendBroadcast(vm, "deploy");
-            Core.Models.VmState state = new Core.Models.VmState
+            VmState state = new VmState
             {
                 Id = id.ToString(),
                 Name = vm.Name.Untagged(),
                 IsRunning = vm.State == VmPowerState.Running
             };
-            await _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM.DEPLOY", state));
+            await _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<VmState>(User, "VM.DEPLOY", state));
 
             return Ok(vm);
         }
@@ -320,13 +320,13 @@ namespace TopoMojo.Controllers
         }
         private void SendBroadcast(Vm vm, string action)
         {
-            Core.Models.VmState state = new Core.Models.VmState
+            VmState state = new VmState
             {
                 Id = vm.Id,
                 Name = vm.Name.Untagged(),
                 IsRunning = vm.State == VmPowerState.Running
             };
-            _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<Core.Models.VmState>(User, "VM." + action.ToUpper(), state));
+            _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<VmState>(User, "VM." + action.ToUpper(), state));
         }
     }
 }

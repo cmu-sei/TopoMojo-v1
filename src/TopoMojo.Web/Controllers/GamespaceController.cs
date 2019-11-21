@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
 using TopoMojo.Core.Models;
+using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -116,7 +117,7 @@ namespace TopoMojo.Controllers
         private void SendBroadcast(GameState gameState, string action)
         {
             _hub.Clients.Group(gameState.GlobalId)
-                .GameEvent(new BroadcastEvent<Core.Models.GameState>(
+                .GameEvent(new BroadcastEvent<GameState>(
                     User,
                     "GAME." + action.ToUpper(),
                     gameState
