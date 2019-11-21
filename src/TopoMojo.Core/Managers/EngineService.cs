@@ -219,6 +219,7 @@ namespace TopoMojo.Core
 
             if (!Guid.TryParse(vmAction.Id, out Guid guid))
             {
+                // lookup id from name
                 vmAction.Id = (await _pod.Find(vmAction.Id)).FirstOrDefault()?.Id ?? Guid.Empty.ToString();
             }
 
@@ -249,7 +250,12 @@ namespace TopoMojo.Core
                     break;
 
                 case "iso":
-                    await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair { Key = "iso", Value = vmAction.Message });
+                    // look up iso path
+                    var vm = (await _pod.Find(vmAction.Id)).FirstOrDefault();
+                    var gamespace = await _repo.FindByGlobalId(vm.Name.Tag());
+                    var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Topology.GlobalId);
+                    string path = allowedIsos.Iso.Where(x => x.Contains(vmAction.Message)).FirstOrDefault();
+                    await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair { Key = "iso", Value = path });
                     result = true;
                     break;
 
