@@ -236,7 +236,9 @@ namespace TopoMojo.Core
 
                     try
                     {
-                        await _pod.StopAll(vmAction.Id);
+                        if (vmAction.Type == "restart")
+                            await _pod.StopAll(vmAction.Id);
+
                     } catch {}
 
                     try
