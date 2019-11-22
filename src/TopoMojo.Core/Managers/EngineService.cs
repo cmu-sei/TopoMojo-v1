@@ -255,7 +255,7 @@ namespace TopoMojo.Core
                     var gamespace = await _repo.FindByGlobalId(vm.Name.Tag());
                     var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Topology.GlobalId);
                     string path = allowedIsos.Iso.Where(x => x.Contains(vmAction.Message)).FirstOrDefault();
-                    _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Topology.Name}, {String.Join(" ", allowedIsos)}");
+                    _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Topology.Name}, {String.Join(" ", allowedIsos.Iso)}");
                     await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair { Key = "iso", Value = path });
                     result = true;
                     break;
