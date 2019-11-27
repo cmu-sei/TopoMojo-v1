@@ -25,7 +25,8 @@ namespace TopoMojo.Controllers
             IHubContext<TopologyHub, ITopoEvent> hub,
             Core.ProfileManager profileManager,
             IPodManager podManager,
-            IServiceProvider sp
+            IServiceProvider sp,
+            Core.CoreOptions options
             )
         :base(sp)
         {
@@ -41,55 +42,33 @@ namespace TopoMojo.Controllers
         private readonly Core.TopologyManager _topoMgr;
         private readonly Core.ProfileManager _profileManager;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        Core.CoreOptions Options { get; }
 
         // This endpoint is a temporary to support an authless demo
-        [HttpGet("api/vmdemo/{id}/{code}")]
+        [HttpGet("api/demo/{id}/{name}")]
         [JsonExceptionFilter]
         [AllowAnonymous]
-        public async Task<ActionResult<DisplayInfo>> Demo(string id, string code)
+        public async Task<ActionResult<DisplayInfo>> Demo([FromRoute]string id, [FromRoute]string name)
         {
-            if (!code.HasValue() || code != _options.DemoCode)
-                throw new InvalidOperationException();
+            if (!_options.DemoCode.HasValue())
+                throw new InvalidOperationException("Endpoint disabled.");
 
-            DisplayInfo info = await _pod.Display(id);
+            if (name == "restart")
+            {
+                try {
+                    await _pod.Stop(id);
+                    await _pod.Start(id);
+                }
+                catch {}
 
+                return Ok(null);
+            }
+
+            DisplayInfo info = await _pod.Display($"{name}#{id}");
             if (info.Url.HasValue())
             {
-                _logger.LogDebug("ticket url: {0}", info.Url);
                 var src = new Uri(info.Url);
-                string target = "";
-                string qs = "";
-                string internalHost = src.Host.Split('.').First();
-                string domain = Request.Host.Value.IndexOf(".") >= 0
-                            ? Request.Host.Value.Substring(Request.Host.Value.IndexOf(".")+1)
-                            : Request.Host.Value;
-
-                switch (_pod.Options.TicketUrlHandler.ToLower())
-                {
-                    case "querystring":
-                        qs = $"?vmhost={src.Host}";
-                        target = _pod.Options.DisplayUrl;
-                    break;
-
-                    case "local-app":
-                        target = $"{Request.Host.Value}/{internalHost}";
-                    break;
-
-                    case "external-domain":
-                        target = $"{internalHost}.{domain}";
-                    break;
-
-                    case "host-map":
-                        var map = _pod.Options.TicketUrlHostMap;
-                        if (map.ContainsKey(src.Host))
-                            target = map[src.Host];
-                    break;
-                }
-
-                if (target.HasValue())
-                    info.Url = info.Url.Replace(src.Host, target);
-
-                info.Url += qs;
+                info.Url = info.Url.Replace(src.Host, Options.ConsoleHost) + $"?vmhost={src.Host}";
             }
             return Ok(info);
         }
