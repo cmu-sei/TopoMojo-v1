@@ -398,9 +398,9 @@ namespace TopoMojo.vSphere
 
                 try
                 {
-                    ticket = await host.GetTicket(id);
+                    ticket = await host.GetTicket(vm.Id);
                 }
-                catch //(System.Exception ex)
+                catch // (System.Exception ex)
                 {
                     conditions = "needs-vm-connected";
                 }
