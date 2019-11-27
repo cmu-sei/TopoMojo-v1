@@ -407,7 +407,7 @@ namespace TopoMojo.vSphere
 
                 di = new DisplayInfo
                 {
-                    Id = id,
+                    Id = vm.Id,
                     Name = vm.Name.Untagged(),
                     TopoId = vm.Name.Tag(),
                     Url = ticket,
