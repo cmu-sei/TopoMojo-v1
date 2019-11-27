@@ -35,6 +35,7 @@ namespace TopoMojo.Controllers
             _profileManager = profileManager;
             _pod = podManager;
             _hub = hub;
+            Options = options;
         }
 
         private readonly IPodManager _pod;
