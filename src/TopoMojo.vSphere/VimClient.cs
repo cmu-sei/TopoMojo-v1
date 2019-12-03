@@ -228,7 +228,7 @@ namespace TopoMojo.vSphere
             return $"wss://{ticket.host ?? _config.Host}{port}/ticket/{ticket.ticket}";
         }
 
-        public async Task<Vm> Deploy(Template template, bool start = true)
+        public async Task<Vm> Deploy(Template template)
         {
             Vm vm = null;
             await Connect();
@@ -260,7 +260,7 @@ namespace TopoMojo.vSphere
                     "Created by TopoMojo Deploy at " + DateTime.UtcNow.ToString("s") + "Z",
                     false, false);
                 info = await WaitForVimTask(task);
-                if (start && info.state == TaskInfoState.success)
+                if (template.AutoStart && info.state == TaskInfoState.success)
                 {
                     _logger.LogDebug("deploy: start vm...");
                     vm = await Start(vm.Id);

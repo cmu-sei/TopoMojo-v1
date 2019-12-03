@@ -23,6 +23,7 @@ namespace TopoMojo.Models.Virtual
         public int Delay { get; set; }
         public Eth[] Eth { get; set; }
         public Disk[] Disks { get; set; }
+        public bool AutoStart { get; set; } = true;
     }
 
     public class Eth

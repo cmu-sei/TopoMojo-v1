@@ -89,7 +89,7 @@ namespace TopoMojo.vMock
             }
         }
 
-        public async Task<Vm> Deploy(Template template, bool start)
+        public async Task<Vm> Deploy(Template template)
         {
             NormalizeTemplate(template, _optPod);
             string key = template.Name;
