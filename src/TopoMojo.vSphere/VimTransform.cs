@@ -267,11 +267,11 @@ namespace TopoMojo.vSphere
                 foreach (var setting in template.GuestSettings)
                 {
                     // TODO: rework this quick fix for injecting isolation specific settings
-                    if (setting.Key.StartsWith("iftag-") && !setting.Value.Contains(template.IsolationTag))
+                    if (setting.Key.StartsWith("iftag.") && !setting.Value.Contains(template.IsolationTag))
                     {
                         continue;
                     }
-                    setting.Key = setting.Key.Replace("iftag-", "");
+                    setting.Key = setting.Key.Replace("iftag.", "guestinfo.");
 
                     options.Add(new OptionValue { key = setting.Key, value = setting.Value });
                 }
