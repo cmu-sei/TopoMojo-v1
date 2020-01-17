@@ -196,6 +196,7 @@ namespace TopoMojo.vSphere
             //delete the vm.
             await Connect();
             Vm vm = _vmCache[id];
+            string tag = vm.Name.Tag();
 
             _logger.LogDebug($"Delete: stopping vm {vm.Name}");
             await Stop(id);
@@ -211,7 +212,7 @@ namespace TopoMojo.vSphere
 
             _vmCache.TryRemove(vm.Id, out vm);
 
-            await _netman.Clean();
+            await _netman.Clean(tag);
 
             vm.Status = "initialized";
             return vm;
@@ -259,7 +260,7 @@ namespace TopoMojo.vSphere
                     "Created by TopoMojo Deploy at " + DateTime.UtcNow.ToString("s") + "Z",
                     false, false);
                 info = await WaitForVimTask(task);
-                if (info.state == TaskInfoState.success)
+                if (template.AutoStart && info.state == TaskInfoState.success)
                 {
                     _logger.LogDebug("deploy: start vm...");
                     vm = await Start(vm.Id);
@@ -270,6 +271,41 @@ namespace TopoMojo.vSphere
                 throw new Exception(info.error.localizedMessage);
             }
             return vm;
+        }
+
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
+        {
+            if (_config.IsVCenter)
+            {
+                var configSpec = new ClusterConfigSpec();
+                var affinityRuleSpec = new ClusterAffinityRuleSpec();
+                var clusterRuleSpec = new ClusterRuleSpec();
+
+                affinityRuleSpec.vm = vms.Select(m => m.Reference.AsReference()).ToArray();
+                affinityRuleSpec.name = $"Affinity#{isolationTag}";
+                affinityRuleSpec.enabled = true;
+                affinityRuleSpec.enabledSpecified = true;
+                affinityRuleSpec.mandatory = true;
+                affinityRuleSpec.mandatorySpecified = true;
+
+                clusterRuleSpec.operation = ArrayUpdateOperation.add;
+                clusterRuleSpec.info = affinityRuleSpec;
+
+                configSpec.rulesSpec = new ClusterRuleSpec[] { clusterRuleSpec };
+                _logger.LogDebug("setaffinity: reconfiguring cluster ");
+                await _vim.ReconfigureCluster_TaskAsync(_res, configSpec, true);
+            }
+
+            if (start)
+            {
+                List<Task<Vm>> tasks = new List<Task<Vm>>();
+                foreach (Vm vm in vms)
+                {
+                    tasks.Add(Start(vm.Id));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
         }
 
         public async Task<Vm> Change(string id, KeyValuePair change)
@@ -331,7 +367,8 @@ namespace TopoMojo.vSphere
                         if (card.backing is VirtualEthernetCardNetworkBackingInfo)
                             ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
 
-                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo) {
+                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+                        {
                             string netMorName = _netman.Resolve(newvalue);
                             ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = netMorName;
                         }
@@ -409,7 +446,8 @@ namespace TopoMojo.vSphere
                                 progress = _taskMap[id].progress;
                                 break;
                         }
-                    } catch
+                    }
+                    catch
                     {
                         //if checking on a task that has expired, clear it.
                         _taskMap.Remove(id);

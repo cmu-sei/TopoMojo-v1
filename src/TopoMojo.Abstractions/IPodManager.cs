@@ -16,9 +16,13 @@ namespace TopoMojo.Abstractions
         Task<Vm> Save(string id);
         Task<Vm> Revert(string id);
         Task<Vm> Delete(string id);
+        Task StartAll(string target);
+        Task StopAll(string target);
+        Task DeleteAll(string target);
         Task<Vm> ChangeState(VmOperation op);
         Task<Vm> ChangeConfiguration(string id, KeyValuePair change);
         Task<Vm> Deploy(Template template);
+        Task SetAffinity(string isolationTag, Vm[] vms, bool start);
         Task<Vm> Refresh(Template template);
         Task<Vm[]> Find(string searchText);
         Task<int> CreateDisks(Template template);

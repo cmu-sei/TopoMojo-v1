@@ -5,6 +5,7 @@
     <DebugType>portable</DebugType>
     <AssemblyName>TopoMojo.vSphere</AssemblyName>
     <PackageId>TopoMojo.vSphere</PackageId>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

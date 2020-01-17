@@ -119,11 +119,21 @@ namespace TopoMojo.vSphere.Network
 
         public async Task Clean()
         {
+            await Clean(null, true);
+        }
+
+        public async Task Clean(string tag)
+        {
+            await Clean(tag, false);
+        }
+
+        public async Task Clean(string tag, bool all)
+        {
             await Task.Delay(0);
             lock(_pgAllocation)
             {
                 //find empties with no associated vm's
-                foreach (var pg in _pgAllocation.Values.ToArray())
+                foreach (var pg in _pgAllocation.Values.Where(p => !all ? p.Net.Tag() == tag : true).ToArray())
                 {
                     if (pg.Counter < 1 && !_vmCache.Values.Any(v => v.Name.EndsWith(pg.Net.Tag())))
                     {

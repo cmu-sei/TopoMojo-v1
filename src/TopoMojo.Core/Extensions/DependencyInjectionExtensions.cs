@@ -28,6 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddScoped<ChatService>()
                 .AddScoped<TransferService>()
                 .AddScoped<ProfileService>()
+                .AddScoped<EngineService>()
                 .AddMappers();
         }
     }

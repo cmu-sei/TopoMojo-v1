@@ -124,6 +124,10 @@ namespace TopoMojo.vMock
             return vm;
         }
 
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
+        {
+        }
+
         public async Task<Vm> Load(string id)
         {
             Vm vm = _vms[id];
@@ -342,7 +346,7 @@ namespace TopoMojo.vMock
                 Id = id,
                 Name = _vms[id].Name.Untagged(),
                 TopoId = _vms[id].Name.Tag(),
-                Url = "",
+                Url = "https://mock.topomojo.local/ticket/12345678",
                 IsRunning = _vms[id].State == VmPowerState.Running,
                 Conditions = "mock"
             };
@@ -452,6 +456,25 @@ namespace TopoMojo.vMock
         public async Task ReloadHost(string host)
         {
             await Task.Delay(0);
+        }
+
+        public async Task DeleteAll(string target)
+        {
+            foreach (var vm in _vms.Values.Where(v => v.Name.Contains(target)).ToArray())
+            {
+                await Task.Delay(50);
+                _vms.Remove(vm.Id);
+            }
+        }
+
+        public Task StartAll(string target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StopAll(string target)
+        {
+            throw new NotImplementedException();
         }
     }
 

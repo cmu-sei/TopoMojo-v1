@@ -1,0 +1,24 @@
+@url = https://topomojo.cyberforce.site/api/engine
+@key = X-API-KEY: 8NpDMXXTtaX5oXJ9wmuAsZVO8JI
+###
+
+POST {{url}}/jam/on
+{{key}}
+Content-Type: application/json
+
+{
+    "Id": "a859f648-e6ab-4b3c-a0e5-3ba36509fb13",
+    "WorkspaceId": 91
+}
+
+###
+GET {{url}}/ticket/422e08f0-0bbc-e326-5e8d-6dbca131d75b
+{{key}}
+
+###
+DELETE {{url}}/a859f648-e6ab-4b3c-a0e5-3ba36509fb13
+{{key}}
+
+###
+GET {{url}}/test
+{{key}}

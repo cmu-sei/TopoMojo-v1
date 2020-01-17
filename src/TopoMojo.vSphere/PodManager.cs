@@ -125,6 +125,15 @@ namespace TopoMojo.vSphere
             return await host.Deploy(template);
         }
 
+        public async Task SetAffinity(string isolationTag, Vm[] vms, bool start)
+        {
+            _logger.LogDebug("setaffinity: find host ");
+            VimClient host = FindHostByAffinity(isolationTag);
+
+            _logger.LogDebug("setaffinity: setting affinity ");
+            await host.SetAffinity(isolationTag, vms, start);
+        }
+
         public async Task<Vm> Load(string id)
         {
             await Task.Delay(0);
@@ -213,6 +222,51 @@ namespace TopoMojo.vSphere
             Vm vm =  await host.Delete(id);
             RefreshAffinity(); //TODO: fix race condition here
             return vm;
+        }
+
+        public async Task StartAll(string target)
+        {
+            _logger.LogDebug("starting all matching " + target);
+            var tasks = new List<Task>();
+            foreach (var vm in await Find(target))
+            {
+                tasks.Add(Start(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+        public async Task StopAll(string target)
+        {
+            _logger.LogDebug("stopping all matching " + target);
+            var tasks = new List<Task>();
+            foreach (var vm in await Find(target))
+            {
+                tasks.Add(Stop(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+
+        public async Task DeleteAll(string target)
+        {
+            _logger.LogDebug("deleting all matching " + target);
+            var tasks = new List<Task>();
+            foreach (var vm in await Find(target))
+            {
+                VimClient host = FindHostByVm(vm.Id);
+                tasks.Add(host.Delete(vm.Id));
+            }
+
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
         }
 
         public async Task<Vm> ChangeConfiguration(string id, KeyValuePair change)
@@ -344,16 +398,16 @@ namespace TopoMojo.vSphere
 
                 try
                 {
-                    ticket = await host.GetTicket(id);
+                    ticket = await host.GetTicket(vm.Id);
                 }
-                catch //(System.Exception ex)
+                catch // (System.Exception ex)
                 {
                     conditions = "needs-vm-connected";
                 }
 
                 di = new DisplayInfo
                 {
-                    Id = id,
+                    Id = vm.Id,
                     Name = vm.Name.Untagged(),
                     TopoId = vm.Name.Tag(),
                     Url = ticket,

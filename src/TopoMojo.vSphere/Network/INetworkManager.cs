@@ -22,6 +22,7 @@ namespace TopoMojo.vSphere.Network
         Task Initialize();
         Task Provision(Template template);
         Task Unprovision(ManagedObjectReference vmMOR);
+        Task Clean(string tag);
         Task Clean();
         string Resolve(string net);
     }

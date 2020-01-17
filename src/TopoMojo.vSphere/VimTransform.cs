@@ -256,6 +256,7 @@ namespace TopoMojo.vSphere
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
+            options.Add(new OptionValue { key = "isolation.tools.setGUIOptions.enable", value = "true" });
             options.Add(new OptionValue { key = "isolation.tools.copy.disable", value = "false" });
             options.Add(new OptionValue { key = "isolation.tools.paste.disable", value = "false" });
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
@@ -265,6 +266,13 @@ namespace TopoMojo.vSphere
             {
                 foreach (var setting in template.GuestSettings)
                 {
+                    // TODO: rework this quick fix for injecting isolation specific settings
+                    if (setting.Key.StartsWith("iftag.") && !setting.Value.Contains(template.IsolationTag))
+                    {
+                        continue;
+                    }
+                    setting.Key = setting.Key.Replace("iftag.", "guestinfo.");
+
                     options.Add(new OptionValue { key = setting.Key, value = setting.Value });
                 }
             }

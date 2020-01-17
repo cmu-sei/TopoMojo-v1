@@ -17,6 +17,7 @@ using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.Entities.Extensions;
+using TopoMojo.Models;
 using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
@@ -364,7 +365,7 @@ namespace TopoMojo.Core
             return topology.Gamespaces.Any();
         }
 
-        public async Task<Models.GameState[]> GetGames(int id)
+        public async Task<GameState[]> GetGames(int id)
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
@@ -373,10 +374,10 @@ namespace TopoMojo.Core
             if (! await _repo.CanEdit(id, Profile))
                 throw new InvalidOperationException();
 
-            return Mapper.Map<Models.GameState[]>(topology.Gamespaces);
+            return Mapper.Map<GameState[]>(topology.Gamespaces);
         }
 
-        public async Task<Models.GameState[]> KillGames(int id)
+        public async Task<GameState[]> KillGames(int id)
         {
             Data.Entities.Topology topology = await _repo.Load(id);
             if (topology == null)
@@ -397,7 +398,7 @@ namespace TopoMojo.Core
                 await _gameRepo.Remove(gamespace);
             }
 
-            return Mapper.Map<Models.GameState[]>(result);
+            return Mapper.Map<GameState[]>(result);
         }
     }
 }
