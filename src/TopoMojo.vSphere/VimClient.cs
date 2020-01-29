@@ -917,6 +917,12 @@ namespace TopoMojo.vSphere
                     {
                         type = "ComputeResource",
                         path = "host"
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "Folder",
+                        path = "childEntity"
                     }
                 }
             };
