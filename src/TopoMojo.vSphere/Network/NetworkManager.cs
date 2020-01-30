@@ -208,5 +208,7 @@ namespace TopoMojo.vSphere.Network
         {
             return _pgAllocation[net]?.Key.AsReference().Value ?? "notfound";
         }
+
+        public abstract void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName);
     }
 }

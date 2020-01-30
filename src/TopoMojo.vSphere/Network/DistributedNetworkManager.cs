@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetVimClient;
 using TopoMojo.Models.Virtual;
@@ -113,8 +114,14 @@ namespace TopoMojo.vSphere.Network
                 if (config.distributedVirtualSwitch.Value == _client.dvs.Value)
                 {
                     string net = dvpg.GetProperty("name") as string;
-                    if (config.defaultPortConfig is VMwareDVSPortSetting
-                        && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec)
+
+                    if (Regex.Match(net, _client.ExcludeNetworkMask).Success)
+                        continue;
+
+                    if (
+                        config.defaultPortConfig is VMwareDVSPortSetting
+                        && ((VMwareDVSPortSetting)config.defaultPortConfig).vlan is VmwareDistributedVirtualSwitchVlanIdSpec
+                    )
                     {
                         list.Add(
                             new PortGroupAllocation
@@ -146,5 +153,29 @@ namespace TopoMojo.vSphere.Network
             return Task.FromResult(0);
         }
 
+        public override void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName)
+        {
+            if (card != null)
+            {
+                if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
+                {
+                    string netMorName = this.Resolve(portgroupName);
+                    card.backing = new VirtualEthernetCardDistributedVirtualPortBackingInfo
+                    {
+                        port = new DistributedVirtualSwitchPortConnection
+                        {
+                            switchUuid = _client.DvsUuid,
+                            portgroupKey = netMorName
+                        }
+                    };
+                }
+
+                card.connectable = new VirtualDeviceConnectInfo()
+                {
+                    connected = true,
+                    startConnected = true,
+                };
+            }
+        }
     }
 }
