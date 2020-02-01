@@ -135,7 +135,10 @@ namespace TopoMojo.vSphere.Network
                 //find empties with no associated vm's
                 foreach (var pg in _pgAllocation.Values.Where(p => !all ? p.Net.Tag() == tag : true).ToArray())
                 {
-                    if (pg.Counter < 1 && !_vmCache.Values.Any(v => v.Name.EndsWith(pg.Net.Tag())))
+                    if (pg.Net.Tag().HasValue()
+                        && pg.Counter < 1
+                        && !_vmCache.Values.Any(v => v.Name.EndsWith(pg.Net.Tag()))
+                    )
                     {
                         RemovePortgroup(pg.Key).Wait();
                         _pgAllocation.Remove(pg.Net);
@@ -205,5 +208,7 @@ namespace TopoMojo.vSphere.Network
         {
             return _pgAllocation[net]?.Key.AsReference().Value ?? "notfound";
         }
+
+        public abstract void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName);
     }
 }

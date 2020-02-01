@@ -16,5 +16,6 @@ namespace TopoMojo.vSphere.Network
         public ManagedObjectReference net { get; set; }
         public string UplinkSwitch { get; set; }
         public string DvsUuid { get; set; }
+        public string ExcludeNetworkMask { get; set; } = "topomojo";
     }
 }

@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetVimClient;
 using TopoMojo.Models.Virtual;
@@ -96,6 +97,9 @@ namespace TopoMojo.vSphere.Network
 
             foreach(HostPortGroup pg in pgs)
             {
+                if (Regex.Match(pg.spec.name, _client.ExcludeNetworkMask).Success)
+                        continue;
+
                 if (pg.spec.name.Contains("#"))
                     list.Add(new PortGroupAllocation
                     {
@@ -116,6 +120,22 @@ namespace TopoMojo.vSphere.Network
         public override async Task RemoveSwitch(string sw)
         {
             await _client.vim.RemoveVirtualSwitchAsync(_client.net, sw);
+        }
+
+        public override void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName)
+        {
+            if (card != null)
+            {
+                if (card.backing is VirtualEthernetCardNetworkBackingInfo)
+                    ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = portgroupName;
+
+
+                card.connectable = new VirtualDeviceConnectInfo()
+                {
+                    connected = true,
+                    startConnected = true,
+                };
+            }
         }
     }
 }

@@ -111,7 +111,7 @@ namespace TopoMojo.vSphere
 
         public static ObjectContent First(this ObjectContent[] tree, string type)
         {
-            return tree.Where(o => o.obj.type == type).FirstOrDefault();
+            return tree.Where(o => o.obj.type.EndsWith(type)).FirstOrDefault();
         }
 
         public static ObjectContent FindTypeByName(this ObjectContent[] tree, string type, string name)

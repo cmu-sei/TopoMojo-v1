@@ -18,6 +18,7 @@ namespace TopoMojo.vSphere.Network
         Task RemovePortgroup(string pgReference);
         Task<VmNetwork[]> GetVmNetworks(ManagedObjectReference managedObjectReference);
         Task<PortGroupAllocation[]> LoadPortGroups();
+        void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName);
 
         Task Initialize();
         Task Provision(Template template);

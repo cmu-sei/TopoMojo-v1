@@ -364,20 +364,7 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        if (card.backing is VirtualEthernetCardNetworkBackingInfo)
-                            ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = newvalue;
-
-                        if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
-                        {
-                            string netMorName = _netman.Resolve(newvalue);
-                            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey = netMorName;
-                        }
-
-                        card.connectable = new VirtualDeviceConnectInfo()
-                        {
-                            connected = true,
-                            startConnected = true,
-                        };
+                        _netman.UpdateEthernetCardBacking(card, newvalue);
 
                         vmcs.deviceChange = new VirtualDeviceConfigSpec[] {
                             new VirtualDeviceConfigSpec {
@@ -917,6 +904,12 @@ namespace TopoMojo.vSphere
                     {
                         type = "ComputeResource",
                         path = "host"
+                    },
+
+                    new TraversalSpec()
+                    {
+                        type = "Folder",
+                        path = "childEntity"
                     }
                 }
             };
@@ -1006,10 +999,8 @@ namespace TopoMojo.vSphere
                 props = _props,
                 pool = _pool,
                 vmFolder = _vms,
-                UplinkSwitch = _config.Uplink
-                //net = netSystem,
-                //dvs = _dvs,
-                //DvsUuid = _dvsuuid,
+                UplinkSwitch = _config.Uplink,
+                ExcludeNetworkMask = _config.ExcludeNetworkMask
             };
 
             if (_config.IsVCenter)

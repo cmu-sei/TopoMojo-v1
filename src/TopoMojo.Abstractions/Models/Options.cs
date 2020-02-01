@@ -24,6 +24,7 @@ namespace TopoMojo.Models
         public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
         public VlanOptions Vlan { get; set; }
         public int ConnectionKeepAliveTimeoutMinutes { get; set; } = 10;
+        public string ExcludeNetworkMask { get; set; } = "topomojo";
     }
 
     public class TemplateOptions {
