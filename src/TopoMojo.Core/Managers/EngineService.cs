@@ -4,12 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
+using TopoMojo.Core.Models;
 using TopoMojo.Core.Models.Extensions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
@@ -32,14 +33,14 @@ namespace TopoMojo.Core
         {
             _pod = podManager;
             _repo = repo;
-            _topos = topos;
-            _templates = templateRepository;
+            _topologyRepo = topos;
+            _templateRepo = templateRepository;
         }
 
         private readonly IPodManager _pod;
         private readonly IGamespaceRepository _repo;
-        private readonly ITopologyRepository _topos;
-        private readonly ITemplateRepository _templates;
+        private readonly ITopologyRepository _topologyRepo;
+        private readonly ITemplateRepository _templateRepo;
 
         public async Task<GameState> Launch(int workspaceId, string isolationId)
         {
@@ -52,7 +53,7 @@ namespace TopoMojo.Core
 
             if (game == null)
             {
-                Topology topology = await _topos.Load(spec.Id);
+                Data.Entities.Topology topology = await _topologyRepo.Load(spec.Id);
                 if (topology == null)
                     throw new InvalidOperationException();
 
@@ -73,83 +74,95 @@ namespace TopoMojo.Core
 
         private async Task<GameState> Deploy(Data.Entities.Gamespace gamespace, WorkspaceSpec spec)
         {
-            List<Task<TopoMojo.Models.Virtual.Vm>> tasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
+            var deployTasks = new List<Task<TopoMojo.Models.Virtual.Vm>>();
 
             try
             {
-                ExpandTemplates(gamespace.Topology.Templates, spec);
+                var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates);
 
-                await AddNetworkServer(gamespace.Topology.Templates, spec);
+                ExpandTemplates(templates, spec);
 
-                foreach (Template template in gamespace.Topology.Templates)
+                await AddNetworkServer(templates, spec);
+
+                foreach (var template in templates)
                 {
-                    string iso = template.Iso;
                     if (!String.IsNullOrEmpty(spec.Iso) && String.IsNullOrEmpty(template.Iso))
-                        iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
+                        template.Iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
 
-                    TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
-                    tu.Name = template.Name;
-                    tu.Networks = template.Networks;
-                    tu.Iso = iso;
-                    tu.IsolationTag = gamespace.GlobalId;
-                    tu.Id = template.Id.ToString();
-                    var t = tu.AsTemplate();
+                    var virtualTemplate = template.ToVirtualTemplate(gamespace.GlobalId);
+
                     if (spec.HostAffinity)
-                        t.AutoStart = false;
+                        virtualTemplate.AutoStart = false;
 
-                    tasks.Add(_pod.Deploy(t));
+                    deployTasks.Add(_pod.Deploy(virtualTemplate));
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                Task.WaitAll(deployTasks.ToArray());
 
                 if (spec.HostAffinity)
                 {
-                    await _pod.SetAffinity(gamespace.GlobalId, tasks.Select(t => t.Result).ToArray(), true);
+                    await _pod.SetAffinity(gamespace.GlobalId, deployTasks.Select(t => t.Result).ToArray(), true);
                 }
-            } catch (Exception ex)
+
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deploying Engine mojo");
                 throw ex;
             }
+
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
-        private async Task AddNetworkServer(ICollection<Data.Entities.Template> templates, WorkspaceSpec spec)
+        private async Task AddNetworkServer(ICollection<ConvergedTemplate> templates, WorkspaceSpec spec)
         {
             if (spec.Network == null)
                 return;
 
-            List<TopoMojo.Models.KeyValuePair> settings = new List<TopoMojo.Models.KeyValuePair>();
-            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "newip", Value = spec.Network.NewIp });
-            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "hosts", Value = String.Join(";", spec.Network.Hosts) });
-            settings.Add(new TopoMojo.Models.KeyValuePair { Key = "dhcp", Value = String.Join(";", spec.Network.Dnsmasq) });
-            var t = await _templates.Load(_options.DefaultNetServerTemplateId);
-            var nettemplate = t.Map<Template>();
-            TemplateUtility tu = new TemplateUtility(nettemplate.Detail);
-            tu.GuestSettings = settings.ToArray();
-            nettemplate.Detail = tu.ToString();
-            templates.Add(nettemplate);
+            var settings = new TopoMojo.Models.KeyValuePair[]
+            {
+                new TopoMojo.Models.KeyValuePair { Key = "newip", Value = spec.Network.NewIp },
+                new TopoMojo.Models.KeyValuePair { Key = "hosts", Value = String.Join(";", spec.Network.Hosts) },
+                new TopoMojo.Models.KeyValuePair { Key = "dhcp", Value = String.Join(";", spec.Network.Dnsmasq) }
+            };
+
+            var netServerTemplateEntity = await _templateRepo.Load(_options.DefaultNetServerTemplateId);
+
+            if (netServerTemplateEntity != null)
+            {
+                var netServerTemplate = Mapper.Map<ConvergedTemplate>(netServerTemplateEntity);
+
+                netServerTemplate.AddSettings(settings);
+
+                templates.Add(netServerTemplate);
+            }
         }
 
-        private void ExpandTemplates(ICollection<Data.Entities.Template> templates, WorkspaceSpec spec)
+        private void ExpandTemplates(ICollection<ConvergedTemplate> templates, WorkspaceSpec spec)
         {
-            List<Data.Entities.Template> ts = String.IsNullOrEmpty(spec.Templates)
+            var ts = String.IsNullOrEmpty(spec.Templates)
                 ? templates.ToList()
-                : JsonConvert.DeserializeObject<List<Data.Entities.Template>>(spec.Templates);
+                : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
 
             templates.Clear();
+
             foreach (var t in ts)
             {
                 templates.Add(t);
+
                 var vmspec = spec.Vms?.SingleOrDefault(v => v.Name == t.Name);
+
                 if (vmspec != null && vmspec.Replicas > 1)
                 {
                     for (int i = 1; i < vmspec.Replicas; i++)
                     {
-                        var tt = t.Map<Data.Entities.Template>();
+                        var tt = t.Clone<ConvergedTemplate>();
+
                         tt.Name += $"_{i}";
+
                         templates.Add(tt);
                     }
+
                     t.Name += "_0";
                 }
             }
@@ -161,7 +174,7 @@ namespace TopoMojo.Core
 
             if (gamespace == null)
             {
-                Data.Entities.Topology topo = await _topos.Load(topoId);
+                Data.Entities.Topology topo = await _topologyRepo.Load(topoId);
                 if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
 
@@ -211,9 +224,9 @@ namespace TopoMojo.Core
 
         public async Task<string> GetTemplates(int topoId)
         {
-            Data.Entities.Topology topo = await _topos.Load(topoId);
+            Data.Entities.Topology topo = await _topologyRepo.Load(topoId);
             return (topo != null)
-                ? JsonConvert.SerializeObject(topo.Templates, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore})
+                ? JsonSerializer.Serialize(Mapper.Map<List<ConvergedTemplate>>(topo.Templates), null)
                 : "";
         }
 

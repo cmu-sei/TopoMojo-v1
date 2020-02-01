@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models.Extensions;
@@ -100,14 +99,19 @@ namespace TopoMojo.Core
             if (await _repo.AtTemplateLimit(newlink.TopologyId))
                 throw new WorkspaceTemplateLimitException();
 
-            Template linked = Mapper.Map<Template>(entity);
-            linked.TopologyId = newlink.TopologyId;
-            linked.GlobalId = "";
-            linked.Name += "-" + new Random().Next(100, 999).ToString();
-            await _repo.Add(linked);
+            var newTemplate = new Template
+            {
+                ParentId = entity.Id,
+                TopologyId = entity.TopologyId,
+                Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
+                Description = entity.Description,
+                Iso = entity.Iso,
+                Networks = entity.Networks
+            };
+            await _repo.Add(newTemplate);
             //TODO: streamline object graph hydration
-            linked = await _repo.Load(linked.Id);
-            return Mapper.Map<Models.Template>(linked, WithActor());
+            newTemplate = await _repo.Load(newTemplate.Id);
+            return Mapper.Map<Models.Template>(newTemplate, WithActor());
         }
 
         public async Task<Models.Template> Unlink(Models.TemplateLink link) //CLONE
@@ -184,7 +188,7 @@ namespace TopoMojo.Core
 
             if (search.Term.HasValue())
                 q = q.Where(t =>
-                    t.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                    t.Name.ToLower().Contains(search.Term.ToLower())
                     // || t.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
                 );
 
@@ -214,20 +218,12 @@ namespace TopoMojo.Core
 
         public async Task<TopoMojo.Models.Virtual.Template> GetDeployableTemplate(int id, string tag = "")
         {
-            Template template = await _repo.Load(id);
+            Template entity = await _repo.Load(id);
 
-            if (template == null)
+            if (entity == null)
                 throw new InvalidOperationException();
 
-            TemplateUtility tu = new TemplateUtility(template.Detail ?? template.Parent.Detail);
-            tu.Name = template.Name;
-            tu.Networks = template.Networks ?? "lan";
-            tu.Iso = template.Iso;
-            tu.IsolationTag = tag.HasValue() ? tag : template.Topology?.GlobalId ?? Guid.Empty.ToString();
-            tu.Id = template.Id.ToString();
-            TopoMojo.Models.Virtual.Template result =  tu.AsTemplate();
-            result.UseUplinkSwitch = template.Topology?.UseUplinkSwitch ?? false;
-            return result;
+            return Mapper.Map<Models.ConvergedTemplate>(entity).ToVirtualTemplate();
         }
 
         public async Task<Dictionary<string, string>> ResolveKeys(string[] keys)

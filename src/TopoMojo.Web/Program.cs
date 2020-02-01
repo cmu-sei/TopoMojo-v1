@@ -2,8 +2,9 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using Microsoft.AspNetCore;
+using System.Linq;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using TopoMojo.Extensions;
 
 namespace TopoMojo.Web
@@ -14,14 +15,24 @@ namespace TopoMojo.Web
         {
             Console.Title = "TopoMojo";
 
-            CreateWebHostBuilder(args)
+            var hostBuilder = CreateHostBuilder(args)
                 .Build()
-                .InitializeDatabase()
-                .Run();
+                .InitializeDatabase();
+
+            bool dbonly = args.ToList().Contains("--dbonly") || Environment.GetEnvironmentVariable("TOPOMOJO_DBONLY")?.ToLower() == "true";
+
+            if (!dbonly)
+                hostBuilder.Run();
+
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.ConfigureKestrel(opt => { })
                 .UseStartup<Startup>();
+            }
+        );
     }
 }

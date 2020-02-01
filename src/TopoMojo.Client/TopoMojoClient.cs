@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using TopoMojo.Models;
 
 namespace TopoMojo.Client
@@ -40,7 +40,7 @@ namespace TopoMojo.Client
 
                 string data = await result.Content.ReadAsStringAsync();
 
-                var game = JsonConvert.DeserializeObject<GameState>(data);
+                var game = JsonSerializer.Deserialize<GameState>(data);
 
                 mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{problemId})"));
 
@@ -70,7 +70,7 @@ namespace TopoMojo.Client
         public async Task<ConsoleSummary> Ticket(string vmId)
         {
             string data = await Client.GetStringAsync($"ticket/{vmId}");
-            var info = JsonConvert.DeserializeObject<ConsoleSummary>(data);
+            var info = JsonSerializer.Deserialize<ConsoleSummary>(data);
             return info;
         }
 
@@ -82,11 +82,12 @@ namespace TopoMojo.Client
         private HttpContent Json(object obj)
         {
             return new StringContent(
-                JsonConvert.SerializeObject(obj),
+                JsonSerializer.Serialize(obj),
                 Encoding.UTF8,
                 "application/json"
             );
         }
+
         public async Task BuildIso(IsoSpec spec)
         {
             await Task.Delay(0);

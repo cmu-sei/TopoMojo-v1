@@ -18,39 +18,21 @@ namespace TopoMojo.Extensions
             return builder;
         }
     }
+
     public class CorsPolicyOptions
     {
         public string[] Origins { get; set; } = new string[]{};
         public string[] Methods { get; set; } = new string[]{};
         public string[] Headers { get; set; } = new string[]{};
-        public bool AllowAnyOrigin { get; set; }
-        public bool AllowAnyMethod { get; set; }
-        public bool AllowAnyHeader { get; set; }
-        public bool SupportsCredentials { get; set; }
+        public bool AllowCredentials { get; set; } = true;
 
         public CorsPolicy Build()
         {
             CorsPolicyBuilder policy = new CorsPolicyBuilder();
-            if (this.AllowAnyOrigin)
-                policy.AllowAnyOrigin();
-            else
-                policy.WithOrigins(this.Origins);
-
-            if (this.AllowAnyHeader)
-                policy.AllowAnyHeader();
-            else
-                policy.WithHeaders(this.Headers);
-
-            if (this.AllowAnyMethod)
-                policy.AllowAnyMethod();
-            else
-                policy.WithMethods(this.Methods);
-
-            if (this.SupportsCredentials)
-                policy.AllowCredentials();
-            else
-                policy.DisallowCredentials();
-
+            if (Origins.IsEmpty()) policy.AllowAnyOrigin(); else policy.WithOrigins(Origins);
+            if (Methods.IsEmpty()) policy.AllowAnyMethod(); else policy.WithMethods(Origins);
+            if (Headers.IsEmpty()) policy.AllowAnyHeader(); else policy.WithHeaders(Origins);
+            if (AllowCredentials) policy.AllowCredentials(); else policy.DisallowCredentials();
             return policy.Build();
         }
     }

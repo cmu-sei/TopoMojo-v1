@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Data.Abstractions;
 
@@ -29,10 +29,10 @@ namespace TopoMojo.Core
             _profileResolver = profileResolver;
             _logger = logger;
 
-            jsonSerializerSettings = new JsonSerializerSettings
+            //TODO: handle reference loops
+            jsonSerializerSettings = new JsonSerializerOptions
             {
-                Formatting = Formatting.Indented,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                WriteIndented = true
             };
         }
 
@@ -42,7 +42,7 @@ namespace TopoMojo.Core
         private readonly ITemplateRepository _templateRepo;
         private readonly ILogger<TransferService> _logger;
         private Data.Entities.Profile _user;
-        private JsonSerializerSettings jsonSerializerSettings;
+        private JsonSerializerOptions jsonSerializerSettings;
 
         public async Task Export(int[] ids, string src, string dest)
         {
@@ -76,8 +76,8 @@ namespace TopoMojo.Core
             foreach (var topo in list)
             {
                 string folder = Path.Combine(dest, topo.GlobalId);
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
+
+                Directory.CreateDirectory(folder);
 
                 File.WriteAllText(
                     Path.Combine(folder, "import.this"),
@@ -88,15 +88,16 @@ namespace TopoMojo.Core
                 topo.Workers.Clear();
                 topo.Gamespaces.Clear();
                 topo.Id = 0;
-                topo.ShareCode = Guid.NewGuid().ToString("N");
+                topo.ShareCode = "";
                 foreach (var template in topo.Templates)
                 {
                     template.Id = 0;
                     template.TopologyId = 0;
+                    template.Topology = null;
                 }
                 File.WriteAllText(
                     Path.Combine(folder, "topo.json"),
-                    JsonConvert.SerializeObject(topo, jsonSerializerSettings)
+                    JsonSerializer.Serialize(topo, jsonSerializerSettings)
                 );
 
                 //export doc
@@ -158,7 +159,7 @@ namespace TopoMojo.Core
 
                     //import data
                     string dataFile = Path.Combine(folder, "topo.json");
-                    var topo = JsonConvert.DeserializeObject<Data.Entities.Topology>(
+                    var topo = JsonSerializer.Deserialize<Data.Entities.Topology>(
                         File.ReadAllText(dataFile),
                         jsonSerializerSettings
                     );

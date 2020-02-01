@@ -1,8 +1,6 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using System;
-
 namespace TopoMojo.Core.Models
 {
     public class Template
@@ -17,9 +15,6 @@ namespace TopoMojo.Core.Models
         public bool IsHidden { get; set; }
         public int TopologyId { get; set; }
         public string TopologyGlobalId { get; set; }
-        //  public TemplateSummary Parent { get; set; }
-        // public string ParentId { get; set; }
-        // public string ParentName { get; set; }
     }
 
     public class ChangedTemplate
@@ -67,5 +62,17 @@ namespace TopoMojo.Core.Models
     {
         public int TemplateId { get; set; }
         public int TopologyId { get; set; }
+    }
+
+    public class ConvergedTemplate
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Networks { get; set; }
+        public string Iso { get; set; }
+        public string Detail { get; set; }
+        public int TopologyId { get; set; }
+        public string TopologyGlobalId { get; set; }
+        public bool TopologyUseUplinkSwitch { get; set; }
     }
 }

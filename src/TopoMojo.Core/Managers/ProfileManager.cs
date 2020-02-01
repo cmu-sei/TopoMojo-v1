@@ -72,7 +72,7 @@ namespace TopoMojo.Core
         {
             IQueryable<Data.Entities.Profile> q = _profileRepo.List();
             if (search.Term.HasValue())
-                q = q.Where(p => p.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0);
+                q = q.Where(p => p.Name.ToLower().Contains(search.Term.ToLower()));
 
             if (search.HasFilter("admins"))
                 q = q.Where(p => p.IsAdmin);

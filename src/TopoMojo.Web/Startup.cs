@@ -4,20 +4,17 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.IO;
-using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
 using TopoMojo.Extensions;
@@ -28,30 +25,43 @@ namespace TopoMojo.Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostEnvironment env)
         {
             Configuration = configuration;
-            oidcOptions = Configuration.GetSection("OpenIdConnect").Get<AuthorizationOptions>();
-            _engineApiKey = Configuration["Core:EngineKey"];
-        }
-        private string _engineApiKey = Guid.NewGuid().ToString();
 
+            _appName = Configuration["Control:ApplicationName"] ?? "TopoMojo";
+
+            _engineApiKey = Configuration["Core:EngineKey"] ?? Guid.NewGuid().ToString();
+
+            oidcOptions = Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
+
+            if (env.IsDevelopment())
+            {
+                oidcOptions.RequireHttpsMetadata = false;
+            }
+        }
+
+        private string _engineApiKey;
+        private string _appName;
         public IConfiguration Configuration { get; }
         public AuthorizationOptions oidcOptions { get; set; }
-
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(options =>
+            services.AddMvc(
+                options =>
+                {
+                    options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
+                })
+            .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+            .AddJsonOptions(options =>
             {
-                var global = new AuthorizationPolicyBuilder()
-                            .RequireAuthenticatedUser()
-                            .Build();
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                );
+            });
 
-                //options.Filters.Add(new AuthorizeFilter(global));
-                options.InputFormatters.Insert(0, new TextMediaTypeFormatter());
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("Cors")));
 
-            services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
             services.AddDbProvider(() => Configuration.GetSection("Database"));
 
             #region Configure TopoMojo
@@ -72,6 +82,8 @@ namespace TopoMojo.Web
                 })
                 .AddHostedService<ServiceHostWrapper<IPodManager>>();
 
+            // services.AddAutoMapper();
+
             #endregion
 
             #region Configure Signalr
@@ -87,14 +99,30 @@ namespace TopoMojo.Web
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
+                    options.Audience = oidcOptions.Audience;
                     options.Authority = oidcOptions.Authority;
                     options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                    options.Audience = oidcOptions.AuthorizationScope;
-                    options.SaveToken = false;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         NameClaimType = "name",
-                        RoleClaimType = "role"
+                        RoleClaimType = "role",
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = ctx =>
+                        {
+                            var token = ctx.Request.Query["access_token"];
+                            if (!String.IsNullOrEmpty(token))
+                            {
+                                ctx.Token = token;
+                            }
+                            return System.Threading.Tasks.Task.CompletedTask;
+                        },
+                        OnTokenValidated = ctx =>
+                        {
+                            // TODO // MAYBE // ensure local user registration
+                            return System.Threading.Tasks.Task.CompletedTask;
+                        }
                     };
                 });
 
@@ -104,81 +132,85 @@ namespace TopoMojo.Web
             //add swagger
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new Info
+                options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "TopoMojo",
                     Version = "v1",
                     Description = "API documentation and interaction"
                 });
 
-                options.AddSecurityDefinition("oauth2", new OAuth2Scheme
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
-                    Type = "oauth2",
-                    Flow = "implicit",
-                    AuthorizationUrl = oidcOptions.AuthorizationUrl,
-                    Scopes = new Dictionary<string, string>
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
                     {
-                        { oidcOptions.AuthorizationScope, "public api access" }
+                        Implicit = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri(oidcOptions.SwaggerClient.AuthorizationUrl),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                { oidcOptions.Audience, "User Access" }
+                            }
+                        }
+                    },
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+                        },
+                        new[] { oidcOptions.Audience }
                     }
                 });
-                options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-                {
-                    { "oauth2", new[] { oidcOptions.AuthorizationScope } }
-                });
-                options.DescribeAllEnumsAsStrings();
+                // options.DescribeAllEnumsAsStrings();
             });
             #endregion
 
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
+            app.UseRouting();
             app.UseCors("default");
-
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                OnPrepareResponse = ctx =>
-                {
-                    if (ctx.Context.Request.Path.Value.ToLower() == "/index.html")
-                    {
-                        ctx.Context.Response.Headers.Append("Cache-Control", "no-cache");
-                    }
-                }
-            });
+            app.UseStaticFiles();
 
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "api/{documentName}/swagger.json";
             });
+
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "api";
-                c.SwaggerEndpoint("/api/v1/swagger.json", Configuration["Control:ApplicationName"]??"TopoMojo" + " (v1)");
+                c.SwaggerEndpoint("/api/v1/swagger.json", Configuration["Control:ApplicationName"] ?? _appName + " (v1)");
                 c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
-                c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName);
-                c.OAuthClientSecret(oidcOptions.SwaggerClient?.ClientSecret);
+                c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName ?? oidcOptions.SwaggerClient?.ClientId);
             });
 
-            app.UseQuerystringBearerToken();
             app.UseAuthentication();
-            app.UseSignalR(routes =>
-            {
-                routes.MapHub<TopologyHub>("/hub");
-            });
 
-            app.Use(async (context, next) => {
+            app.Use(async (context, next) =>
+            {
                 if (context.Request.Path.Value.StartsWith("/api/engine"))
                 {
-                   if (context.Request.Headers["X-API-KEY"] != _engineApiKey)
-                   {
-                       context.Response.StatusCode = 401;
-                       return;
-                   }
+                    if (context.Request.Headers["X-API-KEY"] != _engineApiKey)
+                    {
+                        context.Response.StatusCode = 401;
+                        return;
+                    }
                 }
                 await next();
             });
 
-            app.UseMvc();
+            app.UseAuthorization();
+
+            app.UseEndpoints(ep =>
+            {
+                ep.MapHub<TopologyHub>("/hub");
+                ep.MapControllers();
+            });
         }
     }
 }

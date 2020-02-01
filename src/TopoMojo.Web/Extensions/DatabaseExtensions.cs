@@ -4,12 +4,13 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.EntityFrameworkCore;
 using TopoMojo.Models;
@@ -52,11 +53,9 @@ namespace TopoMojo.Extensions
             IConfiguration config
         )
         {
-            string dbProvider = config.GetValue<string>("Database:Provider", "Sqlite").Trim();
-            // var migrationsAssembly = String.Format("{0}.Migrations.{1}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name, dbProvider);
-            // var migrationsAssembly = String.Format("{0}", typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+            string dbProvider = config.GetValue<string>("Database:Provider", "PostgreSQL").Trim();
             var migrationsAssembly = String.Format("TopoMojo.Data.{0}", dbProvider);
-            var connectionString = config.GetConnectionString(dbProvider);
+            var connectionString = config.GetValue<string>("Database:ConnectionString");
 
             switch (dbProvider)
             {
@@ -76,28 +75,23 @@ namespace TopoMojo.Extensions
             return builder;
         }
 
-        public static IWebHost InitializeDatabase(
-            this IWebHost webHost
+        public static IHost InitializeDatabase(
+            this IHost host
         )
         {
-            using (var scope = webHost.Services.CreateScope())
+            using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 IConfiguration config = services.GetRequiredService<IConfiguration>();
-                IHostingEnvironment env = services.GetService<IHostingEnvironment>();
+                IWebHostEnvironment env = services.GetService<IWebHostEnvironment>();
                 DatabaseOptions options = services.GetService<DatabaseOptions>();
                 TopoMojoDbContext topoDb = services.GetService<TopoMojoDbContext>();
 
-                if (options.DevModeRecreate)
-                {
-                    topoDb.Database.EnsureDeleted();
-                }
-
                 topoDb.Database.Migrate();
 
-                string seedFile = Path.Combine(env.ContentRootPath, options.SeedTemplateKey);
+                string seedFile = Path.Combine(env.ContentRootPath, options.SeedFile);
                 if (File.Exists(seedFile)) {
-                    DbSeedModel seedData = JsonConvert.DeserializeObject<DbSeedModel>(File.ReadAllText(seedFile));
+                    DbSeedModel seedData = JsonSerializer.Deserialize<DbSeedModel>(File.ReadAllText(seedFile));
                     foreach (var u in seedData.Users)
                     {
                         if (!topoDb.Profiles.Any(p => p.GlobalId == u.GlobalId))
@@ -114,7 +108,7 @@ namespace TopoMojo.Extensions
                     topoDb.SaveChanges();
                 }
 
-                return webHost;
+                return host;
             }
         }
     }

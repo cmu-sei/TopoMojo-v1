@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Models;
 using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class EngineController : _Controller
     {
         public EngineController(

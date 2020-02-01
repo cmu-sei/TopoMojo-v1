@@ -2,8 +2,6 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Xml;
-using System.Xml.Serialization;
 using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere

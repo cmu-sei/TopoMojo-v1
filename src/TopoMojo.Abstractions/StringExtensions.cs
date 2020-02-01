@@ -2,10 +2,9 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
+using System.Text.Json;
 
 namespace TopoMojo.Extensions
 {
@@ -128,28 +127,12 @@ namespace TopoMojo.Extensions
                 : s;
         }
 
-        //System.Reflection not fully baked in dotnet core 1.0.0
-        // public static void ReplaceString(this object obj, string pattern, string val)
-        // {
-        //     Type t = obj.GetType();
-        //     foreach (PropertyInfo pi in t.GetRuntimeProperties())
-        //     {
-        //         if (pi.SetMethod != null && pi.PropertyType == typeof(String))
-        //             pi.SetValue(obj, pi.GetValue(obj).ToString().Replace(pattern, val));
-        //     }
-        // }
-
-        // public static object Clone(this object obj)
-        // {
-        //     Type t = obj.GetType();
-        //     Object o = Activator.CreateInstance(t);
-        //     foreach (PropertyInfo pi in t.GetRuntimeProperties())
-        //     {
-        //         if (pi.SetMethod != null && (pi.PropertyType.IsValueType || pi.PropertyType == typeof(String)))
-        //             pi.SetValue(o, pi.GetValue(obj));
-        //     }
-        //     return o;
-        // }
+        public static T Clone<T>(this T obj)
+        {
+            return JsonSerializer.Deserialize<T>(
+                JsonSerializer.Serialize(obj, null)
+            );
+        }
     }
 
 

@@ -15,7 +15,6 @@ namespace TopoMojo.Core.Models
         [Obsolete]
         public string Document { get; set; }
         public string DocumentUrl { get; set; }
-        public string ShareCode { get; set; }
         public string Author { get; set; }
         public string WhenCreated { get; set; }
         public bool CanManage { get; set; }
@@ -71,14 +70,12 @@ namespace TopoMojo.Core.Models
         public bool IsLocked { get; set; }
     }
 
-    [Obsolete]
     public class TopologyStateAction
     {
         public int Id { get; set; }
         public TopologyStateActionType Type { get; set; }
     }
 
-    [Obsolete]
     public enum TopologyStateActionType
     {
         Share,
@@ -88,6 +85,7 @@ namespace TopoMojo.Core.Models
         Lock,
         Unlock
     }
+
     public class Worker
     {
         public int Id { get; set; }
@@ -97,10 +95,4 @@ namespace TopoMojo.Core.Models
         public bool CanEdit { get; set; }
     }
 
-    // public class TopologyTemplate
-    // {
-    //     public int Id { get; set; }
-    //     public string Name { get; set; }
-    //     public string ParentName { get; set; }
-    // }
 }

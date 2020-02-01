@@ -6,14 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models.Extensions;
-using TopoMojo.Data;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Entities;
 using TopoMojo.Data.Entities.Extensions;
@@ -62,20 +59,9 @@ namespace TopoMojo.Core
 
             if (search.HasFilter("detail"))
             {
-             q = q.Include(t => t.Templates)
-                .Include(t => t.Workers)
-                .ThenInclude(w => w.Person);
-            }
-
-            if (search.Term.HasValue())
-            {
-                //TODO: Convert to search tags
-                q = q.Where(o =>
-                    o.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
-                    || o.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
-                    || o.Author.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
-                    || o.GlobalId.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
-                );
+                q = q.Include(t => t.Templates)
+                    .Include(t => t.Workers)
+                    .ThenInclude(w => w.Person);
             }
 
             if (search.HasFilter("public"))
@@ -83,6 +69,24 @@ namespace TopoMojo.Core
 
             if (search.HasFilter("private"))
                 q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(Profile.Id));
+
+            if (search.Term.HasValue())
+            {
+                string term = search.Term.ToLower();
+                q = q.Where(o =>
+                    o.GlobalId.StartsWith(term)
+                    || o.Name.ToLower().Contains(term)
+                    || o.Description.ToLower().Contains(term)
+                    || o.Author.ToLower().Contains(term)
+                );
+                // // TODO: Convert to search tags
+                // q = q.Where(o =>
+                //     o.Name.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                //     || o.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                //     || o.Author.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                //     || o.GlobalId.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                // );
+            }
 
             if (search.Sort == "age")
             {

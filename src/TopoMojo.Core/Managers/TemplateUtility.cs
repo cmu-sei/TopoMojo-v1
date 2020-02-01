@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
 using TopoMojo.Models.Virtual;
 
 namespace TopoMojo.Core
@@ -16,7 +16,7 @@ namespace TopoMojo.Core
         {
             if (detail.HasValue())
             {
-                _template = (Template)JObject.Parse(detail).ToObject(typeof(Template));
+                _template = JsonSerializer.Deserialize<Template>(detail);
             }
             else
             {
@@ -95,6 +95,12 @@ namespace TopoMojo.Core
             set { _template.Iso = value; }
         }
 
+        public bool UseUplinkSwitch
+        {
+            get { return _template.UseUplinkSwitch; }
+            set { _template.UseUplinkSwitch = value; }
+        }
+
         public TopoMojo.Models.KeyValuePair[] GuestSettings
         {
             get { return _template.GuestSettings; }
@@ -121,7 +127,7 @@ namespace TopoMojo.Core
 
         public override string ToString()
         {
-            return JObject.FromObject(_template).ToString();
+            return JsonSerializer.Serialize(_template);
         }
 
         public Template AsTemplate()

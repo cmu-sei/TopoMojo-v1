@@ -49,6 +49,7 @@ namespace TopoMojo.Controllers
         [HttpGet("api/demo/{id}/{name}")]
         [JsonExceptionFilter]
         [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<DisplayInfo>> Demo([FromRoute]string id, [FromRoute]string name)
         {
             if (!_options.DemoCode.HasValue())

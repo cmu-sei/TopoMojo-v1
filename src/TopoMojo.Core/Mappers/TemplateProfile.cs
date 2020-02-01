@@ -12,11 +12,6 @@ namespace TopoMojo.Core.Mappers
     {
         public TemplateProfile()
         {
-            CreateMap<Data.Entities.Template, Data.Entities.Template>()
-                .ForMember(d => d.Id, opt => opt.Ignore())
-                .ForMember(d => d.Detail, opt => opt.Ignore())
-                .ForMember(d => d.IsPublished, opt => opt.Ignore())
-                .ForMember(d => d.ParentId, opt => opt.MapFrom(s => s.Id));
 
             CreateMap<Data.Entities.Template, Models.TemplateDetail>().ReverseMap();
             CreateMap<Data.Entities.Template, Models.TemplateSummary>();
@@ -28,7 +23,8 @@ namespace TopoMojo.Core.Mappers
             CreateMap<Models.NewTemplateDetail, Data.Entities.Template>();
             CreateMap<Models.ChangedTemplate, Data.Entities.Template>();
 
-
+            CreateMap<Data.Entities.Template, Models.ConvergedTemplate>()
+                .ForMember(d => d.Detail, opt => opt.MapFrom(s => s.Detail ?? s.Parent.Detail));
         }
     }
 }

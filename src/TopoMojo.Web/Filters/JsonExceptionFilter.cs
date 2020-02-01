@@ -7,12 +7,7 @@ using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Options;
-using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using TopoMojo.Extensions;
-using TopoMojo.Models;
+using Microsoft.Extensions.Hosting;
 
 namespace TopoMojo.Web
 {
@@ -22,10 +17,10 @@ namespace TopoMojo.Web
 
         private class JsonExceptionFilter : IExceptionFilter
         {
-            private readonly IHostingEnvironment _hostingEnvironment;
+            private readonly IHostEnvironment _hostingEnvironment;
             private readonly ControlOptions _options;
             public JsonExceptionFilter(
-                IHostingEnvironment hostingEnvironment,
+                IHostEnvironment hostingEnvironment,
                 ControlOptions options)
             {
                 _hostingEnvironment = hostingEnvironment;

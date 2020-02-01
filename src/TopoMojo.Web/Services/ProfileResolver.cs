@@ -56,8 +56,8 @@ namespace TopoMojo.Services
             var profile = new Profile();
             profile.GlobalId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             profile.Name = principal.FindFirst("name")?.Value ?? "Anonymous";
-            profile.IsAdmin = principal.IsInRole("Administrator");
             profile.Role = principal.FindFirst("role")?.Value ?? "User";
+            profile.IsAdmin = principal.IsInRole("Administrator");
 
             if (Int32.TryParse(principal.FindFirst(JwtRegisteredClaimNames.NameId)?.Value, out int id))
                 profile.Id = id;

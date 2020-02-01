@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
-using TopoMojo.Abstractions;
-using TopoMojo.Core;
 using TopoMojo.Core.Abstractions;
 using TopoMojo.Core.Models;
 

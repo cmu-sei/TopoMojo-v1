@@ -2,16 +2,14 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
@@ -675,7 +673,7 @@ namespace TopoMojo.vSphere
                 await Task.Delay(100);
             }
 
-            PodConfiguration hostOptions = JsonConvert.DeserializeObject<PodConfiguration>(JsonConvert.SerializeObject(_options)); //(PodConfiguration)Helper.Clone(_options);
+            PodConfiguration hostOptions = _options.Clone<PodConfiguration>();
             if (!url.EndsWith("/sdk")) url += "/sdk";
 
             hostOptions.Url = url;

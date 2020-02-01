@@ -2,21 +2,14 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
-using Microsoft.Net.Http.Headers;
 using TopoMojo.Core;
-using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web;
 
@@ -29,7 +22,7 @@ namespace TopoMojo.Controllers
             IFileUploadHandler uploader,
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
-            IHostingEnvironment host,
+            IWebHostEnvironment host,
             IServiceProvider sp,
             TopologyManager topoManager
         ) : base(sp)
@@ -40,7 +33,7 @@ namespace TopoMojo.Controllers
             _topoManager = topoManager;
             _uploader = uploader;
         }
-        private readonly IHostingEnvironment _host;
+        private readonly IWebHostEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
         private readonly TopologyManager _topoManager;

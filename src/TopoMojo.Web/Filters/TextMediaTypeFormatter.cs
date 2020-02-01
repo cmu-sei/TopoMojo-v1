@@ -35,7 +35,7 @@ namespace TopoMojo.Web
 
             using (var reader = new StreamReader(context.HttpContext.Request.Body))
             {
-                var model = reader.ReadToEnd();
+                var model = reader.ReadToEndAsync().Result;
                 return InputFormatterResult.SuccessAsync(model);
             }
         }
