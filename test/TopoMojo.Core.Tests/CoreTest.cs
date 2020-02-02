@@ -7,8 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
+using TopoMojo.Models;
 using TopoMojo.Data.EntityFrameworkCore;
 using Xunit;
 
@@ -26,7 +25,7 @@ namespace Tests
         protected IOptions<CoreOptions> _optAccessor = null;
         protected CoreOptions _options = null;
 
-        protected Profile _user = null;
+        protected User _user = null;
         protected ILoggerFactory _mill = null;
         private DbContextOptions<TopoMojoDbContext> _dbOptions;
 
@@ -57,7 +56,7 @@ namespace Tests
             {
                 ctx.Database.EnsureDeleted();
                 ctx.Database.EnsureCreated();
-                _user = new Profile { Id = 1, Name = "tester" };
+                _user = new User { Id = 1, Name = "tester" };
                 _ur = new ProfileResolver(_user);
             }
 

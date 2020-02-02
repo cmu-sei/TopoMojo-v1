@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using TopoMojo.Data.Entities;
 using TopoMojo.Data.EntityFrameworkCore;
 using TopoMojo.Models;
 
@@ -96,7 +95,7 @@ namespace TopoMojo.Extensions
                     {
                         if (!topoDb.Profiles.Any(p => p.GlobalId == u.GlobalId))
                         {
-                            topoDb.Profiles.Add(new Profile
+                            topoDb.Profiles.Add(new Data.Profile
                             {
                                 Name = u.Name,
                                 GlobalId = u.GlobalId,

@@ -12,7 +12,7 @@ namespace Tests
         {
             Mapper.Initialize(cfg => {
                 cfg.AddProfile<ActorProfile>();
-                cfg.AddProfile<TopologyProfile>();
+                cfg.AddProfile<WorkspaceProfile>();
                 cfg.AddProfile<TemplateProfile>();
             });
             // Mapper.Configuration.AssertConfigurationIsValid();

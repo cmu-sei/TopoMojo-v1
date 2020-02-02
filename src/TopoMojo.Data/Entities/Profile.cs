@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using TopoMojo.Data.Abstractions;
 
-namespace TopoMojo.Data.Entities
+namespace TopoMojo.Data
 {
     public class Profile: IEntityPrimary
     {

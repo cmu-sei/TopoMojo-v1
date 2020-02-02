@@ -9,9 +9,9 @@ namespace TopoMojo.Core.Mappers
     {
         public MessageProfile()
         {
-            CreateMap<Models.NewMessage, Data.Entities.Message>();
-            CreateMap<Models.ChangedMessage, Data.Entities.Message>();
-            CreateMap<Data.Entities.Message, Models.Message>();
+            CreateMap<Models.NewMessage, Data.Message>();
+            CreateMap<Models.ChangedMessage, Data.Message>();
+            CreateMap<Data.Message, Models.Message>();
         }
     }
 }

@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -9,9 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
+using TopoMojo.Core;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
-using TopoMojo.Models.Virtual;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -20,28 +21,28 @@ namespace TopoMojo.Controllers
     public class VmController : _Controller
     {
         public VmController(
-            Core.TemplateManager templateManager,
-            Core.TopologyManager topoManager,
+            TemplateService templateService,
+            WorkspaceService workspaceService,
             IHubContext<TopologyHub, ITopoEvent> hub,
-            Core.ProfileManager profileManager,
-            IPodManager podManager,
+            UserService userService,
+            IHypervisorService podService,
             IServiceProvider sp,
-            Core.CoreOptions options
+            CoreOptions options
             )
         :base(sp)
         {
-            _mgr = templateManager;
-            _topoMgr = topoManager;
-            _profileManager = profileManager;
-            _pod = podManager;
+            _templateService = templateService;
+            _workspaceService = workspaceService;
+            _userService = userService;
+            _pod = podService;
             _hub = hub;
             Options = options;
         }
 
-        private readonly IPodManager _pod;
-        private readonly Core.TemplateManager _mgr;
-        private readonly Core.TopologyManager _topoMgr;
-        private readonly Core.ProfileManager _profileManager;
+        private readonly IHypervisorService _pod;
+        private readonly Core.TemplateService _templateService;
+        private readonly Core.WorkspaceService _workspaceService;
+        private readonly Core.UserService _userService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
         Core.CoreOptions Options { get; }
 
@@ -50,7 +51,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         [AllowAnonymous]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<ActionResult<DisplayInfo>> Demo([FromRoute]string id, [FromRoute]string name)
+        public async Task<ActionResult<ConsoleSummary>> Demo([FromRoute]string id, [FromRoute]string name)
         {
             if (!_options.DemoCode.HasValue())
                 throw new InvalidOperationException("Endpoint disabled.");
@@ -66,7 +67,7 @@ namespace TopoMojo.Controllers
                 return Ok(null);
             }
 
-            DisplayInfo info = await _pod.Display($"{name}#{id}");
+            var info = await _pod.Display($"{name}#{id}");
             if (info.Url.HasValue())
             {
                 var src = new Uri(info.Url);
@@ -77,10 +78,10 @@ namespace TopoMojo.Controllers
 
         [HttpGet("api/vm/{id}/ticket")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<DisplayInfo>> Ticket(string id)
+        public async Task<ActionResult<ConsoleSummary>> Ticket(string id)
         {
             await AuthorizeAction(id, "ticket");
-            DisplayInfo info = await _pod.Display(id);
+            var info = await _pod.Display(id);
 
             if (info.Url.HasValue())
             {
@@ -97,7 +98,7 @@ namespace TopoMojo.Controllers
                 {
                     case "querystring":
                         qs = $"?vmhost={src.Host}";
-                        target = _pod.Options.DisplayUrl;
+                        target = _pod.Options.ConsoleUrl;
                     break;
 
                     case "local-app":
@@ -128,11 +129,11 @@ namespace TopoMojo.Controllers
         public async Task<ActionResult<Vm[]>> Find(string tag)
         {
             Vm[] vms = new Vm[]{};
-            if (_profile.IsAdmin) //)
+            if (_user.IsAdmin) //)
             {
                 vms = await _pod.Find(tag);
                 var keys = vms.Select(v => v.Name.Tag()).Distinct().ToArray();
-                var map = await _mgr.ResolveKeys(keys);
+                var map = await _templateService.ResolveKeys(keys);
                 foreach (Vm vm in vms)
                     vm.GroupName = map[vm.Name.Tag()];
             }
@@ -155,7 +156,7 @@ namespace TopoMojo.Controllers
             string opType = op.Type.ToString().ToLower();
             await AuthorizeAction(op.Id, opType);
 
-            if (op.Type == VmOperationType.Save && op.WorkspaceId > 0 && await _topoMgr.HasGames(op.WorkspaceId))
+            if (op.Type == VmOperationType.Save && op.WorkspaceId > 0 && await _workspaceService.HasGames(op.WorkspaceId))
                 throw new Core.WorkspaceNotIsolatedException();
 
             Vm vm = await _pod.ChangeState(op);
@@ -175,7 +176,7 @@ namespace TopoMojo.Controllers
 
         [HttpPost("api/vm/{id}/change")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair change)
+        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair<string,string> change)
         {
             await AuthorizeAction(id, "change");
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
@@ -223,7 +224,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Vm>> Resolve(int id)
         {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
             Vm vm = await _pod.Refresh(template);
             if (vm != null)
                 await AuthorizeAction(vm, "resolve");
@@ -234,7 +235,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Vm>> Deploy(int id)
         {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
             Vm vm = await _pod.Deploy(template);
             // SendBroadcast(vm, "deploy");
             VmState state = new VmState
@@ -252,14 +253,14 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Vm>> Initialize(int id)
         {
-            Template template  = await _mgr.GetDeployableTemplate(id, null);
+            VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
             return Ok(await _pod.CreateDisks(template));
         }
 
         [HttpPost("api/host/{host}/reload")]
         public async Task<ActionResult> ReloadHost(string host)
         {
-            if (_profile.IsAdmin)
+            if (_user.IsAdmin)
             {
                 await _pod.ReloadHost(host);
                 return Ok();
@@ -269,7 +270,7 @@ namespace TopoMojo.Controllers
 
         private async Task<bool> AuthorizeAction(string id, string method)
         {
-            if (_profile.IsAdmin)
+            if (_user.IsAdmin)
                 return true;
 
             Vm vm = _pod.Find(id).Result.FirstOrDefault();
@@ -285,7 +286,7 @@ namespace TopoMojo.Controllers
             if (String.IsNullOrEmpty(instanceId))
                 throw new InvalidOperationException();
 
-            bool canManage = await _profileManager.CanEditSpace(instanceId);
+            bool canManage = await _userService.CanEditSpace(instanceId);
 
             if (!canManage) {
                 throw new InvalidOperationException();

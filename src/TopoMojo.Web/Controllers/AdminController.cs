@@ -49,55 +49,6 @@ namespace TopoMojo.Controllers
             return Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided";
         }
 
-        // [HttpGet("/api/admin/getsettings")]
-        // [JsonExceptionFilter]
-        // public ActionResult<string> Settings()
-        // {
-        //     string settings = "";
-        //     string root = Path.Combine(_env.ContentRootPath, "appsettings.json");
-        //     if (System.IO.File.Exists(root))
-        //     {
-        //         var appsettings = JObject.Parse(
-        //             System.IO.File.ReadAllText(root)
-        //         );
-
-        //         string target = Path.Combine(_env.ContentRootPath, $"appsettings.{_env.EnvironmentName}.json");
-        //         if (System.IO.File.Exists(target))
-        //         {
-        //             appsettings.Merge(
-        //                 JObject.Parse(
-        //                     System.IO.File.ReadAllText(target)
-        //                 ),
-        //                 new JsonMergeSettings
-        //                 {
-        //                     MergeArrayHandling = MergeArrayHandling.Union
-        //                 }
-        //             );
-        //         }
-
-        //         settings = appsettings.ToString(Formatting.Indented);
-        //         return Json(appsettings);
-        //     }
-        //     return Json(settings);
-        // }
-
-        // [HttpPost("api/admin/savesettings")]
-        // [JsonExceptionFilter]
-        // public ActionResult<bool> Settings([FromBody]object settings)
-        // {
-        //     try
-        //     {
-        //         var test = JObject.FromObject(settings);
-        //         string target = Path.Combine(_env.ContentRootPath, $"appsettings.{_env.EnvironmentName}.json");
-        //         System.IO.File.WriteAllText(target, test.ToString(Formatting.Indented));
-        //     }
-        //     catch //(Exception ex)
-        //     {
-        //         return Json(false);
-        //     }
-        //     return Json(true);
-        // }
-
 
         [HttpPost("api/admin/announce")]
         [JsonExceptionFilter]

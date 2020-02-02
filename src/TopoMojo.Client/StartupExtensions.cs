@@ -1,6 +1,7 @@
 using System;
 using Polly;
 using Polly.Extensions.Http;
+using TopoMojo.Abstractions;
 using TopoMojo.Client;
 
 namespace Microsoft.Extensions.DependencyInjection

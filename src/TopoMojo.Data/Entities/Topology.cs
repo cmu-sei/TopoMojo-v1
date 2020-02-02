@@ -5,8 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Extensions;
 
-namespace TopoMojo.Data.Entities
+namespace TopoMojo.Data
 {
     public class Topology : IEntityPrimary
     {

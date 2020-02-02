@@ -1,10 +1,9 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using System;
 using System.Linq;
 using AutoMapper;
-using TopoMojo.Data.Entities.Extensions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Core.Mappers
 {
@@ -13,17 +12,17 @@ namespace TopoMojo.Core.Mappers
         public TemplateProfile()
         {
 
-            CreateMap<Data.Entities.Template, Models.TemplateDetail>().ReverseMap();
-            CreateMap<Data.Entities.Template, Models.TemplateSummary>();
-            CreateMap<Data.Entities.Template, Models.Template>()
+            CreateMap<Data.Template, TemplateDetail>().ReverseMap();
+            CreateMap<Data.Template, TemplateSummary>();
+            CreateMap<Data.Template, Template>()
                 .ForMember(d => d.CanEdit, opt =>
                     opt.MapFrom((s, d, m, r) => r.GetActor().IsAdmin || (s.Topology != null && s.Topology.Workers.Any(w => w.PersonId == r.GetActor().Id))))
                 .ReverseMap();
 
-            CreateMap<Models.NewTemplateDetail, Data.Entities.Template>();
-            CreateMap<Models.ChangedTemplate, Data.Entities.Template>();
+            CreateMap<NewTemplateDetail, Data.Template>();
+            CreateMap<ChangedTemplate, Data.Template>();
 
-            CreateMap<Data.Entities.Template, Models.ConvergedTemplate>()
+            CreateMap<Data.Template, ConvergedTemplate>()
                 .ForMember(d => d.Detail, opt => opt.MapFrom(s => s.Detail ?? s.Parent.Detail));
         }
     }

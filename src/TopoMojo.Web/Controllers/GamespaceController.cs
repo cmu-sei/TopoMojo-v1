@@ -17,26 +17,26 @@ namespace TopoMojo.Controllers
     public class GamespaceController : _Controller
     {
         public GamespaceController(
-            GamespaceManager instanceManager,
-            IPodManager podManager,
+            GamespaceService gamespaceService,
+            IHypervisorService podService,
             IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp
         ) : base(sp)
         {
-            _pod = podManager;
-            _mgr = instanceManager;
+            _gamespaceService = gamespaceService;
+            _pod = podService;
             _hub = hub;
         }
 
-        private readonly IPodManager _pod;
-        private readonly GamespaceManager _mgr;
+        private readonly IHypervisorService _pod;
+        private readonly GamespaceService _gamespaceService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/gamespaces")]
         [JsonExceptionFilter]
         public async Task<ActionResult<Gamespace[]>> List(string filter)
         {
-            var result = await _mgr.List(filter);
+            var result = await _gamespaceService.List(filter);
             return Ok(result);
         }
 
@@ -53,7 +53,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Preview(int id)
         {
-            var result = await _mgr.LoadPreview(id);
+            var result = await _gamespaceService.LoadPreview(id);
             return Ok(result);
         }
 
@@ -61,7 +61,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Load(int id)
         {
-            var result = await _mgr.LoadFromTopo(id);
+            var result = await _gamespaceService.LoadFromTopo(id);
             return Ok(result);
         }
 
@@ -69,7 +69,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Launch(int id)
         {
-            var result = await _mgr.Launch(id);
+            var result = await _gamespaceService.Launch(id);
             Log("launched", result);
             return Ok(result);
         }
@@ -78,7 +78,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> CheckState(int id)
         {
-            var result = await _mgr.Load(id);
+            var result = await _gamespaceService.Load(id);
             return Ok(result);
         }
 
@@ -86,7 +86,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Destroy(int id)
         {
-            var result = await _mgr.Destroy(id);
+            var result = await _gamespaceService.Destroy(id);
             Log("destroyed", result);
             SendBroadcast(result, "OVER");
             return Ok(true);
@@ -96,21 +96,21 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
-            return Ok(await _mgr.Enlist(code));
+            return Ok(await _gamespaceService.Enlist(code));
         }
 
         [HttpDelete("api/player/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Delist(int id)
         {
-            return Ok(await _mgr.Delist(id));
+            return Ok(await _gamespaceService.Delist(id));
         }
 
         [HttpGet("api/gamespace/{id}/players")]
         [JsonExceptionFilter]
         public async Task<ActionResult<Player[]>> Players(int id)
         {
-            return Ok(await _mgr.Players(id));
+            return Ok(await _gamespaceService.Players(id));
         }
 
         private void SendBroadcast(GameState gameState, string action)

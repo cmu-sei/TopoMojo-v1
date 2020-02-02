@@ -16,26 +16,26 @@ namespace TopoMojo.Controllers
     public class EngineController : _Controller
     {
         public EngineController(
-            EngineService instanceManager,
-            IPodManager podManager,
+            EngineService engineService,
+            IHypervisorService podService,
             IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp
         ) : base(sp)
         {
-            _pod = podManager;
-            _mgr = instanceManager;
+            _engineService = engineService;
+            _pod = podService;
             _hub = hub;
         }
 
-        private readonly IPodManager _pod;
-        private readonly EngineService _mgr;
+        private readonly IHypervisorService _pod;
+        private readonly EngineService _engineService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpPost("api/engine")]
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Launch([FromBody] NewGamespace model)
         {
-            var result = await _mgr.Launch(model.Workspace, model.Id);
+            var result = await _engineService.Launch(model.Workspace, model.Id);
             Log("launched", result);
             return Ok(result);
         }
@@ -44,36 +44,37 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Destroy([FromRoute]string id)
         {
-            var result = await _mgr.Destroy(id);
+            var result = await _engineService.Destroy(id);
             Log("destroyed", result);
             return Ok(true);
         }
 
         [HttpGet("api/engine/ticket/{vmId}")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Models.Virtual.DisplayInfo>> Ticket([FromRoute]string vmId)
+        public async Task<ActionResult<ConsoleSummary>> Ticket([FromRoute]string vmId)
         {
-            return Ok(await _mgr.Ticket(vmId));
+            return Ok(await _engineService.Ticket(vmId));
         }
 
         [HttpGet("api/engine/topo/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult<string>> Templates([FromRoute]int id)
         {
-            return Ok(await _mgr.GetTemplates(id));
+            return Ok(await _engineService.GetTemplates(id));
         }
 
         [HttpPut("api/engine/vmaction")]
         [JsonExceptionFilter]
         public async Task<IActionResult> ChangeVm([FromBody] VmAction vmAction)
         {
-            return Ok(await _mgr.ChangeVm(vmAction));
+            return Ok(await _engineService.ChangeVm(vmAction));
         }
 
         [HttpGet("api/engine")]
         [JsonExceptionFilter]
         public async Task<ActionResult<string>> Test()
         {
+            await Task.Delay(0);
             return Ok("Test output.");
         }
 

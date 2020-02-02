@@ -47,7 +47,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("History");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Gamespace", b =>
+            modelBuilder.Entity("TopoMojo.Data.Gamespace", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,7 +73,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Gamespaces");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Message", b =>
+            modelBuilder.Entity("TopoMojo.Data.Message", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -98,7 +98,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Player", b =>
+            modelBuilder.Entity("TopoMojo.Data.Player", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,7 +121,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Players");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Profile", b =>
+            modelBuilder.Entity("TopoMojo.Data.Profile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -147,7 +147,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Profiles");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Template", b =>
+            modelBuilder.Entity("TopoMojo.Data.Template", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -187,7 +187,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Templates");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Topology", b =>
+            modelBuilder.Entity("TopoMojo.Data.Topology", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -231,7 +231,7 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Topologies");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Worker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Worker", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -254,46 +254,46 @@ namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
                     b.ToTable("Workers");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Gamespace", b =>
+            modelBuilder.Entity("TopoMojo.Data.Gamespace", b =>
                 {
-                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Topology", "Topology")
                         .WithMany("Gamespaces")
                         .HasForeignKey("TopologyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Player", b =>
+            modelBuilder.Entity("TopoMojo.Data.Player", b =>
                 {
-                    b.HasOne("TopoMojo.Data.Entities.Gamespace", "Gamespace")
+                    b.HasOne("TopoMojo.Data.Gamespace", "Gamespace")
                         .WithMany("Players")
                         .HasForeignKey("GamespaceId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("TopoMojo.Data.Entities.Profile", "Person")
+                    b.HasOne("TopoMojo.Data.Profile", "Person")
                         .WithMany("Gamespaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Template", b =>
+            modelBuilder.Entity("TopoMojo.Data.Template", b =>
                 {
-                    b.HasOne("TopoMojo.Data.Entities.Template", "Parent")
+                    b.HasOne("TopoMojo.Data.Template", "Parent")
                         .WithMany()
                         .HasForeignKey("ParentId");
 
-                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Topology", "Topology")
                         .WithMany("Templates")
                         .HasForeignKey("TopologyId");
                 });
 
-            modelBuilder.Entity("TopoMojo.Data.Entities.Worker", b =>
+            modelBuilder.Entity("TopoMojo.Data.Worker", b =>
                 {
-                    b.HasOne("TopoMojo.Data.Entities.Profile", "Person")
+                    b.HasOne("TopoMojo.Data.Profile", "Person")
                         .WithMany("Workspaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("TopoMojo.Data.Entities.Topology", "Topology")
+                    b.HasOne("TopoMojo.Data.Topology", "Topology")
                         .WithMany("Workers")
                         .HasForeignKey("TopologyId")
                         .OnDelete(DeleteBehavior.Cascade);

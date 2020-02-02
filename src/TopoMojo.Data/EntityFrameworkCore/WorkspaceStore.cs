@@ -1,0 +1,106 @@
+// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using TopoMojo.Data.Abstractions;
+
+namespace TopoMojo.Data.EntityFrameworkCore
+{
+    public class WorkspaceStore : Store<Topology>, IWorkspaceStore
+    {
+        public WorkspaceStore (
+            TopoMojoDbContext db
+        ) : base(db) { }
+
+        public override IQueryable<Topology> List()
+        {
+            return DbContext.Topologies
+                .Include(t => t.Workers)
+                .ThenInclude(w => w.Person);
+        }
+
+        public override async Task<Topology> Load(int id)
+        {
+            return await DbContext.Topologies
+                .Include(t => t.Templates)
+                .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Gamespaces)
+                .Where(t => t.Id == id)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<Topology> LoadWithParents(int id)
+        {
+            return await DbContext.Topologies
+                .Include(t => t.Templates)
+                .ThenInclude(o => o.Parent)
+                .Where(t => t.Id == id)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<Topology> FindByShareCode(string code)
+        {
+            return await DbContext.Topologies
+                .Include(t => t.Templates)
+                .Include(t => t.Workers)
+                .Include(t => t.Gamespaces)
+                .Where(t => t.ShareCode == code)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<Topology> FindByWorker(int workerId)
+        {
+            int id = await DbContext.Workers
+                .Where(p => p.Id == workerId)
+                .Select(p => p.TopologyId)
+                .SingleOrDefaultAsync();
+
+            return (id > 0)
+                ? await Load(id)
+                : null;
+        }
+
+        public override async Task<bool> CanEdit(int entityId, Profile profile)
+        {
+            if (profile.IsAdmin)
+                return true;
+
+            return await DbContext.Workers
+                .Where(p => p.TopologyId == entityId
+                    && p.PersonId == profile.Id
+                    && p.Permission.HasFlag(Permission.Editor)
+                    && !p.Topology.IsLocked)
+                .AnyAsync();
+
+        }
+        public override async Task<bool> CanManage(int entityId, Profile profile)
+        {
+            if (profile.IsAdmin)
+                return true;
+
+            return await DbContext.Workers
+                .Where(p => p.TopologyId == entityId
+                    && p.PersonId == profile.Id
+                    && p.Permission.HasFlag(Permission.Manager))
+                .AnyAsync();
+
+        }
+
+        public override async Task Remove(Topology topology)
+        {
+            DbContext.Templates.RemoveRange(topology.Templates);
+            DbContext.Remove(topology);
+            var messages = await DbContext.Messages.Where(m => m.RoomId == topology.GlobalId).ToArrayAsync();
+            DbContext.Messages.RemoveRange(messages);
+            await DbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> GetWorkspaceCount(int profileId)
+        {
+            return await DbContext.Workers
+                .CountAsync(w => w.PersonId == profileId && w.Permission.HasFlag(Permission.Manager));
+        }
+    }
+}

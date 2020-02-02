@@ -4,11 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using NetVimClient;
 using TopoMojo.Models;
-using TopoMojo.Models.Virtual;
-using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere
 {

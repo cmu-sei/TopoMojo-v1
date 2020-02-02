@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Models;
+using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -17,25 +17,25 @@ namespace TopoMojo.Controllers
     public class TemplateController : _Controller
     {
         public TemplateController(
-            TemplateManager templateManager,
-            IPodManager podManager,
+            TemplateService templateService,
+            IHypervisorService podService,
             IHubContext<TopologyHub, ITopoEvent> hub,
             IServiceProvider sp) : base(sp)
         {
-            _mgr = templateManager;
-            _pod = podManager;
+            _templateService = templateService;
+            _pod = podService;
             _hub = hub;
         }
 
-        private readonly TemplateManager _mgr;
-        private readonly IPodManager _pod;
+        private readonly TemplateService _templateService;
+        private readonly IHypervisorService _pod;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/templates")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<TemplateSummary>>> List(Search search)
         {
-            var result = await _mgr.List(search);
+            var result = await _templateService.List(search);
             return Ok(result);
         }
 
@@ -43,7 +43,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Template>> Load(int id)
         {
-            var result = await _mgr.Load(id);
+            var result = await _templateService.Load(id);
             return Ok(result);
         }
 
@@ -51,7 +51,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult> Update([FromBody]ChangedTemplate template)
         {
-            var result = await _mgr.Update(template);
+            var result = await _templateService.Update(template);
             SendBroadcast(result, "updated");
             return Ok();
         }
@@ -60,7 +60,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Delete(int id)
         {
-            var result = await _mgr.Delete(id);
+            var result = await _templateService.Delete(id);
             SendBroadcast(result, "removed");
             return Ok(true);
         }
@@ -69,7 +69,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Template>> Link([FromBody]TemplateLink link)
         {
-            var result = await _mgr.Link(link);
+            var result = await _templateService.Link(link);
             SendBroadcast(result, "added");
             return Ok(result);
         }
@@ -78,7 +78,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<Template>> UnLink([FromBody]TemplateLink link)
         {
-            var result = await _mgr.Unlink(link);
+            var result = await _templateService.Unlink(link);
             SendBroadcast(result, "updated");
             return Ok(result);
         }
@@ -88,7 +88,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> LoadDetail(int id)
         {
-            var result = await _mgr.LoadDetail(id);
+            var result = await _templateService.LoadDetail(id);
             return Ok(result);
         }
 
@@ -97,7 +97,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
         {
-            var result = await _mgr.Create(model);
+            var result = await _templateService.Create(model);
             return Ok(result);
         }
 
@@ -106,7 +106,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult> Configure([FromBody]TemplateDetail template)
         {
-            var result = await _mgr.Configure(template);
+            var result = await _templateService.Configure(template);
             return Ok();
         }
 
@@ -115,7 +115,7 @@ namespace TopoMojo.Controllers
             _hub.Clients
                 .Group(template.TopologyGlobalId ?? Guid.Empty.ToString())
                 .TemplateEvent(
-                    new BroadcastEvent<Core.Models.Template>(
+                    new BroadcastEvent<Template>(
                         User,
                         "TEMPLATE." + action.ToUpper(),
                         template

@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
-using TopoMojo.Core.Privileged;
+using TopoMojo.Core;
+using TopoMojo.Abstractions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Services
 {
@@ -23,12 +23,12 @@ namespace TopoMojo.Services
         public ProfileResolver(
             IHttpContextAccessor context,
             IMemoryCache cache,
-            ProfileService repo,
+            PrivilegedUserService userSvc,
             ControlOptions options
         ){
             _context = context;
             _cache = cache;
-            _repo = repo;
+            _userService = userSvc;
             _cacheOptions = new MemoryCacheEntryOptions();
             _cacheOptions.SetAbsoluteExpiration(
                 TimeSpan.FromSeconds(options.ProfileCacheSeconds)
@@ -37,23 +37,23 @@ namespace TopoMojo.Services
 
         private readonly IHttpContextAccessor _context;
         private readonly IMemoryCache _cache;
-        private readonly ProfileService _repo;
+        private readonly PrivilegedUserService _userService;
         private readonly MemoryCacheEntryOptions _cacheOptions;
-        private Profile _profile = null;
+        private User _user = null;
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1,1);
 
-        public Profile Profile {
+        public User User {
             get
             {
-                if (_profile == null)
-                    _profile = BuildProfileModel(_context.HttpContext.User);
-                return _profile;
+                if (_user == null)
+                    _user = BuildProfileModel(_context.HttpContext.User);
+                return _user;
             }
         }
 
-        private Profile BuildProfileModel(ClaimsPrincipal principal)
+        private User BuildProfileModel(ClaimsPrincipal principal)
         {
-            var profile = new Profile();
+            var profile = new User();
             profile.GlobalId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             profile.Name = principal.FindFirst("name")?.Value ?? "Anonymous";
             profile.Role = principal.FindFirst("role")?.Value ?? "User";
@@ -75,7 +75,7 @@ namespace TopoMojo.Services
             //add local claims to principal
 
             //only run this once per scope
-            if (_profile != null)
+            if (_user != null)
                 return principal;
 
             //Asynchronously wait to enter the Semaphore. If no-one has been granted access to the Semaphore, code execution will proceed, otherwise this thread waits here until the semaphore is released
@@ -87,26 +87,26 @@ namespace TopoMojo.Services
                 {
 
                     claims = new List<Claim>();
-                    var profile = await _repo.FindByGlobalId(sub);
+                    var profile = await _userService.FindByGlobalId(sub);
                     if (profile != null)
                     {
                         string name = principal.FindFirstValue("name");
                         if (!String.IsNullOrEmpty(name) && name != profile.Name)
                         {
                             profile.Name = name;
-                            await _repo.Update(profile);
+                            await _userService.Update(profile);
                         }
                     }
                     else
                     {
                         try
                         {
-                            profile = await _repo.Add(BuildProfileModel(principal));
+                            profile = await _userService.Add(BuildProfileModel(principal));
                         }
                         catch (Exception ex)
                         {
                             // try again
-                            profile = await _repo.FindByGlobalId(sub);
+                            profile = await _userService.FindByGlobalId(sub);
                             if (profile == null)
                             {
                                 throw ex;
@@ -121,7 +121,7 @@ namespace TopoMojo.Services
                 }
 
                 ((ClaimsIdentity)principal.Identity).AddClaims(claims);
-                _profile = BuildProfileModel(principal);
+                _user = BuildProfileModel(principal);
             }
             finally
             {

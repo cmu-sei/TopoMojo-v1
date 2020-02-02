@@ -3,16 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Abstractions;
 using TopoMojo.Core;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
-using TopoMojo.Core.Privileged;
-using TopoMojo.Data;
-using TopoMojo.Data.Abstractions;
+using TopoMojo.Abstractions;
+using TopoMojo.Models;
 using TopoMojo.Data.EntityFrameworkCore;
 
 namespace Tests
@@ -29,7 +23,7 @@ namespace Tests
             _coreOptions = new CoreOptions();
             _mill = mill;
 
-            _proman = new ProfileService(new ProfileRepository(_ctx));
+            _proman = new TopoMojo.Core.PrivilegedUserService(new UserStore(_ctx));
             // _proman = new ProfileManager(
             //     new ProfileRepository(_ctx),
             //     _mill,
@@ -48,9 +42,9 @@ namespace Tests
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
         private IProfileResolver _ur;
-        private readonly ProfileService _proman;
-        private Profile _actor;
-        public Profile Actor
+        private readonly TopoMojo.Core.PrivilegedUserService _proman;
+        private User _actor;
+        public User Actor
         {
             get { return _actor;}
             set
@@ -64,8 +58,8 @@ namespace Tests
 
         #region Managers
 
-        private Dictionary<string, Profile> _actors = new Dictionary<string, Profile>();
-        private Dictionary<Profile, Dictionary<string, object>> _mgrStore = new Dictionary<Profile, Dictionary<string, object>>();
+        private Dictionary<string, User> _actors = new Dictionary<string, User>();
+        private Dictionary<User, Dictionary<string, object>> _mgrStore = new Dictionary<User, Dictionary<string, object>>();
 
         private object FindManager(Type t)
         {
@@ -88,52 +82,52 @@ namespace Tests
         //     return _mgrStore[_actor][t.Name];
         // }
 
-        public TopologyManager GetTopologyManager()
+        public WorkspaceService GetTopologyManager()
         {
-            Type t = typeof(TopologyManager);
+            Type t = typeof(WorkspaceService);
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
-                    new TopologyRepository(_ctx),
-                    new GamespaceRepository(_ctx),
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx),
+                    new WorkspaceStore(_ctx),
+                    new GamespaceStore(_ctx),
                     _mill, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
-            return mgr as TopologyManager;
+            return mgr as WorkspaceService;
         }
 
-        public TemplateManager GetTemplateManager()
+        public TemplateService GetTemplateManager()
         {
-            Type t = typeof(TemplateManager);
+            Type t = typeof(TemplateService);
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
-                    new TemplateRepository(_ctx),
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx),
+                    new TemplateStore(_ctx),
                     _mill, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
-            return mgr as TemplateManager;
+            return mgr as TemplateService;
         }
 
         #endregion
 
-        public Profile AddActor(string name)
+        public User AddActor(string name)
         {
             return AddUser(name, true);
         }
 
-        public Profile AddUser(string name)
+        public User AddUser(string name)
         {
             return AddUser(name, false);
         }
 
-        public Profile AddUser(string name, bool makeActor, bool isAdmin = false)
+        public User AddUser(string name, bool makeActor, bool isAdmin = false)
         {
             if (!_actors.ContainsKey(name))
             {
-                Profile target = new Profile
+                User target = new User
                 {
                     Name = name,
                     IsAdmin = isAdmin,
@@ -146,7 +140,7 @@ namespace Tests
                 _mgrStore.Add(target, new Dictionary<string, object>());
             }
 
-            Profile person = _actors[name];
+            User person = _actors[name];
             if (makeActor)
                 Actor = person;
 

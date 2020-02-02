@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TopoMojo.Abstractions;
 using TopoMojo.Models;
 
 namespace TopoMojo.Client
@@ -23,14 +24,14 @@ namespace TopoMojo.Client
             Client = client;
         }
 
-        public async Task<string> Start(string problemId, WorkspaceSpec workspace)
+        public async Task<string> Start(string isolationTag, GamespaceSpec spec)
         {
             string mdText = "";
 
             var model = new NewGamespace
             {
-                Id = problemId,
-                Workspace = workspace
+                Id = isolationTag,
+                Workspace = spec
             };
 
             var result = await Client.PostAsync("", Json(model));
@@ -42,7 +43,7 @@ namespace TopoMojo.Client
 
                 var game = JsonSerializer.Deserialize<GameState>(data);
 
-                mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{problemId})"));
+                mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{isolationTag})"));
 
                 try
                 {
@@ -88,7 +89,7 @@ namespace TopoMojo.Client
             );
         }
 
-        public async Task BuildIso(IsoSpec spec)
+        public async Task BuildIso(IsoBuildSpec spec)
         {
             await Task.Delay(0);
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TopoMojo.Core;
-using TopoMojo.Core.Models;
+using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
@@ -15,46 +15,46 @@ namespace TopoMojo.Controllers
     public class ProfileController : _Controller
     {
         public ProfileController(
-            ProfileManager profileManager,
+            UserService userService,
             IServiceProvider sp
         ) : base(sp)
         {
-            _mgr = profileManager;
+            _userService = userService;
         }
 
-        private readonly ProfileManager _mgr;
+        private readonly UserService _userService;
 
         [Authorize(Roles = "Administrator")]
         [HttpGet("api/profiles")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<SearchResult<Profile>>> List(Search search)
+        public async Task<ActionResult<SearchResult<User>>> List(Search search)
         {
-            var result = await _mgr.List(search);
+            var result = await _userService.List(search);
             return Ok(result);
         }
 
         [HttpGet("api/profile")]
         [JsonExceptionFilter]
-        public async Task<ActionResult<Profile>> GetProfile()
+        public async Task<ActionResult<User>> GetProfile()
         {
-            var result = await _mgr.FindByGlobalId("");
+            var result = await _userService.FindByGlobalId("");
             return Ok(result);
         }
 
         [HttpPut("api/profile")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> UpdateProfile([FromBody]ChangedProfile profile)
+        public async Task<IActionResult> UpdateProfile([FromBody]ChangedUser profile)
         {
-            await _mgr.UpdateProfile(profile);
+            await _userService.UpdateProfile(profile);
             return Ok();
         }
 
         [Authorize(Roles = "Administrator")]
         [HttpPut("api/profile/priv")]
         [JsonExceptionFilter]
-        public async Task<IActionResult> PrivilegedUpdate([FromBody]Profile profile)
+        public async Task<IActionResult> PrivilegedUpdate([FromBody]User profile)
         {
-            await _mgr.PrivilegedUpdate(profile);
+            await _userService.PrivilegedUpdate(profile);
             return Ok();
 
         }
@@ -63,7 +63,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<IActionResult> DeleteProfile(int id)
         {
-            await _mgr.DeleteProfile(id);
+            await _userService.DeleteProfile(id);
             return Ok();
         }
 

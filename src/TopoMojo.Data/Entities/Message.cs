@@ -4,7 +4,7 @@
 using System;
 using TopoMojo.Data.Abstractions;
 
-namespace TopoMojo.Data.Entities
+namespace TopoMojo.Data
 {
     public class Message : IEntity
     {

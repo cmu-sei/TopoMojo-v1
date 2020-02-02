@@ -24,19 +24,19 @@ namespace TopoMojo.Controllers
             FileUploadOptions uploadOptions,
             IWebHostEnvironment host,
             IServiceProvider sp,
-            TopologyManager topoManager
+            WorkspaceService workspaceService
         ) : base(sp)
         {
             _host = host;
             _monitor = monitor;
             _config = uploadOptions;
-            _topoManager = topoManager;
+            _workspaceService = workspaceService;
             _uploader = uploader;
         }
         private readonly IWebHostEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
-        private readonly TopologyManager _topoManager;
+        private readonly WorkspaceService _workspaceService;
 
         private readonly IFileUploadHandler _uploader;
 
@@ -67,7 +67,7 @@ namespace TopoMojo.Controllers
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (key != publicTarget && !_topoManager.CanEdit(key).Result)
+                    if (key != publicTarget && !_workspaceService.CanEdit(key).Result)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);

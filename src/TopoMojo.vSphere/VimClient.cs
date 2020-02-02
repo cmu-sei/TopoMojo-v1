@@ -2,7 +2,6 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,16 +12,14 @@ using Microsoft.Extensions.Logging;
 using NetVimClient;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
-using TopoMojo.Models.Virtual;
 using TopoMojo.vSphere.Helpers;
-using TopoMojo.vSphere.Network;
 
 namespace TopoMojo.vSphere
 {
     public class VimClient
     {
         public VimClient(
-            PodConfiguration options,
+            HypervisorServiceConfiguration options,
             ConcurrentDictionary<string, Vm> vmCache,
             VlanManager networkManager,
             ILogger<VimClient> logger
@@ -47,7 +44,7 @@ namespace TopoMojo.vSphere
         private Dictionary<string, PortGroupAllocation> _pgAllocation;
 
         private INetworkManager _netman;
-        PodConfiguration _config = null;
+        HypervisorServiceConfiguration _config = null;
         VimPortTypeClient _vim = null;
         ServiceContent _sic = null;
         UserSession _session = null;
@@ -57,7 +54,6 @@ namespace TopoMojo.vSphere
         int _pollInterval = 1000;
         int _syncInterval = 30000;
         int _taskMonitorInterval = 3000;
-        bool _disposing;
         string _hostPrefix = "";
         DateTime _lastAction;
 
@@ -66,7 +62,7 @@ namespace TopoMojo.vSphere
             get { return _config.Host; }
         }
 
-        public PodConfiguration Options
+        public HypervisorServiceConfiguration Options
         {
             get { return _config; }
         }
@@ -228,7 +224,7 @@ namespace TopoMojo.vSphere
             return $"wss://{ticket.host ?? _config.Host}{port}/ticket/{ticket.ticket}";
         }
 
-        public async Task<Vm> Deploy(Template template)
+        public async Task<Vm> Deploy(VmTemplate template)
         {
             Vm vm = null;
             await Connect();
@@ -308,7 +304,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        public async Task<Vm> Change(string id, KeyValuePair change)
+        public async Task<Vm> Change(string id, KeyValuePair<string,string> change)
         {
             return await ReconfigureVm(id, change.Key, "", change.Value);
         }
@@ -570,7 +566,7 @@ namespace TopoMojo.vSphere
             );
         }
 
-        public async Task CreateDisk(Disk disk)
+        public async Task CreateDisk(VmDisk disk)
         {
             await Connect();
             await MakeDirectories(disk.Path);
@@ -834,7 +830,6 @@ namespace TopoMojo.vSphere
                         _logger.LogDebug($"Initialized {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
 
                         _vim = client;
-                        _disposing = false;
                     }
                     catch (Exception ex)
                     {
@@ -847,7 +842,6 @@ namespace TopoMojo.vSphere
         public async Task Disconnect()
         {
             _logger.LogDebug($"Disconnecting from {this.Name}");
-            _disposing = true;
             await Task.Delay(500);
             _vim.Dispose();
             _vim = null;
@@ -992,7 +986,7 @@ namespace TopoMojo.vSphere
                 );
             _pool = poolContent.obj;
 
-            var netSettings = new Settings
+            var netSettings = new VimReferences
             {
                 vim = client,
                 cluster = _res,

@@ -2,7 +2,6 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using Microsoft.EntityFrameworkCore;
-using TopoMojo.Data.Entities;
 
 namespace TopoMojo.Data.EntityFrameworkCore
 {

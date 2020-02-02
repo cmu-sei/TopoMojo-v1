@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
+using TopoMojo.Abstractions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Controllers
 {
@@ -21,14 +21,14 @@ namespace TopoMojo.Controllers
             _profileResolver = sp.GetRequiredService<IProfileResolver>();
         }
 
-        protected Profile _profile;
+        protected User _user;
         protected readonly IProfileResolver _profileResolver;
         protected readonly ILogger _logger;
         protected readonly ControlOptions _options;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            _profile = _profileResolver.Profile;
+            _user = _profileResolver.User;
             ViewBag.AppName = _options.ApplicationName;
         }
 
@@ -38,7 +38,7 @@ namespace TopoMojo.Controllers
             string itemName = (item != null) ? item.Name : "null";
             string itemId = (item != null) ? item.Id.ToString() : "";
             string entry = String.Format("{0} [{1}] {2} {3} {4} [{5}] {6}",
-                _profile?.Name, _profile?.GlobalId, action, itemType, itemName, itemId, msg);
+                _user?.Name, _user?.GlobalId, action, itemType, itemName, itemId, msg);
             _logger.LogInformation(entry);
         }
 

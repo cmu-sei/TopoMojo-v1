@@ -17,10 +17,10 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             return services
                 .AddDbContext<TopoMojoDbContext>(dbContextAction)
-                .AddScoped<ITemplateRepository, TemplateRepository>()
-                .AddScoped<ITopologyRepository, TopologyRepository>()
-                .AddScoped<IGamespaceRepository, GamespaceRepository>()
-                .AddScoped<IProfileRepository, ProfileRepository>();
+                .AddScoped<ITemplateStore, TemplateStore>()
+                .AddScoped<IWorkspaceStore, WorkspaceStore>()
+                .AddScoped<IGamespaceStore, GamespaceStore>()
+                .AddScoped<IUserStore, UserStore>();
         }
     }
 }

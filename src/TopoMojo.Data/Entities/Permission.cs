@@ -3,7 +3,7 @@
 
 using System;
 
-namespace TopoMojo.Data.Entities
+namespace TopoMojo.Data
 {
     [Flags]
     public enum Permission {

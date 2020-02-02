@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Core.Models;
 using TopoMojo.Models;
+using TopoMojo.Models.Workspace;
 using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
@@ -81,8 +82,8 @@ namespace TopoMojo.Controllers
         //     return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
         // }
 
-        public Task TemplateMessage(string action, Core.Models.Template model){
-            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
+        public Task TemplateMessage(string action, Template model){
+            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Template>(Context.User, action, model));
         }
 
     }
@@ -90,8 +91,8 @@ namespace TopoMojo.Controllers
     public interface ITopoEvent
     {
         Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
-        Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
-        Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
+        Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
+        Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
         Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
         Task PresenceEvent(BroadcastEvent broadcastEvent);

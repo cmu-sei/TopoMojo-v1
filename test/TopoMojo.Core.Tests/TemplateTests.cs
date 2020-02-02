@@ -1,9 +1,9 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-﻿using System;
 using TopoMojo.Core;
-using TopoMojo.Core.Models;
+using TopoMojo.Models;
+using TopoMojo.Models.Workspace;
 using Xunit;
 
 namespace Tests
@@ -15,7 +15,7 @@ namespace Tests
         {
             using (TestSession test = CreateSession())
             {
-                TemplateManager mgr = test.GetTemplateManager();
+                TemplateService mgr = test.GetTemplateManager();
                 TemplateDetail template = mgr.Create(new TemplateDetail {
                     Name = "JamOn",
                     Detail = "original"
@@ -37,7 +37,7 @@ namespace Tests
             using (TestSession test = CreateSession())
             {
                 //test.AddActor("jam@this.ws");
-                TemplateManager mgr = test.GetTemplateManager();
+                TemplateService mgr = test.GetTemplateManager();
                 for (int i = 0; i < 5; i++)
                 {
                     TemplateDetail template = mgr.Create(new TemplateDetail {
@@ -62,11 +62,11 @@ namespace Tests
             using (TestSession test = CreateSession())
             {
                 //test.AddActor("jam@this.ws");
-                TopologyManager topoman = test.GetTopologyManager();
-                Topology topo = topoman.Create(new NewTopology{
+                WorkspaceService topoman = test.GetTopologyManager();
+                Workspace topo = topoman.Create(new NewWorkspace{
                     Name = "jamTopo"
                 }).Result;
-                TemplateManager mgr = test.GetTemplateManager();
+                TemplateService mgr = test.GetTemplateManager();
                 for (int i = 1; i < 6; i++)
                 {
                     TemplateDetail template = mgr.Create(new TemplateDetail {

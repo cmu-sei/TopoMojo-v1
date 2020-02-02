@@ -7,4 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />
+  </ItemGroup>
 </Project>

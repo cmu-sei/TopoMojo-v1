@@ -3,8 +3,6 @@
 
 using AutoMapper;
 using TopoMojo.Core.Mappers;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Data.EntityFrameworkCore;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -14,7 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Mapper.Initialize(cfg => {
                 cfg.AddProfile<ActorProfile>();
-                cfg.AddProfile<TopologyProfile>();
+                cfg.AddProfile<WorkspaceProfile>();
                 cfg.AddProfile<TemplateProfile>();
                 cfg.AddProfile<GamespaceProfile>();
                 cfg.AddProfile<MessageProfile>();

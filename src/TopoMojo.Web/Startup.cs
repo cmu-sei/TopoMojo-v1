@@ -73,14 +73,14 @@ namespace TopoMojo.Web
                 .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
                 .AddScoped<IFileUploadHandler, FileUploadHandler>()
                 .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
-                .AddSingleton<IPodManager>(sp =>
+                .AddSingleton<IHypervisorService>(sp =>
                 {
-                    var options = Configuration.GetSection("Pod").Get<PodConfiguration>();
+                    var options = Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>();
                     return String.IsNullOrWhiteSpace(options.Url)
-                        ? (IPodManager)new TopoMojo.vMock.PodManager(options, sp.GetService<ILoggerFactory>())
-                        : (IPodManager)new TopoMojo.vSphere.PodManager(options, sp.GetService<ILoggerFactory>());
+                        ? (IHypervisorService)new TopoMojo.Services.MockHypervisorService(options, sp.GetService<ILoggerFactory>())
+                        : (IHypervisorService)new TopoMojo.vSphere.HypervisorService(options, sp.GetService<ILoggerFactory>());
                 })
-                .AddHostedService<ServiceHostWrapper<IPodManager>>();
+                .AddHostedService<ServiceHostWrapper<IHypervisorService>>();
 
             // services.AddAutoMapper();
 

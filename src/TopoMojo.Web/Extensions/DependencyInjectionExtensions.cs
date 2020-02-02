@@ -30,7 +30,7 @@ namespace TopoMojo.Extensions
         ) {
             return services.AddMemoryCache()
                 .AddScoped<Services.ProfileResolver>()
-                .AddScoped<Core.Abstractions.IProfileResolver>(sp => sp.GetService<Services.ProfileResolver>())
+                .AddScoped<Abstractions.IProfileResolver>(sp => sp.GetService<Services.ProfileResolver>())
                 .AddScoped<IClaimsTransformation>(sp => sp.GetService<Services.ProfileResolver>())
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 

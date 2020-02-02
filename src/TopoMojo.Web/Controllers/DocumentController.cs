@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TopoMojo.Core;
+using TopoMojo.Extensions;
 using TopoMojo.Web;
 using TopoMojo.Web.Models;
 
@@ -19,23 +20,23 @@ namespace TopoMojo.Controllers
     public class DocumentController : _Controller
     {
         public DocumentController(
-            TopologyManager topologyManager,
+            WorkspaceService workspaceService,
             IWebHostEnvironment env,
             IServiceProvider sp
         ) : base(sp)
         {
-            _mgr = topologyManager;
+            _workspaceService = workspaceService;
             _env = env;
         }
 
-        private readonly TopologyManager _mgr;
+        private readonly WorkspaceService _workspaceService;
         private readonly IWebHostEnvironment _env;
 
         [HttpPut("api/document/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
-            if (await _mgr.CanEdit(id))
+            if (await _workspaceService.CanEdit(id))
             {
                 string path = GetPath("docs");
                 path = System.IO.Path.Combine(path, id+".md");
@@ -49,7 +50,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<ImageFile[]>> Images(string id)
         {
-            if (await _mgr.CanEdit(id))
+            if (await _workspaceService.CanEdit(id))
             {
                 string path = Path.Combine(_env.WebRootPath, "docs", id);
                 if (Directory.Exists(path))
@@ -68,7 +69,7 @@ namespace TopoMojo.Controllers
         [JsonExceptionFilter]
         public async Task<ActionResult<ImageFile>> Delete(string id, string filename)
         {
-            if (filename.HasValue() && await _mgr.CanEdit(id))
+            if (filename.HasValue() && await _workspaceService.CanEdit(id))
             {
                 string path = Path.Combine(_env.WebRootPath, "docs", id, filename);
                 if (System.IO.File.Exists(path))
@@ -87,7 +88,7 @@ namespace TopoMojo.Controllers
         {
             if (file.Length > 0)
             {
-                if (await _mgr.CanEdit(id))
+                if (await _workspaceService.CanEdit(id))
                 {
                     string path = GetPath("docs", id);
                     string filename = SanitizeFilename(file.FileName);
