@@ -16,9 +16,9 @@ using TopoMojo.Web;
 namespace TopoMojo.Controllers
 {
     [Authorize]
-    public class TopologyController : _Controller
+    public class WorkspaceController : _Controller
     {
-        public TopologyController(
+        public WorkspaceController(
             WorkspaceService workspaceService,
             IHypervisorService podService,
             IHubContext<TopologyHub, ITopoEvent> hub,
@@ -35,7 +35,7 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [AllowAnonymous]
-        [HttpGet("api/topology/summaries")]
+        [HttpGet("api/workspace/summaries")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<WorkspaceSummary>>> List(Search search)
         {
@@ -52,7 +52,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpPost("api/topology")]
+        [HttpPost("api/workspace")]
         [JsonExceptionFilter]
         public async Task<ActionResult<Workspace>> Create([FromBody]NewWorkspace model)
         {
@@ -60,7 +60,7 @@ namespace TopoMojo.Controllers
             return Ok(topo);
         }
 
-        [HttpPut("api/topology")]
+        [HttpPut("api/workspace")]
         [JsonExceptionFilter]
         public async Task<ActionResult> Update([FromBody]ChangedWorkspace model)
         {
@@ -71,7 +71,7 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize(Roles = "Administrator")]
-        [HttpPut("api/topology/priv")]
+        [HttpPut("api/workspace/priv")]
         [JsonExceptionFilter]
         public async Task<ActionResult> UpdatePrivilegedChanges([FromBody] PrivilegedWorkspaceChanges model)
         {
@@ -81,7 +81,7 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
-        [HttpGet("api/topology/{id}")]
+        [HttpGet("api/workspace/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult<Workspace>> Load(int id)
         {
@@ -89,7 +89,7 @@ namespace TopoMojo.Controllers
             return Ok(topo);
         }
 
-        [HttpDelete("api/topology/{id}")]
+        [HttpDelete("api/workspace/{id}")]
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Delete(int id)
         {
@@ -99,7 +99,7 @@ namespace TopoMojo.Controllers
             return Ok(true);
         }
 
-        [HttpGet("api/topology/{id}/games")]
+        [HttpGet("api/workspace/{id}/games")]
         [JsonExceptionFilter]
         public async Task<ActionResult<GameState[]>> LoadGames(int id)
         {
@@ -107,7 +107,7 @@ namespace TopoMojo.Controllers
             return Ok(games);
         }
 
-        [HttpDelete("api/topology/{id}/games")]
+        [HttpDelete("api/workspace/{id}/games")]
         [JsonExceptionFilter]
         public async Task<ActionResult<bool>> DeleteGames(int id)
         {
@@ -120,14 +120,14 @@ namespace TopoMojo.Controllers
         }
 
         [Obsolete]
-        [HttpPost("api/topology/{id}/action")]
+        [HttpPost("api/workspace/{id}/action")]
         [JsonExceptionFilter]
         public async Task<ActionResult<WorkspaceState>> ChangeState(int id, [FromBody]WorkspaceStateAction action)
         {
             return Ok(await _workspaceService.ChangeState(action));
         }
 
-        // [HttpGet("api/topology/{id}/publish")]
+        // [HttpGet("api/workspace/{id}/publish")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Publish(int id)
         // {
@@ -135,7 +135,7 @@ namespace TopoMojo.Controllers
         //     return Ok(state);
         // }
 
-        // [HttpGet("api/topology/{id}/unpublish")]
+        // [HttpGet("api/workspace/{id}/unpublish")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Unpublish(int id)
         // {
@@ -143,7 +143,7 @@ namespace TopoMojo.Controllers
         //     return Ok(state);
         // }
 
-        // [HttpGet("api/topology/{id}/lock")]
+        // [HttpGet("api/workspace/{id}/lock")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Lock(int id)
         // {
@@ -151,7 +151,7 @@ namespace TopoMojo.Controllers
         //     return Ok(state);
         // }
 
-        // [HttpGet("api/topology/{id}/unlock")]
+        // [HttpGet("api/workspace/{id}/unlock")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Unlock(int id)
         // {
@@ -159,7 +159,7 @@ namespace TopoMojo.Controllers
         //     return Ok(state);
         // }
 
-        // [HttpGet("api/topology/{id}/share")]
+        // [HttpGet("api/workspace/{id}/share")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Share(int id)
         // {
@@ -167,7 +167,7 @@ namespace TopoMojo.Controllers
         //     return Ok(state);
         // }
 
-        // [HttpGet("api/topology/{id}/unshare")]
+        // [HttpGet("api/workspace/{id}/unshare")]
         // [JsonExceptionFilter]
         // public async Task<ActionResult<TopologyState>> Unshare(int id)
         // {
@@ -189,7 +189,7 @@ namespace TopoMojo.Controllers
             return Ok(await _workspaceService.Delist(id));
         }
 
-        [HttpGet("api/topology/{id}/isos")]
+        [HttpGet("api/workspace/{id}/isos")]
         [JsonExceptionFilter]
         public async Task<ActionResult<VmOptions>> Isos(string id)
         {
@@ -197,7 +197,7 @@ namespace TopoMojo.Controllers
             return Ok(result);
         }
 
-        [HttpGet("api/topology/{id}/nets")]
+        [HttpGet("api/workspace/{id}/nets")]
         [JsonExceptionFilter]
         public async Task<ActionResult<VmOptions>> Nets(string id)
         {
