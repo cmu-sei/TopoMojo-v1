@@ -23,8 +23,8 @@ namespace TopoMojo.Core
             IMemoryCache userCache,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
-        ) : base(mill, options, profileResolver)
+            IIdentityResolver identityResolver
+        ) : base(mill, options, identityResolver)
         {
             _userStore = userStore;
             _userCache = userCache;
@@ -116,6 +116,8 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             await _userStore.Remove(entity);
+
+            _userCache.Remove(entity.GlobalId);
         }
 
     }

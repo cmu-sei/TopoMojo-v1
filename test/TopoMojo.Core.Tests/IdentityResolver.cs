@@ -6,9 +6,9 @@ using TopoMojo.Models;
 
 namespace Tests
 {
-    public class ProfileResolver : IProfileResolver
+    public class IdentityResolver : IIdentityResolver
     {
-        public ProfileResolver(User user)
+        public IdentityResolver(User user)
         {
             User = user;
         }

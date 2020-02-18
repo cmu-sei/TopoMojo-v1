@@ -8,9 +8,9 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Core
 {
-    public class PrivilegedUserService
+    public class IdentityService
     {
-        public PrivilegedUserService
+        public IdentityService
         (
             IUserStore userStore
         )

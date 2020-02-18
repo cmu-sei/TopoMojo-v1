@@ -18,17 +18,17 @@ namespace TopoMojo.Controllers
         {
             _logger = sp.GetService<ILoggerFactory>().CreateLogger(this.GetType());
             _options = sp.GetService<IOptions<ControlOptions>>().Value;
-            _profileResolver = sp.GetRequiredService<IProfileResolver>();
+            _identityResolver = sp.GetRequiredService<IIdentityResolver>();
         }
 
         protected User _user;
-        protected readonly IProfileResolver _profileResolver;
+        protected readonly IIdentityResolver _identityResolver;
         protected readonly ILogger _logger;
         protected readonly ControlOptions _options;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            _user = _profileResolver.User;
+            _user = _identityResolver.User;
             ViewBag.AppName = _options.ApplicationName;
         }
 

@@ -23,12 +23,12 @@ namespace Tests
             _coreOptions = new CoreOptions();
             _mill = mill;
 
-            _proman = new TopoMojo.Core.PrivilegedUserService(new UserStore(_ctx));
+            _proman = new TopoMojo.Core.IdentityService(new UserStore(_ctx));
             // _proman = new ProfileManager(
             //     new ProfileRepository(_ctx),
             //     _mill,
             //     _coreOptions,
-            //     new ProfileResolver(new Profile
+            //     new IdentityResolver(new Profile
             //     {
             //         Name = "admin@test",
             //         IsAdmin = true
@@ -41,8 +41,8 @@ namespace Tests
         private readonly TopoMojoDbContext _ctx = null;
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
-        private IProfileResolver _ur;
-        private readonly TopoMojo.Core.PrivilegedUserService _proman;
+        private IIdentityResolver _ur;
+        private readonly TopoMojo.Core.IdentityService _proman;
         private User _actor;
         public User Actor
         {
@@ -50,7 +50,7 @@ namespace Tests
             set
             {
                 _actor = value;
-                _ur = new ProfileResolver(_actor);
+                _ur = new IdentityResolver(_actor);
             }
         }
 

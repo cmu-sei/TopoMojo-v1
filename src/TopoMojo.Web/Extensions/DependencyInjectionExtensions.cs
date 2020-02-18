@@ -25,13 +25,13 @@ namespace TopoMojo.Extensions
 
         }
 
-        public static IServiceCollection AddProfileResolver(
+        public static IServiceCollection AddIdentityResolver(
             this IServiceCollection services
         ) {
             return services.AddMemoryCache()
-                .AddScoped<Services.ProfileResolver>()
-                .AddScoped<Abstractions.IProfileResolver>(sp => sp.GetService<Services.ProfileResolver>())
-                .AddScoped<IClaimsTransformation>(sp => sp.GetService<Services.ProfileResolver>())
+                .AddScoped<Services.IdentityResolver>()
+                .AddScoped<Abstractions.IIdentityResolver>(sp => sp.GetService<Services.IdentityResolver>())
+                .AddScoped<IClaimsTransformation>(sp => sp.GetService<Services.IdentityResolver>())
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         }

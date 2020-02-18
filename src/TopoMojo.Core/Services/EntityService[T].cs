@@ -15,25 +15,25 @@ namespace TopoMojo.Core
         public EntityService(
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
+            IIdentityResolver identityResolver
         )
         {
             _logger = mill?.CreateLogger(this.GetType());
             _options = options;
-            _profileResolver = profileResolver;
+            _identityResolver = identityResolver;
         }
 
         protected readonly ILogger _logger;
         protected readonly CoreOptions _options;
 
-        protected readonly IProfileResolver _profileResolver;
+        protected readonly IIdentityResolver _identityResolver;
         private Data.Profile _user;
         protected Data.Profile User
         {
             get
             {
                 if (_user == null)
-                    _user = Mapper.Map<Data.Profile>(_profileResolver.User);
+                    _user = Mapper.Map<Data.Profile>(_identityResolver.User);
                 return _user;
             }
         }

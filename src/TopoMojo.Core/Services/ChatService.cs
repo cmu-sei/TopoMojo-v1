@@ -19,8 +19,8 @@ namespace TopoMojo.Core
             TopoMojoDbContext dbContext,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
-        ) : base (mill, options, profileResolver)
+            IIdentityResolver identityResolver
+        ) : base (mill, options, identityResolver)
         {
             _dbContext = dbContext;
         }

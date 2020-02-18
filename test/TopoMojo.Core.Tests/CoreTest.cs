@@ -20,7 +20,7 @@ namespace Tests
             Initialize();
         }
 
-        protected IProfileResolver _ur = null;
+        protected IIdentityResolver _ur = null;
         protected const string _complexPassword = "~Tartans@1~";
         protected IOptions<CoreOptions> _optAccessor = null;
         protected CoreOptions _options = null;
@@ -57,7 +57,7 @@ namespace Tests
                 ctx.Database.EnsureDeleted();
                 ctx.Database.EnsureCreated();
                 _user = new User { Id = 1, Name = "tester" };
-                _ur = new ProfileResolver(_user);
+                _ur = new IdentityResolver(_user);
             }
 
         }

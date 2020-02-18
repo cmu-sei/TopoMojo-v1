@@ -18,7 +18,7 @@ namespace TopoMojo.Core
     public class TransferService
     {
         public TransferService (
-            IProfileResolver profileResolver,
+            IIdentityResolver identityResolver,
             IUserStore userStore,
             IWorkspaceStore workspaceStore,
             ITemplateStore templateStore,
@@ -27,7 +27,7 @@ namespace TopoMojo.Core
             _workspaceStore = workspaceStore;
             _templateStore = templateStore;
             _userStore = userStore;
-            _profileResolver = profileResolver;
+            _identityResolver = identityResolver;
             _logger = logger;
 
             jsonSerializerSettings = new JsonSerializerOptions
@@ -36,7 +36,7 @@ namespace TopoMojo.Core
             };
         }
 
-        private readonly IProfileResolver _profileResolver;
+        private readonly IIdentityResolver _identityResolver;
         private readonly IUserStore _userStore;
         private readonly IWorkspaceStore _workspaceStore;
         private readonly ITemplateStore _templateStore;
@@ -240,7 +240,7 @@ namespace TopoMojo.Core
             {
                 if (_user == null)
                 {
-                    _user = Mapper.Map<Data.Profile>(_profileResolver.User);
+                    _user = Mapper.Map<Data.Profile>(_identityResolver.User);
                     if (_user.Id == 0 && _user.GlobalId.HasValue())
                         _user = _userStore.FindByGlobalId(_user.GlobalId).Result;
                 }

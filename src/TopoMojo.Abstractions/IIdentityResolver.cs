@@ -5,7 +5,7 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Abstractions
 {
-    public interface IProfileResolver
+    public interface IIdentityResolver
     {
         User User { get; }
     }

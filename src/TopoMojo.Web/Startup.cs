@@ -68,7 +68,7 @@ namespace TopoMojo.Web
 
             services
                 .AddApplicationOptions(Configuration)
-                .AddProfileResolver()
+                .AddIdentityResolver()
                 .AddTopoMojo(() => Configuration.GetSection("Core"))
                 .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
                 .AddScoped<IFileUploadHandler, FileUploadHandler>()

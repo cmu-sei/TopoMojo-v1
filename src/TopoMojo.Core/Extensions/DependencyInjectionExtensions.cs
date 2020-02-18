@@ -24,7 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddScoped<UserService>()
                 .AddScoped<ChatService>()
                 .AddScoped<TransferService>()
-                .AddScoped<PrivilegedUserService>()
+                .AddScoped<IdentityService>()
                 .AddScoped<EngineService>()
                 .AddMappers();
         }

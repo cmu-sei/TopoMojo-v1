@@ -22,8 +22,8 @@ namespace TopoMojo.Core
             IHypervisorService podService,
             ILoggerFactory mill,
             CoreOptions options,
-            IProfileResolver profileResolver
-        ) : base (mill, options, profileResolver)
+            IIdentityResolver identityResolver
+        ) : base (mill, options, identityResolver)
         {
             _pod = podService;
             _gamespaceStore = gamespaceStore;
