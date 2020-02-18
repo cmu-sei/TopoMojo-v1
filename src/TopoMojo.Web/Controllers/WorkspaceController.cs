@@ -44,7 +44,7 @@ namespace TopoMojo.Controllers
         }
 
         [Authorize(Roles = "Administrator")]
-        [HttpGet("api/topologies")]
+        [HttpGet("api/workspaces")]
         [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<Workspace>>> ListDetail(Search search)
         {
