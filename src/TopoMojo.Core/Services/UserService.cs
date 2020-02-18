@@ -51,8 +51,15 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             var entity = await _userStore.Load(profile.Id);
+
             Mapper.Map(profile, entity);
+
+            entity.Role = entity.IsAdmin
+                ? Data.ProfileRole.Administrator
+                : Data.ProfileRole.User;
+
             await _userStore.Update(entity);
+
             _userCache.Remove(profile.GlobalId);
             return true;
         }
