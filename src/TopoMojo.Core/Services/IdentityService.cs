@@ -12,12 +12,15 @@ namespace TopoMojo.Core
     {
         public IdentityService
         (
+            IMapper mapper,
             IUserStore userStore
         )
         {
             _userStore = userStore;
+            Mapper = mapper;
         }
 
+        IMapper Mapper { get; }
         private readonly IUserStore _userStore;
         public async Task<User> Add(User profile)
         {

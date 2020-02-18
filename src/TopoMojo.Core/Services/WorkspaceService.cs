@@ -23,9 +23,10 @@ namespace TopoMojo.Core
             IGamespaceStore gamespaceStore,
             IHypervisorService podService,
             ILoggerFactory mill,
+            IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base (mill, options, identityResolver)
+        ) : base (mill, mapper, options, identityResolver)
         {
             _workspaceStore = workspaceStore;
             _gamespaceStore = gamespaceStore;

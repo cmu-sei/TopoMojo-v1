@@ -22,14 +22,15 @@ namespace TopoMojo.Core
             IUserStore userStore,
             IWorkspaceStore workspaceStore,
             ITemplateStore templateStore,
-            ILogger<TransferService> logger
+            ILogger<TransferService> logger,
+            IMapper mapper
         ) {
             _workspaceStore = workspaceStore;
             _templateStore = templateStore;
             _userStore = userStore;
             _identityResolver = identityResolver;
             _logger = logger;
-
+            Mapper = mapper;
             jsonSerializerSettings = new JsonSerializerOptions
             {
                 WriteIndented = true
@@ -43,6 +44,7 @@ namespace TopoMojo.Core
         private readonly ILogger<TransferService> _logger;
         private Data.Profile _user;
         private JsonSerializerOptions jsonSerializerSettings;
+        IMapper Mapper { get; }
 
         public async Task Export(int[] ids, string src, string dest)
         {

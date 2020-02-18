@@ -73,6 +73,11 @@ namespace TopoMojo.Web
                 .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
                 .AddScoped<IFileUploadHandler, FileUploadHandler>()
                 .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
+                .AddSingleton<AutoMapper.IMapper>(
+                    new AutoMapper.MapperConfiguration(cfg => {
+                        cfg.AddTopoMojoMaps();
+                    }).CreateMapper()
+                )
                 .AddSingleton<IHypervisorService>(sp =>
                 {
                     var options = Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>();

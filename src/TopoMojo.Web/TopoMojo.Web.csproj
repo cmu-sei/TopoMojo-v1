@@ -16,7 +16,7 @@
     <ProjectReference Include="..\TopoMojo.Data.PostgreSQL\TopoMojo.Data.PostgreSQL.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
     <!-- <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" /> -->
     <PackageReference Include="DiscUtils.Iso9660" Version="0.14.2-alpha" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0" />

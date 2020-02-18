@@ -8,6 +8,7 @@ using TopoMojo.Core;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
 using TopoMojo.Data.EntityFrameworkCore;
+using AutoMapper;
 
 namespace Tests
 {
@@ -16,14 +17,16 @@ namespace Tests
         public TestSession(
             TopoMojoDbContext ctx,
             CoreOptions options,
-            ILoggerFactory mill
+            ILoggerFactory mill,
+            IMapper mapper
         )
         {
             _ctx = ctx;
             _coreOptions = new CoreOptions();
             _mill = mill;
+            _mapper = mapper;
 
-            _proman = new TopoMojo.Core.IdentityService(new UserStore(_ctx));
+            _proman = new TopoMojo.Core.IdentityService(_mapper, new UserStore(_ctx));
             // _proman = new ProfileManager(
             //     new ProfileRepository(_ctx),
             //     _mill,
@@ -38,6 +41,7 @@ namespace Tests
             AddUser("tester@test", true, true);
         }
 
+        IMapper _mapper;
         private readonly TopoMojoDbContext _ctx = null;
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
@@ -91,7 +95,7 @@ namespace Tests
                 mgr = Activator.CreateInstance(t, new UserStore(_ctx),
                     new WorkspaceStore(_ctx),
                     new GamespaceStore(_ctx),
-                    _mill, _coreOptions, _ur, null);
+                    _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
             return mgr as WorkspaceService;
@@ -105,7 +109,7 @@ namespace Tests
             {
                 mgr = Activator.CreateInstance(t, new UserStore(_ctx),
                     new TemplateStore(_ctx),
-                    _mill, _coreOptions, _ur, null);
+                    _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
             return mgr as TemplateService;

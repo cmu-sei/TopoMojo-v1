@@ -14,6 +14,7 @@ namespace TopoMojo.Core
     {
         public EntityService(
             ILoggerFactory mill,
+            IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
         )
@@ -21,11 +22,12 @@ namespace TopoMojo.Core
             _logger = mill?.CreateLogger(this.GetType());
             _options = options;
             _identityResolver = identityResolver;
+            Mapper = mapper;
         }
 
         protected readonly ILogger _logger;
         protected readonly CoreOptions _options;
-
+        protected IMapper Mapper { get; }
         protected readonly IIdentityResolver _identityResolver;
         private Data.Profile _user;
         protected Data.Profile User

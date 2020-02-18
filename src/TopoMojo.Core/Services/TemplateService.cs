@@ -21,9 +21,10 @@ namespace TopoMojo.Core
             ITemplateStore templateStore,
             IHypervisorService podService,
             ILoggerFactory mill,
+            IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base(mill, options, identityResolver)
+        ) : base(mill, mapper, options, identityResolver)
         {
             _templateStore = templateStore;
             _pod = podService;

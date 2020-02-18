@@ -10,10 +10,12 @@ using TopoMojo.Core;
 using TopoMojo.Models;
 using TopoMojo.Data.EntityFrameworkCore;
 using Xunit;
+using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tests
 {
-    public class CoreTest : IClassFixture<MapperFixture>
+    public class CoreTest
     {
         public CoreTest()
         {
@@ -29,12 +31,15 @@ namespace Tests
         protected ILoggerFactory _mill = null;
         private DbContextOptions<TopoMojoDbContext> _dbOptions;
 
+        protected IMapper Mapper { get; set; }
+
         protected TestSession CreateSession()
         {
             return new TestSession(
                 CreateContext(),
                 _options,
-                _mill
+                _mill,
+                Mapper
             );
         }
 
@@ -47,6 +52,10 @@ namespace Tests
         {
             _options = new CoreOptions();
             _mill = new LoggerFactory();
+
+            Mapper = new AutoMapper.MapperConfiguration(cfg => {
+                cfg.AddTopoMojoMaps();
+            }).CreateMapper();
 
             _dbOptions = new DbContextOptionsBuilder<TopoMojoDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())

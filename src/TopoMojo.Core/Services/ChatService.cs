@@ -18,9 +18,10 @@ namespace TopoMojo.Core
         public ChatService (
             TopoMojoDbContext dbContext,
             ILoggerFactory mill,
+            IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base (mill, options, identityResolver)
+        ) : base (mill, mapper, options, identityResolver)
         {
             _dbContext = dbContext;
         }

@@ -22,9 +22,10 @@ namespace TopoMojo.Core
             IUserStore userStore,
             IMemoryCache userCache,
             ILoggerFactory mill,
+            IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base(mill, options, identityResolver)
+        ) : base(mill, mapper, options, identityResolver)
         {
             _userStore = userStore;
             _userCache = userCache;
