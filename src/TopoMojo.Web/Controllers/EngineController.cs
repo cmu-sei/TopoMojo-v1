@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
@@ -12,6 +13,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
+    [Authorize(AuthenticationSchemes = ApiKeyAuthentication.SchemeName)]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class EngineController : _Controller
     {

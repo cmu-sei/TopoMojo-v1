@@ -13,6 +13,7 @@ using TopoMojo.Core;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
 using TopoMojo.Extensions;
+using TopoMojo.Web;
 
 namespace TopoMojo.Services
 {
@@ -42,9 +43,21 @@ namespace TopoMojo.Services
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1,1);
 
         public User User { get { return _user; } }
+        public Client Client { get; set; }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
+            this.Client = new Client
+            {
+                Id = principal.FindFirstValue(ApiKeyAuthentication.ClaimNames.ClientId),
+                Scope = principal.FindFirstValue(ApiKeyAuthentication.ClaimNames.ClientScope),
+                Url = principal.FindFirstValue(ApiKeyAuthentication.ClaimNames.ClientUrl)
+            };
+
+            if (principal.Identity.AuthenticationType == ApiKeyAuthentication.SchemeName)
+            {
+                return principal;
+            }
 
             string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
             string name = principal.FindFirstValue("name");

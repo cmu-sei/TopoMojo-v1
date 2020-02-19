@@ -13,7 +13,7 @@ namespace Tests
             User = user;
         }
 
-        public User User { get; private set;}
-
+        public User User { get; }
+        public Client Client { get; }
     }
 }

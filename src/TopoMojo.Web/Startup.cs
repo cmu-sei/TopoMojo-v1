@@ -31,8 +31,6 @@ namespace TopoMojo.Web
 
             _appName = Configuration["Control:ApplicationName"] ?? "TopoMojo";
 
-            _engineApiKey = Configuration["Core:EngineKey"] ?? Guid.NewGuid().ToString();
-
             oidcOptions = Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
 
             if (env.IsDevelopment())
@@ -41,7 +39,6 @@ namespace TopoMojo.Web
             }
         }
 
-        private string _engineApiKey;
         private string _appName;
         public IConfiguration Configuration { get; }
         public AuthorizationOptions oidcOptions { get; set; }
@@ -129,7 +126,11 @@ namespace TopoMojo.Web
                             return System.Threading.Tasks.Task.CompletedTask;
                         }
                     };
-                });
+                })
+                .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+                    ApiKeyAuthentication.SchemeName,
+                    opt => opt.Clients = Configuration.GetSection("ApiKeyClients").Get<List<ApiKeyClient>>()
+                );
 
             #endregion
 
@@ -195,19 +196,6 @@ namespace TopoMojo.Web
             });
 
             app.UseAuthentication();
-
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Path.Value.StartsWith("/api/engine"))
-                {
-                    if (context.Request.Headers["X-API-KEY"] != _engineApiKey)
-                    {
-                        context.Response.StatusCode = 401;
-                        return;
-                    }
-                }
-                await next();
-            });
 
             app.UseAuthorization();
 

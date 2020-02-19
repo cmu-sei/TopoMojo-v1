@@ -8,5 +8,6 @@ namespace TopoMojo.Abstractions
     public interface IIdentityResolver
     {
         User User { get; }
+        Client Client { get; }
     }
 }

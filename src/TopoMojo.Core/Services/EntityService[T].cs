@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Core
 {
@@ -39,6 +40,8 @@ namespace TopoMojo.Core
                 return _user;
             }
         }
+
+        protected Client Client => _identityResolver.Client;
 
         protected Action<IMappingOperationOptions> WithActor()
         {
