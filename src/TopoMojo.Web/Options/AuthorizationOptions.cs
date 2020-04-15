@@ -8,6 +8,7 @@ namespace TopoMojo
         public string Authority { get; set; }
         public string Audience { get; set; }
         public bool RequireHttpsMetadata { get; set; } = true;
+        public string BearerCookieEndpoint { get; set; } = "GET /api/version";
         public OAuth2Client SwaggerClient { get; set; }
     }
 

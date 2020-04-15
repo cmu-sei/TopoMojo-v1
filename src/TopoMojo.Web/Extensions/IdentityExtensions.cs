@@ -12,7 +12,7 @@ namespace TopoMojo.Extensions
             {
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
                 new Claim("name", user.Name),
-                new Claim("role", user.Role)
+                new Claim("role", user.Role.ToLower())
             });
 
             return principal;

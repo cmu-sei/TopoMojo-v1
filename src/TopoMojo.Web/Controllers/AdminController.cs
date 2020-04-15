@@ -14,7 +14,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "AdminOnly")]
     public class AdminController : _Controller
     {
         public AdminController(
@@ -44,9 +44,9 @@ namespace TopoMojo.Controllers
 
         [AllowAnonymous]
         [HttpGet("api/version")]
-        public string CommitVersion()
+        public IActionResult CommitVersion()
         {
-            return Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided";
+            return Ok(new { Version = Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided"});
         }
 
 

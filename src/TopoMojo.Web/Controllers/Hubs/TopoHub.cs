@@ -15,7 +15,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "OneTimeTicket")]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (

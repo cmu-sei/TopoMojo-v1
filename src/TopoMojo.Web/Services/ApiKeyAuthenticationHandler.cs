@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -11,7 +12,8 @@ namespace TopoMojo.Web
 {
     public static class ApiKeyAuthentication
     {
-        public const string SchemeName = "x-api-key";
+        public const string AuthenticationScheme = "ApiKey";
+        public const string ApiKeyHeaderName = "x-api-key";
         public const string AuthorizationHeaderName = "Authorization";
         public const string ChallengeHeaderName = "WWW-Authenticate";
 
@@ -39,13 +41,21 @@ namespace TopoMojo.Web
         {
             await Task.Delay(0);
 
-            string key = Request.Headers[ApiKeyAuthentication.SchemeName];
+            string key = Request.Headers[ApiKeyAuthentication.ApiKeyHeaderName];
 
             if (string.IsNullOrEmpty(key))
             {
-                string[] authHeader = Request.Headers[ApiKeyAuthentication.AuthorizationHeaderName].ToString().Split(' ');
-                if (authHeader.Length > 1 && ApiKeyAuthentication.SchemeName.Equals(authHeader[0].ToLower()))
+                string[] authHeader = Request.Headers[ApiKeyAuthentication.AuthorizationHeaderName]
+                    .ToString()
+                    .Split(' ');
+
+                string scheme = authHeader[0];
+
+                if (authHeader.Length > 1
+                    && scheme.Equals(ApiKeyAuthentication.AuthenticationScheme, StringComparison.OrdinalIgnoreCase)
+                ) {
                     key = authHeader[1];
+                }
             }
 
             var client = Options.Clients.Where(c => c.Key == key).SingleOrDefault();
@@ -71,7 +81,7 @@ namespace TopoMojo.Web
 
         protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
-            Response.Headers[ApiKeyAuthentication.ChallengeHeaderName] = ApiKeyAuthentication.SchemeName;
+            Response.Headers[ApiKeyAuthentication.ChallengeHeaderName] = ApiKeyAuthentication.AuthenticationScheme;
 
             await base.HandleChallengeAsync(properties);
         }

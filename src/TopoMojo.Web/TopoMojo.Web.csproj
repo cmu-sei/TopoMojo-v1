@@ -21,6 +21,5 @@
     <PackageReference Include="DiscUtils.Iso9660" Version="0.14.2-alpha" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1" />
-
   </ItemGroup>
 </Project>

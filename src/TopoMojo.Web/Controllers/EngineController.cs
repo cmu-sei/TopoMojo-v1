@@ -13,7 +13,7 @@ using TopoMojo.Web;
 
 namespace TopoMojo.Controllers
 {
-    [Authorize(AuthenticationSchemes = ApiKeyAuthentication.SchemeName)]
+    [Authorize(Policy = "TrustedClients")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class EngineController : _Controller
     {

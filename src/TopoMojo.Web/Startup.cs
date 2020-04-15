@@ -7,18 +7,17 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using TopoMojo.Abstractions;
 using TopoMojo.Controllers;
 using TopoMojo.Extensions;
-using TopoMojo.Models;
 using TopoMojo.Services;
 
 namespace TopoMojo.Web
@@ -91,40 +90,53 @@ namespace TopoMojo.Web
 
             #region Configure Authentication
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
             services
-                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+                .AddAuthentication(options =>
+                {
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
                     options.Audience = oidcOptions.Audience;
                     options.Authority = oidcOptions.Authority;
                     options.RequireHttpsMetadata = oidcOptions.RequireHttpsMetadata;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        NameClaimType = "name",
-                        RoleClaimType = "role",
-                    };
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = ctx =>
-                        {
-                            var token = ctx.Request.Query["access_token"];
-                            if (!String.IsNullOrEmpty(token))
-                            {
-                                ctx.Token = token;
-                            }
-                            return System.Threading.Tasks.Task.CompletedTask;
-                        },
-                        OnTokenValidated = ctx =>
-                        {
-                            // TODO // MAYBE // ensure local user registration
-                            return System.Threading.Tasks.Task.CompletedTask;
-                        }
-                    };
                 })
                 .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-                    ApiKeyAuthentication.SchemeName,
+                    ApiKeyAuthentication.AuthenticationScheme,
                     opt => opt.Clients = Configuration.GetSection("ApiKeyClients").Get<List<ApiKeyClient>>()
+                )
+                .AddScheme<TicketAuthenticationOptions, TicketAuthenticationHandler>(
+                    TicketAuthentication.AuthenticationScheme,
+                    opt => {}
                 );
+
+            services.AddAuthorization(_ =>
+            {
+                _.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        JwtBearerDefaults.AuthenticationScheme
+                    ).Build();
+
+                _.AddPolicy("AdminOnly", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        JwtBearerDefaults.AuthenticationScheme
+                    )
+                    .RequireClaim("role", "administrator")
+                    .Build());
+
+                _.AddPolicy("TrustedClients", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(ApiKeyAuthentication.AuthenticationScheme)
+                    .Build());
+
+                _.AddPolicy("OneTimeTicket", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
+                    .Build());
+            });
 
             #endregion
 
@@ -178,16 +190,31 @@ namespace TopoMojo.Web
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "api/{documentName}/swagger.json";
+                c.RouteTemplate = "api/{documentName}/openapi.json";
             });
 
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "api";
-                c.SwaggerEndpoint("/api/v1/swagger.json", Configuration["Control:ApplicationName"] ?? _appName + " (v1)");
+                c.SwaggerEndpoint("/api/v1/openapi.json", Configuration["Control:ApplicationName"] ?? _appName + " (v1)");
                 c.OAuthClientId(oidcOptions.SwaggerClient?.ClientId);
                 c.OAuthAppName(oidcOptions.SwaggerClient?.ClientName ?? oidcOptions.SwaggerClient?.ClientId);
             });
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Cookies.ContainsKey("Authorization")
+                    && !context.Request.Headers.ContainsKey("Authorization")
+                )
+                {
+                    context.Request.Headers.Add("Authorization", context.Request.Cookies["Authorization"]);
+                }
+                await next.Invoke();
+            });
+
+            // app.UseMiddleware<CrossSiteRequestMiddleware>();
+
+            // app.UseMiddleware<BearerCookieMiddleware>(oidcOptions.BearerCookieEndpoint);
 
             app.UseAuthentication();
 
@@ -196,7 +223,7 @@ namespace TopoMojo.Web
             app.UseEndpoints(ep =>
             {
                 ep.MapHub<TopologyHub>("/hub");
-                ep.MapControllers();
+                ep.MapControllers().RequireAuthorization();
             });
         }
     }

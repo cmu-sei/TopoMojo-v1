@@ -3,16 +3,17 @@
 
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
-using TopoMojo.Core;
 using TopoMojo.Abstractions;
-using TopoMojo.Models;
+using TopoMojo.Core;
 using TopoMojo.Extensions;
+using TopoMojo.Models;
 using TopoMojo.Web;
 
 namespace TopoMojo.Services
@@ -39,14 +40,24 @@ namespace TopoMojo.Services
         private readonly IMemoryCache _cache;
         private readonly IdentityService _identitySvc;
         private readonly MemoryCacheEntryOptions _cacheOptions;
-        private User _user = null;
+        private User _user = new User();
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1,1);
+        private string[] exludedClaims = new string[] {
+            "aud", "iss", "iat", "nbf", "exp", "aio", "c_hash", "uti", "nonce", "auth_time", "idp", "amr"
+        };
 
         public User User { get { return _user; } }
         public Client Client { get; set; }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
+            var identity = principal.Identity as ClaimsIdentity;
+            foreach (var claim in identity.Claims.ToArray())
+            {
+                if (exludedClaims.Contains(claim.Type))
+                    identity.RemoveClaim(claim);
+            }
+
             this.Client = new Client
             {
                 Id = principal.FindFirstValue(ApiKeyAuthentication.ClaimNames.ClientId),
@@ -54,7 +65,7 @@ namespace TopoMojo.Services
                 Url = principal.FindFirstValue(ApiKeyAuthentication.ClaimNames.ClientUrl)
             };
 
-            if (principal.Identity.AuthenticationType == ApiKeyAuthentication.SchemeName)
+            if (principal.Identity.AuthenticationType == ApiKeyAuthentication.AuthenticationScheme)
             {
                 return principal;
             }
@@ -76,16 +87,7 @@ namespace TopoMojo.Services
                     //not in cache, so fetch
                     _user = await _identitySvc.FindByGlobalId(sub);
 
-                    if (_user != null)
-                    {
-                        // Sync name change
-                        if (!String.IsNullOrEmpty(name) && name != _user.Name)
-                        {
-                            _user.Name = name;
-                            await _identitySvc.Update(_user);
-                        }
-                    }
-                    else
+                    if (_user == null)
                     {
                         // Auto-Register
                         try
