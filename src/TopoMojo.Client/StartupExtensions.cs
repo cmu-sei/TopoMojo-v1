@@ -31,6 +31,10 @@ namespace Microsoft.Extensions.DependencyInjection
                     .WaitAndRetryAsync(options.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
                 );
             }
+            else
+            {
+                services.AddScoped<ITopoMojoClient, TopoMojoStub>();
+            }
 
             return services;
         }
