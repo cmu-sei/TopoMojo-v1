@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using NetVimClient;
 using TopoMojo.Models;
 
@@ -148,6 +149,13 @@ namespace TopoMojo.vSphere
         {
             ManagedObjectReference mor = content.GetProperty("resourcePool") as ManagedObjectReference;
             return mor != null && mor.Value == pool.Value;
+        }
+
+        public static T Clone<T>(this T obj)
+        {
+            return JsonSerializer.Deserialize<T>(
+                JsonSerializer.Serialize(obj, null)
+            );
         }
     }
 }

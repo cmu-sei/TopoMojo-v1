@@ -3,12 +3,11 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using TopoMojo.Models;
 
 namespace TopoMojo.Abstractions
 {
-    public interface IHypervisorService : IHostedService
+    public interface IHypervisorService
     {
         Task<Vm> Load(string id);
         Task<Vm> Start(string id);

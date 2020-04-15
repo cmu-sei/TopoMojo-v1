@@ -5,9 +5,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
@@ -15,7 +17,7 @@ using TopoMojo.Models;
 
 namespace TopoMojo.vSphere
 {
-    public class HypervisorService : IHypervisorService
+    public class HypervisorService : IHypervisorService, IHostedService
     {
         public HypervisorService(
             HypervisorServiceConfiguration options,

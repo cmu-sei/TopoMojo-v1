@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
@@ -14,7 +15,7 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Services
 {
-    public class MockHypervisorService : IHypervisorService
+    public class MockHypervisorService : IHypervisorService, IHostedService
     {
         public MockHypervisorService(
             HypervisorServiceConfiguration podConfiguration,

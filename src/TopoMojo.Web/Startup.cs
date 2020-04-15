@@ -68,23 +68,17 @@ namespace TopoMojo.Web
                 .AddIdentityResolver()
                 .AddTopoMojo(() => Configuration.GetSection("Core"))
                 .AddTopoMojoData(builder => builder.UseConfiguredDatabase(Configuration))
+                .AddTopoMojoHypervisor(() =>
+                    Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>()
+                )
                 .AddScoped<IFileUploadHandler, FileUploadHandler>()
                 .AddSingleton<IFileUploadMonitor, FileUploadMonitor>()
                 .AddSingleton<AutoMapper.IMapper>(
-                    new AutoMapper.MapperConfiguration(cfg => {
+                    new AutoMapper.MapperConfiguration(cfg =>
+                    {
                         cfg.AddTopoMojoMaps();
                     }).CreateMapper()
-                )
-                .AddSingleton<IHypervisorService>(sp =>
-                {
-                    var options = Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>();
-                    return String.IsNullOrWhiteSpace(options.Url)
-                        ? (IHypervisorService)new TopoMojo.Services.MockHypervisorService(options, sp.GetService<ILoggerFactory>())
-                        : (IHypervisorService)new TopoMojo.vSphere.HypervisorService(options, sp.GetService<ILoggerFactory>());
-                })
-                .AddHostedService<ServiceHostWrapper<IHypervisorService>>();
-
-            // services.AddAutoMapper();
+                );
 
             #endregion
 

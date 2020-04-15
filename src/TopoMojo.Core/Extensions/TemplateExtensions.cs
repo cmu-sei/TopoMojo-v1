@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 
@@ -24,6 +25,13 @@ namespace TopoMojo.Core
             TemplateUtility tu = new TemplateUtility(template.Detail);
             tu.GuestSettings = settings;
             template.Detail = tu.ToString();
+        }
+
+        public static T Clone<T>(this T obj)
+        {
+            return JsonSerializer.Deserialize<T>(
+                JsonSerializer.Serialize(obj, null)
+            );
         }
     }
 }

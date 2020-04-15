@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 
 namespace TopoMojo.Extensions
 {
@@ -128,13 +127,6 @@ namespace TopoMojo.Extensions
                 : s;
         }
 
-        public static T Clone<T>(this T obj)
-        {
-            return JsonSerializer.Deserialize<T>(
-                JsonSerializer.Serialize(obj, null)
-            );
-        }
     }
-
 
 }
