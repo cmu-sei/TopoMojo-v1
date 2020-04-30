@@ -14,6 +14,7 @@ namespace TopoMojo.Models
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }
         public string Iso { get; set; }
+        public string IsoTarget { get; set; }
         public bool HostAffinity { get; set; }
     }
 
@@ -21,6 +22,7 @@ namespace TopoMojo.Models
     {
         public string Name { get; set; }
         public int Replicas { get; set; }
+        public bool SkipIso { get; set; }
     }
 
     public class NetworkServerSpec

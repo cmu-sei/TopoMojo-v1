@@ -77,14 +77,14 @@ namespace TopoMojo.Core
             {
                 var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates);
 
+                ApplyIso(templates, spec);
+
                 ExpandTemplates(templates, spec);
 
                 await AddNetworkServer(templates, spec);
 
                 foreach (var template in templates)
                 {
-                    if (!String.IsNullOrEmpty(spec.Iso) && String.IsNullOrEmpty(template.Iso))
-                        template.Iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
 
                     var virtualTemplate = template.ToVirtualTemplate(gamespace.GlobalId);
 
@@ -162,6 +162,27 @@ namespace TopoMojo.Core
 
                     t.Name += "_0";
                 }
+            }
+        }
+
+        private void ApplyIso(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
+        {
+            if (string.IsNullOrEmpty(spec.Iso))
+                return;
+
+            string[] targets = spec.IsoTarget.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var template in templates.Where(t => string.IsNullOrEmpty(t.Iso)))
+            {
+                if (targets.Length > 0 && !targets.Contains(template.Name))
+                    continue;
+
+                var vmspec = spec.Vms.FirstOrDefault(v => v.Name == template.Name);
+
+                if (vmspec != null && vmspec.SkipIso)
+                    continue;
+
+                template.Iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
             }
         }
 
