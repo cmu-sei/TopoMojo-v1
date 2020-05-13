@@ -9,7 +9,8 @@ namespace TopoMojo.Core
         public int DefaultWorkspaceLimit { get; set; } = 0;
         public int WorkspaceTemplateLimit { get; set; } = 3;
         public int DefaultNetServerTemplateId { get; set; } = 421;
-        public string GameEngineIsoFolder { get; set; } = "_ge";
+        public int GameEngineMaxReplicas { get; set; } = 5;
+        public string GameEngineIsoFolder { get; set; } = "static";
         public string ConsoleHost { get; set; }
         public string EngineKey { get; set; }
     }

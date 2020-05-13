@@ -75,7 +75,9 @@ namespace TopoMojo.Core
 
             try
             {
-                var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates);
+                var templates = String.IsNullOrEmpty(spec.Templates)
+                ? Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates)
+                : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
 
                 ApplyIso(templates, spec);
 
@@ -137,9 +139,7 @@ namespace TopoMojo.Core
 
         private void ExpandTemplates(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
         {
-            var ts = String.IsNullOrEmpty(spec.Templates)
-                ? templates.ToList()
-                : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
+            var ts = templates.ToList();
 
             templates.Clear();
 
@@ -151,7 +151,9 @@ namespace TopoMojo.Core
 
                 if (vmspec != null && vmspec.Replicas > 1)
                 {
-                    for (int i = 1; i < vmspec.Replicas; i++)
+                    int total = Math.Min(vmspec.Replicas, _options.GameEngineMaxReplicas);
+
+                    for (int i = 1; i < total; i++)
                     {
                         var tt = t.Clone<ConvergedTemplate>();
 
