@@ -139,31 +139,25 @@ namespace TopoMojo.Core
 
         private void ExpandTemplates(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
         {
-            var ts = templates.ToList();
-
-            templates.Clear();
-
-            foreach (var t in ts)
+            foreach (var t in templates.ToList())
             {
-                templates.Add(t);
-
                 var vmspec = spec.Vms?.SingleOrDefault(v => v.Name == t.Name);
 
-                if (vmspec != null && vmspec.Replicas > 1)
+                if (vmspec == null || vmspec.Replicas < 2)
+                    continue;
+
+                int total = Math.Min(vmspec.Replicas, _options.GameEngineMaxReplicas);
+
+                for (int i = 1; i < total; i++)
                 {
-                    int total = Math.Min(vmspec.Replicas, _options.GameEngineMaxReplicas);
+                    var tt = t.Clone<ConvergedTemplate>();
 
-                    for (int i = 1; i < total; i++)
-                    {
-                        var tt = t.Clone<ConvergedTemplate>();
+                    tt.Name += $"_{i}";
 
-                        tt.Name += $"_{i}";
-
-                        templates.Add(tt);
-                    }
-
-                    t.Name += "_0";
+                    templates.Add(tt);
                 }
+
+                t.Name += "_0";
             }
         }
 

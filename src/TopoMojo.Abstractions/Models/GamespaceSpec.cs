@@ -16,6 +16,7 @@ namespace TopoMojo.Models
         public string Iso { get; set; }
         public string IsoTarget { get; set; }
         public bool HostAffinity { get; set; }
+        public bool AppendMarkdown { get; set; }
     }
 
     public class VmSpec

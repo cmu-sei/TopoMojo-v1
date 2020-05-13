@@ -45,16 +45,19 @@ namespace TopoMojo.Client
 
                 mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{isolationTag})"));
 
-                try
+                if (spec.AppendMarkdown)
                 {
-                    // string repl = $"({Client.BaseAddress.Scheme}://{Client.BaseAddress.Host}/docs/";
-                    data = await Client.GetStringAsync(game.TopologyDocument);
-                    // data = data.Replace("(/docs/", repl);
-                    mdText += "\n\n" + data;
-                }
-                catch
-                {
+                    try
+                    {
+                        // string repl = $"({Client.BaseAddress.Scheme}://{Client.BaseAddress.Host}/docs/";
+                        data = await Client.GetStringAsync(game.TopologyDocument);
+                        // data = data.Replace("(/docs/", repl);
+                        mdText += "\n\n" + data;
+                    }
+                    catch
+                    {
 
+                    }
                 }
 
             }
