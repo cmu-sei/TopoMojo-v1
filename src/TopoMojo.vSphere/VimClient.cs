@@ -1268,7 +1268,7 @@ namespace TopoMojo.vSphere
             {
                 try
                 {
-                    if (_vim != null && DateTime.UtcNow.AddMinutes(-_config.ConnectionKeepAliveTimeoutMinutes).CompareTo(_lastAction) > 0)
+                    if (_vim != null && DateTime.UtcNow.AddMinutes(-_config.KeepAliveMinutes).CompareTo(_lastAction) > 0)
                     {
                         await Disconnect();
                     }

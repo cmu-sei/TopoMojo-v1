@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Text.Json;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
+using TopoMojo.Services;
 
-namespace TopoMojo.Core
+namespace TopoMojo
 {
     public static class TemplateExtensions
     {

@@ -1,7 +1,7 @@
 using System;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Web.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (string.IsNullOrWhiteSpace(config.Url))
             {
-                services.AddSingleton<IHypervisorService, MockHypervisorService>();
+                services.AddSingleton<IHypervisorService, TopoMojo.vSphere.MockHypervisorService>();
             }
             else
             {
@@ -28,5 +28,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services;
         }
+
     }
 }

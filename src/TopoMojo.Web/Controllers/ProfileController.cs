@@ -2,17 +2,17 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
 using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class ProfileController : _Controller
@@ -21,78 +21,60 @@ namespace TopoMojo.Controllers
             UserService userService,
             IIdentityResolver identityResolver,
             IServiceProvider sp,
-            IMemoryCache cache
+            IDataProtectionProvider dp
         ) : base(sp)
         {
             _userService = userService;
             _identity = identityResolver;
-            _cache = cache;
+            _dp = dp.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
         }
 
         private readonly UserService _userService;
         private readonly IIdentityResolver _identity;
-        private readonly IMemoryCache _cache;
+        private readonly IDataProtector _dp;
 
         [Authorize(Policy = "AdminOnly")]
         [HttpGet("api/profiles")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<User>>> List(Search search)
         {
             var result = await _userService.List(search);
+
             return Ok(result);
         }
 
         [HttpGet("api/profile")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<User>> GetProfile()
         {
-            var result = await _userService.FindByGlobalId("");
+            var result = await _userService.Load("");
+
             return Ok(result);
         }
 
         [HttpPut("api/profile")]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> UpdateProfile([FromBody]ChangedUser model)
+        public async Task<IActionResult> Update([FromBody]User model)
         {
-            model.GlobalId = User.FindFirstValue("sub");
-            await _userService.UpdateProfile(model);
-            return Ok();
-        }
+            if (!_user.IsAdmin && model.GlobalId != _user.GlobalId)
+                return Forbid();
 
-        [Authorize(Policy = "AdminOnly")]
-        [HttpPut("api/profile/priv")]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> PrivilegedUpdate([FromBody]User profile)
-        {
-            await _userService.PrivilegedUpdate(profile);
-            return Ok();
+            await _userService.Update(model);
 
+            return Ok();
         }
 
         [HttpDelete("api/profile/{id}")]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> DeleteProfile(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            await _userService.DeleteProfile(id);
+            await _userService.Delete(id);
+
             return Ok();
         }
 
         [HttpGet("/api/profile/ticket")]
-        [JsonExceptionFilter]
-        public async Task<IActionResult> GetTicket()
+        public IActionResult GetTicket()
         {
-            await Task.Delay(0);
-            string ticket = Guid.NewGuid().ToString("N");
+            string ticket = $"{DateTime.UtcNow.AddSeconds(20).Ticks}|{Guid.NewGuid().ToString("N")}|{User.FindFirstValue("sub")}";
 
-            _cache.Set(
-                ticket,
-                User.FindFirstValue("sub"),
-                new MemoryCacheEntryOptions {
-                    AbsoluteExpirationRelativeToNow = new TimeSpan(0,0,20)
-                }
-            );
-
-            return Ok(new { Ticket = ticket});
+            return Ok(new { Ticket = _dp.Protect(ticket)});
         }
     }
 

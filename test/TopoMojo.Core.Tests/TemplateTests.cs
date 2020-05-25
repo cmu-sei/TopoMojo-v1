@@ -1,9 +1,9 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using TopoMojo.Core;
+using TopoMojo;
 using TopoMojo.Models;
-using TopoMojo.Models.Workspace;
+using TopoMojo.Services;
 using Xunit;
 
 namespace Tests
@@ -52,7 +52,7 @@ namespace Tests
                     //Term = "2",
                     Filters = new string[] { "published" }
                 }).Result;
-                Assert.True(list.Total == 3);
+                Assert.True(list.Length == 3);
             }
         }
 
@@ -85,7 +85,7 @@ namespace Tests
                         //"published"
                     }
                 }).Result;
-                Assert.True(list.Total == 6);
+                Assert.True(list.Length == 6);
             }
         }
     }

@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using TopoMojo.Models;
 
-namespace TopoMojo.Extensions
+namespace TopoMojo.Web.Extensions
 {
     public static class IdentityExtensions
     {

@@ -7,11 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
 using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class TemplateController : _Controller
@@ -20,7 +19,8 @@ namespace TopoMojo.Controllers
             TemplateService templateService,
             IHypervisorService podService,
             IHubContext<TopologyHub, ITopoEvent> hub,
-            IServiceProvider sp) : base(sp)
+            IServiceProvider sp
+        ) : base(sp)
         {
             _templateService = templateService;
             _pod = podService;
@@ -32,23 +32,22 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/templates")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<SearchResult<TemplateSummary>>> List(Search search)
         {
             var result = await _templateService.List(search);
+
             return Ok(result);
         }
 
         [HttpGet("api/template/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Template>> Load(int id)
         {
             var result = await _templateService.Load(id);
+
             return Ok(result);
         }
 
         [HttpPut("api/template")]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Update([FromBody]ChangedTemplate template)
         {
             var result = await _templateService.Update(template);
@@ -57,56 +56,59 @@ namespace TopoMojo.Controllers
         }
 
         [HttpDelete("api/template/{id}")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
             var result = await _templateService.Delete(id);
+
             SendBroadcast(result, "removed");
-            return Ok(true);
+
+            return Ok();
         }
 
         [HttpPost("api/template/link")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Template>> Link([FromBody]TemplateLink link)
         {
             var result = await _templateService.Link(link);
+
             SendBroadcast(result, "added");
+
             return Ok(result);
         }
 
         [HttpPost("api/template/unlink")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Template>> UnLink([FromBody]TemplateLink link)
         {
             var result = await _templateService.Unlink(link);
+
             SendBroadcast(result, "updated");
+
             return Ok(result);
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Policy = "AdminOnly")]
         [HttpGet("api/template/{id}/detailed")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> LoadDetail(int id)
         {
             var result = await _templateService.LoadDetail(id);
+
             return Ok(result);
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost("api/template/detailed")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
         {
             var result = await _templateService.Create(model);
+
             return Ok(result);
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Policy = "AdminOnly")]
         [HttpPut("api/template/detail")]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Configure([FromBody]TemplateDetail template)
         {
             var result = await _templateService.Configure(template);
+
             return Ok();
         }
 

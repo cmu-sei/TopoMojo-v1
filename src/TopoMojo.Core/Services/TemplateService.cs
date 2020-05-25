@@ -10,32 +10,68 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Extensions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Services
 {
-    public class TemplateService : EntityService<Data.Template>
+    public class TemplateService : _Service
     {
         public TemplateService(
             ITemplateStore templateStore,
+            IWorkspaceStore workspaceStore,
             IHypervisorService podService,
-            ILoggerFactory mill,
+            ILogger<TemplateService> logger,
             IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base(mill, mapper, options, identityResolver)
+        ) : base(logger, mapper, options, identityResolver)
         {
             _templateStore = templateStore;
+
+            _workspaceStore = workspaceStore;
+
             _pod = podService;
         }
 
         private readonly ITemplateStore _templateStore;
+        private readonly IWorkspaceStore _workspaceStore;
         private readonly IHypervisorService _pod;
+
+        public async Task<TemplateSummary[]> List(Search search)
+        {
+            var q = _templateStore.List();
+
+            if (search.Term.HasValue())
+            {
+                q = q.Where(t =>
+                    t.Name.ToLower().Contains(search.Term.ToLower())
+                    // || t.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
+                );
+            }
+
+            if (search.HasFilter("parents"))
+                q = q.Where(t => t.ParentId == null || t.ParentId == 0);
+
+            if (search.HasFilter("published"))
+                q = q.Where(t => t.IsPublished);
+
+            q = q.OrderBy(t => t.Name);
+
+            if (search.Skip > 0)
+                q = q.Skip(search.Skip);
+
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+
+            return Mapper.Map<TemplateSummary[]>(await q.ToArrayAsync());
+        }
 
         public async Task<Template> Load(int id)
         {
             var template = await _templateStore.Load(id);
+
             if (template == null)
                 throw new InvalidOperationException();
 
@@ -45,6 +81,7 @@ namespace TopoMojo.Core
         public async Task<TemplateDetail> LoadDetail(int id)
         {
             var template = await _templateStore.Load(id);
+
             if (template == null)
                 throw new InvalidOperationException();
 
@@ -57,8 +94,11 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             model.Detail = new TemplateUtility("", model.Name).ToString();
+
             var t = Mapper.Map<Data.Template>(model);
+
             await _templateStore.Add(t);
+
             return Mapper.Map<TemplateDetail>(t);
         }
 
@@ -68,31 +108,39 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             var entity = await _templateStore.Load(template.Id);
+
             if (entity == null)
                 throw new InvalidOperationException();
 
             Mapper.Map<TemplateDetail, Data.Template>(template, entity);
+
             await _templateStore.Update(entity);
+
             return Mapper.Map<TemplateDetail>(entity);
         }
 
         public async Task<Template> Update(ChangedTemplate template)
         {
             var entity = await _templateStore.Load(template.Id);
-            if (entity == null)
-                throw new InvalidOperationException();
 
-            if (! await _templateStore.CanEdit(template.TopologyId, User))
+            if (entity == null || !entity.Topology.CanEdit(User))
                 throw new InvalidOperationException();
 
             Mapper.Map<ChangedTemplate, Data.Template>(template, entity);
+
             await _templateStore.Update(entity);
-            return Mapper.Map<Template>(entity);
+
+            return Mapper.Map<Template>(entity, WithActor());
         }
 
         public async Task<Template> Link(TemplateLink newlink)
         {
+            var workspace = await _workspaceStore.Load(newlink.TopologyId);
+            if (workspace == null || !workspace.CanEdit(User))
+                throw new InvalidOperationException();
+
             var entity = await _templateStore.Load(newlink.TemplateId);
+
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
@@ -102,46 +150,51 @@ namespace TopoMojo.Core
             var newTemplate = new Data.Template
             {
                 ParentId = entity.Id,
-                TopologyId = entity.TopologyId,
+                TopologyId = newlink.TopologyId,
                 Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,
                 Networks = entity.Networks
             };
+
             await _templateStore.Add(newTemplate);
+
             //TODO: streamline object graph hydration
             newTemplate = await _templateStore.Load(newTemplate.Id);
+
             return Mapper.Map<Template>(newTemplate, WithActor());
         }
 
         public async Task<Template> Unlink(TemplateLink link) //CLONE
         {
             var entity = await _templateStore.Load(link.TemplateId);
-            if (entity == null)
-                throw new InvalidOperationException();
 
-            if (! await _templateStore.CanEdit(entity.TopologyId ?? 0, User))
+            if (entity == null || !entity.Topology.CanEdit(User))
                 throw new InvalidOperationException();
 
             if (entity.Parent != null)
             {
                 TemplateUtility tu = new TemplateUtility(entity.Parent.Detail);
+
                 tu.Name = entity.Name;
+
                 tu.LocalizeDiskPaths(entity.Topology.GlobalId, entity.GlobalId);
+
                 entity.Detail = tu.ToString();
+
                 entity.Parent = null;
+
                 await _templateStore.Update(entity);
             }
+
             return Mapper.Map<Template>(entity, WithActor());
         }
 
         public async Task<Template> Delete(int id)
         {
             var entity = await _templateStore.Load(id);
-            if (entity == null)
-                throw new InvalidOperationException();
 
-            if (! await _templateStore.CanEdit(entity.TopologyId ?? 0, User))
+            if (entity == null || !entity.Topology.CanEdit(User))
                 throw new InvalidOperationException();
 
             if (await _templateStore.IsParentTemplate(id))
@@ -149,60 +202,24 @@ namespace TopoMojo.Core
 
             //delete associated vm
             var deployable = await GetDeployableTemplate(id);
-            foreach (var vm in await _pod.Find(deployable.Name+"#"+deployable.IsolationTag))
-                await _pod.Delete(vm.Id);
+
+            await _pod.DeleteAll($"{deployable.Name}#{deployable.IsolationTag}");
 
             //if root template, delete disk(s)
+            // TODO: maybe always delete disks?
             if (entity.Parent == null)
                 await _pod.DeleteDisks(deployable);
 
-            await _templateStore.Remove(entity);
-            return Mapper.Map<Template>(entity);
-        }
+            await _templateStore.Delete(entity.Id);
 
-        public async Task<SearchResult<TemplateSummary>> List(Search search)
-        {
-            var q = BuildQuery(search);
-            var result = new SearchResult<TemplateSummary>();
-            if (search.Take == 0) search.Take = 50;
-            result.Search = search;
-            result.Total = await q.CountAsync();
-            result.Results = Mapper.Map<TemplateSummary[]>(await RunQuery(search, q));
-            return result;
-        }
-
-        private IQueryable<Data.Template> BuildQuery(Search search)
-        {
-            var q = _templateStore.List();
-
-            if (search.Term.HasValue())
-                q = q.Where(t =>
-                    t.Name.ToLower().Contains(search.Term.ToLower())
-                    // || t.Description.IndexOf(search.Term, StringComparison.OrdinalIgnoreCase) >= 0
-                );
-
-            if (search.HasFilter("parents"))
-                q = q.Where(t => t.ParentId == null || t.ParentId == 0);
-
-            if (search.HasFilter("published"))
-                q = q.Where(t => t.IsPublished);
-
-            return q;
-        }
-
-        private async Task<Data.Template[]> RunQuery(Search search, IQueryable<Data.Template> q)
-        {
-            return await q
-                .OrderBy(t => t.Name)
-                .Skip(search.Skip)
-                .Take(search.Take)
-                .ToArrayAsync();
+            return Mapper.Map<Template>(entity, WithActor());
         }
 
         public async Task<TemplateSummary[]> ListChildTemplates(int templateId)
         {
-            var results = await _templateStore.ListLinkedTemplates(templateId);
-            return Mapper.Map<TemplateSummary[]>(results);
+            var results = await _templateStore.ListChildren(templateId);
+
+            return Mapper.Map<TemplateSummary[]>(results, WithActor());
         }
 
         public async Task<VmTemplate> GetDeployableTemplate(int id, string tag = "")
@@ -218,11 +235,14 @@ namespace TopoMojo.Core
         public async Task<Dictionary<string, string>> ResolveKeys(string[] keys)
         {
             var map = new Dictionary<string, string>();
-            foreach (string key in keys)
+
+            foreach (string key in keys.Distinct())
             {
                 var val = await _templateStore.ResolveKey(key);
+
                 map.Add(key, $"{val ?? "__orphaned"}#{key}");
             }
+
             return map;
         }
     }

@@ -9,11 +9,10 @@ using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using TopoMojo.Core;
 using TopoMojo.Services;
-using TopoMojo.Web;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class FileController : _Controller
@@ -33,11 +32,11 @@ namespace TopoMojo.Controllers
             _workspaceService = workspaceService;
             _uploader = uploader;
         }
+
         private readonly IWebHostEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
         private readonly WorkspaceService _workspaceService;
-
         private readonly IFileUploadHandler _uploader;
 
         [HttpGet("api/file/progress/{id}")]
@@ -48,11 +47,8 @@ namespace TopoMojo.Controllers
         }
 
         [HttpPost("api/file/upload")]
-        [JsonExceptionFilter]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        // [ApiExplorerSettings(IgnoreApi=true)]
-        //[ValidateAntiForgeryToken]
         public async Task<ActionResult<bool>> Upload()
         {
             await _uploader.Process(
@@ -75,10 +71,6 @@ namespace TopoMojo.Controllers
                     metadata.Add("destination-path", dest);
                     Log("uploading", null, dest);
 
-                    string path = Path.GetDirectoryName(dest);
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-
                     return System.IO.File.Create(dest);
                 },
                 status => {
@@ -91,11 +83,14 @@ namespace TopoMojo.Controllers
                     _monitor.Update(status.Key, status.Progress);
                     // TODO: broadcast progress to group
                 },
+
                 options => {
                     options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
                 },
+
                 metadata => {
                     string dp = metadata["destination-path"];
+
                     if (!dp.ToLower().EndsWith(".iso") && System.IO.File.Exists(dp))
                     {
                         CDBuilder builder = new CDBuilder();
@@ -111,39 +106,32 @@ namespace TopoMojo.Controllers
             return Json(true);
         }
 
-        private string SanitizeFileName(string filename)
-        {
-            string fn = "";
-            char[] bad = Path.GetInvalidFileNameChars();
-            foreach (char c in filename.ToCharArray())
-                if (!bad.Contains(c))
-                    fn += c;
-            return fn;
-        }
-
-        private string SanitizeFilePath(string path)
-        {
-            string p = "";
-            char[] bad = Path.GetInvalidPathChars();
-            foreach (char c in path.ToCharArray())
-                if (!bad.Contains(c))
-                    p += c;
-            return p;
-        }
-
         private string BuildDestinationPath(string filename, string key)
         {
-            string path = SanitizeFilePath(Path.Combine(_config.IsoRoot, key));
-            string fn = SanitizeFileName(filename);
+            string path = Path.Combine(
+                _config.IsoRoot,
+                Sanitize(key, Path.GetInvalidPathChars())
+            );
+
+            string fn = Sanitize(filename, Path.GetInvalidFileNameChars());
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             return Path.Combine(path, fn);
         }
 
-        public IActionResult Error()
+        private string Sanitize(string target, char[] bad)
         {
-            return View();
+            string p = "";
+
+            foreach (char c in target.ToCharArray())
+                if (!bad.Contains(c))
+                    p += c;
+
+            return p;
         }
 
     }
-
 
 }

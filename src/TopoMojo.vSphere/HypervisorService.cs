@@ -396,7 +396,7 @@ namespace TopoMojo.vSphere
                 {
                     Id = vm.Id,
                     Name = vm.Name.Untagged(),
-                    WorkspaceId = vm.Name.Tag(),
+                    IsolationId = vm.Name.Tag(),
                     Url = ticket,
                     IsRunning = vm.State == VmPowerState.Running
                 };

@@ -6,12 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
+using TopoMojo;
 using TopoMojo.Models;
-using TopoMojo.Data.EntityFrameworkCore;
+using TopoMojo.Data;
 using Xunit;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Tests
 {
@@ -32,14 +34,18 @@ namespace Tests
         private DbContextOptions<TopoMojoDbContext> _dbOptions;
 
         protected IMapper Mapper { get; set; }
-
+        protected IDistributedCache Cache { get; set; }
+        protected IMemoryCache MemoryCache { get; set;
+        }
         protected TestSession CreateSession()
         {
             return new TestSession(
                 CreateContext(),
                 _options,
                 _mill,
-                Mapper
+                Mapper,
+                Cache,
+                MemoryCache
             );
         }
 
@@ -56,6 +62,9 @@ namespace Tests
             Mapper = new AutoMapper.MapperConfiguration(cfg => {
                 cfg.AddTopoMojoMaps();
             }).CreateMapper();
+
+            Cache = new StubDistributedCache();
+            MemoryCache = new StubMemoryCache();
 
             _dbOptions = new DbContextOptionsBuilder<TopoMojoDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())

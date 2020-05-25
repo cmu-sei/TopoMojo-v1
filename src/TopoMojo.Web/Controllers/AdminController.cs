@@ -8,11 +8,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using TopoMojo.Core;
 using TopoMojo.Services;
-using TopoMojo.Web;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize(Policy = "AdminOnly")]
     public class AdminController : _Controller
@@ -51,7 +50,6 @@ namespace TopoMojo.Controllers
 
 
         [HttpPost("api/admin/announce")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Announce([FromBody]string text)
         {
             await Task.Run(() => SendBroadcast(text));
@@ -60,7 +58,6 @@ namespace TopoMojo.Controllers
 
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Export([FromBody] int[] ids)
         {
             string srcPath = _fileUploadOptions.TopoRoot;
@@ -74,7 +71,6 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/admin/import")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<string[]>> Import()
         {
             string destPath = _fileUploadOptions.TopoRoot;
@@ -83,7 +79,6 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/admin/live")]
-        [JsonExceptionFilter]
         public ActionResult<CachedConnection[]> LiveUsers()
         {
             return Ok(_hubCache.Connections.Values);

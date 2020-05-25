@@ -3,8 +3,9 @@
 
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Configuration;
+using TopoMojo.Extensions;
 
-namespace TopoMojo.Extensions
+namespace TopoMojo.Web.Extensions
 {
     public static class CorsPolicyExtensions
     {

@@ -1,46 +1,38 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
-// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
-
 using System;
 using System.Linq;
 using System.Reflection;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using TopoMojo.Core;
+using TopoMojo;
+using TopoMojo.Data;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class DependencyInjectionExtensions
+    public static class TopoMojoStartupExtentions
     {
+
         public static IServiceCollection AddTopoMojo(
             this IServiceCollection services,
-            Func<IConfigurationSection> coreConfig
+            CoreOptions options
         ) {
-            services
-                .AddOptions().Configure<CoreOptions>(coreConfig())
-                .AddScoped(sp => sp.GetService<IOptionsMonitor<CoreOptions>>().CurrentValue);
+
+            services.AddSingleton<CoreOptions>(_ => options);
 
             // Auto-discover from EntityService pattern
-            foreach (var t in
-                Assembly.GetExecutingAssembly().ExportedTypes
-                .Where(t => t.Namespace == "TopoMojo.Core"
+            foreach (var t in Assembly
+                .GetExecutingAssembly()
+                .ExportedTypes
+                .Where(t => t.Namespace == "TopoMojo.Services"
                     && t.Name.EndsWith("Service")
-                    && t.IsClass))
+                    && t.IsClass
+                    && !t.IsAbstract
+                )
+            )
             {
                 services.AddScoped(t);
             }
-
-
-                // .AddScoped<WorkspaceService>()
-                // .AddScoped<TemplateService>()
-                // .AddScoped<GamespaceService>()
-                // .AddScoped<UserService>()
-                // .AddScoped<ChatService>()
-                // .AddScoped<TransferService>()
-                // .AddScoped<IdentityService>()
-                // .AddScoped<EngineService>()
-                // .AddMappers();
 
             return services;
         }
@@ -51,6 +43,66 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             cfg.AddMaps(Assembly.GetExecutingAssembly());
             return cfg;
+        }
+
+        public static IServiceCollection AddTopoMojoData(
+            this IServiceCollection services,
+            string provider,
+            string connstr,
+            string migrationAssembly = null
+        )
+        {
+
+            if (string.IsNullOrEmpty(migrationAssembly))
+                migrationAssembly = Assembly.GetExecutingAssembly().GetName().Name;
+
+            switch (provider.ToLower())
+            {
+
+                case "sqlserver":
+                // builder.Services.AddEntityFrameworkSqlServer();
+                services.AddDbContext<TopoMojoDbContext, TopoMojoDbContextSqlServer>(
+                    db => db.UseSqlServer(connstr, options => options.MigrationsAssembly(migrationAssembly))
+                );
+                break;
+
+                case "postgresql":
+                // services.AddEntityFrameworkNpgsql();
+                services.AddDbContext<TopoMojoDbContext, TopoMojoDbContextPostgreSQL>(
+                    db => db.UseNpgsql(connstr, options => options.MigrationsAssembly(migrationAssembly))
+                );
+                break;
+
+                default:
+                // services.AddEntityFrameworkInMemoryDatabase();
+                services.AddDbContext<TopoMojoDbContext, TopoMojoDbContextInMemory>(
+                    db => db.UseInMemoryDatabase(connstr)
+                );
+                break;
+
+            }
+
+            // Auto-discover from EntityStore and IEntityStore pattern
+            foreach (var type in Assembly
+                .GetExecutingAssembly()
+                .ExportedTypes
+                .Where(t =>
+                    t.Namespace == "TopoMojo.Data"
+                    && t.Name.EndsWith("Store")
+                    && t.IsClass
+                    && !t.IsAbstract
+                )
+            )
+            {
+                Type ti = type.GetInterfaces().Where(i => i.Name == $"I{type.Name}").FirstOrDefault();
+
+                if (ti != null)
+                {
+                    services.AddScoped(ti, type);
+                }
+            }
+
+            return services;
         }
     }
 }

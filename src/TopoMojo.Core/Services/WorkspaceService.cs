@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -10,23 +11,21 @@ using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Extensions;
-using TopoMojo.Extensions;
 using TopoMojo.Models;
-using TopoMojo.Models.Workspace;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Services
 {
-    public class WorkspaceService : EntityService<Data.Topology>
+    public class WorkspaceService : _Service
     {
         public WorkspaceService(
             IWorkspaceStore workspaceStore,
             IGamespaceStore gamespaceStore,
             IHypervisorService podService,
-            ILoggerFactory mill,
+            ILogger<WorkspaceService> logger,
             IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base (mill, mapper, options, identityResolver)
+        ) : base (logger, mapper, options, identityResolver)
         {
             _workspaceStore = workspaceStore;
             _gamespaceStore = gamespaceStore;
@@ -37,30 +36,13 @@ namespace TopoMojo.Core
         private readonly IGamespaceStore _gamespaceStore;
         private readonly IHypervisorService _pod;
 
-        public IQueryable<Data.Topology> GetTopoQuery(Search search)
+        /// <summary>
+        /// List workspace summaries.
+        /// </summary>
+        /// <returns>Array of WorkspaceSummary</returns>
+        public async Task<WorkspaceSummary[]> List(Search search, CancellationToken ct = default(CancellationToken))
         {
-            if (search.Take == 0) search.Take = 50;
-
-            string[] allowedFilters = new string[] { "private", "public", "detail" };
-
-            if (!User.IsAdmin)
-            {
-                search.Filters = search.Filters.Except(new string[] { "detail" }).ToArray();
-            }
-
-            if (!search.Filters.Intersect(allowedFilters).Any())
-            {
-                search.Filters = new string[] { "private" };
-            }
-
-            var q = _workspaceStore.List();
-
-            if (search.HasFilter("detail"))
-            {
-                q = q.Include(t => t.Templates)
-                    .Include(t => t.Workers)
-                    .ThenInclude(w => w.Person);
-            }
+            var q = _workspaceStore.List(search.Term);
 
             if (search.HasFilter("public"))
                 q = q.Where(t => t.IsPublished);
@@ -68,326 +50,324 @@ namespace TopoMojo.Core
             if (search.HasFilter("private"))
                 q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(User.Id));
 
-            if (search.Term.HasValue())
-            {
-                string term = search.Term.ToLower();
-                q = q.Where(o =>
-                    o.GlobalId.StartsWith(term)
-                    || o.Name.ToLower().Contains(term)
-                    || o.Description.ToLower().Contains(term)
-                    || o.Author.ToLower().Contains(term)
-                );
-                // // TODO: Convert to search tags
-            }
+            q = search.Sort == "age"
+                ? q.OrderByDescending(w => w.WhenCreated)
+                : q.OrderBy(w => w.Name);
 
-            if (search.Sort == "age")
-            {
-                q = q.OrderByDescending(o => o.WhenCreated);
-            }
-            else
-            {
-                q = q.OrderBy(o => o.Name);
-            }
-            return q;
+            if (search.Skip > 0)
+                q = q.Skip(search.Skip);
+
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+
+            return Mapper.Map<WorkspaceSummary[]>(
+                await q.ToArrayAsync(ct),
+                WithActor()
+            );
         }
 
-        public async Task<SearchResult<WorkspaceSummary>> List(Search search)
+        /// <summary>
+        /// Lists workspaces with template detail.  This should only be exposed to priviledged users.
+        /// </summary>
+        /// <returns>Array of Workspaces</returns>
+        public async Task<Workspace[]> ListDetail(Search search, CancellationToken ct = default(CancellationToken))
         {
-            var q = GetTopoQuery(search);
+            var q = _workspaceStore.List(search.Term);
 
-            var result = new SearchResult<WorkspaceSummary>();
-            result.Search = search;
-            result.Total = await q.CountAsync();
-            result.Results =  Mapper.Map<WorkspaceSummary[]>(q
-                .Skip(search.Skip)
-                .Take(search.Take)
-                .ToArray(), WithActor());
-            return result;
+            q = q.Include(t => t.Templates)
+                    .Include(t => t.Workers)
+                    .ThenInclude(w => w.Person);
+
+            q = search.Sort == "age"
+                ? q.OrderByDescending(w => w.WhenCreated)
+                : q.OrderBy(w => w.Name);
+
+            if (search.Skip > 0)
+                q = q.Skip(search.Skip);
+
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+
+            return Mapper.Map<Workspace[]>(
+                await q.ToArrayAsync(ct),
+                WithActor()
+            );
         }
 
-        public async Task<SearchResult<Workspace>> ListDetail(Search search)
-        {
-            if (!User.IsAdmin)
-                throw new InvalidOperationException();
-
-            if (!search.HasFilter("detail"))
-            {
-                var filters = search.Filters.ToList();
-                filters.Add("detail");
-                search.Filters = filters.ToArray();
-            }
-
-            var q = GetTopoQuery(search);
-
-            SearchResult<Workspace> result = new SearchResult<Workspace>();
-            result.Search = search;
-            result.Total = await q.CountAsync();
-            result.Results =  Mapper.Map<Workspace[]>(q
-                .Skip(search.Skip)
-                .Take(search.Take)
-                .ToArray(), WithActor());
-            return result;
-        }
-
+        /// <summary>
+        /// Load a workspace by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Workspace</returns>
         public async Task<Workspace> Load(int id)
         {
             Data.Topology topo = await _workspaceStore.Load(id);
+
             if (topo == null)
                 throw new InvalidOperationException();
 
-            var worker = topo.Workers.Where(w => w.PersonId == User.Id).SingleOrDefault();
-            if (worker != null)
-            {
-                worker.LastSeen = DateTime.UtcNow;
-                await _workspaceStore.Update(topo);
-            }
-
             return Mapper.Map<Workspace>(topo, WithActor());
         }
 
+        /// <summary>
+        /// Create a new workspace
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>Workspace</returns>
         public async Task<Workspace> Create(NewWorkspace model)
         {
-            if (!User.IsAdmin)
-            {
-                int existingWorkspaceCount = await _workspaceStore.GetWorkspaceCount(User.Id);
-                if (existingWorkspaceCount >= User.WorkspaceLimit)
-                    throw new WorkspaceLimitException();
-            }
+            if (!User.IsAdmin && User.WorkspaceLimit <= await _workspaceStore.GetWorkspaceCount(User.Id))
+                throw new WorkspaceLimitReachedException();
 
-            Data.Topology topo = Mapper.Map<Data.Topology>(model);
-            topo.TemplateLimit = _options.WorkspaceTemplateLimit;
-            topo.ShareCode = Guid.NewGuid().ToString("N");
-            topo.Author = User.Name;
-            topo.LastLaunch = DateTime.MinValue;
-            topo = await _workspaceStore.Add(topo);
-            topo.Workers.Add(new Data.Worker
+            var workspace = Mapper.Map<Data.Topology>(model);
+
+            workspace.TemplateLimit = _options.DefaultTemplateLimit;
+
+            workspace.ShareCode = Guid.NewGuid().ToString("N");
+
+            workspace.Author = User.Name;
+
+            workspace.LastActivity = DateTime.UtcNow;
+
+            workspace = await _workspaceStore.Add(workspace);
+
+            workspace.Workers.Add(new Data.Worker
             {
                 PersonId = User.Id,
-                Permission = Data.Permission.Manager,
-                LastSeen = DateTime.UtcNow
+                Permission = Data.Permission.Manager
             });
-            await _workspaceStore.Update(topo);
 
-            return Mapper.Map<Workspace>(topo, WithActor());
+            await _workspaceStore.Update(workspace);
+
+            return Mapper.Map<Workspace>(workspace, WithActor());
         }
 
+        /// <summary>
+        /// Update an existing workspace.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public async Task<Workspace> Update(ChangedWorkspace model)
         {
-            if (! await _workspaceStore.CanEdit(model.Id, User))
+            var entity = await _workspaceStore.Load(model.Id);
+
+            if (entity == null || !entity.CanEdit(User))
                 throw new InvalidOperationException();
 
-            Data.Topology entity = await _workspaceStore.Load(model.Id);
-            if (entity == null)
-                throw new InvalidOperationException();
+            if (!User.IsAdmin)
+                model.TemplateLimit = entity.TemplateLimit;
 
-            Mapper.Map<ChangedWorkspace, Data.Topology>(model, entity);
+            Mapper.Map<ChangedWorkspace, Data.Topology>(model, entity, WithActor());
+
             await _workspaceStore.Update(entity);
+
             return Mapper.Map<Workspace>(entity, WithActor());
         }
 
-        public async Task<Workspace> UpdatePrivilegedChanges(PrivilegedWorkspaceChanges model)
-        {
-            if (!User.IsAdmin)
-                throw new InvalidOperationException();
-
-            Data.Topology entity = await _workspaceStore.Load(model.Id);
-            if (entity == null)
-                throw new InvalidOperationException();
-
-            Mapper.Map<PrivilegedWorkspaceChanges, Data.Topology>(model, entity);
-            await _workspaceStore.Update(entity);
-            return Mapper.Map<Workspace>(entity);
-        }
-
+        /// <summary>
+        /// Delete a workspace
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Workspace</returns>
         public async Task<Workspace> Delete(int id)
         {
-            if (! await _workspaceStore.CanEdit(id, User))
+            var entity = await _workspaceStore.Load(id);
+
+            if (entity == null || !entity.CanManage(User))
                 throw new InvalidOperationException();
 
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
-                throw new InvalidOperationException();
+            await _pod.DeleteAll(entity.GlobalId);
 
-            foreach (Vm vm in await _pod.Find(topology.GlobalId))
-                await _pod.Delete(vm.Id);
+            await _workspaceStore.Delete(id);
 
-            await _workspaceStore.Remove(topology);
-            return Mapper.Map<Workspace>(topology);
+            return Mapper.Map<Workspace>(entity, WithActor());
         }
 
-        public async Task<bool> CanEdit(string guid)
+        /// <summary>
+        /// Determine if current user can edit workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<bool> CanEdit(string id)
         {
-            Data.Topology topology = await _workspaceStore.FindByGlobalId(guid);
-            if (topology == null)
-                return false;
+            var entity = await _workspaceStore.Load(id);
 
-            return await _workspaceStore.CanEdit(topology.Id, User);
+            return entity != null
+                ? entity.CanEdit(User)
+                : false;
         }
 
-        public async Task<bool> CanEdit(int topoId)
-        {
-            return await _workspaceStore.CanEdit(topoId, User);
-        }
-
+        /// <summary>
+        /// Change workspace state options.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
         public async Task<WorkspaceState> ChangeState(WorkspaceStateAction action)
         {
             WorkspaceState state = null;
+
             switch (action.Type)
             {
                 case WorkspaceStateActionType.Share:
                 state = await Share(action.Id, false);
                 break;
+
                 case WorkspaceStateActionType.Unshare:
                 state = await Share(action.Id, true);
                 break;
+
                 case WorkspaceStateActionType.Publish:
                 state = await Publish(action.Id, false);
                 break;
+
                 case WorkspaceStateActionType.Unpublish:
                 state = await Publish(action.Id, true);
                 break;
-                case WorkspaceStateActionType.Lock:
-                state = await Lock(action.Id, false);
-                break;
-                case WorkspaceStateActionType.Unlock:
-                state = await Lock(action.Id, true);
-                break;
+
             }
+
             return state;
         }
+
+        /// <summary>
+        /// Generate a new invitation code for a workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="revoke"></param>
+        /// <returns></returns>
         public async Task<WorkspaceState> Share(int id, bool revoke)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
+            var workspace = await _workspaceStore.Load(id);
+
+            if (workspace == null || !workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
-            if (! await _workspaceStore.CanEdit(id, User))
-                throw new InvalidOperationException();
+            workspace.ShareCode = Guid.NewGuid().ToString("N");
 
-            // topology.ShareCode = (revoke) ? "" : Guid.NewGuid().ToString("N");
-            topology.ShareCode = Guid.NewGuid().ToString("N");
-            await _workspaceStore.Update(topology);
-            return Mapper.Map<WorkspaceState>(topology);
+            await _workspaceStore.Update(workspace);
+
+            return Mapper.Map<WorkspaceState>(workspace);
         }
 
+        /// <summary>
+        /// Toggle the publish status of a workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="revoke"></param>
+        /// <returns></returns>
         public async Task<WorkspaceState> Publish(int id, bool revoke)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
+            var workspace = await _workspaceStore.Load(id);
+
+            if (workspace == null || !workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
-            if (! await _workspaceStore.CanEdit(id, User))
-                throw new InvalidOperationException();
+            workspace.IsPublished = !revoke;
 
-            topology.IsPublished = !revoke;
-            if (topology.IsPublished && topology.WhenPublished is null)
-            {
-                topology.WhenPublished = DateTime.UtcNow;
-            }
-            await _workspaceStore.Update(topology);
-            return Mapper.Map<WorkspaceState>(topology);
+            await _workspaceStore.Update(workspace);
+
+            return Mapper.Map<WorkspaceState>(workspace);
         }
 
-        public async Task<WorkspaceState> Lock(int id, bool revoke)
+        /// <summary>
+        /// Redeem an invitation code to join user to workspace.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public async Task Enlist(string code)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
+            var workspace = await _workspaceStore.FindByShareCode(code);
+
+            if (workspace == null)
                 throw new InvalidOperationException();
 
-            if (! User.IsAdmin)
-                throw new InvalidOperationException();
-
-            topology.IsLocked = !revoke;
-            await _workspaceStore.Update(topology);
-            return Mapper.Map<WorkspaceState>(topology);
-        }
-
-        public async Task<bool> Enlist(string code)
-        {
-            var topology = await _workspaceStore.FindByShareCode(code);
-
-            if (topology == null)
-                throw new InvalidOperationException();
-
-            if (!topology.Workers.Where(m => m.PersonId == User.Id).Any())
+            if (!workspace.Workers.Where(m => m.PersonId == User.Id).Any())
             {
-                topology.Workers.Add(new Data.Worker
+                workspace.Workers.Add(new Data.Worker
                 {
                     PersonId = User.Id,
-                    Permission = Data.Permission.Editor,
-                    LastSeen = DateTime.UtcNow
+                    Permission = Data.Permission.Editor
+                    // LastSeen = DateTime.UtcNow
                 });
-                await _workspaceStore.Update(topology);
+
+                await _workspaceStore.Update(workspace);
             }
-            return true;
         }
 
-        public async Task<bool> Delist(int workerId)
+        /// <summary>
+        /// Remove a worker from a workspace.
+        /// </summary>
+        /// <param name="workerId"></param>
+        /// <returns></returns>
+        public async Task Delist(int workerId)
         {
-            var topology = await _workspaceStore.FindByWorker(workerId);
+            var workspace = await _workspaceStore.FindByWorker(workerId);
 
-            if (topology == null)
+            if (workspace == null || !workspace.CanManage(User))
                 throw new InvalidOperationException();
 
-            if (! await _workspaceStore.CanManage(topology.Id, User))
-                throw new InvalidOperationException();
-
-            var member = topology.Workers
+            var member = workspace.Workers
                 .Where(p => p.Id == workerId)
                 .SingleOrDefault();
 
-            if (!User.IsAdmin //if you aren't admin, you can't remove the last remaining workspace manager
+            // Only admins can remove the last remaining workspace manager
+            if (!User.IsAdmin
                 && member.Permission.CanManage()
-                && topology.Workers.Count(w => w.Permission.HasFlag(Data.Permission.Manager)) == 1)
+                && workspace.Workers.Count(w => w.Permission.HasFlag(Data.Permission.Manager)) == 1)
                 throw new InvalidOperationException();
 
             if (member != null)
             {
-                topology.Workers.Remove(member);
-                await _workspaceStore.Update(topology);
+                workspace.Workers.Remove(member);
+
+                await _workspaceStore.Update(workspace);
             }
-            return true;
         }
 
+        /// <summary>
+        /// Determine if gamespaces exist for a workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<bool> HasGames(int id)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
-                throw new InvalidOperationException();
-
-            if (! await _workspaceStore.CanEdit(id, User))
-                throw new InvalidOperationException();
-
-            return topology.Gamespaces.Any();
+           return await _workspaceStore.HasGames(id);
         }
 
+        /// <summary>
+        /// Retrieve existing gamestates for a workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<GameState[]> GetGames(int id)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
+            var workspace = await _workspaceStore.LoadWithGamespaces(id);
+
+            if (workspace == null || !workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
-            if (! await _workspaceStore.CanEdit(id, User))
-                throw new InvalidOperationException();
-
-            return Mapper.Map<GameState[]>(topology.Gamespaces);
+            return Mapper.Map<GameState[]>(workspace.Gamespaces);
         }
 
+        /// <summary>
+        /// Delete all existing gamespaces of a workspace.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<GameState[]> KillGames(int id)
         {
-            Data.Topology topology = await _workspaceStore.Load(id);
-            if (topology == null)
+            var workspace = await _workspaceStore.LoadWithGamespaces(id);
+
+            if (workspace == null || !workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
-            if (! await _workspaceStore.CanEdit(id, User))
-                throw new InvalidOperationException();
-
-            var result = topology.Gamespaces.ToArray();
+            var result = workspace.Gamespaces.ToArray();
 
             foreach (var gamespace in result)
             {
                 await _pod.DeleteAll(gamespace.GlobalId);
-                await _gamespaceStore.Remove(gamespace);
+
+                await _gamespaceStore.Delete(gamespace.Id);
             }
 
             return Mapper.Map<GameState[]>(result);

@@ -8,18 +8,21 @@
     <Content Update="appsettings.json;seed-data.json.example" CopyToPublishDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />
     <ProjectReference Include="..\TopoMojo.Core\TopoMojo.Core.csproj" />
     <ProjectReference Include="..\TopoMojo.vSphere\TopoMojo.vSphere.csproj" />
-    <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />
-    <ProjectReference Include="..\TopoMojo.Data.Sqlite\TopoMojo.Data.Sqlite.csproj" />
-    <ProjectReference Include="..\TopoMojo.Data.SqlServer\TopoMojo.Data.SqlServer.csproj" />
-    <ProjectReference Include="..\TopoMojo.Data.PostgreSQL\TopoMojo.Data.PostgreSQL.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
-    <!-- <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" /> -->
     <PackageReference Include="DiscUtils.Iso9660" Version="0.14.2-alpha" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="3.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="3.1" />
   </ItemGroup>
 </Project>

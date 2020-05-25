@@ -7,11 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
 using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class GamespaceController : _Controller
@@ -33,24 +32,14 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/gamespaces")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Gamespace[]>> List(string filter)
         {
             var result = await _gamespaceService.List(filter);
             return Ok(result);
         }
 
-        // [Authorize(Roles = "Administrator")]
-        // [HttpGet("api/gamespaces/all")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Gamespace[]>> ListAll()
-        // {
-        //     var result = await _mgr.ListAll();
-        //     return Ok(result);
-        // }
         [AllowAnonymous]
         [HttpGet("api/gamespace/{id}/preview")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Preview(int id)
         {
             var result = await _gamespaceService.LoadPreview(id);
@@ -58,7 +47,6 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/gamespace/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Load(int id)
         {
             var result = await _gamespaceService.LoadFromTopo(id);
@@ -66,7 +54,6 @@ namespace TopoMojo.Controllers
         }
 
         [HttpPost("api/gamespace/{id}/launch")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Launch(int id)
         {
             var result = await _gamespaceService.Launch(id);
@@ -75,7 +62,6 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/gamespace/{id}/state")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> CheckState(int id)
         {
             var result = await _gamespaceService.Load(id);
@@ -83,31 +69,32 @@ namespace TopoMojo.Controllers
         }
 
         [HttpDelete("api/gamespace/{id}")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Destroy(int id)
+        public async Task<ActionResult> Destroy(int id)
         {
             var result = await _gamespaceService.Destroy(id);
+
             Log("destroyed", result);
+
             SendBroadcast(result, "OVER");
-            return Ok(true);
+
+            return Ok();
         }
 
         [HttpPost("api/player/enlist/{code}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
-            return Ok(await _gamespaceService.Enlist(code));
+            await _gamespaceService.Enlist(code);
+            return Ok();
         }
 
         [HttpDelete("api/player/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Delist(int id)
         {
-            return Ok(await _gamespaceService.Delist(id));
+            await _gamespaceService.Delist(id);
+            return Ok();
         }
 
         [HttpGet("api/gamespace/{id}/players")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Player[]>> Players(int id)
         {
             return Ok(await _gamespaceService.Players(id));

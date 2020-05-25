@@ -8,12 +8,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Core.Models;
 using TopoMojo.Models;
-using TopoMojo.Models.Workspace;
-using TopoMojo.Services;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize(Policy = "OneTimeTicket")]
     public class TopologyHub : Hub<ITopoEvent>

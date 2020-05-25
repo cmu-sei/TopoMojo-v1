@@ -10,6 +10,7 @@ namespace TopoMojo.Models
         public int Id { get; set; }
         public string GlobalId { get; set; }
         public string Name { get; set; }
+        public string Slug { get; set; }
         public string WhenCreated { get; set; }
         public string TopologyDocument { get; set; }
         public int TopologyId { get; set; }

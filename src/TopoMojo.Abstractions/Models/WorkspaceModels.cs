@@ -1,13 +1,14 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-namespace TopoMojo.Models.Workspace
+namespace TopoMojo.Models
 {
     public class Workspace
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }
         public string Name { get; set; }
+        public string Slug { get; set; }
         public string Description { get; set; }
         public string DocumentUrl { get; set; }
         public string Author { get; set; }
@@ -25,7 +26,9 @@ namespace TopoMojo.Models.Workspace
     public class WorkspaceSummary
     {
         public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
+        public string Slug { get; set; }
         public string Description { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
@@ -48,12 +51,8 @@ namespace TopoMojo.Models.Workspace
         public string Description { get; set; }
         public string Author { get; set; }
         public bool IsPublished { get; set; }
+        public string Audience { get; set; }
         public string DocumentUrl { get; set; }
-    }
-
-    public class PrivilegedWorkspaceChanges
-    {
-        public int Id { get; set; }
         public int TemplateLimit { get; set; }
     }
 

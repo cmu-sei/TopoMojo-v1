@@ -9,13 +9,12 @@
   <ItemGroup>
     <ProjectReference Include="../../src/TopoMojo.Abstractions/TopoMojo.Abstractions.csproj" />
     <ProjectReference Include="../../src/TopoMojo.Core/TopoMojo.Core.csproj" />
-    <ProjectReference Include="../../src/TopoMojo.Data/TopoMojo.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AutoMapper" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />

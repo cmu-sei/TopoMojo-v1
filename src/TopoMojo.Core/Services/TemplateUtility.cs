@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Services
 {
     public class TemplateUtility
     {
@@ -22,6 +22,7 @@ namespace TopoMojo.Core
             else
             {
                 diskname = Regex.Replace(diskname, @"[^\w\d]", "-").Replace("--", "-").Trim('-').ToLower();
+
                 _template = new VmTemplate
                 {
                     Ram = 4,
@@ -41,6 +42,10 @@ namespace TopoMojo.Core
         }
 
         private VmTemplate _template = null;
+        private JsonSerializerOptions jsonOptions => new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
 
         public string Id
         {
@@ -63,14 +68,18 @@ namespace TopoMojo.Core
         public string Networks
         {
             get { return String.Join(", ", _template.Eth.Select(e => e.Net)); }
+
             set
             {
                 List<VmNet> nics = _template.Eth.ToList();
+
                 if (nics.Count == 0 || !value.HasValue())
                     return;
+
                 VmNet proto = nics.First();
 
                 string[] nets = value.Split(new char[] { ' ', ',', '\t', '|', ':'}, StringSplitOptions.RemoveEmptyEntries);
+
                 if (nets.Length == 0) nets = new string[]{ "lan" };
 
                 for (int i = nics.Count; i > nets.Length; i--)
@@ -84,8 +93,10 @@ namespace TopoMojo.Core
                             Type = proto.Type,
                         });
                     }
+
                     nics[i].Net = nets[i];
                 }
+
                 _template.Eth = nics.ToArray();
             }
         }
@@ -114,21 +125,25 @@ namespace TopoMojo.Core
                 throw new InvalidOperationException();
 
             string path = $"[ds] {topologyKey}/{templateKey}";
+
             int i = 0;
+
             foreach (VmDisk disk in _template.Disks)
             {
                 if (!disk.Path.StartsWith(path))
                 {
                     disk.Source = disk.Path;
+
                     disk.Path = $"{path}_{i}.vmdk";
                 }
+
                 i += 1;
             }
         }
 
         public override string ToString()
         {
-            return JsonSerializer.Serialize(_template);
+            return JsonSerializer.Serialize<VmTemplate>(_template, jsonOptions);
         }
 
         public VmTemplate AsTemplate()

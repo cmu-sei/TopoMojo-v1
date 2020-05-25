@@ -1,0 +1,26 @@
+@api = http://localhost:5004/api
+@json = Content-Type: application/json
+
+###
+POST http://localhost:5000/api/resource/devimport
+{{json}}
+
+{
+    "Apis": [ "topomojo-api" ],
+    "Clients": [
+        {
+            "Id": "topomojo-ui",
+            "DisplayName": "",
+            "GrantType": "authorization_code",
+            "Scopes": "openid profile topomojo-api",
+            "Secret": "",
+            "RedirectUrl": "http://localhost:4200/oidc"
+        },
+        {
+            "Id": "topomojo-swagger",
+            "GrantType": "authorization_code",
+            "Scopes": "openid topomojo-api",
+            "RedirectUrl": "http://localhost:5004/api/oauth2-redirect.html"
+        }
+    ]
+}

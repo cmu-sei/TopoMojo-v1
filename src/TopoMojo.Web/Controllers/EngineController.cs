@@ -7,11 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
 using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize(Policy = "TrustedClients")]
     [ApiExplorerSettings(IgnoreApi = true)]
@@ -34,50 +33,47 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpPost("api/engine")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Launch([FromBody] NewGamespace model)
         {
             var result = await _engineService.Launch(model.Workspace, model.Id);
+
             Log("launched", result);
+
             return Ok(result);
         }
 
         [HttpDelete("api/engine/{id}")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Destroy([FromRoute]string id)
+        public async Task<ActionResult> Destroy([FromRoute]string id)
         {
-            var result = await _engineService.Destroy(id);
-            Log("destroyed", result);
-            return Ok(true);
+            await _engineService.Destroy(id);
+
+            Log("destroyed", new GameState {GlobalId = id});
+
+            return Ok();
         }
 
         [HttpGet("api/engine/ticket/{vmId}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<ConsoleSummary>> Ticket([FromRoute]string vmId)
         {
             return Ok(await _engineService.Ticket(vmId));
         }
 
         [HttpGet("api/engine/topo/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<string>> Templates([FromRoute]int id)
         {
             return Ok(await _engineService.GetTemplates(id));
         }
 
         [HttpPut("api/engine/vmaction")]
-        [JsonExceptionFilter]
         public async Task<IActionResult> ChangeVm([FromBody] VmAction vmAction)
         {
             return Ok(await _engineService.ChangeVm(vmAction));
         }
 
         [HttpGet("api/engine")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<string>> Test()
+        public ActionResult<string> Usage()
         {
-            await Task.Delay(0);
-            return Ok("Test output.");
+            return Ok("See API documentation.");
         }
 
     }

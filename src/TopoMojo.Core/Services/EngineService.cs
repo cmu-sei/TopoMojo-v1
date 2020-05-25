@@ -13,20 +13,20 @@ using TopoMojo.Data.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Services
 {
-    public class EngineService : EntityService<Data.Gamespace>
+    public class EngineService : _Service
     {
         public EngineService(
             IGamespaceStore gamespaceStore,
             IWorkspaceStore workspaceStore,
             ITemplateStore templateStore,
             IHypervisorService podService,
-            ILoggerFactory mill,
+            ILogger<EngineService> logger,
             IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base (mill, mapper, options, identityResolver)
+        ) : base (logger, mapper, options, identityResolver)
         {
             _pod = podService;
             _gamespaceStore = gamespaceStore;
@@ -41,25 +41,28 @@ namespace TopoMojo.Core
 
         public async Task<GameState> Launch(int workspaceId, string isolationId)
         {
-            return await Launch(new GamespaceSpec{ WorkspaceId = workspaceId }, isolationId);
+            return await Launch(
+                new GamespaceSpec{ WorkspaceId = workspaceId },
+                isolationId);
         }
 
         public async Task<GameState> Launch(GamespaceSpec spec, string isolationId)
         {
-            var game = await _gamespaceStore.FindByGlobalId(isolationId);
+            var game = await _gamespaceStore.Load(isolationId);
 
             if (game == null)
             {
-                Data.Topology topology = await _workspaceStore.Load(spec.WorkspaceId);
-                if (topology == null)
+                var workspace = await _workspaceStore.Load(spec.WorkspaceId);
+
+                if (workspace == null)
                     throw new InvalidOperationException();
 
                 game = new Data.Gamespace
                 {
                     GlobalId = isolationId,
-                    Name = topology.Name,
-                    TopologyId = spec.WorkspaceId,
-                    ShareCode = Guid.NewGuid().ToString("N")
+                    Name = workspace.Name,
+                    Topology = workspace,
+                    // ShareCode = Guid.NewGuid().ToString("N")
                 };
 
                 await _gamespaceStore.Add(game);
@@ -76,8 +79,8 @@ namespace TopoMojo.Core
             try
             {
                 var templates = String.IsNullOrEmpty(spec.Templates)
-                ? Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates)
-                : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
+                    ? Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates)
+                    : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
 
                 ApplyIso(templates, spec);
 
@@ -107,6 +110,7 @@ namespace TopoMojo.Core
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deploying Engine mojo");
+
                 throw ex;
             }
 
@@ -125,7 +129,7 @@ namespace TopoMojo.Core
                 new KeyValuePair<string,string>("dhcp", String.Join(";", spec.Network.Dnsmasq))
             };
 
-            var netServerTemplateEntity = await _templateStore.Load(_options.DefaultNetServerTemplateId);
+            var netServerTemplateEntity = await _templateStore.Load(_options.NetworkHostTemplateId);
 
             if (netServerTemplateEntity != null)
             {
@@ -146,7 +150,7 @@ namespace TopoMojo.Core
                 if (vmspec == null || vmspec.Replicas < 2)
                     continue;
 
-                int total = Math.Min(vmspec.Replicas, _options.GameEngineMaxReplicas);
+                int total = Math.Min(vmspec.Replicas, _options.ReplicaLimit);
 
                 for (int i = 1; i < total; i++)
                 {
@@ -189,56 +193,75 @@ namespace TopoMojo.Core
             if (gamespace == null)
             {
                 Data.Topology topo = await _workspaceStore.Load(topoId);
+
                 if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
 
                 state = new GameState();
+
                 state.Name = gamespace?.Name ?? topo.Name;
+
                 state.TopologyDocument = topo.Document;
+
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
+
             }
             else
             {
                 state = Mapper.Map<GameState>(gamespace);
+
                 state.Vms = gamespace.Topology.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
+
                 state.MergeVms(await _pod.Find(gamespace.GlobalId));
             }
 
             return state;
         }
 
-        public async Task<GameState> Destroy(string globalId)
+        public async Task Destroy(string globalId)
         {
-            var gamespace = await _gamespaceStore.FindByGlobalId(globalId);
+            var gamespace = await _gamespaceStore.Load(globalId);
+
             if (gamespace == null)
                 throw new InvalidOperationException();
 
             await _pod.DeleteAll(gamespace.GlobalId);
 
-            await _gamespaceStore.Remove(gamespace);
-            return Mapper.Map<GameState>(gamespace);
+            await _gamespaceStore.Delete(gamespace.Id);
         }
 
         public async Task<ConsoleSummary> Ticket(string vmId)
         {
             var info = await _pod.Display(vmId);
+
+            var gamespace = await _gamespaceStore.Load(info.IsolationId);
+
+            if (gamespace != null)
+            {
+                gamespace.LastActivity = DateTime.UtcNow;
+                await _gamespaceStore.Update(gamespace);
+            }
+
             if (info.Url.HasValue())
             {
                 var src = new Uri(info.Url);
+
                 info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
             }
+
             return info;
         }
 
         public async Task<string> GetTemplates(int topoId)
         {
-            Data.Topology topo = await _workspaceStore.Load(topoId);
+            var topo = await _workspaceStore.Load(topoId);
+
             return (topo != null)
                 ? JsonSerializer.Serialize(Mapper.Map<List<ConvergedTemplate>>(topo.Templates), null)
                 : "";
@@ -260,7 +283,9 @@ namespace TopoMojo.Core
                     try
                     {
                         await _pod.StopAll(vmAction.Id);
+
                     } catch {}
+
                     break;
 
                 case "start":
@@ -276,19 +301,28 @@ namespace TopoMojo.Core
                     try
                     {
                         await _pod.StartAll(vmAction.Id);
+
                     } catch {}
+
                     result = true;
                     break;
 
                 case "iso":
                     // look up iso path
                     var vm = (await _pod.Find(vmAction.Id)).FirstOrDefault();
-                    var gamespace = await _gamespaceStore.FindByGlobalId(vm.Name.Tag());
+
+                    var gamespace = await _gamespaceStore.Load(vm.Name.Tag());
+
                     var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Topology.GlobalId);
+
                     string path = allowedIsos.Iso.Where(x => x.Contains(vmAction.Message)).FirstOrDefault();
+
                     _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Topology.Name}, {String.Join(" ", allowedIsos.Iso)}");
+
                     await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair<string,string>("iso", path));
+
                     result = true;
+
                     break;
 
             }
@@ -296,5 +330,11 @@ namespace TopoMojo.Core
             return result;
         }
 
+        public async Task<WorkspaceSummary[]> ListWorkspaces(Search search)
+        {
+            // IsPublished or Audience.Contains(allowed)
+
+            return null;
+        }
     }
 }

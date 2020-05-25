@@ -9,103 +9,105 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TopoMojo.Core;
 using TopoMojo.Extensions;
-using TopoMojo.Web;
+using TopoMojo.Services;
 using TopoMojo.Web.Models;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class DocumentController : _Controller
     {
         public DocumentController(
-            WorkspaceService workspaceService,
             IWebHostEnvironment env,
+            WorkspaceService workspaceService,
             IServiceProvider sp
         ) : base(sp)
         {
-            _workspaceService = workspaceService;
             _env = env;
+            _workspaceService = workspaceService;
         }
+
+        // TODO: make folder a setting -- "docs"
 
         private readonly WorkspaceService _workspaceService;
         private readonly IWebHostEnvironment _env;
 
         [HttpPut("api/document/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
-            if (await _workspaceService.CanEdit(id))
-            {
-                string path = GetPath("docs");
-                path = System.IO.Path.Combine(path, id+".md");
-                System.IO.File.WriteAllText(path, text);
-                return Ok();
-            }
-            return BadRequest();
+            if (!await _workspaceService.CanEdit(id))
+                return Forbid();
+
+            string path = BuildPath("docs");
+
+            path = System.IO.Path.Combine(path, id + ".md");
+
+            System.IO.File.WriteAllText(path, text);
+
+            return Ok();
         }
 
         [HttpGet("api/images/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<ImageFile[]>> Images(string id)
         {
-            if (await _workspaceService.CanEdit(id))
-            {
-                string path = Path.Combine(_env.WebRootPath, "docs", id);
-                if (Directory.Exists(path))
-                {
-                    return Ok(
-                        Directory.GetFiles(path)
-                        .Select(x => new ImageFile { Filename = Path.GetFileName(x)})
-                        .ToArray()
-                    );
-                }
-            }
-            return Ok(new ImageFile[]{});
+            if (!await _workspaceService.CanEdit(id))
+                return Forbid();
+
+            string path = Path.Combine(_env.WebRootPath, "docs", id);
+
+            if (!Directory.Exists(path))
+                return Ok(new ImageFile[]{});
+
+
+            return Ok(
+                Directory.GetFiles(path)
+                .Select(x => new ImageFile { Filename = Path.GetFileName(x)})
+                .ToArray()
+            );
         }
 
         [HttpDelete("api/image/{id}")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<ImageFile>> Delete(string id, string filename)
+        public async Task<IActionResult> Delete(string id, string filename)
         {
-            if (filename.HasValue() && await _workspaceService.CanEdit(id))
+            if (!await _workspaceService.CanEdit(id))
+                return Forbid();
+
+            string path = BuildPath("docs", id, filename);
+            if (filename.HasValue() && System.IO.File.Exists(path))
             {
-                string path = Path.Combine(_env.WebRootPath, "docs", id, filename);
-                if (System.IO.File.Exists(path))
-                {
-                    System.IO.File.Delete(path);
-                    return Ok(new ImageFile { Filename = filename });
-                }
+                System.IO.File.Delete(path);
+                return Ok();
             }
-            throw new InvalidOperationException();
+
+            return BadRequest();
         }
 
         [HttpPost("api/image/{id}")]
-        [JsonExceptionFilter]
         [ApiExplorerSettings(IgnoreApi=true)]
         public async Task<ActionResult<ImageFile>> Upload(string id, IFormFile file)
         {
-            if (file.Length > 0)
+            if (!await _workspaceService.CanEdit(id))
+                return Forbid();
+
+            string path = BuildPath("docs", id);
+
+            string filename = SanitizeFilename(file.FileName);
+
+            path = Path.Combine(path, filename);
+
+            using (var stream = new FileStream(path, FileMode.Create))
             {
-                if (await _workspaceService.CanEdit(id))
-                {
-                    string path = GetPath("docs", id);
-                    string filename = SanitizeFilename(file.FileName);
-                    path = Path.Combine(path, filename);
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    return Ok(new ImageFile { Filename = filename});
-                }
+                await file.CopyToAsync(stream);
             }
-            throw new InvalidOperationException();
+
+            return Ok(new ImageFile { Filename = filename});
         }
 
-        private string GetPath(params string[] segments)
+        private string BuildPath(params string[] segments)
         {
             string path = _env.WebRootPath;
+
             foreach (string s in segments)
                 path = System.IO.Path.Combine(path, s);
 
@@ -118,11 +120,15 @@ namespace TopoMojo.Controllers
         private string SanitizeFilename(string filename)
         {
             string fn = "";
+
             char[] badFilenameChars = Path.GetInvalidFileNameChars();
+
             filename = filename.Replace(" ", "");
+
             foreach (char c in filename.ToCharArray())
                 if (!badFilenameChars.Contains(c))
                     fn += c;
+
             return fn.ToLower();
         }
     }

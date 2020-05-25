@@ -10,21 +10,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Extensions;
 using TopoMojo.Models;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Services
 {
-    public class GamespaceService : EntityService<Data.Gamespace>
+    public class GamespaceService : _Service
     {
         public GamespaceService(
             IGamespaceStore gamespaceStore,
             IWorkspaceStore workspaceStore,
             IHypervisorService podService,
-            ILoggerFactory mill,
+            ILogger<GamespaceService> logger,
             IMapper mapper,
             CoreOptions options,
             IIdentityResolver identityResolver
-        ) : base (mill, mapper, options, identityResolver)
+        ) : base (logger, mapper, options, identityResolver)
         {
             _pod = podService;
             _gamespaceStore = gamespaceStore;
@@ -41,7 +42,9 @@ namespace TopoMojo.Core
             {
                 return await ListAll();
             }
+
             var list = await _gamespaceStore.ListByProfile(User.Id).ToArrayAsync();
+
             return Mapper.Map<Gamespace[]>(list);
         }
 
@@ -54,12 +57,15 @@ namespace TopoMojo.Core
                 .Include(g => g.Players)
                 .ThenInclude(p => p.Person)
                 .ToArrayAsync();
+
             return Mapper.Map<Gamespace[]>(list);
         }
 
         public async Task<GameState> Launch(int topoId)
         {
-            var gamespaces = await _gamespaceStore.ListByProfile(User.Id).ToArrayAsync();
+            var gamespaces = await _gamespaceStore
+                .ListByProfile(User.Id)
+                .ToArrayAsync();
 
             var game = gamespaces
                 .Where(m => m.TopologyId == topoId)
@@ -67,29 +73,33 @@ namespace TopoMojo.Core
 
             if (game == null)
             {
-                var topology = await _workspaceStore.Load(topoId);
-                if (topology == null)
+                var workspace = await _workspaceStore.Load(topoId);
+
+                if (workspace == null)
                     throw new InvalidOperationException();
 
-                if (gamespaces.Length >= _options.ConcurrentInstanceMaximum)
+                if (gamespaces.Length >= _options.GamespaceLimit)
                     throw new GamespaceLimitException();
 
                 game = new Data.Gamespace
                 {
-                    Name = topology.Name,
-                    TopologyId = topoId,
+                    Name = workspace.Name,
+                    Topology = workspace,
                     ShareCode = Guid.NewGuid().ToString("N")
                 };
+
                 game.Players.Add(
                     new Data.Player
                     {
                         PersonId = User.Id,
-                        Permission = Data.Permission.Manager,
-                        LastSeen = DateTime.UtcNow
+                        Permission = Data.Permission.Manager
+                        // LastSeen = DateTime.UtcNow
                     }
                 );
+
                 await _gamespaceStore.Add(game);
             }
+
             return await Deploy(await _gamespaceStore.Load(game.Id));
         }
 
@@ -116,12 +126,14 @@ namespace TopoMojo.Core
         public async Task<GameState> Load(int id)
         {
             var gamespace = await _gamespaceStore.Load(id);
+
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
         public async Task<GameState> LoadFromTopo(int topoId)
         {
             var gamespace = await _gamespaceStore.FindByContext(topoId, User.Id);
+
             return await LoadState(gamespace, topoId);
         }
 
@@ -137,12 +149,16 @@ namespace TopoMojo.Core
             if (gamespace == null)
             {
                 var topo = await _workspaceStore.Load(topoId);
+
                 if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
 
                 state = new GameState();
+
                 state.Name = gamespace?.Name ?? topo.Name;
+
                 state.TopologyDocument = topo.Document;
+
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
@@ -150,15 +166,19 @@ namespace TopoMojo.Core
             }
             else
             {
-                var player = gamespace.Players.Where(p => p.PersonId == User.Id).Single();
-                player.LastSeen = DateTime.UtcNow;
-                await _gamespaceStore.Update(gamespace);
+                // var player = gamespace.Players.Where(p => p.PersonId == User.Id).Single();
+
+                // player.LastSeen = DateTime.UtcNow;
+
+                // await _gamespaceStore.Update(gamespace);
 
                 state = Mapper.Map<GameState>(gamespace);
+
                 state.Vms = gamespace.Topology.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
+
                 state.MergeVms(await _pod.Find(gamespace.GlobalId));
             }
 
@@ -169,32 +189,30 @@ namespace TopoMojo.Core
         {
             var gamespace = await _gamespaceStore.Load(id);
 
-            if (gamespace == null)
-                throw new InvalidOperationException();
-
-            if (! await _gamespaceStore.CanEdit(id, User))
+            if (gamespace == null || !gamespace.CanEdit(User))
                 throw new InvalidOperationException();
 
             await _pod.DeleteAll(gamespace.GlobalId);
 
-            await _gamespaceStore.Remove(gamespace);
+            await _gamespaceStore.Delete(id);
 
             return Mapper.Map<GameState>(gamespace);
         }
 
         public async Task<Player[]> Players(int id)
         {
-            if (! await _gamespaceStore.CanEdit(id, User))
+            var gamespace = await _gamespaceStore.Load(id);
+
+            if (gamespace == null || !gamespace.CanEdit(User))
                 throw new InvalidOperationException();
 
-            var players = await _gamespaceStore.ListPlayers(id).ToArrayAsync();
-
-            return Mapper.Map<Player[]>(players);
+            return Mapper.Map<Player[]>(gamespace.Players);
         }
 
-        public async Task<bool> Enlist(string code)
+        public async Task Enlist(string code)
         {
             var gamespace = await _gamespaceStore.FindByShareCode(code);
+
             if (gamespace == null)
                 throw new InvalidOperationException();
 
@@ -204,19 +222,17 @@ namespace TopoMojo.Core
                 {
                     PersonId = User.Id,
                 });
+
                 await _gamespaceStore.Update(gamespace);
             }
-            return true;
+
         }
 
-        public async Task<bool> Delist(int playerId)
+        public async Task Delist(int playerId)
         {
             var gamespace = await _gamespaceStore.FindByPlayer(playerId);
 
-            if (gamespace == null)
-                throw new InvalidOperationException();
-
-            if (! await _gamespaceStore.CanManage(gamespace.Id, User))
+            if (gamespace == null || !gamespace.CanManage(User))
                 throw new InvalidOperationException();
 
             var member = gamespace.Players
@@ -226,9 +242,10 @@ namespace TopoMojo.Core
             if (member != null)
             {
                 gamespace.Players.Remove(member);
+
                 await _gamespaceStore.Update(gamespace);
             }
-            return true;
+
         }
     }
 }

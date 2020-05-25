@@ -3,12 +3,15 @@
 
 using System;
 using System.Collections.Generic;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Core;
+using TopoMojo;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
-using TopoMojo.Data.EntityFrameworkCore;
-using AutoMapper;
+using TopoMojo.Data;
+using TopoMojo.Services;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Tests
 {
@@ -18,15 +21,18 @@ namespace Tests
             TopoMojoDbContext ctx,
             CoreOptions options,
             ILoggerFactory mill,
-            IMapper mapper
+            IMapper mapper,
+            IDistributedCache cache,
+            IMemoryCache memoryCache
         )
         {
             _ctx = ctx;
             _coreOptions = new CoreOptions();
             _mill = mill;
             _mapper = mapper;
-
-            _proman = new TopoMojo.Core.IdentityService(_mapper, new UserStore(_ctx));
+            _cache = cache;
+            _memoryCache = memoryCache;
+            _proman = new TopoMojo.Services.IdentityService(_mapper, new UserStore(_ctx, memoryCache, cache));
             // _proman = new ProfileManager(
             //     new ProfileRepository(_ctx),
             //     _mill,
@@ -46,7 +52,9 @@ namespace Tests
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
         private IIdentityResolver _ur;
-        private readonly TopoMojo.Core.IdentityService _proman;
+        private readonly TopoMojo.Services.IdentityService _proman;
+        private IDistributedCache _cache;
+        private IMemoryCache _memoryCache;
         private User _actor;
         public User Actor
         {
@@ -92,9 +100,9 @@ namespace Tests
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new UserStore(_ctx),
-                    new WorkspaceStore(_ctx),
-                    new GamespaceStore(_ctx),
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx, _memoryCache, _cache),
+                    new WorkspaceStore(_ctx, _memoryCache, _cache),
+                    new GamespaceStore(_ctx, _memoryCache, _cache),
                     _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
@@ -107,8 +115,8 @@ namespace Tests
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new UserStore(_ctx),
-                    new TemplateStore(_ctx),
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx, _memoryCache, _cache),
+                    new TemplateStore(_ctx, _memoryCache, _cache),
                     _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
