@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,9 +33,9 @@ namespace TopoMojo.Web.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/gamespaces")]
-        public async Task<ActionResult<Gamespace[]>> List(string filter)
+        public async Task<ActionResult<Gamespace[]>> List(string filter, CancellationToken ct)
         {
-            var result = await _gamespaceService.List(filter);
+            var result = await _gamespaceService.List(filter, ct);
             return Ok(result);
         }
 

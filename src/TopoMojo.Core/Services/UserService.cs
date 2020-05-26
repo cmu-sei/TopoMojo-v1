@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ namespace TopoMojo.Services
         private readonly IUserStore _userStore;
         private readonly IMemoryCache _userCache;
 
-        public async Task<User[]> List(Search search)
+        public async Task<User[]> List(Search search, CancellationToken ct = default(CancellationToken))
         {
             var q = _userStore.List(search.Term);
 
@@ -49,7 +50,7 @@ namespace TopoMojo.Services
             if (search.Take > 0)
                 q = q.Take(search.Take);
 
-            return await Mapper.ProjectTo<User>(q).ToArrayAsync();
+            return await Mapper.ProjectTo<User>(q).ToArrayAsync(ct);
         }
 
         public async Task<User> Load(string id)

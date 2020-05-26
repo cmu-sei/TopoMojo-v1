@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -36,19 +37,19 @@ namespace TopoMojo.Services
         private readonly IGamespaceStore _gamespaceStore;
         private readonly IWorkspaceStore _workspaceStore;
 
-        public async Task<Gamespace[]> List(string filter)
+        public async Task<Gamespace[]> List(string filter, CancellationToken ct = default(CancellationToken))
         {
             if (filter == "all")
             {
-                return await ListAll();
+                return await ListAll(ct);
             }
 
-            var list = await _gamespaceStore.ListByProfile(User.Id).ToArrayAsync();
+            var list = await _gamespaceStore.ListByProfile(User.Id).ToArrayAsync(ct);
 
             return Mapper.Map<Gamespace[]>(list);
         }
 
-        public async Task<Gamespace[]> ListAll()
+        public async Task<Gamespace[]> ListAll(CancellationToken ct = default(CancellationToken))
         {
             if (!User.IsAdmin)
                 throw new InvalidOperationException();
@@ -56,7 +57,7 @@ namespace TopoMojo.Services
             var list = await _gamespaceStore.List()
                 .Include(g => g.Players)
                 .ThenInclude(p => p.Person)
-                .ToArrayAsync();
+                .ToArrayAsync(ct);
 
             return Mapper.Map<Gamespace[]>(list);
         }

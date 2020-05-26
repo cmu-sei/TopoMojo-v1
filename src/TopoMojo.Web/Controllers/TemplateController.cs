@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,9 +33,9 @@ namespace TopoMojo.Web.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/templates")]
-        public async Task<ActionResult<SearchResult<TemplateSummary>>> List(Search search)
+        public async Task<ActionResult<SearchResult<TemplateSummary>>> List(Search search, CancellationToken ct)
         {
-            var result = await _templateService.List(search);
+            var result = await _templateService.List(search, ct);
 
             return Ok(result);
         }

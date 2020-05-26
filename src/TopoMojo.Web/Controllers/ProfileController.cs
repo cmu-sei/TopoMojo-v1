@@ -4,6 +4,7 @@
 using System;
 using System.Reflection;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -35,9 +36,9 @@ namespace TopoMojo.Web.Controllers
 
         [Authorize(Policy = "AdminOnly")]
         [HttpGet("api/profiles")]
-        public async Task<ActionResult<SearchResult<User>>> List(Search search)
+        public async Task<ActionResult<SearchResult<User>>> List(Search search, CancellationToken ct)
         {
-            var result = await _userService.List(search);
+            var result = await _userService.List(search, ct);
 
             return Ok(result);
         }

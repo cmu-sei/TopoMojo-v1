@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,7 @@ namespace TopoMojo.Services
         private readonly IWorkspaceStore _workspaceStore;
         private readonly IHypervisorService _pod;
 
-        public async Task<TemplateSummary[]> List(Search search)
+        public async Task<TemplateSummary[]> List(Search search, CancellationToken ct = default(CancellationToken))
         {
             var q = _templateStore.List();
 
@@ -65,7 +66,7 @@ namespace TopoMojo.Services
             if (search.Take > 0)
                 q = q.Take(search.Take);
 
-            return Mapper.Map<TemplateSummary[]>(await q.ToArrayAsync());
+            return Mapper.Map<TemplateSummary[]>(await q.ToArrayAsync(ct));
         }
 
         public async Task<Template> Load(int id)

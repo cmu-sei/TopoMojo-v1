@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using TopoMojo.Abstractions;
 using TopoMojo.Services;
 using TopoMojo.Models;
+using System.Threading;
 
 namespace TopoMojo.Web.Controllers
 {
@@ -34,18 +35,18 @@ namespace TopoMojo.Web.Controllers
 
         [AllowAnonymous]
         [HttpGet("api/workspaces/summary")]
-        public async Task<ActionResult<WorkspaceSummary>> List(Search search)
+        public async Task<ActionResult<WorkspaceSummary>> List(Search search, CancellationToken ct)
         {
-            var result = await _workspaceService.List(search);
+            var result = await _workspaceService.List(search, ct);
 
             return Ok(result);
         }
 
         [Authorize(Policy = "AdminOnly")]
         [HttpGet("api/workspaces")]
-        public async Task<ActionResult<Workspace>> ListDetail(Search search)
+        public async Task<ActionResult<Workspace>> ListDetail(Search search, CancellationToken ct)
         {
-            var result = await _workspaceService.ListDetail(search);
+            var result = await _workspaceService.ListDetail(search, ct);
 
             return Ok(result);
         }
