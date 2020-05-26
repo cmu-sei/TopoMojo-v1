@@ -86,7 +86,7 @@ namespace TopoMojo.Services
 
                 ExpandTemplates(templates, spec);
 
-                await AddNetworkServer(templates, spec);
+                // await AddNetworkServer(templates, spec);
 
                 foreach (var template in templates)
                 {
@@ -117,29 +117,29 @@ namespace TopoMojo.Services
             return await LoadState(gamespace, gamespace.TopologyId);
         }
 
-        private async Task AddNetworkServer(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
-        {
-            if (spec.Network == null)
-                return;
+        // private async Task AddNetworkServer(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
+        // {
+        //     if (spec.Network == null)
+        //         return;
 
-            var settings = new KeyValuePair<string,string>[]
-            {
-                new KeyValuePair<string,string>("newip", spec.Network.IpAddress),
-                new KeyValuePair<string,string>("hosts", String.Join(";", spec.Network.HostFileEntries)),
-                new KeyValuePair<string,string>("dhcp", String.Join(";", spec.Network.Dnsmasq))
-            };
+        //     var settings = new KeyValuePair<string,string>[]
+        //     {
+        //         new KeyValuePair<string,string>("newip", spec.Network.IpAddress),
+        //         new KeyValuePair<string,string>("hosts", String.Join(";", spec.Network.HostFileEntries)),
+        //         new KeyValuePair<string,string>("dhcp", String.Join(";", spec.Network.Dnsmasq))
+        //     };
 
-            var netServerTemplateEntity = await _templateStore.Load(_options.NetworkHostTemplateId);
+        //     var netServerTemplateEntity = await _templateStore.Load(_options.NetworkHostTemplateId);
 
-            if (netServerTemplateEntity != null)
-            {
-                var netServerTemplate = Mapper.Map<ConvergedTemplate>(netServerTemplateEntity);
+        //     if (netServerTemplateEntity != null)
+        //     {
+        //         var netServerTemplate = Mapper.Map<ConvergedTemplate>(netServerTemplateEntity);
 
-                netServerTemplate.AddSettings(settings);
+        //         netServerTemplate.AddSettings(settings);
 
-                templates.Add(netServerTemplate);
-            }
-        }
+        //         templates.Add(netServerTemplate);
+        //     }
+        // }
 
         private void ExpandTemplates(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
         {

@@ -12,6 +12,7 @@ namespace TopoMojo.Models
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
+        public string Guestinfo { get; set; }
         public bool IsHidden { get; set; }
         public int TopologyId { get; set; }
         public string TopologyGlobalId { get; set; }
@@ -25,6 +26,7 @@ namespace TopoMojo.Models
         public string Networks { get; set; }
         public string Iso { get; set; }
         public bool IsHidden { get; set; }
+        public string Guestinfo { get; set; }
         public int TopologyId { get; set; }
     }
 
@@ -71,6 +73,7 @@ namespace TopoMojo.Models
         public string Networks { get; set; }
         public string Iso { get; set; }
         public string Detail { get; set; }
+        public string Guestinfo { get; set; }
         public int TopologyId { get; set; }
         public string TopologyGlobalId { get; set; }
         public bool TopologyUseUplinkSwitch { get; set; }

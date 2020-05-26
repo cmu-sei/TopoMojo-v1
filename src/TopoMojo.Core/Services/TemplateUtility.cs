@@ -119,6 +119,34 @@ namespace TopoMojo.Services
             set { _template.GuestSettings = value; }
         }
 
+        public void AddGuestSettings(string guestinfo)
+        {
+            var lines = guestinfo?.Split(
+                new char[] {';', '\n', '\r'},
+                StringSplitOptions.RemoveEmptyEntries
+            ) ?? Array.Empty<string>();
+
+            foreach (var line in lines)
+            {
+                int x = line.IndexOf('=');
+
+                if (x > 0)
+                {
+                    string key = line.Substring(0, x).Trim();
+
+                    if (!key.StartsWith("guestinfo."))
+                        key = "guestinfo." + key;
+
+                    _template.GuestSettings.Append(
+                        new KeyValuePair<string, string>(
+                            key,
+                            line.Substring(x + 1).Trim()
+                        )
+                    );
+                }
+            }
+        }
+
         public void LocalizeDiskPaths(string topologyKey, string templateKey)
         {
             if (!topologyKey.HasValue() || !templateKey.HasValue())

@@ -18,15 +18,16 @@ namespace TopoMojo
             tu.IsolationTag = isolationTag.HasValue() ? isolationTag : template.TopologyGlobalId ?? Guid.Empty.ToString();
             tu.Id = template.Id.ToString();
             tu.UseUplinkSwitch = template.TopologyUseUplinkSwitch;
+            tu.AddGuestSettings(template.Guestinfo);
             return tu.AsTemplate();
         }
 
-        public static void AddSettings(this ConvergedTemplate template, KeyValuePair<string,string>[] settings)
-        {
-            TemplateUtility tu = new TemplateUtility(template.Detail);
-            tu.GuestSettings = settings;
-            template.Detail = tu.ToString();
-        }
+        // public static void AddSettings(this ConvergedTemplate template, KeyValuePair<string,string>[] settings)
+        // {
+        //     TemplateUtility tu = new TemplateUtility(template.Detail);
+        //     tu.GuestSettings = settings;
+        //     template.Detail = tu.ToString();
+        // }
 
         public static T Clone<T>(this T obj)
         {
