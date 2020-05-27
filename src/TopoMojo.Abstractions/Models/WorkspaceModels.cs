@@ -12,12 +12,12 @@ namespace TopoMojo.Models
         public string Description { get; set; }
         public string DocumentUrl { get; set; }
         public string Author { get; set; }
+        public string Audience { get; set; }
         public string WhenCreated { get; set; }
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
         public int TemplateLimit { get; set; }
         public bool IsPublished { get; set; }
-        public bool IsLocked { get; set; }
         public int GamespaceCount { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
@@ -33,7 +33,7 @@ namespace TopoMojo.Models
         public bool CanManage { get; set; }
         public bool CanEdit { get; set; }
         public bool IsPublished { get; set; }
-        public bool IsLocked { get; set; }
+        public string Audience { get; set; }
         public string Author { get; set; }
         public string WhenCreated { get; set; }
     }

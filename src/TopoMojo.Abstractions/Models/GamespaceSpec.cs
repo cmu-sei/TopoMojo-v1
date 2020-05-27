@@ -10,7 +10,6 @@ namespace TopoMojo.Models
     {
         public string IsolationId { get; set; }
         public int WorkspaceId { get; set; }
-        public NetworkServerSpec Network { get; set; }
         public VmSpec[] Vms { get; set; } = new VmSpec[] {};
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }

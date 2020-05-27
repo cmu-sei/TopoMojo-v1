@@ -5,11 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Extensions;
 using TopoMojo.Extensions;
 using TopoMojo.Models;
 
@@ -54,7 +57,7 @@ namespace TopoMojo.Services
             {
                 var workspace = await _workspaceStore.Load(spec.WorkspaceId);
 
-                if (workspace == null)
+                if (workspace == null || !workspace.HasScope(Client.Scope))
                     throw new InvalidOperationException();
 
                 game = new Data.Gamespace
@@ -330,11 +333,17 @@ namespace TopoMojo.Services
             return result;
         }
 
-        public async Task<WorkspaceSummary[]> ListWorkspaces(Search search)
+        public async Task<WorkspaceSummary[]> ListWorkspaces(Search search, CancellationToken ct = default(CancellationToken))
         {
-            // IsPublished or Audience.Contains(allowed)
+            var q = _workspaceStore.List(search.Term)
+                .Where(w => w.Audience.Contains(Client.Scope))
+                .OrderBy(w => w.Name)
+                .Skip(search.Skip);
 
-            return null;
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+
+            return Mapper.Map<WorkspaceSummary[]>(await q.ToArrayAsync(ct));
         }
     }
 }

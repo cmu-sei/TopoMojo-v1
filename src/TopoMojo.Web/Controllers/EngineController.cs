@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,14 @@ namespace TopoMojo.Web.Controllers
         private readonly IHypervisorService _pod;
         private readonly EngineService _engineService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+
+        [HttpGet("api/engine/topo")]
+        public async Task<ActionResult<WorkspaceSummary>> List(Search search, CancellationToken ct)
+        {
+            var result = await _engineService.ListWorkspaces(search, ct);
+
+            return Ok(result);
+        }
 
         [HttpPost("api/engine")]
         public async Task<ActionResult<GameState>> Launch([FromBody] NewGamespace model)

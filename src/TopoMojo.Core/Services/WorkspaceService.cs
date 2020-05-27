@@ -197,37 +197,37 @@ namespace TopoMojo.Services
                 : false;
         }
 
-        /// <summary>
-        /// Change workspace state options.
-        /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public async Task<WorkspaceState> ChangeState(WorkspaceStateAction action)
-        {
-            WorkspaceState state = null;
+        // /// <summary>
+        // /// Change workspace state options.
+        // /// </summary>
+        // /// <param name="action"></param>
+        // /// <returns></returns>
+        // public async Task<WorkspaceState> ChangeState(WorkspaceStateAction action)
+        // {
+        //     WorkspaceState state = null;
 
-            switch (action.Type)
-            {
-                case WorkspaceStateActionType.Share:
-                state = await Share(action.Id, false);
-                break;
+        //     switch (action.Type)
+        //     {
+        //         case WorkspaceStateActionType.Share:
+        //         state = await Share(action.Id, false);
+        //         break;
 
-                case WorkspaceStateActionType.Unshare:
-                state = await Share(action.Id, true);
-                break;
+        //         case WorkspaceStateActionType.Unshare:
+        //         state = await Share(action.Id, true);
+        //         break;
 
-                case WorkspaceStateActionType.Publish:
-                state = await Publish(action.Id, false);
-                break;
+        //         case WorkspaceStateActionType.Publish:
+        //         state = await Publish(action.Id, false);
+        //         break;
 
-                case WorkspaceStateActionType.Unpublish:
-                state = await Publish(action.Id, true);
-                break;
+        //         case WorkspaceStateActionType.Unpublish:
+        //         state = await Publish(action.Id, true);
+        //         break;
 
-            }
+        //     }
 
-            return state;
-        }
+        //     return state;
+        // }
 
         /// <summary>
         /// Generate a new invitation code for a workspace.
@@ -235,7 +235,7 @@ namespace TopoMojo.Services
         /// <param name="id"></param>
         /// <param name="revoke"></param>
         /// <returns></returns>
-        public async Task<WorkspaceState> Share(int id, bool revoke)
+        public async Task<WorkspaceState> Share(int id)
         {
             var workspace = await _workspaceStore.Load(id);
 
@@ -249,25 +249,25 @@ namespace TopoMojo.Services
             return Mapper.Map<WorkspaceState>(workspace);
         }
 
-        /// <summary>
-        /// Toggle the publish status of a workspace.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="revoke"></param>
-        /// <returns></returns>
-        public async Task<WorkspaceState> Publish(int id, bool revoke)
-        {
-            var workspace = await _workspaceStore.Load(id);
+        // /// <summary>
+        // /// Toggle the publish status of a workspace.
+        // /// </summary>
+        // /// <param name="id"></param>
+        // /// <param name="revoke"></param>
+        // /// <returns></returns>
+        // public async Task<WorkspaceState> Publish(int id, bool revoke)
+        // {
+        //     var workspace = await _workspaceStore.Load(id);
 
-            if (workspace == null || !workspace.CanEdit(User))
-                throw new InvalidOperationException();
+        //     if (workspace == null || !workspace.CanEdit(User))
+        //         throw new InvalidOperationException();
 
-            workspace.IsPublished = !revoke;
+        //     workspace.IsPublished = !revoke;
 
-            await _workspaceStore.Update(workspace);
+        //     await _workspaceStore.Update(workspace);
 
-            return Mapper.Map<WorkspaceState>(workspace);
-        }
+        //     return Mapper.Map<WorkspaceState>(workspace);
+        // }
 
         /// <summary>
         /// Redeem an invitation code to join user to workspace.

@@ -111,60 +111,12 @@ namespace TopoMojo.Web.Controllers
             return Ok(true);
         }
 
-        [Obsolete]
-        [HttpPost("api/workspace/{id}/action")]
-        public async Task<ActionResult<WorkspaceState>> ChangeState(int id, [FromBody]WorkspaceStateAction action)
+        [HttpPut("api/workspace/{id}/share")]
+        public async Task<ActionResult<WorkspaceState>> Share(int id)
         {
-            return Ok(await _workspaceService.ChangeState(action));
+            var state = await _workspaceService.Share(id);
+            return Ok(state);
         }
-
-        // [HttpGet("api/workspace/{id}/publish")]
-        //
-        // public async Task<ActionResult<TopologyState>> Publish(int id)
-        // {
-        //     TopologyState state = await _mgr.Publish(id, false);
-        //     return Ok(state);
-        // }
-
-        // [HttpGet("api/workspace/{id}/unpublish")]
-        //
-        // public async Task<ActionResult<TopologyState>> Unpublish(int id)
-        // {
-        //     TopologyState state = await _mgr.Publish(id, true);
-        //     return Ok(state);
-        // }
-
-        // [HttpGet("api/workspace/{id}/lock")]
-        //
-        // public async Task<ActionResult<TopologyState>> Lock(int id)
-        // {
-        //     TopologyState state = await _mgr.Lock(id, false);
-        //     return Ok(state);
-        // }
-
-        // [HttpGet("api/workspace/{id}/unlock")]
-        //
-        // public async Task<ActionResult<TopologyState>> Unlock(int id)
-        // {
-        //     TopologyState state = await _mgr.Lock(id, true);
-        //     return Ok(state);
-        // }
-
-        // [HttpGet("api/workspace/{id}/share")]
-        //
-        // public async Task<ActionResult<TopologyState>> Share(int id)
-        // {
-        //     TopologyState state = await _mgr.Share(id, false);
-        //     return Ok(state);
-        // }
-
-        // [HttpGet("api/workspace/{id}/unshare")]
-        //
-        // public async Task<ActionResult<TopologyState>> Unshare(int id)
-        // {
-        //     TopologyState state = await _mgr.Share(id, true);
-        //     return Ok(state);
-        // }
 
         [HttpPost("api/worker/enlist/{code}")]
         public async Task<ActionResult> Enlist(string code)

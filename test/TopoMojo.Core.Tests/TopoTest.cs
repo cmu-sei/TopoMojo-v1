@@ -51,7 +51,20 @@ namespace Tests
                     }).Result;
 
                     if (i > 2)
-                        mgr.Publish(topo.Id, false).Wait();
+                    {
+                        topo.IsPublished = true;
+                        mgr.Update(new ChangedWorkspace
+                        {
+                            Id = topo.Id,
+                            Name = topo.Name,
+                            Description = topo.Description,
+                            Author = topo.Author,
+                            IsPublished = true,
+                            Audience = topo.Audience,
+                            TemplateLimit = topo.TemplateLimit
+                        }).Wait();
+                        // mgr.Publish(topo.Id, false).Wait();
+                    }
                 }
 
                 var list = mgr.List(new Search {

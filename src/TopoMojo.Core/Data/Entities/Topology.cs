@@ -14,10 +14,10 @@ namespace TopoMojo.Data
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public DateTime WhenCreated { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public string DocumentUrl { get; set; } = string.Empty;
-        public string Author { get; set; } = string.Empty;
-        public string Audiences { get; set; } // topomojo, prescup, seilearn,
+        public string Description { get; set; } // = string.Empty;
+        public string DocumentUrl { get; set; } // = string.Empty;
+        public string Author { get; set; } // = string.Empty;
+        public string Audience { get; set; }
         public string ShareCode { get; set; }
         public bool IsPublished { get; set; }
         public int TemplateLimit { get; set; }
