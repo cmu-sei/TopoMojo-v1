@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System;
 using TopoMojo.Data;
 
-namespace TopoMojo.Data.PostgreSQL.Migrations.TopoMojoDb
+namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContext))]
     [Migration("20180418023901_InitialSchema")]

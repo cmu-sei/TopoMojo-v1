@@ -10,14 +10,15 @@ namespace TopoMojo.Services
     {
         public UserProfile()
         {
-            CreateMap<Data.Profile, User>()
+            CreateMap<Data.User, User>()
 
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
 
+                .ForMember(d => d.IsAdmin, opt => opt.MapFrom(s => s.Role.HasFlag(Data.UserRole.Administrator)))
                 .ReverseMap()
             ;
 
-            CreateMap<ChangedUser, Data.Profile>();
+            CreateMap<ChangedUser, Data.User>();
         }
     }
 }

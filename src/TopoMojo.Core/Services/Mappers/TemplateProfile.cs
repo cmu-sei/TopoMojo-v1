@@ -20,7 +20,7 @@ namespace TopoMojo.Services
             CreateMap<Data.Template, Template>()
 
                 .ForMember(d => d.CanEdit, opt =>
-                    opt.MapFrom((s, d, m, r) => s.Topology.CanEdit(r.GetActor())))
+                    opt.MapFrom((s, d, m, r) => s.Workspace.CanEdit(r.GetActor())))
 
                 .ReverseMap()
             ;

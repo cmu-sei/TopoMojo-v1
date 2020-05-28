@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System;
 using System.Collections.Generic;
 
-namespace TopoMojo.Data.PostgreSQL.Migrations.TopoMojoDb
+namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     public partial class InitialSchema : Migration
     {

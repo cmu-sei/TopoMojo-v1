@@ -120,7 +120,7 @@ namespace TopoMojo.Services
             if (_cache.TryGetValue(key, out bool permission))
                 return permission;
 
-            if (await _dbContext.Workers.AnyAsync(w => w.Topology.GlobalId == roomId && w.Person.GlobalId == User.GlobalId))
+            if (await _dbContext.Workers.AnyAsync(w => w.Workspace.GlobalId == roomId && w.Person.GlobalId == User.GlobalId))
             {
                 _cache.Set(key, true, new TimeSpan(0, 5, 0));
                 return true;

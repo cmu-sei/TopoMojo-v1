@@ -69,7 +69,7 @@ namespace TopoMojo.Services
                 .ToArrayAsync();
 
             var game = gamespaces
-                .Where(m => m.TopologyId == topoId)
+                .Where(m => m.WorkspaceId == topoId)
                 .SingleOrDefault();
 
             if (game == null)
@@ -85,7 +85,7 @@ namespace TopoMojo.Services
                 game = new Data.Gamespace
                 {
                     Name = workspace.Name,
-                    Topology = workspace,
+                    Workspace = workspace,
                     ShareCode = Guid.NewGuid().ToString("N")
                 };
 
@@ -108,7 +108,7 @@ namespace TopoMojo.Services
         {
             var tasks = new List<Task<Vm>>();
 
-            var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates);
+            var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Workspace.Templates);
 
             foreach (var template in templates)
             {
@@ -121,14 +121,14 @@ namespace TopoMojo.Services
 
             Task.WaitAll(tasks.ToArray());
 
-            return await LoadState(gamespace, gamespace.TopologyId);
+            return await LoadState(gamespace, gamespace.WorkspaceId);
         }
 
         public async Task<GameState> Load(int id)
         {
             var gamespace = await _gamespaceStore.Load(id);
 
-            return await LoadState(gamespace, gamespace.TopologyId);
+            return await LoadState(gamespace, gamespace.WorkspaceId);
         }
 
         public async Task<GameState> LoadFromTopo(int topoId)
@@ -175,7 +175,7 @@ namespace TopoMojo.Services
 
                 state = Mapper.Map<GameState>(gamespace);
 
-                state.Vms = gamespace.Topology.Templates
+                state.Vms = gamespace.Workspace.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();

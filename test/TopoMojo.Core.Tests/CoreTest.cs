@@ -29,7 +29,7 @@ namespace Tests
         protected IOptions<CoreOptions> _optAccessor = null;
         protected CoreOptions _options = null;
 
-        protected User _user = null;
+        protected TopoMojo.Models.User _user = null;
         protected ILoggerFactory _mill = null;
         private DbContextOptions<TopoMojoDbContext> _dbOptions;
 
@@ -74,7 +74,7 @@ namespace Tests
             {
                 ctx.Database.EnsureDeleted();
                 ctx.Database.EnsureCreated();
-                _user = new User { Id = 1, Name = "tester" };
+                _user = new TopoMojo.Models.User { Id = 1, Name = "tester" };
                 _ur = new IdentityResolver(_user);
             }
 

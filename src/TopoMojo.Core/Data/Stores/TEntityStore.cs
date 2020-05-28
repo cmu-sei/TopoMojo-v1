@@ -70,12 +70,12 @@ namespace TopoMojo.Data
             return DbContext.Set<TEntity>();
         }
 
-        public virtual async Task<bool> CanEdit(int id, Profile profile)
+        public virtual async Task<bool> CanEdit(int id, User profile)
         {
             return await Task.FromResult(false);
         }
 
-        public virtual async Task<bool> CanManage(int id, Profile profile)
+        public virtual async Task<bool> CanManage(int id, User profile)
         {
             return await Task.FromResult(false);
         }

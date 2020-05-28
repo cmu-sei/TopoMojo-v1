@@ -10,8 +10,8 @@ namespace TopoMojo.Data.Abstractions
         where TEntity : class, IEntity
     {
         Task<TEntity> Add(TEntity entity);
-        Task<bool> CanEdit(int id, Profile profile);
-        Task<bool> CanManage(int id, Profile profile);
+        Task<bool> CanEdit(int id, User profile);
+        Task<bool> CanManage(int id, User profile);
         IQueryable<TEntity> List();
         Task<TEntity> Load(int id);
         Task<TEntity> FindByGlobalId(string guid);

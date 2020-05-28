@@ -20,8 +20,8 @@ namespace TopoMojo.Data
         public string Detail { get; set; }
         public int? ParentId { get; set; }
         public virtual Template Parent { get; set; }
-        public int? TopologyId { get; set; }
-        public virtual Topology Topology { get; set; }
+        public int? WorkspaceId { get; set; }
+        public virtual Workspace Workspace { get; set; }
 
     }
 }

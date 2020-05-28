@@ -15,8 +15,8 @@ namespace TopoMojo.Data
         public DateTime WhenCreated { get; set; }
         public DateTime LastActivity { get; set; }
         public string ShareCode { get; set; }
-        public int TopologyId { get; set; }
-        public virtual Topology Topology { get; set; }
+        public int WorkspaceId { get; set; }
+        public virtual Workspace Workspace { get; set; }
         public virtual ICollection<Player> Players { get; set; } = new List<Player>();
     }
 

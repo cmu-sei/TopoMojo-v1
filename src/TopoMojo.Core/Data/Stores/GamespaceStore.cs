@@ -21,11 +21,11 @@ namespace TopoMojo.Data
 
         public override async Task<Gamespace> Add(Gamespace entity)
         {
-            if (entity.Topology != null)
+            if (entity.Workspace != null)
             {
-                entity.Topology.LaunchCount += 1;
+                entity.Workspace.LaunchCount += 1;
 
-                entity.Topology.LastActivity = DateTime.UtcNow;
+                entity.Workspace.LastActivity = DateTime.UtcNow;
             }
 
             var gamespace = await base.Add(entity);
@@ -43,7 +43,7 @@ namespace TopoMojo.Data
         public override async Task<Gamespace> Load(int id)
         {
             return await base.Load(id, query => query
-                .Include(g => g.Topology)
+                .Include(g => g.Workspace)
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
                 .Include(g => g.Players)
@@ -54,7 +54,7 @@ namespace TopoMojo.Data
         public override async Task<Gamespace> Load(string id)
         {
             return await base.Load(id, query => query
-                .Include(g => g.Topology)
+                .Include(g => g.Workspace)
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
                 .Include(g => g.Players)
@@ -77,7 +77,7 @@ namespace TopoMojo.Data
         public async Task<Gamespace> FindByContext(int topoId, int profileId)
         {
             int id = await DbContext.Players
-                .Where(g => g.PersonId == profileId && g.Gamespace.TopologyId == topoId)
+                .Where(g => g.PersonId == profileId && g.Gamespace.WorkspaceId == topoId)
                 .Select(p => p.GamespaceId)
                 .SingleOrDefaultAsync();
 

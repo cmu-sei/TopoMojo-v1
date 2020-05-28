@@ -11,7 +11,7 @@ using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data
 {
-    public class WorkspaceStore : DataStore<Topology>, IWorkspaceStore
+    public class WorkspaceStore : DataStore<Workspace>, IWorkspaceStore
     {
         public WorkspaceStore (
             TopoMojoDbContext db,
@@ -19,7 +19,7 @@ namespace TopoMojo.Data
             IDistributedCache cache
         ) : base(db, memoryCache) { }
 
-        public override IQueryable<Topology> List(string term = null)
+        public override IQueryable<Workspace> List(string term = null)
         {
             var q = base.List();
 
@@ -36,7 +36,7 @@ namespace TopoMojo.Data
             return q.Include(t => t.Workers);
         }
 
-        public override async Task<Topology> Load(int id)
+        public override async Task<Workspace> Load(int id)
         {
             return await base.Load(id, query => query
                 .Include(t => t.Templates)
@@ -44,7 +44,7 @@ namespace TopoMojo.Data
             );
         }
 
-        public override async Task<Topology> Load(string id)
+        public override async Task<Workspace> Load(string id)
         {
             return await base.Load(id, query => query
                 .Include(t => t.Templates)
@@ -52,14 +52,14 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Topology> LoadWithGamespaces(int id)
+        public async Task<Workspace> LoadWithGamespaces(int id)
         {
             return await base.Load(id, query => query
                 .Include(t => t.Gamespaces)
             );
         }
 
-        public async Task<Topology> LoadWithParents(int id)
+        public async Task<Workspace> LoadWithParents(int id)
         {
             return await base.Load(id, query => query
                 .Include(t => t.Templates)
@@ -67,20 +67,20 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Topology> FindByShareCode(string code)
+        public async Task<Workspace> FindByShareCode(string code)
         {
-            return await DbContext.Topologies
+            return await DbContext.Workspaces
                 .Include(t => t.Templates)
                 .Include(t => t.Workers).ThenInclude(w => w.Person)
                 .Where(t => t.ShareCode == code)
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<Topology> FindByWorker(int workerId)
+        public async Task<Workspace> FindByWorker(int workerId)
         {
             int id = await DbContext.Workers
                 .Where(p => p.Id == workerId)
-                .Select(p => p.TopologyId)
+                .Select(p => p.WorkspaceId)
                 .SingleOrDefaultAsync();
 
             return (id > 0)
@@ -113,12 +113,12 @@ namespace TopoMojo.Data
         public async Task<bool> HasGames(int id)
         {
             return await DbContext.Gamespaces
-                .AnyAsync(g => g.TopologyId == id);
+                .AnyAsync(g => g.WorkspaceId == id);
         }
 
-        public async Task<Topology[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true)
+        public async Task<Workspace[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true)
         {
-            var results = await DbContext.Topologies
+            var results = await DbContext.Workspaces
                 .Where(g =>
                     g.LastActivity < staleAfter
                     && g.IsPublished == published
@@ -127,7 +127,7 @@ namespace TopoMojo.Data
 
             if (!dryrun)
             {
-                DbContext.Topologies.RemoveRange(results);
+                DbContext.Workspaces.RemoveRange(results);
 
                 await DbContext.SaveChangesAsync();
             }

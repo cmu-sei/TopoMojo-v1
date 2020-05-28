@@ -38,7 +38,7 @@ namespace TopoMojo.Data.Extensions
             return player.Permission.CanEdit();
         }
 
-        public static bool CanManage(this Topology workspace, User user)
+        public static bool CanManage(this Workspace workspace, Models.User user)
         {
             return user.IsAdmin
                 || (workspace.Workers
@@ -46,7 +46,7 @@ namespace TopoMojo.Data.Extensions
                     .Permission.CanManage() ?? false);
         }
 
-        public static bool CanEdit(this Topology workspace, User user)
+        public static bool CanEdit(this Workspace workspace, Models.User user)
         {
             return user.IsAdmin
                 || (workspace.Workers
@@ -54,7 +54,7 @@ namespace TopoMojo.Data.Extensions
                     .Permission.CanEdit() ?? false);
         }
 
-        public static bool CanManage(this Gamespace player, User user)
+        public static bool CanManage(this Gamespace player, Models.User user)
         {
             return user.IsAdmin
                 || (player.Players
@@ -62,7 +62,7 @@ namespace TopoMojo.Data.Extensions
                     .Permission.CanManage() ?? false);
         }
 
-        public static bool CanEdit(this Gamespace player, User user)
+        public static bool CanEdit(this Gamespace player, Models.User user)
         {
             return user.IsAdmin
                 || (player.Players

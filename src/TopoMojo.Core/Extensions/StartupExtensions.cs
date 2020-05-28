@@ -54,7 +54,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
 
             if (string.IsNullOrEmpty(migrationAssembly))
-                migrationAssembly = Assembly.GetExecutingAssembly().GetName().Name;
+                migrationAssembly = "TopoMojo.Web"; //Assembly.GetEntryAssembly().GetName().Name;
 
             switch (provider.ToLower())
             {

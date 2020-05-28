@@ -19,7 +19,7 @@ namespace TopoMojo.Services
 
             CreateMap<Data.Gamespace, GameState>()
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
-                .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Topology.Name))
+                .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Workspace.Name))
             ;
 
             CreateMap<Data.Player, Player>()

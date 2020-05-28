@@ -55,8 +55,8 @@ namespace Tests
         private readonly TopoMojo.Services.IdentityService _proman;
         private IDistributedCache _cache;
         private IMemoryCache _memoryCache;
-        private User _actor;
-        public User Actor
+        private TopoMojo.Models.User _actor;
+        public TopoMojo.Models.User Actor
         {
             get { return _actor;}
             set
@@ -70,8 +70,8 @@ namespace Tests
 
         #region Managers
 
-        private Dictionary<string, User> _actors = new Dictionary<string, User>();
-        private Dictionary<User, Dictionary<string, object>> _mgrStore = new Dictionary<User, Dictionary<string, object>>();
+        private Dictionary<string, TopoMojo.Models.User> _actors = new Dictionary<string, TopoMojo.Models.User>();
+        private Dictionary<TopoMojo.Models.User, Dictionary<string, object>> _mgrStore = new Dictionary<TopoMojo.Models.User, Dictionary<string, object>>();
 
         private object FindManager(Type t)
         {
@@ -125,21 +125,21 @@ namespace Tests
 
         #endregion
 
-        public User AddActor(string name)
+        public TopoMojo.Models.User AddActor(string name)
         {
             return AddUser(name, true);
         }
 
-        public User AddUser(string name)
+        public TopoMojo.Models.User AddUser(string name)
         {
             return AddUser(name, false);
         }
 
-        public User AddUser(string name, bool makeActor, bool isAdmin = false)
+        public TopoMojo.Models.User AddUser(string name, bool makeActor, bool isAdmin = false)
         {
             if (!_actors.ContainsKey(name))
             {
-                User target = new User
+                TopoMojo.Models.User target = new TopoMojo.Models.User
                 {
                     Name = name,
                     IsAdmin = isAdmin,
@@ -152,7 +152,7 @@ namespace Tests
                 _mgrStore.Add(target, new Dictionary<string, object>());
             }
 
-            User person = _actors[name];
+            TopoMojo.Models.User person = _actors[name];
             if (makeActor)
                 Actor = person;
 

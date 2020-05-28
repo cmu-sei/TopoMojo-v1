@@ -101,7 +101,7 @@ namespace TopoMojo.Services
         /// <returns>Workspace</returns>
         public async Task<Workspace> Load(int id)
         {
-            Data.Topology topo = await _workspaceStore.Load(id);
+            Data.Workspace topo = await _workspaceStore.Load(id);
 
             if (topo == null)
                 throw new InvalidOperationException();
@@ -119,7 +119,7 @@ namespace TopoMojo.Services
             if (!User.IsAdmin && User.WorkspaceLimit <= await _workspaceStore.GetWorkspaceCount(User.Id))
                 throw new WorkspaceLimitReachedException();
 
-            var workspace = Mapper.Map<Data.Topology>(model);
+            var workspace = Mapper.Map<Data.Workspace>(model);
 
             workspace.TemplateLimit = _options.DefaultTemplateLimit;
 
@@ -157,7 +157,7 @@ namespace TopoMojo.Services
             if (!User.IsAdmin)
                 model.TemplateLimit = entity.TemplateLimit;
 
-            Mapper.Map<ChangedWorkspace, Data.Topology>(model, entity, WithActor());
+            Mapper.Map<ChangedWorkspace, Data.Workspace>(model, entity, WithActor());
 
             await _workspaceStore.Update(entity);
 

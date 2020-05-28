@@ -5,7 +5,7 @@ namespace TopoMojo.Data.Extensions
 {
     public static class WorkspaceExtensions
     {
-        public static bool HasScope(this Topology workspace, string scope)
+        public static bool HasScope(this Workspace workspace, string scope)
         {
             var delims = new char[] { ' ', ',', ';' };
 

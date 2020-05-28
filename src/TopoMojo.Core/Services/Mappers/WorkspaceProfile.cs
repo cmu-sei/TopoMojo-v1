@@ -13,7 +13,7 @@ namespace TopoMojo.Services
     {
         public WorkspaceProfile()
         {
-            CreateMap<Data.Topology, Workspace>()
+            CreateMap<Data.Workspace, Workspace>()
 
                 .ForMember(d => d.Slug, opt => opt.MapFrom(s => s.Name.ToSlug()))
 
@@ -31,7 +31,7 @@ namespace TopoMojo.Services
                 .ForMember(d => d.GamespaceCount, opt => opt.MapFrom(s => s.Gamespaces.Count))
             ;
 
-            CreateMap<Data.Topology, WorkspaceSummary>()
+            CreateMap<Data.Workspace, WorkspaceSummary>()
 
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
 
@@ -44,11 +44,11 @@ namespace TopoMojo.Services
                     opt.MapFrom((s, d, m, r) => s.CanEdit(r.GetActor())))
             ;
 
-            CreateMap<Data.Topology, WorkspaceState>();
+            CreateMap<Data.Workspace, WorkspaceState>();
 
-            CreateMap<NewWorkspace, Data.Topology>();
+            CreateMap<NewWorkspace, Data.Workspace>();
 
-            CreateMap<ChangedWorkspace, Data.Topology>();
+            CreateMap<ChangedWorkspace, Data.Workspace>();
 
             CreateMap<Data.Worker, Worker>()
 

@@ -39,7 +39,7 @@ namespace TopoMojo.Services
         private readonly IUserStore _userStore;
         private readonly IWorkspaceStore _workspaceStore;
         private readonly ITemplateStore _templateStore;
-        private Data.Profile _user;
+        private Data.User _user;
         private JsonSerializerOptions jsonSerializerSettings;
 
         public async Task Export(int[] ids, string src, string dest)
@@ -47,7 +47,7 @@ namespace TopoMojo.Services
             if (!User.IsAdmin)
                 throw new InvalidOperationException();
 
-            var list = new List<Data.Topology>();
+            var list = new List<Data.Workspace>();
 
             foreach (int id in ids)
             {
@@ -99,8 +99,8 @@ namespace TopoMojo.Services
                 foreach (var template in topo.Templates)
                 {
                     template.Id = 0;
-                    template.TopologyId = 0;
-                    template.Topology = null;
+                    template.WorkspaceId = 0;
+                    template.Workspace = null;
                 }
 
                 File.WriteAllText(
@@ -173,7 +173,7 @@ namespace TopoMojo.Services
                     //import data
                     string dataFile = Path.Combine(folder, "topo.json");
 
-                    var topo = JsonSerializer.Deserialize<Data.Topology>(
+                    var topo = JsonSerializer.Deserialize<Data.Workspace>(
                         File.ReadAllText(dataFile),
                         jsonSerializerSettings
                     );
@@ -195,7 +195,7 @@ namespace TopoMojo.Services
                             if (pt == null)
                             {
                                 template.ParentId = 0;
-                                template.TopologyId = 0;
+                                template.WorkspaceId = 0;
                                 pt = await _templateStore.Add(template.Parent);
                             }
 

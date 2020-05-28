@@ -1,11 +1,11 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace TopoMojo.Data.SqlServer.Migrations.TopoMojoDb
+namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 {
     public partial class InitialSchema : Migration
     {

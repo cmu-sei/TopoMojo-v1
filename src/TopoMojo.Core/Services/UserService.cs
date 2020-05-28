@@ -40,7 +40,7 @@ namespace TopoMojo.Services
                 q = q.Where(p => p.Name.ToLower().Contains(search.Term.ToLower()));
 
             if (search.HasFilter("admins"))
-                q = q.Where(p => p.IsAdmin);
+                q = q.Where(p => p.Role == Data.UserRole.Administrator);
 
             q = q.OrderBy(p => p.Name);
 
@@ -68,7 +68,7 @@ namespace TopoMojo.Services
         public async Task<User> Add(User profile)
         {
             var entity = await _userStore.Add(
-                Mapper.Map<Data.Profile>(profile)
+                Mapper.Map<Data.User>(profile)
             );
 
             return Mapper.Map<User>(entity);
@@ -82,7 +82,7 @@ namespace TopoMojo.Services
 
             if (User.IsAdmin)
             {
-                entity.IsAdmin = model.IsAdmin;
+                // entity.IsAdmin = model.IsAdmin;
                 entity.Role = Enum.Parse<Data.UserRole>(model.Role);
                 entity.WorkspaceLimit = model.WorkspaceLimit;
             }

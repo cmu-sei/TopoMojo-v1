@@ -64,7 +64,7 @@ namespace TopoMojo.Services
                 {
                     GlobalId = isolationId,
                     Name = workspace.Name,
-                    Topology = workspace,
+                    Workspace = workspace,
                     // ShareCode = Guid.NewGuid().ToString("N")
                 };
 
@@ -82,7 +82,7 @@ namespace TopoMojo.Services
             try
             {
                 var templates = String.IsNullOrEmpty(spec.Templates)
-                    ? Mapper.Map<List<ConvergedTemplate>>(gamespace.Topology.Templates)
+                    ? Mapper.Map<List<ConvergedTemplate>>(gamespace.Workspace.Templates)
                     : JsonSerializer.Deserialize<List<ConvergedTemplate>>(spec.Templates);
 
                 ApplyIso(templates, spec);
@@ -117,7 +117,7 @@ namespace TopoMojo.Services
                 throw ex;
             }
 
-            return await LoadState(gamespace, gamespace.TopologyId);
+            return await LoadState(gamespace, gamespace.WorkspaceId);
         }
 
         // private async Task AddNetworkServer(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
@@ -195,7 +195,7 @@ namespace TopoMojo.Services
 
             if (gamespace == null)
             {
-                Data.Topology topo = await _workspaceStore.Load(topoId);
+                Data.Workspace topo = await _workspaceStore.Load(topoId);
 
                 if (topo == null || !topo.IsPublished)
                     throw new InvalidOperationException();
@@ -216,7 +216,7 @@ namespace TopoMojo.Services
             {
                 state = Mapper.Map<GameState>(gamespace);
 
-                state.Vms = gamespace.Topology.Templates
+                state.Vms = gamespace.Workspace.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
@@ -316,11 +316,11 @@ namespace TopoMojo.Services
 
                     var gamespace = await _gamespaceStore.Load(vm.Name.Tag());
 
-                    var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Topology.GlobalId);
+                    var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Workspace.GlobalId);
 
                     string path = allowedIsos.Iso.Where(x => x.Contains(vmAction.Message)).FirstOrDefault();
 
-                    _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Topology.Name}, {String.Join(" ", allowedIsos.Iso)}");
+                    _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Workspace.Name}, {String.Join(" ", allowedIsos.Iso)}");
 
                     await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair<string,string>("iso", path));
 

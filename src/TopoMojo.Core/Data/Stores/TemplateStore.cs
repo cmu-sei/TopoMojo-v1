@@ -21,14 +21,14 @@ namespace TopoMojo.Data
         public override IQueryable<Template> List(string term = null)
         {
             return base.List(term)
-                .Include(t => t.Topology);
+                .Include(t => t.Workspace);
         }
 
         public override async Task<Template> Load(int id)
         {
             return await base.Load(id, query => query
                 .Include(tt => tt.Parent)
-                .Include(tt => tt.Topology)
+                .Include(tt => tt.Workspace)
                 .ThenInclude(t => t.Workers)
             );
         }
@@ -37,7 +37,7 @@ namespace TopoMojo.Data
         {
             return await base.Load(id, query => query
                 .Include(tt => tt.Parent)
-                .Include(tt => tt.Topology)
+                .Include(tt => tt.Workspace)
                 .ThenInclude(t => t.Workers)
             );
         }
@@ -52,21 +52,21 @@ namespace TopoMojo.Data
         public async Task<Template[]> ListChildren(int parentId)
         {
             return await base.List()
-                .Include(t => t.Topology)
+                .Include(t => t.Workspace)
                 .Where(t => t.ParentId == parentId)
                 .ToArrayAsync();
         }
 
         public async Task<bool> AtTemplateLimit(int topoId)
         {
-            Topology topo = await DbContext.Topologies.FindAsync(topoId);
-            int count = await DbContext.Templates.Where(t => t.TopologyId == topoId).CountAsync();
+            Workspace topo = await DbContext.Workspaces.FindAsync(topoId);
+            int count = await DbContext.Templates.Where(t => t.WorkspaceId == topoId).CountAsync();
             return count >= topo.TemplateLimit;
         }
 
         public async Task<string> ResolveKey(string key)
         {
-            var name = await DbContext.Topologies.Where(t => t.GlobalId == key)
+            var name = await DbContext.Workspaces.Where(t => t.GlobalId == key)
                 .Select(t => t.Name)
                 .SingleOrDefaultAsync();
 

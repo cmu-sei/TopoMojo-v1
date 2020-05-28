@@ -8,7 +8,7 @@ using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data
 {
-    public class Topology : IEntity
+    public class Workspace : IEntity
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }

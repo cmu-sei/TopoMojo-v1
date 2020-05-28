@@ -35,7 +35,7 @@ namespace TopoMojo.Services
         public async Task<User> Add(User profile)
         {
             var entity = await _userStore.Add(
-                Mapper.Map<Data.Profile>(profile)
+                Mapper.Map<Data.User>(profile)
             );
 
             return Mapper.Map<User>(entity);

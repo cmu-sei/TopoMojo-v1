@@ -124,7 +124,7 @@ namespace TopoMojo.Services
         {
             var entity = await _templateStore.Load(template.Id);
 
-            if (entity == null || !entity.Topology.CanEdit(User))
+            if (entity == null || !entity.Workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
             Mapper.Map<ChangedTemplate, Data.Template>(template, entity);
@@ -151,7 +151,7 @@ namespace TopoMojo.Services
             var newTemplate = new Data.Template
             {
                 ParentId = entity.Id,
-                TopologyId = newlink.TopologyId,
+                WorkspaceId = newlink.TopologyId,
                 Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,
@@ -170,7 +170,7 @@ namespace TopoMojo.Services
         {
             var entity = await _templateStore.Load(link.TemplateId);
 
-            if (entity == null || !entity.Topology.CanEdit(User))
+            if (entity == null || !entity.Workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
             if (entity.Parent != null)
@@ -179,7 +179,7 @@ namespace TopoMojo.Services
 
                 tu.Name = entity.Name;
 
-                tu.LocalizeDiskPaths(entity.Topology.GlobalId, entity.GlobalId);
+                tu.LocalizeDiskPaths(entity.Workspace.GlobalId, entity.GlobalId);
 
                 entity.Detail = tu.ToString();
 
@@ -195,7 +195,7 @@ namespace TopoMojo.Services
         {
             var entity = await _templateStore.Load(id);
 
-            if (entity == null || !entity.Topology.CanEdit(User))
+            if (entity == null || !entity.Workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
             if (await _templateStore.IsParentTemplate(id))

@@ -8,10 +8,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using TopoMojo.Data;
 
-namespace TopoMojo.Data.PostgreSQL.Migrations.TopoMojoDb
+namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
 {
-    [DbContext(typeof(TopoMojoDbContext))]
+    [DbContext(typeof(TopoMojoDbContextPostgreSQL))]
     [Migration("20190602043648_AddHistory")]
     partial class AddHistory
     {

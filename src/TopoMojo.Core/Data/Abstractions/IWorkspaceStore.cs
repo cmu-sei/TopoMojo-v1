@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace TopoMojo.Data.Abstractions
 {
-    public interface IWorkspaceStore : IDataStore<Topology>
+    public interface IWorkspaceStore : IDataStore<Workspace>
     {
-        Task<Topology> FindByShareCode(string code);
-        Task<Topology> FindByWorker(int id);
+        Task<Workspace> FindByShareCode(string code);
+        Task<Workspace> FindByWorker(int id);
         Task<int> GetWorkspaceCount(int profileId);
-        Task<Topology> LoadWithGamespaces(int id);
-        Task<Topology> LoadWithParents(int id);
+        Task<Workspace> LoadWithGamespaces(int id);
+        Task<Workspace> LoadWithParents(int id);
         Task<bool> HasGames(int id);
-        Task<Topology[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true);
+        Task<Workspace[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true);
     }
 }
