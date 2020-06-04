@@ -58,7 +58,10 @@ namespace TopoMojo.Services
                 var workspace = await _workspaceStore.Load(spec.WorkspaceId);
 
                 if (workspace == null || !workspace.HasScope(Client.Scope))
+                {
+                    _logger.LogInformation($"No audience match: [{workspace.Audience}] [{Client.Scope}]");
                     throw new InvalidOperationException();
+                }
 
                 game = new Data.Gamespace
                 {
