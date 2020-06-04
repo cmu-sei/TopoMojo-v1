@@ -59,7 +59,7 @@ namespace TopoMojo.Services
 
                 if (workspace == null || !workspace.HasScope(Client.Scope))
                 {
-                    _logger.LogInformation($"No audience match: [{workspace.Audience}] [{Client.Scope}]");
+                    _logger.LogInformation($"No audience match for workspace {workspace?.Id}: [{workspace?.Audience}] [{Client?.Scope}]");
                     throw new InvalidOperationException();
                 }
 
