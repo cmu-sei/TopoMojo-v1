@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Linq;
@@ -40,13 +40,8 @@ namespace TopoMojo.Client
 
         public async Task<GameState> Start(GamespaceSpec spec)
         {
-            var model = new NewGamespace
-            {
-                Id = spec.IsolationId,
-                Workspace = spec
-            };
 
-            var result = await Client.PostAsync("gamespace", Json(model));
+            var result = await Client.PostAsync("gamespace", Json(spec));
 
             if (!result.IsSuccessStatusCode)
                 throw new Exception();

@@ -51,8 +51,6 @@ namespace TopoMojo.Services
 
         public async Task<GameState> Launch(GamespaceSpec spec)
         {
-            _logger.LogDebug(Newtonsoft.Json.JsonConvert.SerializeObject(spec));
-
             var game = await _gamespaceStore.Load(spec.IsolationId);
 
             if (game == null)
@@ -179,7 +177,7 @@ namespace TopoMojo.Services
             if (string.IsNullOrEmpty(spec.Iso))
                 return;
 
-            string[] targets = spec.IsoTarget.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] targets = spec.IsoTarget?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? new string[] {};
 
             foreach (var template in templates.Where(t => string.IsNullOrEmpty(t.Iso)))
             {
