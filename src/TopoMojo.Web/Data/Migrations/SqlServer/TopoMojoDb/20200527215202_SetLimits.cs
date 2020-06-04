@@ -1,3 +1,6 @@
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -205,6 +208,7 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 
             // Added auto-cleanup, so initialize all topologies to now
             migrationBuilder.Sql(@"UPDATE ""Topologies"" set ""LastActivity"" = '" + DateTime.UtcNow.ToString("s") + "';");
+            migrationBuilder.Sql(@"UPDATE ""Gamespaces"" set ""LastActivity"" = '" + DateTime.UtcNow.ToString("s") + "';");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

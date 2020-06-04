@@ -1,3 +1,6 @@
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -15,10 +18,10 @@ namespace TopoMojo
             tu.Name = template.Name;
             tu.Networks = template.Networks ?? "lan";
             tu.Iso = template.Iso;
-            tu.IsolationTag = isolationTag.HasValue() ? isolationTag : template.TopologyGlobalId ?? Guid.Empty.ToString();
+            tu.IsolationTag = isolationTag.HasValue() ? isolationTag : template.WorkspaceGlobalId ?? Guid.Empty.ToString();
             tu.Id = template.Id.ToString();
-            tu.UseUplinkSwitch = template.TopologyUseUplinkSwitch;
-            tu.AddGuestSettings(template.Guestinfo);
+            tu.UseUplinkSwitch = template.WorkspaceUseUplinkSwitch;
+            tu.AddGuestSettings(template.Guestinfo ?? "");
             return tu.AsTemplate();
         }
 

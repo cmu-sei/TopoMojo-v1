@@ -1,18 +1,16 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
-using TopoMojo.Extensions;
 using TopoMojo.Models;
 
 namespace TopoMojo.vSphere
@@ -363,8 +361,8 @@ namespace TopoMojo.vSphere
                 VimClient host = FindHostByRandom();
                 foreach (VmDisk disk in template.Disks)
                 {
-                    //protect stock disks; only delete a disk if it is local to the topology
-                    //i.e. the disk folder matches the topologyId
+                    //protect stock disks; only delete a disk if it is local to the workspace
+                    //i.e. the disk folder matches the workspaceId
                     if (template.IsolationTag.HasValue() && disk.Path.Contains(template.IsolationTag))
                     {
                         Task deleteTask = host.DeleteDisk(disk.Path);

@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -121,6 +121,11 @@ namespace TopoMojo.Services
 
         public void AddGuestSettings(string guestinfo)
         {
+            var result = new List<KeyValuePair<string, string>>();
+
+            if (_template.GuestSettings != null)
+                result.AddRange(_template.GuestSettings);
+
             var lines = guestinfo?.Split(
                 new char[] {';', '\n', '\r'},
                 StringSplitOptions.RemoveEmptyEntries
@@ -134,10 +139,13 @@ namespace TopoMojo.Services
                 {
                     string key = line.Substring(0, x).Trim();
 
+                    if (key.StartsWith("#"))
+                        continue;
+
                     if (!key.StartsWith("guestinfo."))
                         key = "guestinfo." + key;
 
-                    _template.GuestSettings.Append(
+                    result.Add(
                         new KeyValuePair<string, string>(
                             key,
                             line.Substring(x + 1).Trim()
@@ -145,14 +153,16 @@ namespace TopoMojo.Services
                     );
                 }
             }
+
+            _template.GuestSettings = result.ToArray();
         }
 
-        public void LocalizeDiskPaths(string topologyKey, string templateKey)
+        public void LocalizeDiskPaths(string workspaceKey, string templateKey)
         {
-            if (!topologyKey.HasValue() || !templateKey.HasValue())
+            if (!workspaceKey.HasValue() || !templateKey.HasValue())
                 throw new InvalidOperationException();
 
-            string path = $"[ds] {topologyKey}/{templateKey}";
+            string path = $"[ds] {workspaceKey}/{templateKey}";
 
             int i = 0;
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -15,6 +15,7 @@ namespace TopoMojo.Data
         public DateTime WhenCreated { get; set; }
         public DateTime LastActivity { get; set; }
         public string ShareCode { get; set; }
+        public string Audience { get; set; }
         public int WorkspaceId { get; set; }
         public virtual Workspace Workspace { get; set; }
         public virtual ICollection<Player> Players { get; set; } = new List<Player>();

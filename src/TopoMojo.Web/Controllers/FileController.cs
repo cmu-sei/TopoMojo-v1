@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -9,36 +9,49 @@ using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using TopoMojo.Abstractions;
+using TopoMojo.Extensions;
 using TopoMojo.Services;
 using TopoMojo.Web.Services;
 
 namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiController]
     public class FileController : _Controller
     {
         public FileController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             IFileUploadHandler uploader,
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
-            IWebHostEnvironment host,
-            IServiceProvider sp,
             WorkspaceService workspaceService
-        ) : base(sp)
+        ) : base(logger, identityResolver)
         {
-            _host = host;
             _monitor = monitor;
             _config = uploadOptions;
             _workspaceService = workspaceService;
             _uploader = uploader;
         }
 
-        private readonly IWebHostEnvironment _host;
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
         private readonly WorkspaceService _workspaceService;
         private readonly IFileUploadHandler _uploader;
 
+        /// <summary>
+        /// Get file upload progress.
+        /// </summary>
+        /// <remarks>
+        /// If a client doesn't track progress client-side,
+        /// it can specify a form value `monitor-key` with
+        /// the file upload, and then query for progress
+        /// using that key.
+        /// </remarks>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("api/file/progress/{id}")]
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult Progress(string id)
@@ -46,6 +59,17 @@ namespace TopoMojo.Web.Controllers
             return Json(_monitor.Check(id).Progress);
         }
 
+        /// <summary>
+        /// Upload a file.
+        /// </summary>
+        /// <remarks>
+        /// Expects mime-multipart body with single file
+        /// and form-data part with:
+        /// - group-key (optional guid specifying destination bin; defaults to public-bin)
+        /// - monitor-key (optional unique value with which to query upload progress)
+        /// - size (number of bytes in file)
+        /// </remarks>
+        /// <returns></returns>
         [HttpPost("api/file/upload")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
@@ -57,7 +81,7 @@ namespace TopoMojo.Web.Controllers
                     string publicTarget = Guid.Empty.ToString();
                     string original = metadata["original-name"];
                     string filename = metadata["name"] ?? original;
-                    string key = metadata["group-key"];
+                    string key = metadata["group-key"] ?? publicTarget;
                     long size = Int64.Parse(metadata["size"] ?? "0");
 
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
@@ -110,26 +134,16 @@ namespace TopoMojo.Web.Controllers
         {
             string path = Path.Combine(
                 _config.IsoRoot,
-                Sanitize(key, Path.GetInvalidPathChars())
+                key.SanitizePath()
             );
-
-            string fn = Sanitize(filename, Path.GetInvalidFileNameChars());
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            return Path.Combine(path, fn);
-        }
-
-        private string Sanitize(string target, char[] bad)
-        {
-            string p = "";
-
-            foreach (char c in target.ToCharArray())
-                if (!bad.Contains(c))
-                    p += c;
-
-            return p;
+            return Path.Combine(
+                path,
+                filename.Replace(" ", "").SanitizeFilename()
+            );
         }
 
     }

@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -14,9 +14,9 @@ namespace TopoMojo.Data
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public DateTime WhenCreated { get; set; }
-        public string Description { get; set; } // = string.Empty;
-        public string DocumentUrl { get; set; } // = string.Empty;
-        public string Author { get; set; } // = string.Empty;
+        public string Description { get; set; }
+        public string DocumentUrl { get; set; }
+        public string Author { get; set; }
         public string Audience { get; set; }
         public string ShareCode { get; set; }
         public bool IsPublished { get; set; }

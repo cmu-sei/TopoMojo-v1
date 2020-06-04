@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -45,13 +45,13 @@ namespace TopoMojo.Services
         public async Task<GameState> Launch(int workspaceId, string isolationId)
         {
             return await Launch(
-                new GamespaceSpec{ WorkspaceId = workspaceId },
-                isolationId);
+                new GamespaceSpec{ WorkspaceId = workspaceId }
+            );
         }
 
-        public async Task<GameState> Launch(GamespaceSpec spec, string isolationId)
+        public async Task<GameState> Launch(GamespaceSpec spec)
         {
-            var game = await _gamespaceStore.Load(isolationId);
+            var game = await _gamespaceStore.Load(spec.IsolationId);
 
             if (game == null)
             {
@@ -62,9 +62,10 @@ namespace TopoMojo.Services
 
                 game = new Data.Gamespace
                 {
-                    GlobalId = isolationId,
+                    GlobalId = spec.IsolationId,
                     Name = workspace.Name,
                     Workspace = workspace,
+                    Audience = Client.Id.Untagged()
                     // ShareCode = Guid.NewGuid().ToString("N")
                 };
 
@@ -204,7 +205,7 @@ namespace TopoMojo.Services
 
                 state.Name = gamespace?.Name ?? topo.Name;
 
-                state.TopologyDocument = topo.Document;
+                state.WorkspaceDocument = topo.Document;
 
                 state.Vms = topo.Templates
                     .Where(t => !t.IsHidden)

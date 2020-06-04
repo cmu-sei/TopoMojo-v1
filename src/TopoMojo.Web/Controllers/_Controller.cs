@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -15,19 +15,24 @@ namespace TopoMojo.Web.Controllers
 {
     public class _Controller : Controller
     {
-        public _Controller(IServiceProvider sp)
+        public _Controller(
+            ILogger logger,
+            IIdentityResolver identityResolver
+        )
         {
-            _logger = sp.GetService<ILoggerFactory>().CreateLogger(this.GetType());
-            _identityResolver = sp.GetRequiredService<IIdentityResolver>();
+            _logger = logger;
+            _identityResolver = identityResolver;
         }
 
         protected User _user;
+        protected Client _client;
         protected readonly IIdentityResolver _identityResolver;
         protected readonly ILogger _logger;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             _user = _identityResolver.User;
+            _client = _identityResolver.Client;
         }
 
         internal void Log(string action, dynamic item, string msg = "")

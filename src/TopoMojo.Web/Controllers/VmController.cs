@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -17,18 +17,19 @@ using TopoMojo.Services;
 namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiController]
     public class VmController : _Controller
     {
         public VmController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             TemplateService templateService,
             WorkspaceService workspaceService,
             IHubContext<TopologyHub, ITopoEvent> hub,
             UserService userService,
             IHypervisorService podService,
-            IServiceProvider sp,
             CoreOptions options
-            )
-        :base(sp)
+        ) : base(logger, identityResolver)
         {
             _templateService = templateService;
             _workspaceService = workspaceService;
@@ -45,36 +46,177 @@ namespace TopoMojo.Web.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
         private readonly CoreOptions _options;
 
-        // This endpoint is a temporary to support an authless demo
-        [HttpGet("api/demo/{id}/{name}")]
-        [AllowAnonymous]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<ActionResult<ConsoleSummary>> Demo([FromRoute]string id, [FromRoute]string name)
+        /// <summary>
+        /// List vms.
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet("api/vms")]
+        public async Task<ActionResult<Vm[]>> Find(string filter)
         {
-            if (!_options.DemoCode.HasValue())
-                throw new InvalidOperationException("Endpoint disabled.");
+            var vms = await _pod.Find(filter);
 
-            if (name == "restart")
-            {
-                try {
-                    await _pod.Stop(id);
-                    await _pod.Start(id);
-                }
-                catch {}
+            var keys = vms.Select(v => v.Name.Tag()).Distinct().ToArray();
 
-                return Ok(null);
-            }
+            var map = await _templateService.ResolveKeys(keys);
 
-            var info = await _pod.Display($"{name}#{id}");
-            if (info.Url.HasValue())
-            {
-                var src = new Uri(info.Url);
-                info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
-            }
-            return Ok(info);
+            foreach (Vm vm in vms)
+                vm.GroupName = map[vm.Name.Tag()];
+
+            return Ok(
+                vms
+                .OrderBy(v => v.GroupName)
+                .ThenBy(v => v.Name)
+                .ToArray()
+            );
         }
 
-        [HttpGet("api/vm/{id}/ticket")]
+        /// <summary>
+        /// Load a vm.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("api/vm/{id}")]
+        public async Task<ActionResult<Vm>> Load(string id)
+        {
+            await AuthorizeAction(id, "load");
+
+            Vm vm = await _pod.Load(id);
+
+            return Ok(vm);
+        }
+
+        /// <summary>
+        /// Change vm state.
+        /// </summary>
+        /// <remarks>
+        /// Operations: Start, Stop, Save, Revert
+        /// </remarks>
+        /// <param name="op"></param>
+        /// <returns></returns>
+        [HttpPut("api/vm")]
+        public async Task<ActionResult<Vm>> ChangeVm([FromBody]VmOperation op)
+        {
+            string opType = op.Type.ToString().ToLower();
+
+            await AuthorizeAction(op.Id, opType);
+
+            if (
+                op.Type == VmOperationType.Save
+                && op.WorkspaceId > 0
+                && await _workspaceService.HasGames(op.WorkspaceId)
+            )
+            {
+                throw new WorkspaceNotIsolatedException();
+            }
+
+            Vm vm = await _pod.ChangeState(op);
+
+            SendBroadcast(vm, opType);
+
+            return Ok(vm);
+        }
+
+        /// <summary>
+        /// Delete a vm.
+        /// </summary>
+        /// <param name="id">Vm Id</param>
+        /// <returns></returns>
+        [HttpDelete("api/vm/{id}")]
+        public async Task<ActionResult<Vm>> Delete(string id)
+        {
+            await AuthorizeAction(id, "delete");
+
+            Vm vm = await _pod.Delete(id);
+
+            SendBroadcast(vm, "delete");
+
+            return Ok(vm);
+        }
+
+        /// <summary>
+        /// Change vm iso or network
+        /// </summary>
+        /// <param name="id">Vm Id</param>
+        /// <param name="change">key-value pairs</param>
+        /// <returns></returns>
+        [HttpPut("api/vm/{id}/change")]
+        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair<string,string> change)
+        {
+            await AuthorizeAction(id, "change");
+
+            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+
+            SendBroadcast(vm, "change");
+
+            return Ok(await _pod.ChangeConfiguration(id, change));
+        }
+
+        /// <summary>
+        /// Answer a vm question.
+        /// </summary>
+        /// <param name="id">Vm Id</param>
+        /// <param name="answer"></param>
+        /// <returns></returns>
+        [HttpPut("api/vm/{id}/answer")]
+        public async Task<ActionResult<Vm>> Answer(string id, [FromBody] VmAnswer answer)
+        {
+            await AuthorizeAction(id, "answer");
+
+            Vm vm = await _pod.Answer(id, answer);
+
+            SendBroadcast(vm, "answer");
+
+            return Ok(vm);
+        }
+
+        /// <summary>
+        /// Find ISO files available to a vm.
+        /// </summary>
+        /// <param name="id">Vm Id</param>
+        /// <returns></returns>
+        [HttpGet("api/vm/{id}/isos")]
+        public async Task<ActionResult<VmOptions>> IsoOptions(string id)
+        {
+            await AuthorizeAction(id, "isooptions");
+
+            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+
+            if (vm == null)
+                return BadRequest();
+
+            string tag = vm.Name.Tag();
+
+            return Ok(await _pod.GetVmIsoOptions(tag));
+        }
+
+        /// <summary>
+        /// Find virtual networks available to a vm.
+        /// </summary>
+        /// <param name="id">Vm Id</param>
+        /// <returns></returns>
+        [HttpGet("api/vm/{id}/nets")]
+        public async Task<ActionResult<VmOptions>> NetOptions(string id)
+        {
+            await AuthorizeAction(id, "netoptions");
+
+            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+
+            if (vm == null)
+                return BadRequest();
+
+            string tag = vm.Name.Tag();
+
+            return Ok(await _pod.GetVmNetOptions(tag));
+        }
+
+        /// <summary>
+        /// Request a vm console access ticket.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("api/vm-console/{id}")]
         public async Task<ActionResult<ConsoleSummary>> Ticket(string id)
         {
             await AuthorizeAction(id, "ticket");
@@ -124,127 +266,12 @@ namespace TopoMojo.Web.Controllers
             return Ok(info);
         }
 
-        [Authorize(Policy = "AdminOnly")]
-        [HttpGet("api/vms")]
-        public async Task<ActionResult<Vm[]>> Find(string tag)
-        {
-            var vms = await _pod.Find(tag);
-
-            var keys = vms.Select(v => v.Name.Tag()).Distinct().ToArray();
-
-            var map = await _templateService.ResolveKeys(keys);
-
-            foreach (Vm vm in vms)
-                vm.GroupName = map[vm.Name.Tag()];
-
-            return Ok(
-                vms
-                .OrderBy(v => v.GroupName)
-                .ThenBy(v => v.Name)
-                .ToArray()
-            );
-        }
-
-        [HttpGet("api/vm/{id}")]
-        public async Task<ActionResult<Vm>> Load(string id)
-        {
-            await AuthorizeAction(id, "load");
-
-            Vm vm = await _pod.Load(id);
-
-            return Ok(vm);
-        }
-
-        [HttpPost("api/vm/action")]
-        public async Task<ActionResult<Vm>> ChangeVm([FromBody]VmOperation op)
-        {
-            string opType = op.Type.ToString().ToLower();
-
-            await AuthorizeAction(op.Id, opType);
-
-            if (
-                op.Type == VmOperationType.Save
-                && op.WorkspaceId > 0
-                && await _workspaceService.HasGames(op.WorkspaceId)
-            )
-            {
-                throw new WorkspaceNotIsolatedException();
-            }
-
-            Vm vm = await _pod.ChangeState(op);
-
-            SendBroadcast(vm, opType);
-
-            return Ok(vm);
-        }
-
-        [HttpDelete("api/vm/{id}")]
-        public async Task<ActionResult<Vm>> Delete(string id)
-        {
-            await AuthorizeAction(id, "delete");
-
-            Vm vm = await _pod.Delete(id);
-
-            SendBroadcast(vm, "delete");
-
-            return Ok(vm);
-        }
-
-        [HttpPost("api/vm/{id}/change")]
-        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair<string,string> change)
-        {
-            await AuthorizeAction(id, "change");
-
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
-
-            SendBroadcast(vm, "change");
-
-            return Ok(await _pod.ChangeConfiguration(id, change));
-        }
-
-        [HttpPost("api/vm/{id}/answer")]
-        public async Task<ActionResult<Vm>> Answer(string id, [FromBody] VmAnswer answer)
-        {
-            await AuthorizeAction(id, "answer");
-
-            Vm vm = await _pod.Answer(id, answer);
-
-            SendBroadcast(vm, "answer");
-
-            return Ok(vm);
-        }
-
-        [HttpGet("api/vm/{id}/isos")]
-        public async Task<ActionResult<VmOptions>> IsoOptions(string id)
-        {
-            await AuthorizeAction(id, "isooptions");
-
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
-
-            if (vm == null)
-                return BadRequest();
-
-            string tag = vm.Name.Tag();
-
-            return Ok(await _pod.GetVmIsoOptions(tag));
-        }
-
-        [HttpGet("api/vm/{id}/nets")]
-        public async Task<ActionResult<VmOptions>> NetOptions(string id)
-        {
-            await AuthorizeAction(id, "netoptions");
-
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
-
-            if (vm == null)
-                return BadRequest();
-
-            string tag = vm.Name.Tag();
-
-            return Ok(await _pod.GetVmNetOptions(tag));
-        }
-
-        [HttpGet("api/template/{id}/vm")]
+        /// <summary>
+        /// Resolve a vm from a template.
+        /// </summary>
+        /// <param name="id">Template Id</param>
+        /// <returns></returns>
+        [HttpGet("api/vm-template/{id}")]
         public async Task<ActionResult<Vm>> Resolve(int id)
         {
             VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
@@ -257,7 +284,12 @@ namespace TopoMojo.Web.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/template/{id}/deploy")]
+        /// <summary>
+        /// Deploy a vm from a template.
+        /// </summary>
+        /// <param name="id">Template Id</param>
+        /// <returns></returns>
+        [HttpPost("api/vm-template/{id}")]
         public async Task<ActionResult<Vm>> Deploy(int id)
         {
             VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
@@ -277,7 +309,12 @@ namespace TopoMojo.Web.Controllers
             return Ok(vm);
         }
 
-        [HttpPost("api/template/{id}/disks")]
+        /// <summary>
+        /// Initialize vm disks.
+        /// </summary>
+        /// <param name="id">Template Id</param>
+        /// <returns></returns>
+        [HttpPut("api/vm-template/{id}")]
         public async Task<ActionResult<Vm>> Initialize(int id)
         {
             VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
@@ -285,13 +322,49 @@ namespace TopoMojo.Web.Controllers
             return Ok(await _pod.CreateDisks(template));
         }
 
+        /// <summary>
+        /// Initiate hypervisor manager reload
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
         [Authorize(Policy = "AdminOnly")]
-        [HttpPost("api/host/{host}/reload")]
+        [HttpPost("api/pod/{host}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> ReloadHost(string host)
         {
             await _pod.ReloadHost(host);
 
             return Ok();
+        }
+
+        // This endpoint is a temporary to support an authless demo
+        [HttpGet("api/vm-demo/{id}/{name}")]
+        [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<ConsoleSummary>> Demo([FromRoute]string id, [FromRoute]string name)
+        {
+            if (!_options.DemoCode.HasValue())
+                throw new InvalidOperationException("Endpoint disabled.");
+
+            if (name == "restart")
+            {
+                try {
+                    await _pod.Stop(id);
+                    await _pod.Start(id);
+                }
+                catch {}
+
+                return Ok(null);
+            }
+
+            var info = await _pod.Display(id);
+
+            if (info.Url.HasValue())
+            {
+                var src = new Uri(info.Url);
+                info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
+            }
+            return Ok(info);
         }
 
         private async Task AuthorizeAction(string id, string method)

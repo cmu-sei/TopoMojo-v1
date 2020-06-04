@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 namespace TopoMojo.Models
@@ -14,8 +14,8 @@ namespace TopoMojo.Models
         public string Iso { get; set; }
         public string Guestinfo { get; set; }
         public bool IsHidden { get; set; }
-        public int TopologyId { get; set; }
-        public string TopologyGlobalId { get; set; }
+        public int WorkspaceId { get; set; }
+        public string WorkspaceGlobalId { get; set; }
     }
 
     public class ChangedTemplate
@@ -27,7 +27,7 @@ namespace TopoMojo.Models
         public string Iso { get; set; }
         public bool IsHidden { get; set; }
         public string Guestinfo { get; set; }
-        public int TopologyId { get; set; }
+        public int WorkspaceId { get; set; }
     }
 
     public class NewTemplateDetail
@@ -44,6 +44,7 @@ namespace TopoMojo.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
+        public string Guestinfo { get; set; }
         public string Detail { get; set; }
         public bool IsPublished { get; set; }
     }
@@ -53,8 +54,8 @@ namespace TopoMojo.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public int TopologyId { get; set; }
-        public string TopologyName { get; set; }
+        public int WorkspaceId { get; set; }
+        public string WorkspaceName { get; set; }
         public string ParentId { get; set; }
         public string ParentName { get; set; }
         public bool IsPublished { get; set; }
@@ -63,7 +64,7 @@ namespace TopoMojo.Models
     public class TemplateLink
     {
         public int TemplateId { get; set; }
-        public int TopologyId { get; set; }
+        public int WorkspaceId { get; set; }
     }
 
     public class ConvergedTemplate
@@ -74,8 +75,8 @@ namespace TopoMojo.Models
         public string Iso { get; set; }
         public string Detail { get; set; }
         public string Guestinfo { get; set; }
-        public int TopologyId { get; set; }
-        public string TopologyGlobalId { get; set; }
-        public bool TopologyUseUplinkSwitch { get; set; }
+        public int WorkspaceId { get; set; }
+        public string WorkspaceGlobalId { get; set; }
+        public bool WorkspaceUseUplinkSwitch { get; set; }
     }
 }

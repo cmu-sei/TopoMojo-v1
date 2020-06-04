@@ -70,7 +70,7 @@ namespace Tests
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new string[] {
+                    Filter = new string[] {
                         "published",
                         "mine"
                     }

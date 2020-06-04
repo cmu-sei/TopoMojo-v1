@@ -3,9 +3,13 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
-    <Content Update="wwwroot/docs/**/*;**/*.json;**/*.DS_Store;topomojo.db" CopyToPublishDirectory="Never" />
-    <Content Update="appsettings.json;seed-data.json.example" CopyToPublishDirectory="Always" />
+    <Content Update="wwwroot/docs/**/*;**/*.json;**/*.DS_Store" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.conf;appsettings.json;seed-data.json.example" CopyToPublishDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />

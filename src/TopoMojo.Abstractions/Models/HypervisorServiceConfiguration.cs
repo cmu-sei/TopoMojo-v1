@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System.Collections.Generic;
@@ -17,7 +17,6 @@ namespace TopoMojo.Models
         public string VmStore { get; set; } = "[topomojo] _run/";
         public string DiskStore { get; set; } = "[topomojo]";
         public string IsoStore { get; set; } = "[topomojo] iso/";
-        // public string DisplayMethod { get; set; }
         public string ConsoleUrl { get; set; }
         public string TicketUrlHandler { get; set; }  = "querystring"; //"local-app", "external-domain", "host-map", "none"
         public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();

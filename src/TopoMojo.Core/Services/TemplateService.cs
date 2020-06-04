@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -52,11 +52,11 @@ namespace TopoMojo.Services
                 );
             }
 
+            if (!User.IsAdmin || search.HasFilter("published"))
+                q = q.Where(t => t.IsPublished);
+
             if (search.HasFilter("parents"))
                 q = q.Where(t => t.ParentId == null || t.ParentId == 0);
-
-            if (search.HasFilter("published"))
-                q = q.Where(t => t.IsPublished);
 
             q = q.OrderBy(t => t.Name);
 
@@ -136,7 +136,7 @@ namespace TopoMojo.Services
 
         public async Task<Template> Link(TemplateLink newlink)
         {
-            var workspace = await _workspaceStore.Load(newlink.TopologyId);
+            var workspace = await _workspaceStore.Load(newlink.WorkspaceId);
             if (workspace == null || !workspace.CanEdit(User))
                 throw new InvalidOperationException();
 
@@ -145,17 +145,18 @@ namespace TopoMojo.Services
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
-            if (await _templateStore.AtTemplateLimit(newlink.TopologyId))
+            if (await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
                 throw new WorkspaceTemplateLimitException();
 
             var newTemplate = new Data.Template
             {
                 ParentId = entity.Id,
-                WorkspaceId = newlink.TopologyId,
+                WorkspaceId = newlink.WorkspaceId,
                 Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,
-                Networks = entity.Networks
+                Networks = entity.Networks,
+                Guestinfo = entity.Guestinfo
             };
 
             await _templateStore.Add(newTemplate);

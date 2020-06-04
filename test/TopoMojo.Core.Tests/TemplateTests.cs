@@ -50,7 +50,7 @@ namespace Tests
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new string[] { "published" }
+                    Filter = new string[] { "published" }
                 }).Result;
                 Assert.True(list.Length == 3);
             }
@@ -76,12 +76,12 @@ namespace Tests
                     }).Result;
                 }
 
-                Template t = mgr.Link(new TemplateLink { TemplateId = 5, TopologyId = topo.Id}).Result;
+                Template t = mgr.Link(new TemplateLink { TemplateId = 5, WorkspaceId = topo.Id}).Result;
                 t = mgr.Unlink(new TemplateLink { TemplateId = t.Id }).Result;
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new string[] {
+                    Filter = new string[] {
                         //"published"
                     }
                 }).Result;

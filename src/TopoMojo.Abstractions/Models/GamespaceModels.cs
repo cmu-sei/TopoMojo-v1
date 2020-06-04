@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System.Collections.Generic;
@@ -11,9 +11,10 @@ namespace TopoMojo.Models
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Slug { get; set; }
+        public string Audience { get; set; }
         public string WhenCreated { get; set; }
-        public string TopologyDocument { get; set; }
-        public int TopologyId { get; set; }
+        public string WorkspaceDocument { get; set; }
+        public int WorkspaceId { get; set; }
         public Player[] Players { get; set; }
     }
 
@@ -23,8 +24,10 @@ namespace TopoMojo.Models
         public string Name { get; set; }
         public string GlobalId { get; set; }
         public string WhenCreated { get; set; }
-        public string TopologyDocument { get; set; }
+        public string WorkspaceDocument { get; set; }
+        public string Markdown { get; set; }
         public string ShareCode { get; set; }
+        public string Audience { get; set; }
         public Player[] Players { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
 

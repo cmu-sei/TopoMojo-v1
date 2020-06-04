@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 namespace TopoMojo.Models
@@ -56,28 +56,10 @@ namespace TopoMojo.Models
         public int TemplateLimit { get; set; }
     }
 
-    public class WorkspaceState
+    public class WorkspaceInvitation
     {
         public int Id { get; set; }
         public string ShareCode { get; set; }
-        public bool IsPublished { get; set; }
-        public bool IsLocked { get; set; }
-    }
-
-    public class WorkspaceStateAction
-    {
-        public int Id { get; set; }
-        public WorkspaceStateActionType Type { get; set; }
-    }
-
-    public enum WorkspaceStateActionType
-    {
-        Share,
-        Unshare,
-        Publish,
-        Unpublish,
-        Lock,
-        Unlock
     }
 
     public class Worker

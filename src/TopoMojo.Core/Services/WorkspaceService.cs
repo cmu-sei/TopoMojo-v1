@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -43,6 +43,14 @@ namespace TopoMojo.Services
         public async Task<WorkspaceSummary[]> List(Search search, CancellationToken ct = default(CancellationToken))
         {
             var q = _workspaceStore.List(search.Term);
+
+            if (!User.IsAdmin
+                && !search.HasFilter("public")
+                && !search.HasFilter("private")
+            )
+            {
+                search.Filter = search.Filter.Append("private").ToArray();
+            }
 
             if (search.HasFilter("public"))
                 q = q.Where(t => t.IsPublished);
@@ -154,7 +162,7 @@ namespace TopoMojo.Services
             if (entity == null || !entity.CanEdit(User))
                 throw new InvalidOperationException();
 
-            if (!User.IsAdmin)
+            if (model.TemplateLimit == 0 || !User.IsAdmin)
                 model.TemplateLimit = entity.TemplateLimit;
 
             Mapper.Map<ChangedWorkspace, Data.Workspace>(model, entity, WithActor());
@@ -235,7 +243,7 @@ namespace TopoMojo.Services
         /// <param name="id"></param>
         /// <param name="revoke"></param>
         /// <returns></returns>
-        public async Task<WorkspaceState> Share(int id)
+        public async Task<WorkspaceInvitation> Invite(int id)
         {
             var workspace = await _workspaceStore.Load(id);
 
@@ -246,7 +254,7 @@ namespace TopoMojo.Services
 
             await _workspaceStore.Update(workspace);
 
-            return Mapper.Map<WorkspaceState>(workspace);
+            return Mapper.Map<WorkspaceInvitation>(workspace);
         }
 
         // /// <summary>

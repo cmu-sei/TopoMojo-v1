@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using NetVimClient;
-using TopoMojo.Extensions;
 using TopoMojo.Models;
 using TopoMojo.vSphere.Helpers;
 
@@ -125,7 +124,7 @@ namespace TopoMojo.vSphere
             Vm vm = _vmCache[id];
 
             //protect stock disks; only save a disk if it is local to the workspace
-            //i.e. the disk folder matches the topologyId
+            //i.e. the disk folder matches the workspaceId
             if (vm.Name.Tag().HasValue() && !vm.DiskPath.Contains(vm.Name.Tag()))
                 throw new InvalidOperationException("External templates must be cloned into local templates in order to be saved.");
 

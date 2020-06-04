@@ -1,15 +1,14 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
-// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TopoMojo.Extensions
+namespace TopoMojo.vSphere
 {
     public static class StringExtensions
     {
-        //check for string value
         public static bool HasValue(this string s)
         {
             return (!String.IsNullOrWhiteSpace(s));
@@ -117,16 +116,14 @@ namespace TopoMojo.Extensions
         //Note: this assumes a guid string (length > 16)
         public static string ToSwitchName(this string s)
         {
-            return String.Format("sw#{0}..{1}", s.Substring(0,8), s.Substring(s.Length-8));
+            return string.Format("sw#{0}..{1}", s.Substring(0,8), s.Substring(s.Length-8));
         }
 
         public static string ToAbbreviatedHex(this string s)
         {
             return (s.Length > 8)
-                ? String.Format("{0}..{1}", s.Substring(0, 4), s.Substring(s.Length - 4))
+                ? string.Format("{0}..{1}", s.Substring(0, 4), s.Substring(s.Length - 4))
                 : s;
         }
-
     }
-
 }

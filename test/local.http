@@ -1,5 +1,10 @@
 @api = http://localhost:5004/api
+# @api = https://topomojo.cyberforce.site/api
 @json = Content-Type: application/json
+
+###
+GET {{api}}/workspaces
+
 
 ###
 POST http://localhost:5000/api/resource/devimport

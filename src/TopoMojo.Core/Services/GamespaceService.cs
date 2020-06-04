@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -62,19 +62,19 @@ namespace TopoMojo.Services
             return Mapper.Map<Gamespace[]>(list);
         }
 
-        public async Task<GameState> Launch(int topoId)
+        public async Task<GameState> Launch(int workspaceId)
         {
             var gamespaces = await _gamespaceStore
                 .ListByProfile(User.Id)
                 .ToArrayAsync();
 
             var game = gamespaces
-                .Where(m => m.WorkspaceId == topoId)
+                .Where(m => m.WorkspaceId == workspaceId)
                 .SingleOrDefault();
 
             if (game == null)
             {
-                var workspace = await _workspaceStore.Load(topoId);
+                var workspace = await _workspaceStore.Load(workspaceId);
 
                 if (workspace == null)
                     throw new InvalidOperationException();
@@ -86,7 +86,9 @@ namespace TopoMojo.Services
                 {
                     Name = workspace.Name,
                     Workspace = workspace,
-                    ShareCode = Guid.NewGuid().ToString("N")
+                    LastActivity = DateTime.UtcNow,
+                    ShareCode = Guid.NewGuid().ToString("N"),
+                    Audience = "topomojo"
                 };
 
                 game.Players.Add(
@@ -131,48 +133,39 @@ namespace TopoMojo.Services
             return await LoadState(gamespace, gamespace.WorkspaceId);
         }
 
-        public async Task<GameState> LoadFromTopo(int topoId)
+        public async Task<GameState> LoadFromWorkspace(int workspaceId)
         {
-            var gamespace = await _gamespaceStore.FindByContext(topoId, User.Id);
+            var gamespace = User.Id > 0
+                ? await _gamespaceStore.FindByContext(workspaceId, User.Id)
+                : null;
 
-            return await LoadState(gamespace, topoId);
+            return await LoadState(gamespace, workspaceId);
         }
 
-        public async Task<GameState> LoadPreview(int topoId)
-        {
-            return await LoadState(null, topoId);
-        }
-
-        private async Task<GameState> LoadState(Data.Gamespace gamespace, int topoId)
+        private async Task<GameState> LoadState(Data.Gamespace gamespace, int workspaceId)
         {
             GameState state = null;
 
             if (gamespace == null)
             {
-                var topo = await _workspaceStore.Load(topoId);
+                var workspace = await _workspaceStore.Load(workspaceId);
 
-                if (topo == null || !topo.IsPublished)
+                if (workspace == null || !workspace.IsPublished)
                     throw new InvalidOperationException();
 
                 state = new GameState();
 
-                state.Name = gamespace?.Name ?? topo.Name;
+                state.Name = gamespace?.Name ?? workspace.Name;
 
-                state.TopologyDocument = topo.Document;
+                state.WorkspaceDocument = workspace.Document;
 
-                state.Vms = topo.Templates
+                state.Vms = workspace.Templates
                     .Where(t => !t.IsHidden)
                     .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
                     .ToArray();
             }
             else
             {
-                // var player = gamespace.Players.Where(p => p.PersonId == User.Id).Single();
-
-                // player.LastSeen = DateTime.UtcNow;
-
-                // await _gamespaceStore.Update(gamespace);
-
                 state = Mapper.Map<GameState>(gamespace);
 
                 state.Vms = gamespace.Workspace.Templates

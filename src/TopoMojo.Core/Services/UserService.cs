@@ -1,3 +1,6 @@
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+
 using System;
 using System.Linq;
 using System.Threading;
@@ -94,7 +97,7 @@ namespace TopoMojo.Services
         {
             var entity = await _userStore.Load(id);
 
-            if (entity == null || (!User.IsAdmin && User.GlobalId != entity.GlobalId))
+            if (entity == null || (!User.IsAdmin && User.Id != entity.Id))
                 throw new InvalidOperationException();
 
             await _userStore.Delete(id);
@@ -104,5 +107,6 @@ namespace TopoMojo.Services
         {
             return await _userStore.MemberOf(globalId, User);
         }
+
     }
 }

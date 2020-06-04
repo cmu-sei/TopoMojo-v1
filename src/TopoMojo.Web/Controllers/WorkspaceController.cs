@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -11,18 +11,21 @@ using TopoMojo.Abstractions;
 using TopoMojo.Services;
 using TopoMojo.Models;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiController]
     public class WorkspaceController : _Controller
     {
         public WorkspaceController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             WorkspaceService workspaceService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub,
-            IServiceProvider sp
-        ) : base(sp)
+            IHubContext<TopologyHub, ITopoEvent> hub
+        ) : base(logger, identityResolver)
         {
             _pod = podService;
             _workspaceService = workspaceService;
@@ -33,71 +36,134 @@ namespace TopoMojo.Web.Controllers
         private readonly WorkspaceService _workspaceService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
+        /// <summary>
+        /// List workspaces according to search parameters.
+        /// </summary>
+        /// <remarks>
+        /// filter: public, private
+        /// sort: age
+        /// </remarks>
+        /// <param name="search"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         [AllowAnonymous]
-        [HttpGet("api/workspaces/summary")]
-        public async Task<ActionResult<WorkspaceSummary>> List(Search search, CancellationToken ct)
+        [HttpGet("api/workspaces")]
+        public async Task<ActionResult<WorkspaceSummary[]>> List([FromQuery]Search search, CancellationToken ct)
         {
             var result = await _workspaceService.List(search, ct);
 
             return Ok(result);
         }
 
-        [Authorize(Policy = "AdminOnly")]
-        [HttpGet("api/workspaces")]
-        public async Task<ActionResult<Workspace>> ListDetail(Search search, CancellationToken ct)
+        /// <summary>
+        /// Load a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/workspace/{id}")]
+        public async Task<ActionResult<Workspace>> Load(int id)
         {
-            var result = await _workspaceService.ListDetail(search, ct);
+            Workspace workspace = await _workspaceService.Load(id);
 
-            return Ok(result);
+            return Ok(workspace);
         }
 
+        /// <summary>
+        /// Create a new workspace.
+        /// </summary>
+        /// <param name="model">New Workspace</param>
+        /// <returns>A new workspace.</returns>
         [HttpPost("api/workspace")]
         public async Task<ActionResult<Workspace>> Create([FromBody]NewWorkspace model)
         {
-            Workspace topo = await _workspaceService.Create(model);
+            Workspace workspace = await _workspaceService.Create(model);
 
-            return Ok(topo);
+            return Created(Url.Action("Load", new {Id = workspace.Id}), workspace);
         }
 
+        /// <summary>
+        /// Update an existing workspace.
+        /// </summary>
+        /// <param name="model">Changed Workspace</param>
+        /// <returns></returns>
         [HttpPut("api/workspace")]
         public async Task<ActionResult> Update([FromBody]ChangedWorkspace model)
         {
-            Workspace topo = await _workspaceService.Update(model);
+            Workspace workspace = await _workspaceService.Update(model);
 
             // Broadcast(topo.GlobalId, new BroadcastEvent<Topology>(User, "TOPO.UPDATED", topo));
-            await _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.UPDATED", topo));
+            await _hub.Clients.Group(workspace.GlobalId).TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.UPDATED", workspace));
 
             return Ok();
         }
 
-        [HttpGet("api/workspace/{id}")]
-        public async Task<ActionResult<Workspace>> Load(int id)
-        {
-            Workspace topo = await _workspaceService.Load(id);
-            return Ok(topo);
-        }
-
+        /// <summary>
+        /// Delete a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
         [HttpDelete("api/workspace/{id}")]
-        public async Task<ActionResult<bool>> Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var topo = await _workspaceService.Delete(id);
+            var workspace = await _workspaceService.Delete(id);
 
-            Log("deleted", topo);
+            Log("deleted", workspace);
 
-            await _hub.Clients.Group(topo.GlobalId).TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.DELETED", topo));
+            await _hub.Clients.Group(workspace.GlobalId).TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.DELETED", workspace));
 
-            return Ok(true);
+            return Ok();
         }
 
+        /// <summary>
+        /// Find ISO files available to a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/workspace/{id}/isos")]
+        public async Task<ActionResult<VmOptions>> Isos(string id)
+        {
+            VmOptions result = await _pod.GetVmIsoOptions(id);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Find virtual networks available to a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/workspace/{id}/nets")]
+        public async Task<ActionResult<VmOptions>> Nets(string id)
+        {
+            VmOptions result = await _pod.GetVmNetOptions(id);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Load gamespaces generated from a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
         [HttpGet("api/workspace/{id}/games")]
         public async Task<ActionResult<GameState[]>> LoadGames(int id)
         {
             GameState[] games = await _workspaceService.GetGames(id);
+
             return Ok(games);
         }
 
+        /// <summary>
+        /// Delete all gamespaces generated from this workspace.
+        /// </summary>
+        /// <remarks>
+        /// Useful if updating a workspace after it is published.
+        /// Workspace updates are disallowed if gamespaces exist.
+        /// </remarks>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
         [HttpDelete("api/workspace/{id}/games")]
-        public async Task<ActionResult<bool>> DeleteGames(int id)
+        public async Task<ActionResult> DeleteGames(int id)
         {
             var games = await _workspaceService.KillGames(id);
 
@@ -108,17 +174,32 @@ namespace TopoMojo.Web.Controllers
 
             Task.WaitAll(tasklist.ToArray());
 
-            return Ok(true);
+            return Ok();
         }
 
-        [HttpPut("api/workspace/{id}/share")]
-        public async Task<ActionResult<WorkspaceState>> Share(int id)
+        /// <summary>
+        /// Generate an invitation code for worker enlistment.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpPut("api/workspace/{id}/invite")]
+        public async Task<ActionResult<WorkspaceInvitation>> Invite(int id)
         {
-            var state = await _workspaceService.Share(id);
+            var state = await _workspaceService.Invite(id);
+
             return Ok(state);
         }
 
-        [HttpPost("api/worker/enlist/{code}")]
+        /// <summary>
+        /// Accept an invitation to a workspace.
+        /// </summary>
+        /// <remarks>
+        /// Any user that submits the invitation code is
+        /// added as member of the workspace.
+        /// </remarks>
+        /// <param name="code">Invitation Code</param>
+        /// <returns></returns>
+        [HttpPost("api/worker/{code}")]
         public async Task<ActionResult> Enlist(string code)
         {
             await _workspaceService.Enlist(code);
@@ -126,6 +207,11 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Removes a worker from the workspace.
+        /// </summary>
+        /// <param name="id">Worker Id</param>
+        /// <returns></returns>
         [HttpDelete("api/worker/{id}")]
         public async Task<ActionResult> Delist(int id)
         {
@@ -134,20 +220,6 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
-        [HttpGet("api/workspace/{id}/isos")]
-        public async Task<ActionResult<VmOptions>> Isos(string id)
-        {
-            VmOptions result = await _pod.GetVmIsoOptions(id);
-
-            return Ok(result);
-        }
-
-        [HttpGet("api/workspace/{id}/nets")]
-        public async Task<ActionResult<VmOptions>> Nets(string id)
-        {
-            VmOptions result = await _pod.GetVmNetOptions(id);
-
-            return Ok(result);
-        }
     }
+
 }
