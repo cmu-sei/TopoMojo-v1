@@ -39,8 +39,8 @@ namespace TopoMojo.Web.Controllers
             var cc = new CachedConnection
             {
                 Id = Context.ConnectionId,
-                ProfileName = Context.User?.Identity.Name,
                 ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                ProfileName = Context.User?.FindFirstValue("name"),
                 Room = channelId
             };
             _cache.Connections.TryAdd(cc.Id, cc);

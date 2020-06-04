@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Linq;
@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TopoMojo.Extensions;
 
 namespace TopoMojo.Web
 {
@@ -25,6 +26,7 @@ namespace TopoMojo.Web
         public static class ClaimNames
         {
             public const string Subject = "sub";
+            public const string Name = "name";
         }
 
     }
@@ -87,7 +89,8 @@ namespace TopoMojo.Web
             var principal = new ClaimsPrincipal(
                 new ClaimsIdentity(
                     new Claim[] {
-                        new Claim(TicketAuthentication.ClaimNames.Subject, subject)
+                        new Claim(TicketAuthentication.ClaimNames.Subject, subject.Untagged()),
+                        new Claim(TicketAuthentication.ClaimNames.Name, subject.Tag())
                     },
                     Scheme.Name
                 )

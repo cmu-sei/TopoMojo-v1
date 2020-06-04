@@ -30,12 +30,13 @@ namespace TopoMojo.Web.Controllers
             _userService = userService;
             _identity = identityResolver;
             _dp = dp.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
+            _random = new Random();
         }
 
         private readonly UserService _userService;
         private readonly IIdentityResolver _identity;
         private readonly IDataProtector _dp;
-
+        private readonly Random _random;
         /// <summary>
         /// List users. (admin only)
         /// </summary>
@@ -106,7 +107,13 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("/api/user/ticket")]
         public IActionResult GetTicket()
         {
-            string ticket = $"{DateTime.UtcNow.AddSeconds(20).Ticks}|{Guid.NewGuid().ToString("N")}|{User.FindFirstValue("sub")}";
+            int random = _random.Next();
+
+            long expires = DateTime.UtcNow.AddSeconds(20).Ticks;
+
+            string id = $"{User.FindFirstValue(TicketAuthentication.ClaimNames.Subject)}#{User.FindFirstValue(TicketAuthentication.ClaimNames.Name)}";
+
+            string ticket = $"{expires}|{random}|{id}";
 
             return Ok(new { Ticket = _dp.Protect(ticket)});
         }
