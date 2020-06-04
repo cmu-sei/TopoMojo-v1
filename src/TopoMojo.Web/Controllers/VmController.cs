@@ -53,7 +53,7 @@ namespace TopoMojo.Web.Controllers
         /// <returns></returns>
         [Authorize(Policy = "AdminOnly")]
         [HttpGet("api/vms")]
-        public async Task<ActionResult<Vm[]>> Find(string filter)
+        public async Task<ActionResult<Vm[]>> Find([FromQuery]string filter)
         {
             var vms = await _pod.Find(filter);
 

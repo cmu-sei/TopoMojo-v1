@@ -42,7 +42,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (workspace.Workers
-                    .FirstOrDefault(p => p.Id == user.Id)?
+                    .FirstOrDefault(p => p.PersonId == user.Id)?
                     .Permission.CanManage() ?? false);
         }
 
@@ -50,7 +50,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (workspace.Workers
-                    .FirstOrDefault(p => p.Id == user.Id)?
+                    .FirstOrDefault(p => p.PersonId == user.Id)?
                     .Permission.CanEdit() ?? false);
         }
 
@@ -58,7 +58,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (player.Players
-                    .FirstOrDefault(p => p.Id == user.Id)?
+                    .FirstOrDefault(p => p.PersonId == user.Id)?
                     .Permission.CanManage() ?? false);
         }
 
@@ -66,7 +66,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (player.Players
-                    .FirstOrDefault(p => p.Id == user.Id)?
+                    .FirstOrDefault(p => p.PersonId == user.Id)?
                     .Permission.CanEdit() ?? false);
         }
     }
