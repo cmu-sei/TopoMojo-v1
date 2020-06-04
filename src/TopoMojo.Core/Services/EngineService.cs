@@ -51,6 +51,8 @@ namespace TopoMojo.Services
 
         public async Task<GameState> Launch(GamespaceSpec spec)
         {
+            _logger.LogDebug(Newtonsoft.Json.JsonConvert.SerializeObject(spec));
+
             var game = await _gamespaceStore.Load(spec.IsolationId);
 
             if (game == null)
@@ -59,7 +61,7 @@ namespace TopoMojo.Services
 
                 if (workspace == null || !workspace.HasScope(Client.Scope))
                 {
-                    _logger.LogInformation($"No audience match for workspace {workspace?.Id}: [{workspace?.Audience}] [{Client?.Scope}]");
+                    _logger.LogInformation($"No audience match for workspace {spec?.WorkspaceId}: [{workspace?.Audience}] [{Client?.Scope}]");
                     throw new InvalidOperationException();
                 }
 
