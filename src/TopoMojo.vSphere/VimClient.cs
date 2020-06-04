@@ -303,7 +303,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        public async Task<Vm> Change(string id, KeyValuePair<string,string> change)
+        public async Task<Vm> Change(string id, VmKeyValue change)
         {
             return await ReconfigureVm(id, change.Key, "", change.Value);
         }
@@ -317,7 +317,6 @@ namespace TopoMojo.vSphere
                 _props,
                 FilterFactory.VmFilter(vm.AsVim(), "config"));
             ObjectContent[] oc = response.returnval;
-            //var content = oc.FindTypeByName("VirtualMachine", vm.Name);
 
             VirtualMachineConfigInfo config = (VirtualMachineConfigInfo)oc[0].GetProperty("config");
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
@@ -499,7 +498,11 @@ namespace TopoMojo.vSphere
                     {
                         if (result != null && result.file != null && result.file.Length > 0)
                         {
-                            list.AddRange(result.file.Select(o => result.folderPath + "/" + o.path));
+                            string fp = result.folderPath;
+                            if (!fp.EndsWith("/"))
+                                fp += "/";
+
+                            list.AddRange(result.file.Select(o => fp + o.path));
                         }
 
                     }
@@ -542,6 +545,10 @@ namespace TopoMojo.vSphere
                 task = await _vim.CopyVirtualDisk_TaskAsync(
                     _vdm, source, _datacenter, dest, _datacenter, null, false);
             }
+
+            // sometimes returns blank info, so wait a sec to prevent race
+            await Task.Delay(500);
+
             info = await GetVimTaskInfo(task);
             _taskMap[templateId] = info;
             _logger.LogDebug("clonedisk: progress " + info.progress);

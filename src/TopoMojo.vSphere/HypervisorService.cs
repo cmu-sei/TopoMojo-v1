@@ -256,7 +256,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        public async Task<Vm> ChangeConfiguration(string id, KeyValuePair<string,string> change)
+        public async Task<Vm> ChangeConfiguration(string id, VmKeyValue change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
             Vm vm = (await Find(id)).FirstOrDefault();
@@ -273,7 +273,11 @@ namespace TopoMojo.vSphere
                 //     throw new InvalidOperationException();
                 var isopath = new DatastorePath(change.Value);
                 isopath.Merge(host.Options.IsoStore);
-                change = new KeyValuePair<string, string>("iso", isopath.ToString());
+                change = new VmKeyValue
+                {
+                    Key = "iso",
+                    Value = isopath.ToString()
+                };
             }
 
             if (change.Key == "net")
@@ -412,23 +416,21 @@ namespace TopoMojo.vSphere
         public async Task<VmOptions> GetVmIsoOptions(string id)
         {
             VimClient host = FindHostByRandom();
+
             List<string> isos = new List<string>();
+
             string publicFolder = Guid.Empty.ToString();
 
             isos.AddRange(
                 (await host.GetFiles(host.Options.IsoStore + id + "/*.iso", false))
-                // .Select(x => x.Substring(x.LastIndexOf("/") + 1))
-                // .ToArray()
             );
             isos.AddRange(
                 (await host.GetFiles(host.Options.IsoStore + publicFolder + "/*.iso", false))
-                // .Select(x => "public/" + x.Substring(x.LastIndexOf("/") + 1))
-                // .ToArray()
             );
 
             //translate actual path to display path
             isos = isos.Select(x => x.Replace(host.Options.IsoStore, "").Trim()).ToList();
-            // isos.Sort();
+
             return new VmOptions {
                 Iso = isos.ToArray()
             };

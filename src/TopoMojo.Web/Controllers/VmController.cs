@@ -142,7 +142,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="change">key-value pairs</param>
         /// <returns></returns>
         [HttpPut("api/vm/{id}/change")]
-        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] KeyValuePair<string,string> change)
+        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] VmKeyValue change)
         {
             await AuthorizeAction(id, "change");
 

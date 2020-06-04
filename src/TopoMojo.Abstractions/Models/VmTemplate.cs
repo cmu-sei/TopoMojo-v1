@@ -25,7 +25,7 @@ namespace TopoMojo.Models
         public bool AutoStart { get; set; } = true;
         public VmNet[] Eth { get; set; }
         public VmDisk[] Disks { get; set; }
-        public GuestSetting[] GuestSettings { get; set; }
+        public VmKeyValue[] GuestSettings { get; set; }
     }
 
     public class VmNet
@@ -48,7 +48,7 @@ namespace TopoMojo.Models
         public int Status { get; set; }
     }
 
-    public class GuestSetting
+    public class VmKeyValue
     {
         public string Key { get; set; }
         public string Value { get; set; }

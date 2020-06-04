@@ -223,7 +223,7 @@ namespace TopoMojo.vSphere
             return vm;
         }
 
-        public async Task<Vm> ChangeConfiguration(string id, KeyValuePair<string,string> change)
+        public async Task<Vm> ChangeConfiguration(string id, VmKeyValue change)
         {
             Vm vm = _vms[id];
             await Delay();

@@ -326,7 +326,14 @@ namespace TopoMojo.Services
 
                     _logger.LogDebug($"{vm.Name}, {vmAction.Message}, {gamespace.Workspace.Name}, {String.Join(" ", allowedIsos.Iso)}");
 
-                    await _pod.ChangeConfiguration(vmAction.Id, new KeyValuePair<string,string>("iso", path));
+                    await _pod.ChangeConfiguration(
+                        vmAction.Id,
+                        new VmKeyValue
+                        {
+                            Key = "iso",
+                            Value = path
+                        }
+                    );
 
                     result = true;
 
