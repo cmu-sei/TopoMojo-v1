@@ -113,7 +113,7 @@ namespace TopoMojo.Services
             set { _template.UseUplinkSwitch = value; }
         }
 
-        public KeyValuePair<string,string>[] GuestSettings
+        public GuestSetting[] GuestSettings
         {
             get { return _template.GuestSettings; }
             set { _template.GuestSettings = value; }
@@ -121,7 +121,7 @@ namespace TopoMojo.Services
 
         public void AddGuestSettings(string guestinfo)
         {
-            var result = new List<KeyValuePair<string, string>>();
+            var result = new List<GuestSetting>();
 
             if (_template.GuestSettings != null)
                 result.AddRange(_template.GuestSettings);
@@ -146,10 +146,11 @@ namespace TopoMojo.Services
                         key = "guestinfo." + key;
 
                     result.Add(
-                        new KeyValuePair<string, string>(
-                            key,
-                            line.Substring(x + 1).Trim()
-                        )
+                        new GuestSetting
+                        {
+                            Key = key,
+                            Value = line.Substring(x + 1).Trim()
+                        }
                     );
                 }
             }
