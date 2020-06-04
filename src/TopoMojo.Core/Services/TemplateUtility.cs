@@ -17,7 +17,9 @@ namespace TopoMojo.Services
         {
             if (detail.HasValue())
             {
-                _template = JsonSerializer.Deserialize<VmTemplate>(detail);
+                _template = JsonSerializer.Deserialize<VmTemplate>(detail, new JsonSerializerOptions {
+                    PropertyNameCaseInsensitive = true
+                });
             }
             else
             {
@@ -44,7 +46,7 @@ namespace TopoMojo.Services
         private VmTemplate _template = null;
         private JsonSerializerOptions jsonOptions => new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
         };
 
         public string Id
