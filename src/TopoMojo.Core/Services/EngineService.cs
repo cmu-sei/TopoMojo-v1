@@ -267,7 +267,7 @@ namespace TopoMojo.Services
 
         public async Task<string> GetTemplates(int topoId)
         {
-            var topo = await _workspaceStore.Load(topoId);
+            var topo = await _workspaceStore.LoadWithParents(topoId);
 
             return (topo != null)
                 ? JsonSerializer.Serialize(Mapper.Map<List<ConvergedTemplate>>(topo.Templates), null)
