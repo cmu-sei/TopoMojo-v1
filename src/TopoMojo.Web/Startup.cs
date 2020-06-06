@@ -105,7 +105,7 @@ namespace TopoMojo.Web
             services.AddCache(() => CacheOptions);
 
             services.AddDataProtection()
-                .SetApplicationName(Assembly.GetEntryAssembly().GetName().Name)
+                .SetApplicationName(AppConstants.DataProtectionPurpose)
                 .PersistKeys(() => CacheOptions);
 
             services.AddSignalR(options => {});
@@ -165,7 +165,7 @@ namespace TopoMojo.Web
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme
                     )
-                    .RequireClaim("role", "administrator")
+                    .RequireClaim("role", TopoMojo.Models.UserRole.Administrator.ToString())
                     .Build());
 
                 _.AddPolicy("TrustedClients", new AuthorizationPolicyBuilder()

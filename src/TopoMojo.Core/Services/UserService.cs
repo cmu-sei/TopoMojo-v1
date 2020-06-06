@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Linq;
@@ -43,7 +43,7 @@ namespace TopoMojo.Services
                 q = q.Where(p => p.Name.ToLower().Contains(search.Term.ToLower()));
 
             if (search.HasFilter("admins"))
-                q = q.Where(p => p.Role == Data.UserRole.Administrator);
+                q = q.Where(p => p.Role == UserRole.Administrator);
 
             q = q.OrderBy(p => p.Name);
 
@@ -85,8 +85,7 @@ namespace TopoMojo.Services
 
             if (User.IsAdmin)
             {
-                // entity.IsAdmin = model.IsAdmin;
-                entity.Role = Enum.Parse<Data.UserRole>(model.Role);
+                entity.Role = model.Role;
                 entity.WorkspaceLimit = model.WorkspaceLimit;
             }
 

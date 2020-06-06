@@ -14,7 +14,6 @@ namespace TopoMojo.Services
 
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
 
-                .ForMember(d => d.IsAdmin, opt => opt.MapFrom(s => s.Role.HasFlag(Data.UserRole.Administrator)))
                 .ReverseMap()
             ;
 

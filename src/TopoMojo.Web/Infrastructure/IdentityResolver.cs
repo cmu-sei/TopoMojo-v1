@@ -74,7 +74,7 @@ namespace TopoMojo.Web.Services
                 {
                     new Claim(JwtRegisteredClaimNames.NameId, _user.Id.ToString()),
                     new Claim("name", _user.Name),
-                    new Claim("role", _user.Role.ToLower())
+                    new Claim("role", _user.Role.ToString())
                 });
 
                 return principal;
@@ -108,7 +108,7 @@ namespace TopoMojo.Web.Services
             {
                 new Claim(JwtRegisteredClaimNames.NameId, _user.Id.ToString()),
                 new Claim("name", _user.Name),
-                new Claim("role", _user.Role.ToLower())
+                new Claim("role", _user.Role.ToString())
             });
 
             return principal;

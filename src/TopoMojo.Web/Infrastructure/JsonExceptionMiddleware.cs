@@ -32,15 +32,18 @@ namespace TopoMojo.Web
                     context.Response.StatusCode = 500;
                     string message = "Error";
 
-                    if (ex is System.InvalidOperationException
-                    || ex is System.ArgumentException
-                    || ex.GetType().Namespace.StartsWith("TopoMojo.")
+                    if (
+                        ex is System.InvalidOperationException
+                        || ex is System.ArgumentException
+                        || ex.GetType().Namespace.StartsWith("TopoMojo.")
                     ) {
                         context.Response.StatusCode = 400;
-                        message = ex.GetType().Name
-                            .Split('.')
-                            .Last()
-                            .Replace("Exception", "");
+                        message = ex.Message;
+                        // message = ex.GetType().Name
+                        //     .Split('.')
+                        //     .Last()
+                        //     .Replace("Exception", "");
+
                         // message += $" {ex.Message}";
                     }
 

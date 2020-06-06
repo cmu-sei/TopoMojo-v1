@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,7 +15,7 @@ namespace TopoMojo.Web.Extensions
             {
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
                 new Claim("name", user.Name),
-                new Claim("role", user.Role.ToLower())
+                new Claim("role", user.Role.ToString().ToLower())
             });
 
             return principal;

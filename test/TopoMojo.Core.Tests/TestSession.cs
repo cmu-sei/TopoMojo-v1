@@ -142,7 +142,7 @@ namespace Tests
                 TopoMojo.Models.User target = new TopoMojo.Models.User
                 {
                     Name = name,
-                    IsAdmin = isAdmin,
+                    Role = UserRole.Administrator,
                     GlobalId = Guid.NewGuid().ToString()
                 };
 

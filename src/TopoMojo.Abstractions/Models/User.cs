@@ -8,10 +8,10 @@ namespace TopoMojo.Models
         public int Id { get; set; }
         public string GlobalId { get; set; }
         public string Name { get; set; }
-        public string Role { get; set; }
-        public bool IsAdmin { get; set; }
+        public UserRole Role { get; set; }
         public int WorkspaceLimit { get; set; }
         public string WhenCreated { get; set; }
+        public bool IsAdmin => Role == UserRole.Administrator;
     }
 
     public class ChangedUser
@@ -20,4 +20,12 @@ namespace TopoMojo.Models
         public string Name { get; set; }
     }
 
+
+    public enum UserRole
+    {
+        User,
+        Builder,
+        Creator,
+        Administrator
+    }
 }

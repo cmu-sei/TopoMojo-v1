@@ -41,7 +41,8 @@ namespace TopoMojo.Web
         )
             : base(options, logger, encoder, clock)
         {
-            _dp = dataProtection.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
+            // _dp = dataProtection.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
+            _dp = dataProtection.CreateProtector(AppConstants.DataProtectionPurpose);
         }
 
         private readonly IDataProtector _dp;
@@ -79,7 +80,11 @@ namespace TopoMojo.Web
                 ? DateTime.UtcNow.Ticks > ticks
                 : true;
 
-            string subject = Guid.TryParse(value.Last(), out Guid guid)
+            string identity = value.Last();
+
+            string name = identity.Tag();
+
+            string subject = Guid.TryParse(identity.Untagged(), out Guid guid)
                 ? guid.ToString()
                 : "";
 
@@ -89,8 +94,8 @@ namespace TopoMojo.Web
             var principal = new ClaimsPrincipal(
                 new ClaimsIdentity(
                     new Claim[] {
-                        new Claim(TicketAuthentication.ClaimNames.Subject, subject.Untagged()),
-                        new Claim(TicketAuthentication.ClaimNames.Name, subject.Tag())
+                        new Claim(TicketAuthentication.ClaimNames.Subject, subject),
+                        new Claim(TicketAuthentication.ClaimNames.Name, name)
                     },
                     Scheme.Name
                 )

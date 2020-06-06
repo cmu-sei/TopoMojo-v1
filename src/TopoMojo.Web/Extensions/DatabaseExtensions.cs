@@ -52,8 +52,7 @@ namespace TopoMojo.Web.Extensions
                                 Name = u.Name,
                                 GlobalId = u.GlobalId,
                                 WhenCreated = DateTime.UtcNow,
-                                // IsAdmin = u.IsAdmin
-                                Role = UserRole.Administrator
+                                Role = TopoMojo.Models.UserRole.Administrator
                             });
                         }
                     }

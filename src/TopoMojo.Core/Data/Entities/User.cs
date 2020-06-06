@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Models;
 
 namespace TopoMojo.Data
 {
@@ -19,11 +20,4 @@ namespace TopoMojo.Data
         public virtual ICollection<Player> Gamespaces { get; set; } = new List<Player>();
     }
 
-    public enum UserRole
-    {
-        User,
-        Builder,
-        Creator,
-        Administrator
-    }
 }

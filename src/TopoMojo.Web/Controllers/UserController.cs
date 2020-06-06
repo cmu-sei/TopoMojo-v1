@@ -29,7 +29,7 @@ namespace TopoMojo.Web.Controllers
         {
             _userService = userService;
             _identity = identityResolver;
-            _dp = dp.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
+            _dp = dp.CreateProtector(AppConstants.DataProtectionPurpose);
             _random = new Random();
         }
 
