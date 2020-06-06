@@ -144,6 +144,15 @@ namespace TopoMojo.Web.Controllers
         [HttpPut("api/vm/{id}/change")]
         public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] VmKeyValue change)
         {
+            // need elevated privileges to change vm to special nets
+            if (
+                change.Key == "net" && !change.Value.Contains("#")
+                && (_user.Role == UserRole.User || _user.Role == UserRole.Builder)
+            )
+            {
+                throw new InvalidOperationException("Forbidden");
+            }
+
             await AuthorizeAction(id, "change");
 
             Vm vm = (await _pod.Find(id)).FirstOrDefault();
