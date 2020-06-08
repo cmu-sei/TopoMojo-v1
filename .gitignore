@@ -239,3 +239,4 @@ _Pvt_Extensions
 
 appsettings.*.json
 appsettings.*.conf
+**/.dpk

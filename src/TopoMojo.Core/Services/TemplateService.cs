@@ -146,7 +146,7 @@ namespace TopoMojo.Services
                 throw new InvalidOperationException();
 
             if (await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
-                throw new WorkspaceTemplateLimitException();
+                throw new TemplateLimitReachedException();
 
             var newTemplate = new Data.Template
             {

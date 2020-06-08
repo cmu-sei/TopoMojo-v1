@@ -80,7 +80,7 @@ namespace TopoMojo.Services
                     throw new InvalidOperationException();
 
                 if (gamespaces.Length >= _options.GamespaceLimit)
-                    throw new GamespaceLimitException();
+                    throw new GamespaceLimitReachedException();
 
                 game = new Data.Gamespace
                 {

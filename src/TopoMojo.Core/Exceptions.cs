@@ -5,9 +5,10 @@ using System;
 
 namespace TopoMojo
 {
-    public class GamespaceLimitException : Exception { }
+    public class GamespaceLimitReachedException : Exception { }
     public class WorkspaceLimitReachedException : Exception { }
-    public class WorkspaceTemplateLimitException : Exception { }
+    public class TemplateLimitReachedException : Exception { }
     public class ParentTemplateException : Exception { }
     public class WorkspaceNotIsolatedException : Exception { }
+    public class ActionForbiddenException: Exception { }
 }

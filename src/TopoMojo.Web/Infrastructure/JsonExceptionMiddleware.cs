@@ -31,18 +31,18 @@ namespace TopoMojo.Web
                 {
                     context.Response.StatusCode = 500;
                     string message = "Error";
+                    Type type = ex.GetType();
 
                     if (
                         ex is System.InvalidOperationException
-                        || ex is System.ArgumentException
-                        || ex.GetType().Namespace.StartsWith("TopoMojo.")
+                        || type.Namespace.StartsWith("TopoMojo")
                     ) {
                         context.Response.StatusCode = 400;
-                        message = ex.Message;
-                        // message = ex.GetType().Name
-                        //     .Split('.')
-                        //     .Last()
-                        //     .Replace("Exception", "");
+                        // message = ex.Message;
+                        message = type.Name
+                            .Split('.')
+                            .Last()
+                            .Replace("Exception", "");
 
                         // message += $" {ex.Message}";
                     }

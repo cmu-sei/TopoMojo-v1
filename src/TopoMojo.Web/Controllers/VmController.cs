@@ -150,7 +150,7 @@ namespace TopoMojo.Web.Controllers
                 && (_user.Role == UserRole.User || _user.Role == UserRole.Builder)
             )
             {
-                throw new InvalidOperationException("Forbidden");
+                throw new ActionForbiddenException();
             }
 
             await AuthorizeAction(id, "change");
