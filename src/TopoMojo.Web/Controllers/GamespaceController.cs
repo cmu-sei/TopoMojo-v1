@@ -1,117 +1,154 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
-using TopoMojo.Core.Models;
 using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiController]
     public class GamespaceController : _Controller
     {
         public GamespaceController(
-            GamespaceManager instanceManager,
-            IPodManager podManager,
-            IHubContext<TopologyHub, ITopoEvent> hub,
-            IServiceProvider sp
-        ) : base(sp)
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
+            GamespaceService gamespaceService,
+            IHypervisorService podService,
+            IHubContext<TopologyHub, ITopoEvent> hub
+        ) : base(logger, identityResolver)
         {
-            _pod = podManager;
-            _mgr = instanceManager;
+            _gamespaceService = gamespaceService;
+            _pod = podService;
             _hub = hub;
         }
 
-        private readonly IPodManager _pod;
-        private readonly GamespaceManager _mgr;
+        private readonly IHypervisorService _pod;
+        private readonly GamespaceService _gamespaceService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
+        /// <summary>
+        /// List user's running gamespaces.
+        /// </summary>
+        /// <remarks>
+        /// By default, result is filtered to user's gamespaces.
+        /// An administrator can override default filter with filter = "all".
+        /// </remarks>
+        /// <param name="filter"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         [HttpGet("api/gamespaces")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<Gamespace[]>> List(string filter)
+        public async Task<ActionResult<Gamespace[]>> List(string filter, CancellationToken ct)
         {
-            var result = await _mgr.List(filter);
+            var result = await _gamespaceService.List(filter, ct);
+
             return Ok(result);
         }
 
-        // [Authorize(Roles = "Administrator")]
-        // [HttpGet("api/gamespaces/all")]
-        // [JsonExceptionFilter]
-        // public async Task<ActionResult<Gamespace[]>> ListAll()
-        // {
-        //     var result = await _mgr.ListAll();
-        //     return Ok(result);
-        // }
+        /// <summary>
+        /// Load a gamespace.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
         [AllowAnonymous]
-        [HttpGet("api/gamespace/{id}/preview")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<GameState>> Preview(int id)
-        {
-            var result = await _mgr.LoadPreview(id);
-            return Ok(result);
-        }
-
         [HttpGet("api/gamespace/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<GameState>> Load(int id)
         {
-            var result = await _mgr.LoadFromTopo(id);
+            var result = await _gamespaceService.LoadFromWorkspace(id);
+
             return Ok(result);
         }
 
-        [HttpPost("api/gamespace/{id}/launch")]
-        [JsonExceptionFilter]
+        /// <summary>
+        /// Start a gamespace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpPost("api/gamespace/{id}")]
         public async Task<ActionResult<GameState>> Launch(int id)
         {
-            var result = await _mgr.Launch(id);
+            var result = await _gamespaceService.Launch(id);
+
             Log("launched", result);
+
             return Ok(result);
         }
 
-        [HttpGet("api/gamespace/{id}/state")]
-        [JsonExceptionFilter]
+        /// <summary>
+        /// End a gamespace.
+        /// </summary>
+        /// <param name="id">Gamespace Id</param>
+        /// <returns></returns>
+        [HttpDelete("api/gamespace/{id}")]
+        public async Task<ActionResult> Destroy(int id)
+        {
+            var result = await _gamespaceService.Destroy(id);
+
+            Log("destroyed", result);
+
+            SendBroadcast(result, "OVER");
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Get current game state.
+        /// </summary>
+        /// <param name="id">Gamespace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/gamestate/{id}")]
         public async Task<ActionResult<GameState>> CheckState(int id)
         {
-            var result = await _mgr.Load(id);
+            var result = await _gamespaceService.Load(id);
+
             return Ok(result);
         }
 
-        [HttpDelete("api/gamespace/{id}")]
-        [JsonExceptionFilter]
-        public async Task<ActionResult<bool>> Destroy(int id)
-        {
-            var result = await _mgr.Destroy(id);
-            Log("destroyed", result);
-            SendBroadcast(result, "OVER");
-            return Ok(true);
-        }
-
-        [HttpPost("api/player/enlist/{code}")]
-        [JsonExceptionFilter]
+        /// <summary>
+        /// Accept an invitation to a gamespace.
+        /// </summary>
+        /// <param name="code">Invitation Code</param>
+        /// <returns></returns>
+        [HttpPost("api/player/{code}")]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
-            return Ok(await _mgr.Enlist(code));
+            await _gamespaceService.Enlist(code);
+
+            return Ok();
         }
 
+        /// <summary>
+        /// Remove a player from a gamespace.
+        /// </summary>
+        /// <param name="id">Player Id</param>
+        /// <returns></returns>
         [HttpDelete("api/player/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Delist(int id)
         {
-            return Ok(await _mgr.Delist(id));
+            await _gamespaceService.Delist(id);
+
+            return Ok();
         }
 
-        [HttpGet("api/gamespace/{id}/players")]
-        [JsonExceptionFilter]
+        /// <summary>
+        /// List gamespace players.
+        /// </summary>
+        /// <param name="id">Gamespace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/players/{id}")]
         public async Task<ActionResult<Player[]>> Players(int id)
         {
-            return Ok(await _mgr.Players(id));
+            return Ok(await _gamespaceService.Players(id));
         }
 
         private void SendBroadcast(GameState gameState, string action)

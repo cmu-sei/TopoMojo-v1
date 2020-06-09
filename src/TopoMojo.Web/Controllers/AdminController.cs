@@ -1,122 +1,85 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using TopoMojo.Core;
+using Microsoft.Extensions.Logging;
+using TopoMojo.Abstractions;
+using TopoMojo.Models;
 using TopoMojo.Services;
-using TopoMojo.Web;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "AdminOnly")]
+    [ApiController]
     public class AdminController : _Controller
     {
         public AdminController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             ChatService chatService,
             IHubContext<TopologyHub, ITopoEvent> hub,
-            IServiceProvider sp,
-            IHostingEnvironment env,
             TransferService transferSvc,
             FileUploadOptions fileUploadOptions,
+            JanitorService janitor,
             HubCache hubCache
-        ) : base(sp)
+        ) : base(logger, identityResolver)
         {
             _chatService = chatService;
             _transferSvc = transferSvc;
-            _fileUploadOptions = fileUploadOptions;
+            _uploadOptions = fileUploadOptions;
             _hub = hub;
-            _env = env;
             _hubCache = hubCache;
+            _janitor = janitor;
         }
 
         private readonly ChatService _chatService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
-        private readonly IHostingEnvironment _env;
         private readonly TransferService _transferSvc;
-        private readonly FileUploadOptions _fileUploadOptions;
+        private readonly FileUploadOptions _uploadOptions;
         private readonly HubCache _hubCache;
+        private readonly JanitorService _janitor;
 
+        /// <summary>
+        /// Show application version info.
+        /// </summary>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("api/version")]
-        public string CommitVersion()
+        public IActionResult CommitVersion()
         {
-            return Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided";
+            return Ok(new { Version = Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided"});
         }
 
-        [HttpGet("/api/admin/getsettings")]
-        [JsonExceptionFilter]
-        public ActionResult<string> Settings()
-        {
-            string settings = "";
-            string root = Path.Combine(_env.ContentRootPath, "appsettings.json");
-            if (System.IO.File.Exists(root))
-            {
-                var appsettings = JObject.Parse(
-                    System.IO.File.ReadAllText(root)
-                );
-
-                string target = Path.Combine(_env.ContentRootPath, $"appsettings.{_env.EnvironmentName}.json");
-                if (System.IO.File.Exists(target))
-                {
-                    appsettings.Merge(
-                        JObject.Parse(
-                            System.IO.File.ReadAllText(target)
-                        ),
-                        new JsonMergeSettings
-                        {
-                            MergeArrayHandling = MergeArrayHandling.Union
-                        }
-                    );
-                }
-
-                settings = appsettings.ToString(Formatting.Indented);
-                return Json(appsettings);
-            }
-            return Json(settings);
-        }
-
-        [HttpPost("api/admin/savesettings")]
-        [JsonExceptionFilter]
-        public ActionResult<bool> Settings([FromBody]object settings)
-        {
-            try
-            {
-                var test = JObject.FromObject(settings);
-                string target = Path.Combine(_env.ContentRootPath, $"appsettings.{_env.EnvironmentName}.json");
-                System.IO.File.WriteAllText(target, test.ToString(Formatting.Indented));
-            }
-            catch //(Exception ex)
-            {
-                return Json(false);
-            }
-            return Json(true);
-        }
-
-
+        /// <summary>
+        /// Post an announcement to users.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         [HttpPost("api/admin/announce")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<bool>> Announce([FromBody]string text)
         {
             await Task.Run(() => SendBroadcast(text));
             return Ok(true);
         }
 
+        /// <summary>
+        /// Generate an export package.
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Export([FromBody] int[] ids)
         {
-            string srcPath = _fileUploadOptions.TopoRoot;
+            string srcPath = _uploadOptions.TopoRoot;
             string destPath = Path.Combine(
-                _fileUploadOptions.TopoRoot,
+                _uploadOptions.TopoRoot,
                 "_export"
             );
             await _transferSvc.Export(ids, srcPath, destPath);
@@ -124,20 +87,38 @@ namespace TopoMojo.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Initiate import process.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("api/admin/import")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<string[]>> Import()
         {
-            string destPath = _fileUploadOptions.TopoRoot;
-            string docPath = Path.Combine(_env.WebRootPath, "_docs");
-            return Ok(await _transferSvc.Import(destPath, docPath));
+            return Ok(await _transferSvc.Import(
+                _uploadOptions.TopoRoot,
+                _uploadOptions.DocRoot
+            ));
         }
 
+        /// <summary>
+        /// Show online users.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("api/admin/live")]
-        [JsonExceptionFilter]
         public ActionResult<CachedConnection[]> LiveUsers()
         {
             return Ok(_hubCache.Connections.Values);
+        }
+
+        /// <summary>
+        /// Run clean up tasks
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [HttpPost("api/admin/janitor")]
+        public async Task<ActionResult<JanitorReport[]>> Cleanup([FromBody]JanitorOptions options = null)
+        {
+            return Ok(await _janitor.Cleanup(options));
         }
 
         private void SendBroadcast(string text = "")

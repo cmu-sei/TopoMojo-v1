@@ -1,16 +1,102 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
-// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
 
 using System;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-namespace TopoMojo.Core
+namespace TopoMojo.Extensions
 {
     public static class StringExtensions
     {
-        public static bool HasValue(this string s)
+public static bool HasValue(this string s)
         {
-            return !String.IsNullOrWhiteSpace(s);
+            return (!String.IsNullOrWhiteSpace(s));
+        }
+
+        //check for presence of array values
+        public static bool IsEmpty(this object[] o)
+        {
+            return (o == null || o.Length == 0);
+        }
+
+        public static bool IsNotEmpty(this object[] o)
+        {
+            return (o != null && o.Length > 0);
+        }
+
+        //expands a range string (i.e. [1-3,5,7,10-12]) into an int list
+        public static int[] ExpandRange(this string s)
+        {
+            s = s.Inner();
+
+            List<int> list = new List<int>();
+            string[] sections = s.Split(',');
+            foreach (string section in sections)
+            {
+                //Console.WriteLine(section);
+                string[] token = section.Split('-');
+                int x = 0, y = 0;
+                if (Int32.TryParse(token[0], out x))
+                {
+                    if (token.Length > 1)
+                    {
+                        if (!Int32.TryParse(token[1], out y))
+                            y = x;
+                    }
+                    else
+                    {
+                        y = x;
+                    }
+                    for (int i = x; i <= y; i++)
+                    {
+                        //Console.WriteLine(i);
+                        list.Add(i);
+                    }
+                }
+            }
+            return list.ToArray();
+        }
+
+        //extracts string from brackets [].
+        public static string Inner(this string s)
+        {
+            if (s == null)
+                s = "";
+
+            int x = s.IndexOf('[');
+            if (x > -1)
+            {
+                int y = s.IndexOf(']', x);
+                if (x > -1 && y > -1)
+                    s = s.Substring(x + 1, y - x - 1);
+            }
+            return s.Trim();
+        }
+
+        // returns first token following #
+        public static string Tag(this string s)
+        {
+            if (s.HasValue())
+            {
+                int x = s.IndexOf("#");
+                if (x >= 0)
+                    return s.Substring(x+1).Split(' ').First();
+            }
+            return "";
+        }
+
+        //strips hashtag+ from string
+        public static string Untagged(this string s)
+        {
+            if (s.HasValue())
+            {
+                int x = s.IndexOf("#");
+                if (x >= 0)
+                    return s.Substring(0, x);
+            }
+            return s;
         }
 
         public static string ExtractBefore(this string s, string target)
@@ -28,37 +114,118 @@ namespace TopoMojo.Core
                 : s;
         }
 
-        public static string ToDisplay(this Enum e)
+        //Note: this assumes a guid string (length > 16)
+        public static string ToSwitchName(this string s)
         {
-            return e.ToString().Replace("_", " ");
+            return String.Format("sw#{0}..{1}", s.Substring(0,8), s.Substring(s.Length-8));
         }
 
-        public static string ExtractUrl(this string inputString)
+        public static string ToAbbreviatedHex(this string s)
         {
-            if (string.IsNullOrEmpty(inputString))
+            return (s.Length > 8)
+                ? String.Format("{0}..{1}", s.Substring(0, 4), s.Substring(s.Length - 4))
+                : s;
+        }
+
+        public static string ToSlug(this string target)
+        {
+            string result = "";
+
+            bool duplicate = false;
+
+            foreach (char c in target.ToCharArray())
             {
-                return string.Empty;
+                if (char.IsLetterOrDigit(c))
+                {
+                    result += c;
+
+                    duplicate = false;
+                }
+                else
+                {
+                    if (!duplicate)
+                        result += '-';
+
+                    duplicate = true;
+                }
             }
 
-            if (Uri.IsWellFormedUriString(inputString, UriKind.Absolute))
+            if (result.EndsWith('-'))
+                result = result.Substring(0, result.Length - 1);
+
+            return result.ToLower();
+        }
+
+        public static int ToSeconds(this string ts)
+        {
+            if (ts == string.Empty)
+                return 0;
+
+            if (int.TryParse(ts.Substring(0, ts.Length - 1), out int value))
             {
-                return inputString;
+                char type = ts.Trim().ToCharArray().Last();
+                int factor = 1;
+
+                switch (type)
+                {
+                    case 'y':
+                    factor = 86400 * 365;
+                    break;
+
+                    case 'w':
+                    factor = 86400 * 7;
+                    break;
+
+                    case 'd':
+                    factor = 86400;
+                    break;
+
+                    case 'h':
+                    factor = 3600;
+                    break;
+
+                    case 'm':
+                    factor = 60;
+                    break;
+                }
+
+                return value * factor;
             }
 
-            string pattern = "(href|src)\\s*=\\s*(?:[\"'](?<1>[^\"']*)[\"']|(?<1>\\S+))";
+            throw new ArgumentException("invalid simple-timespan");
+        }
 
-            Match match = Regex.Match(inputString, pattern,
-                                RegexOptions.IgnoreCase | RegexOptions.Compiled,
-                                TimeSpan.FromSeconds(1));
+        public static DateTime ToDatePast(this string ts)
+        {
+            return DateTime.UtcNow
+                .Subtract(
+                    new TimeSpan(
+                        0,
+                        0,
+                        ts.ToSeconds()
+                    )
+                );
+        }
 
-            if (match.Success)
-            {
-                return match.Groups[1].ToString();
-            }
-            else
-            {
-                return string.Empty;
-            }
+        public static string Sanitize(this string target, char[] exclude)
+        {
+            string p = "";
+
+            foreach (char c in target.ToCharArray())
+                if (!exclude.Contains(c))
+                    p += c;
+
+            return p;
+        }
+
+        public static string SanitizeFilename(this string target)
+        {
+            return target.Sanitize(Path.GetInvalidFileNameChars());
+        }
+
+        public static string SanitizePath(this string target)
+        {
+            return target.Sanitize(Path.GetInvalidPathChars());
         }
     }
 }

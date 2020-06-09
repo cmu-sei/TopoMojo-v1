@@ -1,6 +1,10 @@
+// Copyright 2020 Carnegie Mellon University. 
+// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+
 using System;
 using Polly;
 using Polly.Extensions.Http;
+using TopoMojo.Abstractions;
 using TopoMojo.Client;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -29,6 +33,10 @@ namespace Microsoft.Extensions.DependencyInjection
                     .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
                     .WaitAndRetryAsync(options.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
                 );
+            }
+            else
+            {
+                services.AddScoped<ITopoMojoClient, TopoMojoStub>();
             }
 
             return services;

@@ -3,17 +3,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Caching.Memory;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
+using TopoMojo;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
-using TopoMojo.Core.Privileged;
+using TopoMojo.Models;
 using TopoMojo.Data;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Data.EntityFrameworkCore;
+using TopoMojo.Services;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Tests
 {
@@ -22,19 +20,24 @@ namespace Tests
         public TestSession(
             TopoMojoDbContext ctx,
             CoreOptions options,
-            ILoggerFactory mill
+            ILoggerFactory mill,
+            IMapper mapper,
+            IDistributedCache cache,
+            IMemoryCache memoryCache
         )
         {
             _ctx = ctx;
             _coreOptions = new CoreOptions();
             _mill = mill;
-
-            _proman = new ProfileService(new ProfileRepository(_ctx));
+            _mapper = mapper;
+            _cache = cache;
+            _memoryCache = memoryCache;
+            _proman = new TopoMojo.Services.IdentityService(_mapper, new UserStore(_ctx, memoryCache, cache));
             // _proman = new ProfileManager(
             //     new ProfileRepository(_ctx),
             //     _mill,
             //     _coreOptions,
-            //     new ProfileResolver(new Profile
+            //     new IdentityResolver(new Profile
             //     {
             //         Name = "admin@test",
             //         IsAdmin = true
@@ -44,19 +47,22 @@ namespace Tests
             AddUser("tester@test", true, true);
         }
 
+        IMapper _mapper;
         private readonly TopoMojoDbContext _ctx = null;
         private readonly CoreOptions _coreOptions;
         private readonly ILoggerFactory _mill;
-        private IProfileResolver _ur;
-        private readonly ProfileService _proman;
-        private Profile _actor;
-        public Profile Actor
+        private IIdentityResolver _ur;
+        private readonly TopoMojo.Services.IdentityService _proman;
+        private IDistributedCache _cache;
+        private IMemoryCache _memoryCache;
+        private TopoMojo.Models.User _actor;
+        public TopoMojo.Models.User Actor
         {
             get { return _actor;}
             set
             {
                 _actor = value;
-                _ur = new ProfileResolver(_actor);
+                _ur = new IdentityResolver(_actor);
             }
         }
 
@@ -64,8 +70,8 @@ namespace Tests
 
         #region Managers
 
-        private Dictionary<string, Profile> _actors = new Dictionary<string, Profile>();
-        private Dictionary<Profile, Dictionary<string, object>> _mgrStore = new Dictionary<Profile, Dictionary<string, object>>();
+        private Dictionary<string, TopoMojo.Models.User> _actors = new Dictionary<string, TopoMojo.Models.User>();
+        private Dictionary<TopoMojo.Models.User, Dictionary<string, object>> _mgrStore = new Dictionary<TopoMojo.Models.User, Dictionary<string, object>>();
 
         private object FindManager(Type t)
         {
@@ -88,55 +94,55 @@ namespace Tests
         //     return _mgrStore[_actor][t.Name];
         // }
 
-        public TopologyManager GetTopologyManager()
+        public WorkspaceService GetTopologyManager()
         {
-            Type t = typeof(TopologyManager);
+            Type t = typeof(WorkspaceService);
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
-                    new TopologyRepository(_ctx),
-                    new GamespaceRepository(_ctx),
-                    _mill, _coreOptions, _ur, null);
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx, _memoryCache, _cache),
+                    new WorkspaceStore(_ctx, _memoryCache, _cache),
+                    new GamespaceStore(_ctx, _memoryCache, _cache),
+                    _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
-            return mgr as TopologyManager;
+            return mgr as WorkspaceService;
         }
 
-        public TemplateManager GetTemplateManager()
+        public TemplateService GetTemplateManager()
         {
-            Type t = typeof(TemplateManager);
+            Type t = typeof(TemplateService);
             object mgr = FindManager(t);
             if (mgr == null)
             {
-                mgr = Activator.CreateInstance(t, new ProfileRepository(_ctx),
-                    new TemplateRepository(_ctx),
-                    _mill, _coreOptions, _ur, null);
+                mgr = Activator.CreateInstance(t, new UserStore(_ctx, _memoryCache, _cache),
+                    new TemplateStore(_ctx, _memoryCache, _cache),
+                    _mill, _mapper, _coreOptions, _ur, null);
                 _mgrStore[_actor].Add(t.Name, mgr);
             }
-            return mgr as TemplateManager;
+            return mgr as TemplateService;
         }
 
         #endregion
 
-        public Profile AddActor(string name)
+        public TopoMojo.Models.User AddActor(string name)
         {
             return AddUser(name, true);
         }
 
-        public Profile AddUser(string name)
+        public TopoMojo.Models.User AddUser(string name)
         {
             return AddUser(name, false);
         }
 
-        public Profile AddUser(string name, bool makeActor, bool isAdmin = false)
+        public TopoMojo.Models.User AddUser(string name, bool makeActor, bool isAdmin = false)
         {
             if (!_actors.ContainsKey(name))
             {
-                Profile target = new Profile
+                TopoMojo.Models.User target = new TopoMojo.Models.User
                 {
                     Name = name,
-                    IsAdmin = isAdmin,
+                    Role = UserRole.Administrator,
                     GlobalId = Guid.NewGuid().ToString()
                 };
 
@@ -146,7 +152,7 @@ namespace Tests
                 _mgrStore.Add(target, new Dictionary<string, object>());
             }
 
-            Profile person = _actors[name];
+            TopoMojo.Models.User person = _actors[name];
             if (makeActor)
                 Actor = person;
 

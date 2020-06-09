@@ -1,52 +1,57 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Microsoft.Net.Http.Headers;
-using TopoMojo.Core;
-using TopoMojo.Models;
+using TopoMojo.Abstractions;
+using TopoMojo.Extensions;
 using TopoMojo.Services;
-using TopoMojo.Web;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiController]
     public class FileController : _Controller
     {
         public FileController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             IFileUploadHandler uploader,
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
-            IHostingEnvironment host,
-            IServiceProvider sp,
-            TopologyManager topoManager
-        ) : base(sp)
+            WorkspaceService workspaceService
+        ) : base(logger, identityResolver)
         {
-            _host = host;
             _monitor = monitor;
             _config = uploadOptions;
-            _topoManager = topoManager;
+            _workspaceService = workspaceService;
             _uploader = uploader;
         }
-        private readonly IHostingEnvironment _host;
+
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
-        private readonly TopologyManager _topoManager;
-
+        private readonly WorkspaceService _workspaceService;
         private readonly IFileUploadHandler _uploader;
 
+        /// <summary>
+        /// Get file upload progress.
+        /// </summary>
+        /// <remarks>
+        /// If a client doesn't track progress client-side,
+        /// it can specify a form value `monitor-key` with
+        /// the file upload, and then query for progress
+        /// using that key.
+        /// </remarks>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("api/file/progress/{id}")]
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult Progress(string id)
@@ -54,12 +59,20 @@ namespace TopoMojo.Controllers
             return Json(_monitor.Check(id).Progress);
         }
 
+        /// <summary>
+        /// Upload a file.
+        /// </summary>
+        /// <remarks>
+        /// Expects mime-multipart body with single file
+        /// and form-data part with:
+        /// - group-key (optional guid specifying destination bin; defaults to public-bin)
+        /// - monitor-key (optional unique value with which to query upload progress)
+        /// - size (number of bytes in file)
+        /// </remarks>
+        /// <returns></returns>
         [HttpPost("api/file/upload")]
-        [JsonExceptionFilter]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        // [ApiExplorerSettings(IgnoreApi=true)]
-        //[ValidateAntiForgeryToken]
         public async Task<ActionResult<bool>> Upload()
         {
             await _uploader.Process(
@@ -68,23 +81,19 @@ namespace TopoMojo.Controllers
                     string publicTarget = Guid.Empty.ToString();
                     string original = metadata["original-name"];
                     string filename = metadata["name"] ?? original;
-                    string key = metadata["group-key"];
+                    string key = metadata["group-key"] ?? publicTarget;
                     long size = Int64.Parse(metadata["size"] ?? "0");
 
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (key != publicTarget && !_topoManager.CanEdit(key).Result)
+                    if (key != publicTarget && !_workspaceService.CanEdit(key).Result)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);
                     string dest = BuildDestinationPath(filename, key);
                     metadata.Add("destination-path", dest);
                     Log("uploading", null, dest);
-
-                    string path = Path.GetDirectoryName(dest);
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
 
                     return System.IO.File.Create(dest);
                 },
@@ -98,11 +107,14 @@ namespace TopoMojo.Controllers
                     _monitor.Update(status.Key, status.Progress);
                     // TODO: broadcast progress to group
                 },
+
                 options => {
                     options.MultipartBodyLengthLimit = (long)((_config.MaxFileBytes > 0) ? _config.MaxFileBytes : 1E9);
                 },
+
                 metadata => {
                     string dp = metadata["destination-path"];
+
                     if (!dp.ToLower().EndsWith(".iso") && System.IO.File.Exists(dp))
                     {
                         CDBuilder builder = new CDBuilder();
@@ -118,39 +130,22 @@ namespace TopoMojo.Controllers
             return Json(true);
         }
 
-        private string SanitizeFileName(string filename)
-        {
-            string fn = "";
-            char[] bad = Path.GetInvalidFileNameChars();
-            foreach (char c in filename.ToCharArray())
-                if (!bad.Contains(c))
-                    fn += c;
-            return fn;
-        }
-
-        private string SanitizeFilePath(string path)
-        {
-            string p = "";
-            char[] bad = Path.GetInvalidPathChars();
-            foreach (char c in path.ToCharArray())
-                if (!bad.Contains(c))
-                    p += c;
-            return p;
-        }
-
         private string BuildDestinationPath(string filename, string key)
         {
-            string path = SanitizeFilePath(Path.Combine(_config.IsoRoot, key));
-            string fn = SanitizeFileName(filename);
-            return Path.Combine(path, fn);
-        }
+            string path = Path.Combine(
+                _config.IsoRoot,
+                key.SanitizePath()
+            );
 
-        public IActionResult Error()
-        {
-            return View();
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            return Path.Combine(
+                path,
+                filename.Replace(" ", "").SanitizeFilename()
+            );
         }
 
     }
-
 
 }

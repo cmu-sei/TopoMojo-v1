@@ -237,4 +237,6 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 
-appsettings-custom.json
+appsettings.*.json
+appsettings.*.conf
+**/.dpk

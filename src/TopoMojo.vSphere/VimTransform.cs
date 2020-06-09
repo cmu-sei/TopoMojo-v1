@@ -1,13 +1,10 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using TopoMojo.Extensions;
 using TopoMojo.Models;
-using TopoMojo.Models.Virtual;
 using NetVimClient;
 
 namespace TopoMojo.vSphere
@@ -15,7 +12,7 @@ namespace TopoMojo.vSphere
     public static class Transform
     {
 
-        public static VirtualMachineConfigSpec TemplateToVmSpec(Template template, string datastore, string dvsuuid)
+        public static VirtualMachineConfigSpec TemplateToVmSpec(VmTemplate template, string datastore, string dvsuuid)
         {
             int key = -101, idekey = 200;
             VirtualMachineConfigSpec vmcs = new VirtualMachineConfigSpec();
@@ -35,7 +32,7 @@ namespace TopoMojo.vSphere
             }
 
             //can't actually be applied via ExtraConfig
-            if (template.GuestSettings.IsNotEmpty()
+            if (template.GuestSettings.Length > 0
                 && template.GuestSettings.Any(s => s.Key == "vhv.enable" && s.Value == "true"))
             {
                 vmcs.nestedHVEnabled = true;
@@ -50,7 +47,7 @@ namespace TopoMojo.vSphere
                 devices.Add(GetFloppy(ref key, template.Floppy));
 
             //nics
-            foreach (Eth nic in template.Eth)
+            foreach (VmNet nic in template.Eth)
                 devices.Add(GetEthernetAdapter(ref key, nic, dvsuuid));
 
             // //network serial port
@@ -59,7 +56,7 @@ namespace TopoMojo.vSphere
 
             //controller
             int controllerKey = 0, count = 0;
-            foreach (Disk disk in template.Disks)
+            foreach (VmDisk disk in template.Disks)
             {
                 if (controllerKey == 0)
                 {
@@ -113,7 +110,7 @@ namespace TopoMojo.vSphere
 
         }
 
-        private static VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, Eth nic, string dvsuuid)
+        private static VirtualDeviceConfigSpec GetEthernetAdapter(ref int key, VmNet nic, string dvsuuid)
         {
             VirtualDeviceConfigSpec devicespec = new VirtualDeviceConfigSpec();
             VirtualEthernetCard eth = new VirtualE1000();
@@ -252,7 +249,7 @@ namespace TopoMojo.vSphere
             return devicespec;
         }
 
-        public static OptionValue[] GetExtraConfig(Template template)
+        public static OptionValue[] GetExtraConfig(VmTemplate template)
         {
             List<OptionValue> options = new List<OptionValue>();
             options.Add(new OptionValue { key = "snapshot.redoNotWithParent", value = "true" });
@@ -262,20 +259,22 @@ namespace TopoMojo.vSphere
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
             options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
             options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
-            if (template.GuestSettings.IsNotEmpty())
-            {
-                foreach (var setting in template.GuestSettings)
-                {
-                    // TODO: rework this quick fix for injecting isolation specific settings
-                    if (setting.Key.StartsWith("iftag.") && !setting.Value.Contains(template.IsolationTag))
-                    {
-                        continue;
-                    }
-                    setting.Key = setting.Key.Replace("iftag.", "guestinfo.");
 
-                    options.Add(new OptionValue { key = setting.Key, value = setting.Value });
+            foreach (var setting in template.GuestSettings)
+            {
+                // TODO: rework this quick fix for injecting isolation specific settings
+                if (setting.Key.StartsWith("iftag.") && !setting.Value.Contains(template.IsolationTag))
+                {
+                    continue;
                 }
+
+                var option = new OptionValue { key = setting.Key, value = setting.Value };
+
+                option.key = option.key.Replace("iftag.", "guestinfo.");
+
+                options.Add(option);
             }
+
             return options.ToArray();
         }
 

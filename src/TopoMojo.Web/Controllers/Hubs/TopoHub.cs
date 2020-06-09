@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -8,13 +8,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Core.Models;
 using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Web.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "OneTimeTicket")]
     public class TopologyHub : Hub<ITopoEvent>
     {
         public TopologyHub (
@@ -40,8 +39,8 @@ namespace TopoMojo.Controllers
             var cc = new CachedConnection
             {
                 Id = Context.ConnectionId,
-                ProfileName = Context.User?.Identity.Name,
                 ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                ProfileName = Context.User?.FindFirstValue("name"),
                 Room = channelId
             };
             _cache.Connections.TryAdd(cc.Id, cc);
@@ -81,8 +80,8 @@ namespace TopoMojo.Controllers
         //     return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
         // }
 
-        public Task TemplateMessage(string action, Core.Models.Template model){
-            return Clients.OthersInGroup(model.TopologyGlobalId).TemplateEvent(new BroadcastEvent<Core.Models.Template>(Context.User, action, model));
+        public Task TemplateMessage(string action, Template model){
+            return Clients.OthersInGroup(model.WorkspaceGlobalId).TemplateEvent(new BroadcastEvent<Template>(Context.User, action, model));
         }
 
     }
@@ -90,8 +89,8 @@ namespace TopoMojo.Controllers
     public interface ITopoEvent
     {
         Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
-        Task TopoEvent(BroadcastEvent<Topology> broadcastEvent);
-        Task TemplateEvent(BroadcastEvent<Core.Models.Template> broadcastEvent);
+        Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
+        Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
         Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
         Task PresenceEvent(BroadcastEvent broadcastEvent);

@@ -1,3 +1,6 @@
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
+
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -5,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using TopoMojo.Abstractions;
 using TopoMojo.Models;
 
 namespace TopoMojo.Client
@@ -23,17 +27,63 @@ namespace TopoMojo.Client
             Client = client;
         }
 
-        public async Task<string> Start(string problemId, WorkspaceSpec workspace)
+        public async Task<WorkspaceSummary[]> List(Search search)
+        {
+            string qs = $"?term={search.Term}&skip={search.Skip}&take={search.Take}";
+
+            string result = await Client.GetStringAsync("workspaces" + qs);
+
+            var list = JsonConvert.DeserializeObject<WorkspaceSummary[]>(result);
+
+            return list;
+        }
+
+        public async Task<GameState> Start(GamespaceSpec spec)
+        {
+
+            var result = await Client.PostAsync("gamespace", Json(spec));
+
+            if (!result.IsSuccessStatusCode)
+                throw new Exception();
+
+            string data = await result.Content.ReadAsStringAsync();
+
+            var game = JsonConvert.DeserializeObject<GameState>(data);
+
+
+            if (spec.AppendMarkdown)
+            {
+                try
+                {
+                    string mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{spec.IsolationId})"));
+
+                    data = await Client.GetStringAsync(game.WorkspaceDocument);
+
+                    mdText += "\n\n" + data;
+
+                    game.Markdown = mdText;
+                }
+                catch
+                {
+
+                }
+            }
+
+            return game;
+        }
+
+        [Obsolete]
+        public async Task<string> Start(string isolationTag, GamespaceSpec spec)
         {
             string mdText = "";
 
             var model = new NewGamespace
             {
-                Id = problemId,
-                Workspace = workspace
+                Id = isolationTag,
+                Workspace = spec
             };
 
-            var result = await Client.PostAsync("", Json(model));
+            var result = await Client.PostAsync("gamespace", Json(model));
 
             if (result.IsSuccessStatusCode)
             {
@@ -42,18 +92,20 @@ namespace TopoMojo.Client
 
                 var game = JsonConvert.DeserializeObject<GameState>(data);
 
-                mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{problemId})"));
+                mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{isolationTag})"));
 
-                try
+                if (spec.AppendMarkdown)
                 {
-                    // string repl = $"({Client.BaseAddress.Scheme}://{Client.BaseAddress.Host}/docs/";
-                    data = await Client.GetStringAsync(game.TopologyDocument);
-                    // data = data.Replace("(/docs/", repl);
-                    mdText += "\n\n" + data;
-                }
-                catch
-                {
+                    try
+                    {
+                        data = await Client.GetStringAsync(game.WorkspaceDocument);
 
+                        mdText += "\n\n" + data;
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
             }
@@ -64,19 +116,19 @@ namespace TopoMojo.Client
 
         public async Task Stop(string problemId)
         {
-            await Client.DeleteAsync(problemId);
+            await Client.DeleteAsync($"gamespace/{problemId}");
         }
 
         public async Task<ConsoleSummary> Ticket(string vmId)
         {
-            string data = await Client.GetStringAsync($"ticket/{vmId}");
+            string data = await Client.GetStringAsync($"vm-console/{vmId}");
             var info = JsonConvert.DeserializeObject<ConsoleSummary>(data);
             return info;
         }
 
         public async Task ChangeVm(VmAction vmAction)
         {
-            await Client.PutAsync($"vmaction", Json(vmAction));
+            await Client.PutAsync($"vm", Json(vmAction));
         }
 
         private HttpContent Json(object obj)
@@ -87,14 +139,15 @@ namespace TopoMojo.Client
                 "application/json"
             );
         }
-        public async Task BuildIso(IsoSpec spec)
+
+        public async Task BuildIso(IsoBuildSpec spec)
         {
             await Task.Delay(0);
         }
 
         public async Task<string> Templates(int id)
         {
-            return await Client.GetStringAsync($"topo/{id}");
+            return await Client.GetStringAsync($"templates/{id}");
         }
 
     }

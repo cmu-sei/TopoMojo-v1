@@ -1,13 +1,13 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-namespace TopoMojo
+namespace TopoMojo.Web
 {
     public class FileUploadOptions
     {
         public long MaxFileBytes { get; set; }
-        public string IsoRoot { get; set; }
-        public string TopoRoot { get; set; }
-        public string MiscRoot { get; set; }
+        public string IsoRoot { get; set; } = "tm";
+        public string TopoRoot { get; set; } = "tm";
+        public string DocRoot { get; set; } = "tm/_docs";
     }
 }

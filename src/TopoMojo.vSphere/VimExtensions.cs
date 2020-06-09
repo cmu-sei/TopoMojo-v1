@@ -1,14 +1,12 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using NetVimClient;
 using TopoMojo.Models;
-using TopoMojo.Models.Virtual;
-using TopoMojo.Extensions;
 
 namespace TopoMojo.vSphere
 {
@@ -151,6 +149,13 @@ namespace TopoMojo.vSphere
         {
             ManagedObjectReference mor = content.GetProperty("resourcePool") as ManagedObjectReference;
             return mor != null && mor.Value == pool.Value;
+        }
+
+        public static T Clone<T>(this T obj)
+        {
+            return JsonSerializer.Deserialize<T>(
+                JsonSerializer.Serialize(obj, null)
+            );
         }
     }
 }

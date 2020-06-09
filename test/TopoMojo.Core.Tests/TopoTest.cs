@@ -1,9 +1,9 @@
 // Copyright 2019 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-﻿using System;
-using TopoMojo.Core;
-using TopoMojo.Core.Models;
+using TopoMojo;
+using TopoMojo.Models;
+using TopoMojo.Services;
 using Xunit;
 
 namespace Tests
@@ -17,8 +17,8 @@ namespace Tests
             {
                 _options.DefaultWorkspaceLimit = 3;
                 test.AddActor("jam@this.ws");
-                TopologyManager mgr = test.GetTopologyManager();
-                Topology topo = mgr.Create(new NewTopology {
+                WorkspaceService mgr = test.GetTopologyManager();
+                Workspace topo = mgr.Create(new NewWorkspace {
                     Name = "JamOn",
                     Description = "original"
                 }).Result;
@@ -27,7 +27,7 @@ namespace Tests
                 Assert.True(topo.CanManage);
                 Assert.True(topo.CanEdit);
 
-                topo = mgr.Update(new ChangedTopology {
+                topo = mgr.Update(new ChangedWorkspace {
                     Id = topo.Id,
                     Name = topo.Name + "Changed",
                     Description = topo.Description}).Result;
@@ -42,27 +42,40 @@ namespace Tests
             using (TestSession test = CreateSession())
             {
                 test.AddActor("jam@this.ws");
-                TopologyManager mgr = test.GetTopologyManager();
+                WorkspaceService mgr = test.GetTopologyManager();
                 for (int i = 0; i < 5; i++)
                 {
-                    Topology topo = mgr.Create(new NewTopology {
+                    Workspace topo = mgr.Create(new NewWorkspace {
                         Name = "JamOn" + i.ToString(),
                         Description = i.ToString()
                     }).Result;
 
                     if (i > 2)
-                        mgr.Publish(topo.Id, false).Wait();
+                    {
+                        topo.IsPublished = true;
+                        mgr.Update(new ChangedWorkspace
+                        {
+                            Id = topo.Id,
+                            Name = topo.Name,
+                            Description = topo.Description,
+                            Author = topo.Author,
+                            IsPublished = true,
+                            Audience = topo.Audience,
+                            TemplateLimit = topo.TemplateLimit
+                        }).Wait();
+                        // mgr.Publish(topo.Id, false).Wait();
+                    }
                 }
 
                 var list = mgr.List(new Search {
                     Take = 50,
                     //Term = "2",
-                    Filters = new string[] {
+                    Filter = new string[] {
                         "published",
                         "mine"
                     }
                 }).Result;
-                Assert.True(list.Total == 2);
+                Assert.True(list.Length == 2);
             }
         }
     }

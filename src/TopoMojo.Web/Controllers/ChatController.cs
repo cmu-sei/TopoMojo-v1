@@ -1,30 +1,26 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
-using TopoMojo.Core.Models;
-using TopoMojo.Web;
+using TopoMojo.Models;
+using TopoMojo.Services;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     [Authorize]
     public class ChatController : _Controller
     {
         public ChatController(
+            ILogger<AdminController> logger,
+            IIdentityResolver identityResolver,
             ChatService chatService,
-            IHubContext<TopologyHub, ITopoEvent> hub,
-            IServiceProvider sp
-        ) : base(sp)
+            IHubContext<TopologyHub, ITopoEvent> hub
+        ) : base(logger, identityResolver)
         {
             _chatService = chatService;
             _hub = hub;
@@ -34,7 +30,6 @@ namespace TopoMojo.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         [HttpGet("api/chats/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Message[]>> List(string id, int marker, int take = 25)
         {
             var result = await _chatService.List(id, take, marker);
@@ -42,17 +37,14 @@ namespace TopoMojo.Controllers
         }
 
         [HttpGet("api/chat/{id}")]
-        [JsonExceptionFilter]
         public async Task<ActionResult<Message>> GetMessage(int id)
         {
             var result = await _chatService.Find(id);
             return result;
         }
 
-
         [HttpPost("api/chat")]
         [ProducesResponseType(201)]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Add([FromBody]NewMessage model)
         {
             var msg = await _chatService.Add(model);
@@ -62,7 +54,6 @@ namespace TopoMojo.Controllers
 
         [HttpPut("api/chat")]
         [ProducesResponseType(200)]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Update([FromBody]ChangedMessage model)
         {
             var msg = await _chatService.Update(model);
@@ -72,7 +63,6 @@ namespace TopoMojo.Controllers
 
         [HttpDelete("api/chat/{id}")]
         [ProducesResponseType(200)]
-        [JsonExceptionFilter]
         public async Task<ActionResult> Delete([FromRoute]int id)
         {
             var msg = await _chatService.Delete(id);

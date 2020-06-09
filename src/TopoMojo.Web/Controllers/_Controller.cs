@@ -1,4 +1,4 @@
-// Copyright 2019 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
@@ -8,39 +8,38 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using TopoMojo.Abstractions;
-using TopoMojo.Core;
-using TopoMojo.Core.Abstractions;
-using TopoMojo.Core.Models;
+using TopoMojo.Models;
+using TopoMojo.Web;
 
-namespace TopoMojo.Controllers
+namespace TopoMojo.Web.Controllers
 {
     public class _Controller : Controller
     {
-        public _Controller(IServiceProvider sp)
+        public _Controller(
+            ILogger logger,
+            IIdentityResolver identityResolver
+        )
         {
-            _logger = sp.GetService<ILoggerFactory>().CreateLogger(this.GetType());
-            _options = sp.GetService<IOptions<ControlOptions>>().Value;
-            _profileResolver = sp.GetRequiredService<IProfileResolver>();
+            _logger = logger;
+            _identityResolver = identityResolver;
         }
 
-        protected Profile _profile;
-        protected readonly IProfileResolver _profileResolver;
+        protected User _user;
+        protected Client _client;
+        protected readonly IIdentityResolver _identityResolver;
         protected readonly ILogger _logger;
-        protected readonly ControlOptions _options;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            _profile = _profileResolver.Profile;
-            ViewBag.AppName = _options.ApplicationName;
+            _user = _identityResolver.User;
+            _client = _identityResolver.Client;
         }
 
         internal void Log(string action, dynamic item, string msg = "")
         {
-            string itemType = (item != null) ? item.GetType().Name : "null";
-            string itemName = (item != null) ? item.Name : "null";
-            string itemId = (item != null) ? item.Id.ToString() : "";
             string entry = String.Format("{0} [{1}] {2} {3} {4} [{5}] {6}",
-                _profile?.Name, _profile?.GlobalId, action, itemType, itemName, itemId, msg);
+                _user?.Name, _user?.GlobalId, action, item?.GetType().Name, item?.Name, item?.Id, msg);
+
             _logger.LogInformation(entry);
         }
 

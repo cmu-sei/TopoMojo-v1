@@ -20,7 +20,7 @@ Goals:
 ## Getting Started
 
 Build with Docker, or:
-1. Install .Net Core SDK 2.2
+1. Install .Net Core SDK 3.1
 2. `dotnet run`
 3. Browse to `http://localhost:5000/api`
 
@@ -29,12 +29,12 @@ for this api.
 
 By default, TopoMojo starts with a "Mock" hypervisor manager so you
 can investigate it without having to connect it to your hypervisors.
-When ready for that you'll need to edit the "Pod" fields in `appsettings.json`, (or rather in an `appsettings.Development.json`
+When ready for that you'll need to edit the "Pod" fields in `appsettings.conf`, (or rather in an `appsettings.Development.conf`
 copy of it.)
 
 *TODO:* More info
 
-It also starts with a sqlite database; not recommended for production,
+It also starts with an in-memory database; not usable for production,
 but nice for quick startup.  Use the appsettings file to switch to
 PostgreSQL or SqlServer.
 
