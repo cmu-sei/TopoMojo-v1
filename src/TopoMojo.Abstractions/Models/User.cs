@@ -12,6 +12,7 @@ namespace TopoMojo.Models
         public int WorkspaceLimit { get; set; }
         public string WhenCreated { get; set; }
         public bool IsAdmin => Role == UserRole.Administrator;
+        public bool IsCreator => Role == UserRole.Creator || Role == UserRole.Administrator;
     }
 
     public class ChangedUser

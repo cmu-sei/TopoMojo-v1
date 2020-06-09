@@ -26,6 +26,9 @@ namespace TopoMojo.Services
                 .ForMember(d => d.CanEdit, opt =>
                     opt.MapFrom((s, d, m, r) => s.CanEdit(r.GetActor())))
 
+                .ForMember(d => d.TemplateLimit, opt =>
+                    opt.MapFrom((s,d,m,r) => r.GetActor().IsCreator ? 0 : s.TemplateLimit))
+
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
 
                 .ForMember(d => d.GamespaceCount, opt => opt.MapFrom(s => s.Gamespaces.Count))

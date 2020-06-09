@@ -124,7 +124,8 @@ namespace TopoMojo.Services
         /// <returns>Workspace</returns>
         public async Task<Workspace> Create(NewWorkspace model)
         {
-            if (!User.IsAdmin && User.WorkspaceLimit <= await _workspaceStore.GetWorkspaceCount(User.Id))
+            if (!User.IsCreator
+                && User.WorkspaceLimit <= await _workspaceStore.GetWorkspaceCount(User.Id))
                 throw new WorkspaceLimitReachedException();
 
             var workspace = Mapper.Map<Data.Workspace>(model);

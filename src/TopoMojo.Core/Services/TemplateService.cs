@@ -145,7 +145,8 @@ namespace TopoMojo.Services
             if (entity == null || entity.Parent != null || !entity.IsPublished)
                 throw new InvalidOperationException();
 
-            if (await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
+            if (!User.IsCreator
+                && await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
                 throw new TemplateLimitReachedException();
 
             var newTemplate = new Data.Template
