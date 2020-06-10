@@ -41,6 +41,7 @@ namespace TopoMojo.Data
             return await base.Load(id, query => query
                 .Include(t => t.Templates)
                 .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Gamespaces)
             );
         }
 
@@ -49,6 +50,7 @@ namespace TopoMojo.Data
             return await base.Load(id, query => query
                 .Include(t => t.Templates)
                 .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Gamespaces)
             );
         }
 
