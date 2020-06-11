@@ -28,5 +28,5 @@ jobs:
         repository: seifoundry/topomojo
         tag_with_ref: true
         push: ${{ startsWith(github.ref, 'refs/tags/') }}
-        build_args: "COMMIT=${{ github.sha }}"
+        build_args: "commit=${{ github.sha }}"
 
