@@ -19,6 +19,7 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS prod
 ARG commit
 ENV COMMIT=$commit
 COPY --from=dev /app/dist /app
+COPY --from=dev /app/LICENSE.md /app/LICENSE.md
 WORKDIR /app
 EXPOSE 80
 ENV ASPNETCORE_URLS=http://*:80
