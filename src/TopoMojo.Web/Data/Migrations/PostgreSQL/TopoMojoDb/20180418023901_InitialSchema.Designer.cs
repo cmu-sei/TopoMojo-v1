@@ -14,7 +14,7 @@ using TopoMojo.Data;
 
 namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
 {
-    [DbContext(typeof(TopoMojoDbContext))]
+    [DbContext(typeof(TopoMojoDbContextPostgreSQL))]
     [Migration("20180418023901_InitialSchema")]
     partial class InitialSchema
     {
