@@ -1,0 +1,13 @@
+{
+    "names": [
+        {
+            "C": "US",
+            "O": "Local Foundry Authority"
+        }
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "CN": "Local Foundry Authority"
+}

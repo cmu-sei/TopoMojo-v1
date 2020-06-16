@@ -1,0 +1,12 @@
+{
+    "names": [
+        {
+	    "organization": "Local Foundry Root CA"
+        }
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "CN": "Local Foundry Root CA"
+}
