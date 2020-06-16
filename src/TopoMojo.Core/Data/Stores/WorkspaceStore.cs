@@ -58,12 +58,14 @@ namespace TopoMojo.Data
         {
             return await base.Load(id, query => query
                 .Include(t => t.Gamespaces)
+                .Include(t => t.Workers)
             );
         }
 
         public async Task<Workspace> LoadWithParents(int id)
         {
             return await base.Load(id, query => query
+                .Include(t => t.Workers)
                 .Include(t => t.Templates)
                 .ThenInclude(o => o.Parent)
             );

@@ -186,11 +186,11 @@ namespace TopoMojo.Web
         {
             app.UseJsonExceptions();
 
-            if (!string.IsNullOrEmpty(Headers.Forwarding.TargetHeaders))
-                app.UseForwardedHeaders();
-
             if (Headers.LogHeaders)
                 app.UseHeaderInspection();
+
+            if (!string.IsNullOrEmpty(Headers.Forwarding.TargetHeaders))
+                app.UseForwardedHeaders();
 
             if (Headers.UseHsts)
                 app.UseHsts();
