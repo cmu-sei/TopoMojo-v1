@@ -40,6 +40,8 @@ cd /home/admin/appliance
 find . -type f -exec sed -i s/foundry\.local/whatever\.domain/g {} \;
 ```
 
+Note: you'll want to reset your environment/database after changing the domain (see Reset Database below). Alternatively, you could update the domain values directly in the database, specifically the `identity_db.ClientUris` table.
+
 ## Certificate
 
 By default the appliance generates a local certificate authority and issues a certificate for all the applications.
