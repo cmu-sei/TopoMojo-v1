@@ -86,7 +86,7 @@ namespace TopoMojo.vSphere
         {
             PropertySpec prop = new PropertySpec {
                 type = "Datastore",
-                pathSet = new string[] { "browser", "summary" }
+                pathSet = new string[] { "browser", "capability", "summary" }
             };
 
             ObjectSpec objectspec = new ObjectSpec {
@@ -131,6 +131,32 @@ namespace TopoMojo.vSphere
             PropertySpec prop = new PropertySpec {
                 type = "DistributedVirtualPortgroup",
                 pathSet = new string[] { "name", "parent", "config" }
+            };
+
+            ObjectSpec objectspec = new ObjectSpec {
+                obj = mor, //_pool
+                selectSet = new SelectionSpec[]
+                {
+                    new TraversalSpec {
+                        type = "ComputeResource",
+                        path = "network",
+                    }
+                }
+            };
+
+            return new PropertyFilterSpec[] {
+                new PropertyFilterSpec {
+                    propSet = new PropertySpec[] { prop },
+                    objectSet = new ObjectSpec[] { objectspec }
+                }
+            };
+        }
+
+        public static PropertyFilterSpec[] OpaqueNetworkFilter(ManagedObjectReference mor)
+        {
+            PropertySpec prop = new PropertySpec {
+                type = "OpaqueNetwork",
+                pathSet = new string[] { "summary" }
             };
 
             ObjectSpec objectspec = new ObjectSpec {

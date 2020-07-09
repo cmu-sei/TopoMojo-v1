@@ -124,11 +124,17 @@ namespace TopoMojo.vSphere
             if (nic.Type == "e1000e")
                 eth = new VirtualE1000e();
 
-            // VirtualEthernetCardNetworkBackingInfo ethbacking = new VirtualEthernetCardNetworkBackingInfo();
-            // ethbacking.deviceName = nic.Net;
-
             eth.key = key--;
-            if (dvsuuid.HasValue())
+
+            if (nic.Net.StartsWith("nsx."))
+            {
+                eth.backing = new VirtualEthernetCardOpaqueNetworkBackingInfo {
+                    opaqueNetworkId = nic.Net.Tag(),
+                    opaqueNetworkType = nic.Net.Untagged()
+                };
+            }
+            else if (dvsuuid.HasValue())
+            {
                 eth.backing = new VirtualEthernetCardDistributedVirtualPortBackingInfo {
                     port = new DistributedVirtualSwitchPortConnection
                     {
@@ -136,8 +142,11 @@ namespace TopoMojo.vSphere
                         portgroupKey = nic.Net
                     }
                 };
+            }
             else
+            {
                 eth.backing = new VirtualEthernetCardNetworkBackingInfo { deviceName = nic.Net };
+            }
 
             devicespec = new VirtualDeviceConfigSpec();
             devicespec.device = eth;

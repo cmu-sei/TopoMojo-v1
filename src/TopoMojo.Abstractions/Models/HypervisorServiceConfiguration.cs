@@ -23,6 +23,16 @@ namespace TopoMojo.Models
         public VlanConfiguration Vlan { get; set; } = new VlanConfiguration();
         public int KeepAliveMinutes { get; set; } = 10;
         public string ExcludeNetworkMask { get; set; } = "topomojo";
+        public SddcConfiguration Sddc { get; set; } = new SddcConfiguration();
+    }
+
+    public class SddcConfiguration
+    {
+        public string Url { get; set; }
+        public string AuthUrl { get; set; }
+        public string OrgId { get; set; }
+        public string SddcId { get; set; }
+        public string ApiKey { get; set; }
     }
 
     public class VlanConfiguration

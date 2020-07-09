@@ -189,7 +189,7 @@ namespace TopoMojo.Services
                 if (vmspec != null && vmspec.SkipIso)
                     continue;
 
-                template.Iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
+                template.Iso =  $"{_options.GameEngineIsoFolder}/{spec.Iso}";
             }
         }
 

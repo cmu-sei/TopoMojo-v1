@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NetVimClient;
 using TopoMojo.Models;
 using TopoMojo.vSphere.Helpers;
+using System.IO;
 
 namespace TopoMojo.vSphere
 {
@@ -42,14 +43,14 @@ namespace TopoMojo.vSphere
         private ConcurrentDictionary<string, Vm> _vmCache;
         private Dictionary<string, PortGroupAllocation> _pgAllocation;
         Dictionary<string, TaskInfo> _taskMap = new Dictionary<string, TaskInfo>();
-
+        Dictionary<string, string> _dsnsMap = new Dictionary<string, string>();
         private INetworkManager _netman;
         HypervisorServiceConfiguration _config = null;
         VimPortTypeClient _vim = null;
         ServiceContent _sic = null;
         UserSession _session = null;
         ManagedObjectReference _props, _vdm, _file;
-        ManagedObjectReference _datacenter, _vms, _res, _pool, _dvs;
+        ManagedObjectReference _datacenter, _dsns, _vms, _res, _pool, _dvs;
         string _dvsuuid = "";
         int _pollInterval = 1000;
         int _syncInterval = 30000;
@@ -452,7 +453,7 @@ namespace TopoMojo.vSphere
         public async Task<bool> FileExists(string path)
         {
             string[] list = await GetFiles(path, false);
-            return list.Length > 0;
+            return list.Any(x => x == path);
         }
 
         public async Task<string[]> GetFiles(string path, bool recursive)
@@ -460,39 +461,98 @@ namespace TopoMojo.vSphere
             await Connect();
             List<string> list = new List<string>();
             DatastorePath dsPath = new DatastorePath(path);
+            string oldRoot = "";
+            string pattern = dsPath.File ?? "*";
 
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
-                _props, FilterFactory.DatastoreFilter(_res));
+                _props,
+                FilterFactory.DatastoreFilter(_res)
+            );
+
             ObjectContent[] oc = response.returnval;
 
             foreach (ObjectContent obj in oc)
             {
                 ManagedObjectReference dsBrowser = (ManagedObjectReference)obj.propSet[0].val;
-                string dsName = ((DatastoreSummary)obj.propSet[1].val).name;
-                if (dsName == dsPath.Datastore)
+
+                var capability = obj.propSet[1].val as DatastoreCapability;
+
+                var summary = obj.propSet[2].val as DatastoreSummary;
+
+                // if topLevelDirectory not supported (vsan), map from directory name to guid)
+                if (
+                    capability.topLevelDirectoryCreateSupportedSpecified
+                    && !capability.topLevelDirectoryCreateSupported
+                    && dsPath.TopLevelFolder.HasValue()
+                )
+                {
+                    oldRoot = dsPath.TopLevelFolder;
+                    string target = summary.url + oldRoot;
+
+                    if (!_dsnsMap.ContainsKey(target))
+                    {
+                        var result = await _vim.ConvertNamespacePathToUuidPathAsync(
+                            _dsns,
+                            _datacenter,
+                            target
+                        );
+
+                        _dsnsMap.Add(target, result.Replace(summary.url, ""));
+                    }
+
+                    dsPath.TopLevelFolder = _dsnsMap[target];
+
+                    // vmcloud sddc errors on Search_Datastore()
+                    // so force SearchDatastoreSubFolders()
+                    recursive = true;
+                    pattern = "*" + Path.GetExtension(dsPath.File);
+
+                    _logger.LogDebug("mapped datastore namespace: " + dsPath.ToString());
+
+                }
+
+                if (summary.name == dsPath.Datastore)
                 {
                     ManagedObjectReference task = null;
                     TaskInfo info = null;
-                    HostDatastoreBrowserSearchSpec spec = new HostDatastoreBrowserSearchSpec
+
+                    var spec = new HostDatastoreBrowserSearchSpec
                     {
-                        matchPattern = new string[] { dsPath.File }
+                        matchPattern = new string[] { pattern },
                     };
-                    List<HostDatastoreBrowserSearchResults> results = new List<HostDatastoreBrowserSearchResults>();
+
+                    var results = new List<HostDatastoreBrowserSearchResults>();
+
                     if (recursive)
                     {
-                        task = await _vim.SearchDatastoreSubFolders_TaskAsync(
-                        dsBrowser, dsPath.FolderPath, spec);
-                        info = await WaitForVimTask(task);
-                        if (info.result != null)
-                            results.AddRange((HostDatastoreBrowserSearchResults[])info.result);
+                        try {
+
+                            task = await _vim.SearchDatastoreSubFolders_TaskAsync(
+                                dsBrowser, dsPath.FolderPath, spec
+                            );
+
+                            info = await WaitForVimTask(task);
+
+                            if (info.result != null)
+                                results.AddRange((HostDatastoreBrowserSearchResults[])info.result);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "error searching datastore.");
+                        }
                     }
                     else
                     {
                         task = await _vim.SearchDatastore_TaskAsync(
-                        dsBrowser, dsPath.FolderPath, spec);
+                            dsBrowser, dsPath.FolderPath, spec
+                        );
+
                         info = await WaitForVimTask(task);
+
                         if (info.result != null)
                             results.Add((HostDatastoreBrowserSearchResults)info.result);
+
                     }
 
                     foreach (HostDatastoreBrowserSearchResults result in results)
@@ -500,6 +560,9 @@ namespace TopoMojo.vSphere
                         if (result != null && result.file != null && result.file.Length > 0)
                         {
                             string fp = result.folderPath;
+                            if (oldRoot.HasValue())
+                                fp = fp.Replace(dsPath.TopLevelFolder, oldRoot);
+
                             if (!fp.EndsWith("/"))
                                 fp += "/";
 
@@ -668,19 +731,21 @@ namespace TopoMojo.vSphere
 
             TaskInfo info = new TaskInfo();
 
-            RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
-                _props,
-                FilterFactory.TaskFilter(task));
-
-            ObjectContent[] oc = response.returnval;
-
             try
             {
+                RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
+                    _props,
+                    FilterFactory.TaskFilter(task)
+                );
+
+                ObjectContent[] oc = response.returnval;
+
                 info = (TaskInfo)oc[0]?.propSet[0]?.val;
             }
-            catch
+            catch (Exception ex)
             {
-                _logger.LogDebug($"Failed to get TaskInfo {task.Value}");
+                _logger.LogError(ex, "Failed to get TaskInfo for {0}", task.Value);
+
                 info = new TaskInfo { task = task, state = TaskInfoState.error };
             }
 
@@ -721,6 +786,8 @@ namespace TopoMojo.vSphere
                         _props = _sic.propertyCollector;
                         _vdm = _sic.virtualDiskManager;
                         _file = _sic.fileManager;
+                        _dsns = _sic.datastoreNamespaceManager;
+
                         _logger.LogDebug($"Connected {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
 
                         sp = DateTime.Now;
@@ -907,18 +974,31 @@ namespace TopoMojo.vSphere
                 if (subpools != null && subpools.Length > 0)
                     _pool = subpools.First();
 
-                var dvs = clunkyTree.FindTypeByName("DistributedVirtualSwitch", _config.Uplink.ToLower()) ?? clunkyTree.First("DistributedVirtualSwitch");
-                _dvs = dvs?.obj;
-                _dvsuuid = dvs?.GetProperty("uuid").ToString();
+                if (_config.Uplink.StartsWith("nsx."))
+                {
+                    _netman = new NsxNetworkManager(
+                        netSettings,
+                        _vmCache,
+                        _vlanman,
+                        _config.Sddc
+                    );
+                }
+                else
+                {
 
-                netSettings.dvs = dvs?.obj;
-                netSettings.DvsUuid = _dvsuuid;
+                    var dvs = clunkyTree.FindTypeByName("DistributedVirtualSwitch", _config.Uplink.ToLower()) ?? clunkyTree.First("DistributedVirtualSwitch");
+                    _dvs = dvs?.obj;
+                    _dvsuuid = dvs?.GetProperty("uuid").ToString();
 
-                _netman = new DistributedNetworkManager(
-                    netSettings,
-                    _vmCache,
-                    _vlanman
-                );
+                    netSettings.dvs = dvs?.obj;
+                    netSettings.DvsUuid = _dvsuuid;
+
+                    _netman = new DistributedNetworkManager(
+                        netSettings,
+                        _vmCache,
+                        _vlanman
+                    );
+                }
             }
             else
             {

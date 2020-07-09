@@ -43,7 +43,7 @@ namespace TopoMojo.vSphere
             return new PortGroupAllocation
             {
                 Net = eth.Net,
-                Key = "HostPortGroup|"+eth.Net,
+                Key = eth.Net,
                 VlanId = eth.Vlan,
                 Switch = sw
             };
@@ -104,7 +104,7 @@ namespace TopoMojo.vSphere
                     list.Add(new PortGroupAllocation
                     {
                         Net = pg.spec.name,
-                        Key = "HostPortGroup|" + pg.spec.name,
+                        Key = pg.spec.name,
                         VlanId = pg.spec.vlanId,
                         Switch = pg.spec.vswitchName
                     });
@@ -114,7 +114,7 @@ namespace TopoMojo.vSphere
 
         public override async Task RemovePortgroup(string pgReference)
         {
-            await _client.vim.RemovePortGroupAsync(_client.net, pgReference.AsReference().Value);
+            await _client.vim.RemovePortGroupAsync(_client.net, pgReference);
         }
 
         public override async Task RemoveSwitch(string sw)
@@ -128,7 +128,6 @@ namespace TopoMojo.vSphere
             {
                 if (card.backing is VirtualEthernetCardNetworkBackingInfo)
                     ((VirtualEthernetCardNetworkBackingInfo)card.backing).deviceName = portgroupName;
-
 
                 card.connectable = new VirtualDeviceConnectInfo()
                 {

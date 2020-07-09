@@ -252,7 +252,7 @@ namespace TopoMojo.Web.Controllers
                     break;
 
                     case "local-app":
-                        target = $"{Request.Host.Value}/{internalHost}";
+                        target = $"{Request.Host.Value}{Request.PathBase}/{internalHost}";
                     break;
 
                     case "external-domain":

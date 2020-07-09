@@ -24,7 +24,7 @@ namespace TopoMojo.Web
 
         public async Task Invoke(HttpContext context)
         {
-            var sb = new StringBuilder($"Request Headers: {context.Request.Scheme}://{context.Request.Host} from {context.Connection.RemoteIpAddress}\n");
+            var sb = new StringBuilder($"Request Headers: {context.Request.Scheme}://{context.Request.Host}{context.Request.PathBase} from {context.Connection.RemoteIpAddress}\n");
 
             sb.AppendLine($"\t{context.Request.Method} {context.Request.Path.Value} {context.Request.Protocol}");
 

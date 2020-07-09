@@ -18,6 +18,6 @@ namespace TopoMojo.Web
         };
 
         public bool IncludeSwagger { get; set; } = true;
-
+        public string PathBase { get; set; }
     }
 }
