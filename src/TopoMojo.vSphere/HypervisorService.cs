@@ -68,7 +68,7 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Refresh(VmTemplate template)
         {
             string target = template.Name + "#" + template.IsolationTag;
-            Vm vm = (await Find(target)).FirstOrDefault();
+            Vm vm = await Load(target);
             if (vm == null)
             {
                 vm = new Vm() { Name = target, Status = "created" };
@@ -88,9 +88,9 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Deploy(VmTemplate template)
         {
 
-            Vm[] vms = await Find(template.Name + "#" + template.IsolationTag);
-            if (vms.Any())
-                return vms.First();
+            var vm = await Load(template.Name + "#" + template.IsolationTag);
+            if (vm != null)
+                return vm;
 
             _logger.LogDebug("deploy: find host ");
             VimClient host = FindHostByAffinity(template.IsolationTag);
@@ -124,14 +124,16 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Load(string id)
         {
             await Task.Delay(0);
-            Vm vm = _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
-            CheckProgress(vm.Id);
+
+            Vm vm = _vmCache.Values.Where(o=>o.Id == id || o.Name == id).FirstOrDefault();
+
+            CheckProgress(vm);
+
             return vm;
         }
 
-        private void CheckProgress(string id)
+        private void CheckProgress(Vm vm)
         {
-            Vm vm = _vmCache.Values.Where(o=>o.Id == id).SingleOrDefault();
             if (vm.Task != null && (vm.Task.Progress < 0 || vm.Task.Progress > 99))
             {
                 vm.Task = null;
@@ -142,7 +144,8 @@ namespace TopoMojo.vSphere
         private Vm[] CheckProgress(Vm[] vms)
         {
             foreach (Vm vm in vms)
-                CheckProgress(vm.Id);
+                CheckProgress(vm);
+
             return vms;
         }
 
@@ -259,7 +262,7 @@ namespace TopoMojo.vSphere
         public async Task<Vm> ChangeConfiguration(string id, VmKeyValue change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
-            Vm vm = (await Find(id)).FirstOrDefault();
+            Vm vm = await Load(id);
             if (vm == null)
                 throw new InvalidOperationException();
 
@@ -293,9 +296,12 @@ namespace TopoMojo.vSphere
         public async Task<Vm[]> Find(string term)
         {
             await Task.Delay(0);
+
             IEnumerable<Vm> q = _vmCache.Values;
+
             if (term.HasValue())
                 q =  q.Where(o=>o.Id.Contains(term) || o.Name.Contains(term));
+
             return CheckProgress(q.ToArray());
         }
 
@@ -381,9 +387,9 @@ namespace TopoMojo.vSphere
         {
             ConsoleSummary info = null;
 
-            Vm vm = Find(id).Result.FirstOrDefault();
+            Vm vm = await Load(id);
 
-            if (vm !=  null)
+            if (vm != null)
             {
                 VimClient host = _hostCache[vm.Host];
                 string ticket = "";

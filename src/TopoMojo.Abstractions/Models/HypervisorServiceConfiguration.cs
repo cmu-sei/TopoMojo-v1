@@ -20,7 +20,7 @@ namespace TopoMojo.Models
         public string ConsoleUrl { get; set; }
         public string TicketUrlHandler { get; set; }  = "querystring"; //"local-app", "external-domain", "host-map", "none"
         public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
-        public VlanConfiguration Vlan { get; set; }
+        public VlanConfiguration Vlan { get; set; } = new VlanConfiguration();
         public int KeepAliveMinutes { get; set; } = 10;
         public string ExcludeNetworkMask { get; set; } = "topomojo";
     }

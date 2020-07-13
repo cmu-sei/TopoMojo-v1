@@ -155,7 +155,7 @@ namespace TopoMojo.Web.Controllers
 
             await AuthorizeAction(id, "change");
 
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+            Vm vm = await _pod.Load(id);
 
             SendBroadcast(vm, "change");
 
@@ -190,7 +190,7 @@ namespace TopoMojo.Web.Controllers
         {
             await AuthorizeAction(id, "isooptions");
 
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+            Vm vm = await _pod.Load(id);
 
             if (vm == null)
                 return BadRequest();
@@ -210,7 +210,7 @@ namespace TopoMojo.Web.Controllers
         {
             await AuthorizeAction(id, "netoptions");
 
-            Vm vm = (await _pod.Find(id)).FirstOrDefault();
+            Vm vm = await _pod.Load(id);
 
             if (vm == null)
                 return BadRequest();
@@ -381,7 +381,7 @@ namespace TopoMojo.Web.Controllers
             if (_user.IsAdmin)
                 return;
 
-            Vm vm = _pod.Find(id).Result.FirstOrDefault();
+            Vm vm = await _pod.Load(id);
 
             await AuthorizeAction(vm, method);
         }

@@ -277,11 +277,13 @@ namespace TopoMojo.Services
         public async Task<bool> ChangeVm(VmAction vmAction)
         {
             bool result = false;
+            Vm vm = null;
 
             if (!Guid.TryParse(vmAction.Id, out Guid guid))
             {
                 // lookup id from name
-                vmAction.Id = (await _pod.Find(vmAction.Id)).FirstOrDefault()?.Id ?? Guid.Empty.ToString();
+                vm = await _pod.Load(vmAction.Id);
+                vmAction.Id = vm.Id;
             }
 
             switch (vmAction.Type)
@@ -315,9 +317,11 @@ namespace TopoMojo.Services
                     break;
 
                 case "iso":
-                    // look up iso path
-                    var vm = (await _pod.Find(vmAction.Id)).FirstOrDefault();
 
+                    if (vm == null)
+                        return false;
+
+                    // look up valid iso path
                     var gamespace = await _gamespaceStore.Load(vm.Name.Tag());
 
                     var allowedIsos = await _pod.GetVmIsoOptions(gamespace.Workspace.GlobalId);
