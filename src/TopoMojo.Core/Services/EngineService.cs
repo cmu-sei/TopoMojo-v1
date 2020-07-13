@@ -197,6 +197,7 @@ namespace TopoMojo.Services
         {
             GameState state = null;
 
+            // gamespace should never be null in the engine service
             if (gamespace == null)
             {
                 Data.Workspace topo = await _workspaceStore.Load(topoId);
@@ -218,14 +219,49 @@ namespace TopoMojo.Services
             }
             else
             {
+                // get vm's, look up template, add if template not mark as hidden.
+
                 state = Mapper.Map<GameState>(gamespace);
 
-                state.Vms = gamespace.Workspace.Templates
-                    .Where(t => !t.IsHidden)
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                    .ToArray();
+                var vmState = new List<VmState>();
 
-                state.MergeVms(await _pod.Find(gamespace.GlobalId));
+                var vms = await _pod.Find(gamespace.GlobalId);
+
+                foreach (Vm vm in vms)
+                {
+                    string name = vm.Name.Untagged();
+
+                    // a vm could be a replica, denoted by `_1` or some number,
+                    // so strip that to find template.
+                    int x = name.LastIndexOf('_');
+
+                    var tmpl = gamespace.Workspace.Templates
+                        .Where(t => !t.IsHidden && t.Name == name)
+                        .FirstOrDefault();
+
+                    if (tmpl == null && x == name.Length - 2)
+                    {
+                        name = name.Substring(0, x);
+
+                        tmpl = gamespace.Workspace.Templates
+                        .Where(t => !t.IsHidden && t.Name == name)
+                        .FirstOrDefault();
+                    }
+
+                    if (tmpl != null)
+                    {
+                        vmState.Add(new VmState
+                        {
+                            Id = vm.Id,
+                            Name = vm.Name,
+                            IsRunning = (vm.State == VmPowerState.Running),
+                            TemplateId = tmpl.Id
+                        });
+                    }
+                }
+
+                state.Vms = vmState.ToArray();
+
             }
 
             return state;
