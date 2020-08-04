@@ -248,7 +248,7 @@ namespace TopoMojo.Web.Controllers
                 {
                     case "querystring":
                         qs = $"?vmhost={src.Host}";
-                        target = _pod.Options.ConsoleUrl;
+                        target = _options.ConsoleHost;
                     break;
 
                     case "local-app":
