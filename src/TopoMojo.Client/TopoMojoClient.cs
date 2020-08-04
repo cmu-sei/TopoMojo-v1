@@ -55,13 +55,9 @@ namespace TopoMojo.Client
             {
                 try
                 {
-                    string mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{spec.IsolationId})"));
-
                     data = await Client.GetStringAsync(game.WorkspaceDocument);
 
-                    mdText += "\n\n" + data;
-
-                    game.Markdown = mdText;
+                    game.Markdown = data;
                 }
                 catch
                 {
@@ -70,48 +66,6 @@ namespace TopoMojo.Client
             }
 
             return game;
-        }
-
-        [Obsolete]
-        public async Task<string> Start(string isolationTag, GamespaceSpec spec)
-        {
-            string mdText = "";
-
-            var model = new NewGamespace
-            {
-                Id = isolationTag,
-                Workspace = spec
-            };
-
-            var result = await Client.PostAsync("gamespace", Json(model));
-
-            if (result.IsSuccessStatusCode)
-            {
-
-                string data = await result.Content.ReadAsStringAsync();
-
-                var game = JsonConvert.DeserializeObject<GameState>(data);
-
-                mdText = "> Gamespace Resources: " + String.Join(" | ", game.Vms.Select(v => $"[{v.Name}](/console/{v.Id}/{v.Name}/{isolationTag})"));
-
-                if (spec.AppendMarkdown)
-                {
-                    try
-                    {
-                        data = await Client.GetStringAsync(game.WorkspaceDocument);
-
-                        mdText += "\n\n" + data;
-                    }
-                    catch
-                    {
-
-                    }
-                }
-
-            }
-
-            return mdText;
-
         }
 
         public async Task Stop(string problemId)
