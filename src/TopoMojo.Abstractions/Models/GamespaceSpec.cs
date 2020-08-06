@@ -1,5 +1,7 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
+
+using System;
 
 namespace TopoMojo.Models
 {
@@ -12,7 +14,9 @@ namespace TopoMojo.Models
     public class GamespaceSpec
     {
         public string IsolationId { get; set; }
+        [Obsolete]
         public int WorkspaceId { get; set; }
+        public string WorkspaceGuid { get; set; }
         public VmSpec[] Vms { get; set; } = new VmSpec[] {};
         public bool CustomizeTemplates { get; set; }
         public string Templates { get; set; }

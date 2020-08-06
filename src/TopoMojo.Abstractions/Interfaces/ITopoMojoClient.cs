@@ -15,6 +15,7 @@ namespace TopoMojo.Abstractions
         Task ChangeVm(VmAction vmAction);
         Task BuildIso(IsoBuildSpec spec);
         Task<string> Templates(int id);
+        Task<WorkspaceSummary[]> List(Search search);
     }
 
 }
