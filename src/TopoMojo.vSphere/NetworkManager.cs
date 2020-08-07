@@ -117,7 +117,7 @@ namespace TopoMojo.vSphere
                         _pgAllocation[eth.Net].Counter += 1;
                     }
 
-                    eth.Net = _pgAllocation[eth.Net].Key;
+                    eth.Key = _pgAllocation[eth.Net].Key;
                 }
             }
         }

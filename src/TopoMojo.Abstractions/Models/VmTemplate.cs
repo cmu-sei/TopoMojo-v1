@@ -32,6 +32,7 @@ namespace TopoMojo.Models
     {
         public int Id { get; set; }
         public string Net { get; set; }
+        public string Key { get; set; }
         public string Type { get; set; }
         public string Mac { get; set; }
         public string Ip { get; set; }

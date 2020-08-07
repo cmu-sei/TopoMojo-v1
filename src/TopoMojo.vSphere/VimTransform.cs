@@ -129,8 +129,8 @@ namespace TopoMojo.vSphere
             if (nic.Net.StartsWith("nsx."))
             {
                 eth.backing = new VirtualEthernetCardOpaqueNetworkBackingInfo {
-                    opaqueNetworkId = nic.Net.Tag(),
-                    opaqueNetworkType = nic.Net.Untagged()
+                    opaqueNetworkId = nic.Key.Tag(),
+                    opaqueNetworkType = nic.Key.Untagged()
                 };
             }
             else if (dvsuuid.HasValue())
@@ -139,13 +139,13 @@ namespace TopoMojo.vSphere
                     port = new DistributedVirtualSwitchPortConnection
                     {
                         switchUuid = dvsuuid,
-                        portgroupKey = nic.Net
+                        portgroupKey = nic.Key.AsReference().Value
                     }
                 };
             }
             else
             {
-                eth.backing = new VirtualEthernetCardNetworkBackingInfo { deviceName = nic.Net };
+                eth.backing = new VirtualEthernetCardNetworkBackingInfo { deviceName = nic.Key };
             }
 
             devicespec = new VirtualDeviceConfigSpec();

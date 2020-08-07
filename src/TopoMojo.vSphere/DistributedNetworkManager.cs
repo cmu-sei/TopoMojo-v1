@@ -91,7 +91,7 @@ namespace TopoMojo.vSphere
 
                         result.Add(new VmNetwork
                         {
-                            NetworkMOR = back.port.portgroupKey,
+                            NetworkMOR = $"DistributedVirtualPortgroup|{back.port.portgroupKey}",
                             VmName = vmName
                         });
                     }
@@ -169,7 +169,7 @@ namespace TopoMojo.vSphere
                         port = new DistributedVirtualSwitchPortConnection
                         {
                             switchUuid = _client.DvsUuid,
-                            portgroupKey = netMorName
+                            portgroupKey = netMorName.AsReference().Value
                         }
                     };
                 }

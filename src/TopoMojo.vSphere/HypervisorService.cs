@@ -132,7 +132,8 @@ namespace TopoMojo.vSphere
 
             Vm vm = _vmCache.Values.Where(o=>o.Id == id || o.Name == id).FirstOrDefault();
 
-            CheckProgress(vm);
+            if (vm != null)
+                CheckProgress(vm);
 
             return vm;
         }
