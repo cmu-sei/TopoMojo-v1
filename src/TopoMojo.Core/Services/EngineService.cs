@@ -55,11 +55,13 @@ namespace TopoMojo.Services
 
             if (game == null)
             {
-                var workspace = await _workspaceStore.Load(spec.WorkspaceId);
+                var workspace = string.IsNullOrEmpty(spec.WorkspaceGuid)
+                    ? await _workspaceStore.Load(spec.WorkspaceId)
+                    : await _workspaceStore.Load(spec.WorkspaceGuid);
 
                 if (workspace == null || !workspace.HasScope(Client.Scope))
                 {
-                    _logger.LogInformation($"No audience match for workspace {spec?.WorkspaceId}: [{workspace?.Audience}] [{Client?.Scope}]");
+                    _logger.LogInformation($"No audience match for workspace {spec?.WorkspaceGuid}: [{workspace?.Audience}] [{Client?.Scope}]");
                     throw new InvalidOperationException();
                 }
 
@@ -189,7 +191,7 @@ namespace TopoMojo.Services
                 if (vmspec != null && vmspec.SkipIso)
                     continue;
 
-                template.Iso =  $"{_pod.Options.IsoStore}/{_options.GameEngineIsoFolder}/{spec.Iso}";
+                template.Iso =  $"{_options.GameEngineIsoFolder}/{spec.Iso}";
             }
         }
 

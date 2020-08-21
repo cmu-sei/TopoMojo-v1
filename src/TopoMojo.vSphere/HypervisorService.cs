@@ -30,6 +30,7 @@ namespace TopoMojo.vSphere
             _vmCache = new ConcurrentDictionary<string, Vm>();
             _vlanman = new VlanManager(_options.Vlan);
 
+            NormalizeOptions(_options);
         }
 
         private readonly HypervisorServiceConfiguration _options;
@@ -43,6 +44,7 @@ namespace TopoMojo.vSphere
         private ConcurrentDictionary<string, Vm> _vmCache;
 
         public HypervisorServiceConfiguration Options { get {return _options;}}
+
         public async Task ReloadHost(string hostname)
         {
             string host = "https://" + hostname + "/sdk";
@@ -92,9 +94,9 @@ namespace TopoMojo.vSphere
             if (vm != null)
                 return vm;
 
-            _logger.LogDebug("deploy: find host ");
             VimClient host = FindHostByAffinity(template.IsolationTag);
             _logger.LogDebug("deploy: host " + host.Name);
+
             NormalizeTemplate(template, host.Options);
             _logger.LogDebug("deploy: normalized "+ template.Name);
 
@@ -105,8 +107,11 @@ namespace TopoMojo.vSphere
                     throw new Exception("Template disks have not been prepared.");
             }
 
-            _logger.LogDebug("deploy: reserve vlans ");
-            _vlanman.ReserveVlans(template, host.Options.IsVCenter);
+            if (!host.Options.Uplink.StartsWith("nsx."))
+            {
+                _logger.LogDebug("deploy: reserve vlans ");
+                _vlanman.ReserveVlans(template, host.Options.IsVCenter);
+            }
 
             _logger.LogDebug("deploy: " + template.Name + " " + host.Name);
             return await host.Deploy(template);
@@ -127,7 +132,8 @@ namespace TopoMojo.vSphere
 
             Vm vm = _vmCache.Values.Where(o=>o.Id == id || o.Name == id).FirstOrDefault();
 
-            CheckProgress(vm);
+            if (vm != null)
+                CheckProgress(vm);
 
             return vm;
         }
@@ -464,6 +470,7 @@ namespace TopoMojo.vSphere
                 // need to have a backing file to add the cdrom device
                 template.Iso = option.IsoStore + "null.iso";
             }
+
             var isopath = new DatastorePath(template.Iso);
             isopath.Merge(option.IsoStore);
             template.Iso = isopath.ToString();
@@ -642,6 +649,20 @@ namespace TopoMojo.vSphere
         {
             public string Name { get; set; }
             public int Count { get; set; }
+        }
+
+        private void NormalizeOptions(HypervisorServiceConfiguration options)
+        {
+            var regex = new Regex("(]|/)$");
+
+            if (!regex.IsMatch(options.VmStore))
+                options.VmStore += "/";
+
+            if (!regex.IsMatch(options.DiskStore))
+                options.DiskStore += "/";
+
+            if (!regex.IsMatch(options.IsoStore))
+                options.IsoStore += "/";
         }
     }
 

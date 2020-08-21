@@ -79,23 +79,26 @@ namespace TopoMojo.vSphere
 
             foreach (ObjectContent obj in oc)
             {
-                // if (!obj.IsInPool(_client.pool))
-                //     continue;
-
                 string vmName = obj.GetProperty("name").ToString();
+
                 VirtualMachineConfigInfo config = obj.GetProperty("config") as VirtualMachineConfigInfo;
+
                 foreach (VirtualEthernetCard card in config.hardware.device.OfType<VirtualEthernetCard>())
                 {
                     if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
                     {
+                        var back = card.backing as VirtualEthernetCardDistributedVirtualPortBackingInfo;
+
                         result.Add(new VmNetwork
                         {
-                            NetworkMOR = ((VirtualEthernetCardDistributedVirtualPortBackingInfo)card.backing).port.portgroupKey,
+                            NetworkMOR = $"DistributedVirtualPortgroup|{back.port.portgroupKey}",
                             VmName = vmName
                         });
                     }
                 }
+
             }
+
             return result.ToArray();
         }
 
@@ -160,12 +163,13 @@ namespace TopoMojo.vSphere
                 if (card.backing is VirtualEthernetCardDistributedVirtualPortBackingInfo)
                 {
                     string netMorName = this.Resolve(portgroupName);
+
                     card.backing = new VirtualEthernetCardDistributedVirtualPortBackingInfo
                     {
                         port = new DistributedVirtualSwitchPortConnection
                         {
                             switchUuid = _client.DvsUuid,
-                            portgroupKey = netMorName
+                            portgroupKey = netMorName.AsReference().Value
                         }
                     };
                 }

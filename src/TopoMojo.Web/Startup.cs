@@ -186,6 +186,9 @@ namespace TopoMojo.Web
         {
             app.UseJsonExceptions();
 
+            if (!string.IsNullOrEmpty(Branding.PathBase))
+                app.UsePathBase(Branding.PathBase);
+
             if (Headers.LogHeaders)
                 app.UseHeaderInspection();
 

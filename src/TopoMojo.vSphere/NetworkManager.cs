@@ -58,10 +58,14 @@ namespace TopoMojo.vSphere
 
             //process vm counts
             var map = GetKeyMap();
+
             var vmnets = await GetVmNetworks(_client.pool);
+
             foreach (var vmnet in vmnets)
+            {
                 if (map.ContainsKey(vmnet.NetworkMOR))
                     map[vmnet.NetworkMOR].Counter += 1;
+            }
 
             //remove empties
             await Clean();
@@ -70,6 +74,7 @@ namespace TopoMojo.vSphere
         public async Task Provision(VmTemplate template)
         {
             await Task.Delay(0);
+
             lock (_pgAllocation)
             {
                 string sw = _client.UplinkSwitch;
@@ -88,16 +93,31 @@ namespace TopoMojo.vSphere
                     if (!_pgAllocation.ContainsKey(eth.Net))
                     {
                         var pg = AddPortGroup(sw, eth).Result;
+                        pg.Counter = 1;
+
                         _pgAllocation.Add(pg.Net, pg);
-                        _vlanManager.Activate(new Vlan[] { new Vlan { Id = pg.VlanId, Name = pg.Net, OnUplink = sw == _client.UplinkSwitch }});
+
+                        if (pg.VlanId > 0)
+                        {
+                            _vlanManager.Activate(new Vlan[] {
+                                new Vlan {
+                                    Id = pg.VlanId,
+                                    Name = pg.Net,
+                                    OnUplink = sw == _client.UplinkSwitch
+                                }
+                            });
+                        }
+
                         if (_swAllocation.ContainsKey(sw))
                             _swAllocation[sw] += 1;
+
                     }
                     else
                     {
                         _pgAllocation[eth.Net].Counter += 1;
                     }
-                    eth.Net = _pgAllocation[eth.Net].Key.AsReference().Value;
+
+                    eth.Key = _pgAllocation[eth.Net].Key;
                 }
             }
         }
@@ -105,10 +125,13 @@ namespace TopoMojo.vSphere
         public async Task Unprovision(ManagedObjectReference vmMOR)
         {
             await Task.Delay(0);
+
             lock(_pgAllocation)
             {
                 var map = GetKeyMap();
+
                 var vmnets = GetVmNetworks(vmMOR).Result;
+
                 foreach (var vmnet in vmnets)
                     if (map.ContainsKey(vmnet.NetworkMOR))
                         map[vmnet.NetworkMOR].Counter -= 1;
@@ -139,8 +162,11 @@ namespace TopoMojo.vSphere
                     )
                     {
                         RemovePortgroup(pg.Key).Wait();
+
                         _pgAllocation.Remove(pg.Net);
+
                         _vlanManager.Deactivate(pg.Net);
+
                         if (_swAllocation.ContainsKey(pg.Switch))
                             _swAllocation[pg.Switch] -= 1;
                     }
@@ -151,6 +177,7 @@ namespace TopoMojo.vSphere
                     if (_swAllocation[sw] < 1 && sw.Contains("#"))
                     {
                         RemoveSwitch(sw).Wait();
+
                         _swAllocation.Remove(sw);
                     }
                 }
@@ -163,9 +190,8 @@ namespace TopoMojo.vSphere
             var map = new Dictionary<string, PortGroupAllocation>();
             foreach (var pga in _pgAllocation.Values)
             {
-                string key = pga.Key.AsReference().Value;
-                if (!map.ContainsKey(key))
-                    map.Add(key, pga);
+                if (!map.ContainsKey(pga.Key))
+                    map.Add(pga.Key, pga);
             }
             return map;
         }
@@ -204,7 +230,7 @@ namespace TopoMojo.vSphere
 
         public string Resolve(string net)
         {
-            return _pgAllocation[net]?.Key.AsReference().Value ?? "notfound";
+            return _pgAllocation[net]?.Key ?? "notfound";
         }
 
         public abstract void UpdateEthernetCardBacking(VirtualEthernetCard card, string portgroupName);

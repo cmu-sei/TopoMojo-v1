@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using TopoMojo.Web;
 
 namespace TopoMojo.Web
@@ -13,12 +14,15 @@ namespace TopoMojo.Web
     public class JsonExceptionMiddleware
     {
         public JsonExceptionMiddleware(
-            RequestDelegate next
+            RequestDelegate next,
+            ILogger<JsonExceptionMiddleware> logger
         )
         {
             _next = next;
+            _logger = logger;
         }
         private readonly RequestDelegate _next;
+        private readonly ILogger _logger;
 
         public async Task Invoke(HttpContext context)
         {
@@ -27,6 +31,8 @@ namespace TopoMojo.Web
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error");
+
                 if (!context.Response.HasStarted)
                 {
                     context.Response.StatusCode = 500;

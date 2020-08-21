@@ -17,12 +17,21 @@ namespace TopoMojo.Models
         public string VmStore { get; set; } = "[topomojo] _run/";
         public string DiskStore { get; set; } = "[topomojo]";
         public string IsoStore { get; set; } = "[topomojo] iso/";
-        public string ConsoleUrl { get; set; }
         public string TicketUrlHandler { get; set; }  = "querystring"; //"local-app", "external-domain", "host-map", "none"
         public Dictionary<string,string> TicketUrlHostMap { get; set; } = new Dictionary<string, string>();
         public VlanConfiguration Vlan { get; set; } = new VlanConfiguration();
         public int KeepAliveMinutes { get; set; } = 10;
         public string ExcludeNetworkMask { get; set; } = "topomojo";
+        public SddcConfiguration Sddc { get; set; } = new SddcConfiguration();
+    }
+
+    public class SddcConfiguration
+    {
+        public string Url { get; set; }
+        public string AuthUrl { get; set; }
+        public string OrgId { get; set; }
+        public string SddcId { get; set; }
+        public string ApiKey { get; set; }
     }
 
     public class VlanConfiguration

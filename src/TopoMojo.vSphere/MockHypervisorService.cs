@@ -27,6 +27,8 @@ namespace TopoMojo.vSphere
             _vms = new Dictionary<string, Vm>();
             _tasks = new Dictionary<string, VmTask>();
             _rand = new Random();
+
+            NormalizeOptions(_optPod);
         }
 
         private readonly HypervisorServiceConfiguration _optPod;
@@ -295,8 +297,9 @@ namespace TopoMojo.vSphere
             VmDisk disk = template.Disks.FirstOrDefault();
             if (disk != null)
             {
-                    if (disk.Path.Contains("blank-"))
-                        return 100;
+
+                if (disk.Path.Contains("blank-"))
+                    return 100;
 
                 MockDisk mock = _disks.FirstOrDefault(o=>o.Path == disk.Path);
                 if (mock == null)
@@ -361,6 +364,51 @@ namespace TopoMojo.vSphere
         }
 
         private void NormalizeTemplate(VmTemplate template, HypervisorServiceConfiguration option)
+        {
+            if (!template.Iso.HasValue())
+            {
+                // need to have a backing file to add the cdrom device
+                template.Iso = option.IsoStore + "null.iso";
+            }
+
+            var isopath = new DatastorePath(template.Iso);
+            isopath.Merge(option.IsoStore);
+            template.Iso = isopath.ToString();
+
+            foreach (VmDisk disk in template.Disks)
+            {
+                if (!disk.Path.StartsWith(option.DiskStore)
+                ) {
+                    DatastorePath dspath = new DatastorePath(disk.Path);
+                    dspath.Merge(option.DiskStore);
+                    disk.Path = dspath.ToString();
+                }
+                if (disk.Source.HasValue() && !disk.Source.StartsWith(option.DiskStore)
+                ) {
+                    DatastorePath dspath = new DatastorePath(disk.Source);
+                    dspath.Merge(option.DiskStore);
+                    disk.Source = dspath.ToString();
+                }
+            }
+
+            if (template.IsolationTag.HasValue())
+            {
+                string tag = "#" + template.IsolationTag;
+                Regex rgx = new Regex("#.*");
+                if (!template.Name.EndsWith(template.IsolationTag))
+                    template.Name = rgx.Replace(template.Name, "") + tag;
+                foreach (VmNet eth in template.Eth)
+                {
+                    // //don't add tag if referencing a global vlan
+                    // if (!_vlanman.Contains(eth.Net))
+                    // {
+                    //     eth.Net = rgx.Replace(eth.Net, "") + tag;
+                    // }
+                }
+            }
+        }
+
+        private void NormalizeTemplateOld(VmTemplate template, HypervisorServiceConfiguration option)
         {
             if (template.Iso.HasValue() && !template.Iso.StartsWith(option.IsoStore))
             {
@@ -465,6 +513,20 @@ namespace TopoMojo.vSphere
         public Task StopAll(string target)
         {
             throw new NotImplementedException();
+        }
+
+        private void NormalizeOptions(HypervisorServiceConfiguration options)
+        {
+            var regex = new Regex("(]|/)$");
+
+            if (!regex.IsMatch(options.VmStore))
+                options.VmStore += "/";
+
+            if (!regex.IsMatch(options.DiskStore))
+                options.DiskStore += "/";
+
+            if (!regex.IsMatch(options.IsoStore))
+                options.IsoStore += "/";
         }
     }
 
