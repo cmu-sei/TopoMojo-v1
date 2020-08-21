@@ -88,6 +88,8 @@ namespace TopoMojo.Data
                     gamespace.LastActivity = DateTime.UtcNow;
             }
 
+            await DbContext.SaveChangesAsync();
+
             return result;
         }
 

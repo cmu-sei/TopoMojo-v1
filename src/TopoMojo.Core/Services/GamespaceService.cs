@@ -86,7 +86,6 @@ namespace TopoMojo.Services
                 {
                     Name = workspace.Name,
                     Workspace = workspace,
-                    LastActivity = DateTime.UtcNow,
                     ShareCode = Guid.NewGuid().ToString("N"),
                     Audience = "topomojo"
                 };

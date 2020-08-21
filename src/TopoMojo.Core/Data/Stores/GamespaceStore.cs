@@ -21,12 +21,15 @@ namespace TopoMojo.Data
 
         public override async Task<Gamespace> Add(Gamespace entity)
         {
+
             if (entity.Workspace != null)
             {
                 entity.Workspace.LaunchCount += 1;
 
                 entity.Workspace.LastActivity = DateTime.UtcNow;
             }
+
+            entity.LastActivity = DateTime.UtcNow;
 
             var gamespace = await base.Add(entity);
 
