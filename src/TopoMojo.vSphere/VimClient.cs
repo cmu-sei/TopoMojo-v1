@@ -156,6 +156,9 @@ namespace TopoMojo.vSphere
             {
                 _logger.LogDebug($"Save: remove previous snap for vm {vm.Name}");
                 task = await _vim.RemoveSnapshot_TaskAsync(mor, false, true);
+
+                await Task.Delay(500);
+
                 info = await GetVimTaskInfo(task);
                 if (info.state == TaskInfoState.error)
                     throw new Exception(info.error.localizedMessage);
@@ -746,7 +749,10 @@ namespace TopoMojo.vSphere
             {
                 _logger.LogError(ex, "Failed to get TaskInfo for {0}", task.Value);
 
-                info = new TaskInfo { task = task, state = TaskInfoState.error };
+                info = new TaskInfo {
+                    task = task,
+                    state = TaskInfoState.error
+                };
             }
 
             return info;
@@ -1230,8 +1236,8 @@ namespace TopoMojo.vSphere
                         {
                             case TaskInfoState.error:
                                 t.Progress = -1;
-                                t.Action = info.description.message + " - " +
-                                    info.error.localizedMessage;
+                                t.Action = info.description?.message + " - " +
+                                    info.error?.localizedMessage;
                                 _tasks.Remove(key);
                                 break;
 
