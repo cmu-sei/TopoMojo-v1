@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using Polly;
@@ -20,7 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (Uri.TryCreate(options.Url, UriKind.Absolute, out Uri uri))
             {
-                services.AddScoped<ITopoMojoClient, TopoMojoClient>();
+                // services.AddScoped<ITopoMojoClient, TopoMojoClient>();
 
                 services.AddHttpClient<ITopoMojoClient, TopoMojoClient>()
                 .ConfigureHttpClient(client =>
