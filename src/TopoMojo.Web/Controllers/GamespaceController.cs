@@ -66,6 +66,8 @@ namespace TopoMojo.Web.Controllers
         {
             var result = await _gamespaceService.LoadFromWorkspace(id);
 
+            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
+
             return Ok(result);
         }
 
@@ -78,6 +80,8 @@ namespace TopoMojo.Web.Controllers
         public async Task<ActionResult<GameState>> Launch(int id)
         {
             var result = await _gamespaceService.Launch(id);
+
+            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
 
             Log("launched", result);
 
@@ -110,6 +114,8 @@ namespace TopoMojo.Web.Controllers
         public async Task<ActionResult<GameState>> CheckState(int id)
         {
             var result = await _gamespaceService.Load(id);
+
+            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
 
             return Ok(result);
         }
@@ -160,5 +166,6 @@ namespace TopoMojo.Web.Controllers
                     gameState
                 ));
         }
+
     }
 }

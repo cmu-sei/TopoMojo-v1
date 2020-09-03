@@ -43,5 +43,22 @@ namespace TopoMojo.Web.Controllers
             _logger.LogInformation(entry);
         }
 
+        /// <summary>
+        /// Apply PathBase to urls generated in service
+        /// </summary>
+        /// <param name="target"></param>
+        internal string ApplyPathBase(string target)
+        {
+            if (
+                !string.IsNullOrEmpty(Request.PathBase)
+                && !string.IsNullOrEmpty(target)
+                && !target.Contains("://")
+            )
+            {
+                return Request.PathBase + target;
+            }
+
+            return target;
+        }
     }
 }

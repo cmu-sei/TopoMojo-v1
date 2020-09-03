@@ -60,6 +60,8 @@ namespace TopoMojo.Web.Controllers
         {
             var result = await _engineService.Launch(model);
 
+            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
+
             Log("launched", result);
 
             return Ok(result);
