@@ -126,6 +126,9 @@ namespace TopoMojo.vSphere
 
             eth.key = key--;
 
+            if (nic.Mac.HasValue())
+                eth.macAddress = nic.Mac;
+
             if (nic.Net.StartsWith("nsx."))
             {
                 eth.backing = new VirtualEthernetCardOpaqueNetworkBackingInfo {
