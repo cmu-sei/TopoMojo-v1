@@ -127,7 +127,10 @@ namespace TopoMojo.vSphere
             eth.key = key--;
 
             if (nic.Mac.HasValue())
+            {
+                eth.addressType = "Manual";
                 eth.macAddress = nic.Mac;
+            }
 
             if (nic.Net.StartsWith("nsx."))
             {
