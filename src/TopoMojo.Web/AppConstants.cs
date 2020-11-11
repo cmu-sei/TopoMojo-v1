@@ -12,6 +12,7 @@ namespace TopoMojo.Web
         public const string SubjectClaimName = "sub";
         public const string NameClaimName = "name";
         public const string RegistrationCachePrefix = "lp:";
+        public const string CookieScheme = ".TopoMojo.Cookies";
     }
 
     internal static class AuditId

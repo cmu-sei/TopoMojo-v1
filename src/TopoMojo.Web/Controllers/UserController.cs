@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
@@ -135,14 +136,19 @@ namespace TopoMojo.Web.Controllers
         /// Used to exhange one-time-ticket for an auth cookie
         /// </remarks>
         /// <returns></returns>
-        [Authorize(Policy="Launcher")]
+        [Authorize(Policy="TicketOrCookie")]
         [HttpPost("/api/user/login")]
         public async Task<IActionResult> GetAuthCookie()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
                 return Ok();
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, User);
+            await HttpContext.SignInAsync(
+                AppConstants.CookieScheme,
+                new ClaimsPrincipal(
+                    new ClaimsIdentity(User.Claims, AppConstants.CookieScheme)
+                )
+            );
 
             return Ok();
         }
@@ -154,8 +160,8 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("/api/user/logout")]
         public async Task Logout()
         {
-            if (User.Identity.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
-                await HttpContext.SignOutAsync();
+            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
+                await HttpContext.SignOutAsync(AppConstants.CookieScheme);
         }
 
     }

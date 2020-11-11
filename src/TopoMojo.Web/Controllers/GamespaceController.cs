@@ -157,6 +157,9 @@ namespace TopoMojo.Web.Controllers
 
             await _cache.RemoveAsync($"{AppConstants.RegistrationCachePrefix}{token}");
 
+            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
+                await HttpContext.SignOutAsync(AppConstants.CookieScheme);
+
             return Ok();
         }
 

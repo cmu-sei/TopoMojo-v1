@@ -63,19 +63,9 @@ namespace TopoMojo.Web.Services
 
             if (_user != null)
             {
-            //     if (_user.Name != name)
-            //     {
-            //         _user.Name = name;
-
-            //         await _identitySvc.Update(_user);
-            //     }
-
-                identity.AddClaims(new Claim[]
-                {
-                    new Claim(JwtRegisteredClaimNames.NameId, _user.Id.ToString()),
-                    new Claim("name", _user.Name),
-                    new Claim("role", _user.Role.ToString())
-                });
+                AddOrUpdateClaim(identity, JwtRegisteredClaimNames.NameId, _user.Id.ToString());
+                AddOrUpdateClaim(identity, "name", _user.Name);
+                AddOrUpdateClaim(identity, "role", _user.Role.ToString());
 
                 return principal;
             }
@@ -104,14 +94,27 @@ namespace TopoMojo.Web.Services
                 semaphoreSlim.Release();
             }
 
-            identity.AddClaims(new Claim[]
-            {
-                new Claim(JwtRegisteredClaimNames.NameId, _user.Id.ToString()),
-                new Claim("name", _user.Name),
-                new Claim("role", _user.Role.ToString())
-            });
+            AddOrUpdateClaim(identity, JwtRegisteredClaimNames.NameId, _user.Id.ToString());
+            AddOrUpdateClaim(identity, "name", _user.Name);
+            AddOrUpdateClaim(identity, "role", _user.Role.ToString());
 
             return principal;
+        }
+
+        private void AddOrUpdateClaim(ClaimsIdentity identity, string type, string value)
+        {
+            var claim = identity.FindFirst(c => c.Type == type);
+
+            if (claim == null)
+            {
+                identity.AddClaim(new Claim(type, value));
+            }
+            else if (claim.Value != value)
+            {
+                identity.RemoveClaim(claim);
+                identity.AddClaim(new Claim(type, value));
+            }
+
         }
     }
 }
