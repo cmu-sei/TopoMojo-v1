@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -150,7 +151,9 @@ namespace TopoMojo.Web
                 {
                     options.Clients = ApiKeyClients;
                 })
-                .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {});
+                .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {})
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+                ;
 
             services.AddAuthorization(_ =>
             {
@@ -176,6 +179,21 @@ namespace TopoMojo.Web
                 _.AddPolicy("OneTimeTicket", new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
+                    .Build());
+
+                _.AddPolicy("Players", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        JwtBearerDefaults.AuthenticationScheme,
+                        CookieAuthenticationDefaults.AuthenticationScheme
+                    )
+                    .Build());
+                _.AddPolicy("Launcher", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        TicketAuthentication.AuthenticationScheme
+                    )
                     .Build());
             });
 

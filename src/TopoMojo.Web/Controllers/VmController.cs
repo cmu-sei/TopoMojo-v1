@@ -16,7 +16,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Policy="Players")]
     [ApiController]
     public class VmController : _Controller
     {

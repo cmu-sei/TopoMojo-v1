@@ -396,7 +396,71 @@ namespace TopoMojo.Services
             if (search.Take > 0)
                 q = q.Take(search.Take);
 
-            return Mapper.Map<WorkspaceSummary[]>(await q.ToArrayAsync(ct));
+            return Mapper.Map<WorkspaceSummary[]>(await q.ToArrayAsync(ct), WithActor());
+        }
+
+        public async Task<Registration> Register(RegistrationRequest registration)
+        {
+            // check client scope / workspace audience
+            var workspace = await _workspaceStore.Load(registration.ResourceId);
+
+            if (workspace == null)
+                throw new ResourceNotFound();
+
+            if (!workspace.HasScope(Client.Scope))
+                throw new InvalidClientAudience();
+
+            var game = await _gamespaceStore.ListByProfile(registration.SubjectId)
+                .SingleOrDefaultAsync(m => m.GlobalId == registration.ResourceId);
+
+            string id = game?.GlobalId ?? Guid.NewGuid().ToString();
+            string token = Guid.NewGuid().ToString("n");
+
+            var challenge = new Challenge
+            {
+                GamespaceId = id,
+                Questions = new Question[] {
+                    new Question { Text = "What is flag A?" },
+                    new Question { Text = "What is flag B?" },
+                }
+            };
+
+            return new Registration{
+                SubjectId = registration.SubjectId,
+                SubjectName = registration.SubjectName,
+                ResourceId = registration.ResourceId,
+                GamespaceId = id,
+                Token = token,
+                RedirectUrl =  _options.LaunchUrl + token,
+                ClientId = Client.Id,
+                Challenge = challenge
+            };
+        }
+
+        public async Task<Challenge> Grade(Challenge challenge)
+        {
+            // TODO: Demo only, implement actual
+            foreach(var q in challenge.Questions)
+            {
+                if (q.Answer.Equals(challenge.GamespaceId))
+                {
+                    q.Points = 50;
+                }
+            }
+            return await Task.FromResult(challenge);
+        }
+
+        public async Task<Challenge> Hints(Challenge challenge)
+        {
+            // TODO: Demo only, implement actual
+            foreach(var q in challenge.Questions)
+            {
+                if (q.Points == 0)
+                {
+                    q.Hint = "Try the Gamespace Id.";
+                }
+            }
+            return await Task.FromResult(challenge);
         }
     }
 }

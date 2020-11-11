@@ -11,4 +11,11 @@ namespace TopoMojo
     public class ParentTemplateException : Exception { }
     public class WorkspaceNotIsolatedException : Exception { }
     public class ActionForbiddenException: Exception { }
+    public class InvalidClientAudience: Exception { }
+    public class ResourceNotFound: Exception { }
+    public class GamespaceNotRegistered: Exception {
+        public GamespaceNotRegistered() : base() { }
+        public GamespaceNotRegistered(string message) : base(message) { }
+        public GamespaceNotRegistered(string message, Exception ex) : base(message, ex) { }
+    }
 }

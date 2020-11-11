@@ -13,6 +13,7 @@ namespace TopoMojo.Data.Abstractions
         Task<Gamespace> FindByPlayer(int playerId);
         Task<Gamespace> FindByShareCode(string code);
         IQueryable<Gamespace> ListByProfile(int id);
+        IQueryable<Gamespace> ListByProfile(string id);
         Task<Gamespace[]> DeleteStale(DateTime staleAfter, bool dryrun = true);
     }
 }

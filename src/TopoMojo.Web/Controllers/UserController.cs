@@ -6,9 +6,12 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
@@ -24,19 +27,23 @@ namespace TopoMojo.Web.Controllers
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
             UserService userService,
-            IDataProtectionProvider dp
+            IDataProtectionProvider dp,
+            IDistributedCache cache
         ) : base(logger, identityResolver)
         {
             _userService = userService;
             _identity = identityResolver;
             _dp = dp.CreateProtector(AppConstants.DataProtectionPurpose);
+            _cache = cache;
             _random = new Random();
         }
 
         private readonly UserService _userService;
         private readonly IIdentityResolver _identity;
         private readonly IDataProtector _dp;
+        private readonly IDistributedCache _cache;
         private readonly Random _random;
+
         /// <summary>
         /// List users. (admin only)
         /// </summary>
@@ -104,18 +111,51 @@ namespace TopoMojo.Web.Controllers
         /// in an `Authorization: Ticket [ticket]` or `Authorization: Bearer [ticket]` header.
         /// </remarks>
         /// <returns></returns>
+        [Authorize(Policy="Players")]
         [HttpGet("/api/user/ticket")]
-        public IActionResult GetTicket()
+        public async Task<IActionResult> GetTicket()
         {
-            int random = _random.Next();
+            string ticket = Guid.NewGuid().ToString("n");
 
-            long expires = DateTime.UtcNow.AddSeconds(20).Ticks;
+            await _cache.SetStringAsync(
+                $"{TicketAuthentication.TicketCachePrefix}{ticket}",
+                $"{User.FindFirstValue(TicketAuthentication.ClaimNames.Subject)}#{User.FindFirstValue(TicketAuthentication.ClaimNames.Name)}",
+                new DistributedCacheEntryOptions {
+                    AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 20)
+                }
+            );
 
-            string id = $"{User.FindFirstValue(TicketAuthentication.ClaimNames.Subject)}#{User.FindFirstValue(TicketAuthentication.ClaimNames.Name)}";
+            return Ok(new { Ticket = ticket });
+        }
 
-            string ticket = $"{expires}|{random}|{id}";
+        /// <summary>
+        /// Get auth cookie
+        /// </summary>
+        /// <remarks>
+        /// Used to exhange one-time-ticket for an auth cookie
+        /// </remarks>
+        /// <returns></returns>
+        [Authorize(Policy="Launcher")]
+        [HttpPost("/api/user/login")]
+        public async Task<IActionResult> GetAuthCookie()
+        {
+            if (User.Identity.IsAuthenticated)
+                return Ok();
 
-            return Ok(new { Ticket = _dp.Protect(ticket)});
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, User);
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// End a cookie auth session
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("/api/user/logout")]
+        public async Task Logout()
+        {
+            if (User.Identity.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+                await HttpContext.SignOutAsync();
         }
 
     }

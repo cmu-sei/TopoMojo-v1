@@ -13,6 +13,7 @@ namespace TopoMojo
         public string GameEngineIsoFolder { get; set; } = "static";
         public string ConsoleHost { get; set; }
         public string DemoCode { get; set; }
+        public string LaunchUrl { get; set; } = "/lp/?t=";
         public JanitorOptions Expirations { get; set; } = new JanitorOptions();
 
     }

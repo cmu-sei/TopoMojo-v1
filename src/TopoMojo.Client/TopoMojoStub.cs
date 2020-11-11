@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Threading.Tasks;
@@ -73,6 +73,21 @@ namespace TopoMojo.Client
                 Name = "mockvm",
                 Url = "/ticket/9876543210"
             };
+        }
+
+        public async Task<Registration> Register(RegistrationRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Challenge> Grade(Challenge challenge)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Challenge> Hints(Challenge challenge)
+        {
+            throw new NotImplementedException();
         }
     }
 }
