@@ -132,7 +132,7 @@ namespace TopoMojo.Services
             return game;
         }
 
-        private Task Deploy(Data.Gamespace gamespace)
+        private async Task Deploy(Data.Gamespace gamespace)
         {
             var tasks = new List<Task<Vm>>();
 
@@ -147,9 +147,7 @@ namespace TopoMojo.Services
                 );
             }
 
-            Task.WaitAll(tasks.ToArray());
-
-            return Task.FromResult(0);
+            await Task.WhenAll(tasks.ToArray());
         }
 
         public async Task<GameState> Load(int id)

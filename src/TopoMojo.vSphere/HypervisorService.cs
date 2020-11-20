@@ -231,7 +231,7 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
         public async Task StopAll(string target)
@@ -245,7 +245,7 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
 
@@ -261,7 +261,7 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
 

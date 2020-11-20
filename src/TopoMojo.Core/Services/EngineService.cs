@@ -108,7 +108,7 @@ namespace TopoMojo.Services
                     deployTasks.Add(_pod.Deploy(virtualTemplate));
                 }
 
-                Task.WaitAll(deployTasks.ToArray());
+                await Task.WhenAll(deployTasks.ToArray());
 
                 if (spec.HostAffinity)
                 {

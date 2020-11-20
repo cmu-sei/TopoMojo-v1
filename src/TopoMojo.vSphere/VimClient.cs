@@ -304,7 +304,7 @@ namespace TopoMojo.vSphere
                     tasks.Add(Start(vm.Id));
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
 
