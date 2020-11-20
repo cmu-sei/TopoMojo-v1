@@ -28,11 +28,14 @@ namespace TopoMojo.vSphere
             var mor = new ManagedObjectReference();
             try
             {
+                bool allowAll = eth.Net.Untagged().EndsWith(_client.NetworkAllowAllSuffix);
+
                 var spec = new DVPortgroupConfigSpec()
                 {
                     name = eth.Net,
                     autoExpand = true,
                     type = "earlyBinding",
+
                     defaultPortConfig = new VMwareDVSPortSetting
                     {
                         vlan = new VmwareDistributedVirtualSwitchVlanIdSpec
@@ -45,7 +48,18 @@ namespace TopoMojo.vSphere
                             {
                                 value = true,
                                 valueSpecified = true
+                            },
+                            forgedTransmits = new BoolPolicy()
+                            {
+                                value = allowAll,
+                                valueSpecified = allowAll
+                            },
+                            macChanges = new BoolPolicy()
+                            {
+                                value = allowAll,
+                                valueSpecified = allowAll
                             }
+
                         }
                     }
                 };
