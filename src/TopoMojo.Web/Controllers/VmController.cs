@@ -146,8 +146,10 @@ namespace TopoMojo.Web.Controllers
         {
             // need elevated privileges to change vm to special nets
             if (
-                change.Key == "net" && !change.Value.Contains("#")
-                && (_user.Role == UserRole.User || _user.Role == UserRole.Builder)
+                change.Key == "net" &&
+                !change.Value.Contains("#") &&
+                !_options.AllowUnprivilegedVmReconfigure &&
+                (_user.Role == UserRole.User || _user.Role == UserRole.Builder)
             )
             {
                 throw new ActionForbiddenException();
