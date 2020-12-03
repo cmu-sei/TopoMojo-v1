@@ -310,13 +310,25 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Change(string id, VmKeyValue change)
         {
-            return await ReconfigureVm(id, change.Key, "", change.Value);
+            var segments = change.Value.Split(':');
+
+            string label = segments.Length > 1
+                ? segments.Last()
+                : "";
+
+            return await ReconfigureVm(id, change.Key, label, segments.First());
         }
 
         //id, feature (iso, net, boot, guest), label, value
         public async Task<Vm> ReconfigureVm(string id, string feature, string label, string newvalue)
         {
             await Connect();
+
+            int index = 0;
+
+            if (int.TryParse(label, out index))
+                label = "";
+
             Vm vm = _vmCache[id];
             RetrievePropertiesResponse response = await _vim.RetrievePropertiesAsync(
                 _props,
@@ -331,7 +343,7 @@ namespace TopoMojo.vSphere
                 case "iso":
                     VirtualCdrom cdrom = (VirtualCdrom)((label.HasValue())
                         ? config.hardware.device.Where(o => o.deviceInfo.label == label).SingleOrDefault()
-                        : config.hardware.device.OfType<VirtualCdrom>().FirstOrDefault());
+                        : config.hardware.device.OfType<VirtualCdrom>().ToArray()[index]);
 
                     if (cdrom != null)
                     {
@@ -359,7 +371,7 @@ namespace TopoMojo.vSphere
                 case "eth":
                     VirtualEthernetCard card = (VirtualEthernetCard)((label.HasValue())
                         ? config.hardware.device.Where(o => o.deviceInfo.label == label).SingleOrDefault()
-                        : config.hardware.device.OfType<VirtualEthernetCard>().FirstOrDefault());
+                        : config.hardware.device.OfType<VirtualEthernetCard>().ToArray()[index]);
 
                     if (card != null)
                     {
