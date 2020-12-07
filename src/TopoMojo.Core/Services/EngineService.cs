@@ -381,6 +381,21 @@ namespace TopoMojo.Services
 
                     break;
 
+                case "net":
+
+                    await _pod.ChangeConfiguration(
+                        vmAction.Id,
+                        new VmKeyValue
+                        {
+                            Key = "net",
+                            Value = vmAction.Message
+                        }
+                    );
+
+                    result = true;
+
+                    break;
+
             }
 
             return result;
