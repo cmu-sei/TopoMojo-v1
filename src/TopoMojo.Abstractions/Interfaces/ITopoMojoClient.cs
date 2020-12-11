@@ -16,6 +16,9 @@ namespace TopoMojo.Abstractions
         Task BuildIso(IsoBuildSpec spec);
         Task<string> Templates(int id);
         Task<WorkspaceSummary[]> List(Search search);
+        Task<Registration> Register(RegistrationRequest request);
+        Task<Challenge> Grade(Challenge challenge);
+        Task<Challenge> Hints(Challenge challenge);
     }
 
 }

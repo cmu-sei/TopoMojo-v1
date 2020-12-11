@@ -2,11 +2,13 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
@@ -24,17 +26,20 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             EngineService engineService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<TopologyHub, ITopoEvent> hub,
+            IDistributedCache cache
         ) : base(logger, identityResolver)
         {
             _engineService = engineService;
             _pod = podService;
             _hub = hub;
+            _cache = cache;
         }
 
         private readonly IHypervisorService _pod;
         private readonly EngineService _engineService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IDistributedCache _cache;
 
         /// <summary>
         /// List gamespaces published for a client.
@@ -42,7 +47,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="search"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [HttpGet("api/engine/gamespaces")]
+        [HttpGet("api/engine/workspaces")]
         public async Task<ActionResult<WorkspaceSummary>> List([FromQuery]Search search, CancellationToken ct)
         {
             var result = await _engineService.ListWorkspaces(search, ct);
@@ -125,5 +130,73 @@ namespace TopoMojo.Web.Controllers
         //     return Ok("See API documentation.");
         // }
 
+        /// <summary>
+        /// Register a gamespace on behalf of a user
+        /// </summary>
+        /// <param name="registration"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [HttpPost("api/engine/register")]
+        public async Task<Registration> Register([FromBody]RegistrationRequest registration, CancellationToken ct)
+        {
+            var result = await _engineService.Register(registration);
+
+            var opt = new DistributedCacheEntryOptions {
+                SlidingExpiration = new TimeSpan(0, 0, 60)
+            };
+
+            await _cache.SetStringAsync(
+                $"{TicketAuthentication.TicketCachePrefix}{result.Token}",
+                $"{result.SubjectId}#{result.SubjectName}",
+                //opt,
+                ct
+            );
+
+            string payload = JsonSerializer.Serialize<Registration>(result);
+
+            await _cache.SetStringAsync(
+                $"{AppConstants.RegistrationCachePrefix}{result.Token}",
+                payload,
+                //opt,
+                ct
+            );
+
+            // if url is just path, prepend host
+            if (!result.RedirectUrl.Contains("://"))
+            {
+                result.RedirectUrl = string.Format("{0}://{1}{2}{3}",
+                    Request.Scheme,
+                    Request.Host,
+                    Request.PathBase,
+                    result.RedirectUrl
+                );
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Grade a challenge
+        /// </summary>
+        /// <param name="challenge"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [HttpPost("api/engine/grade")]
+        public async Task<Challenge> Grade([FromBody]Challenge challenge, CancellationToken ct)
+        {
+            return await _engineService.Grade(challenge);
+        }
+
+        /// <summary>
+        /// Populate challenge hints
+        /// </summary>
+        /// <param name="challenge"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [HttpPost("api/engine/hints")]
+        public async Task<Challenge> Hints([FromBody]Challenge challenge, CancellationToken ct)
+        {
+            return await _engineService.Hints(challenge);
+        }
     }
 }

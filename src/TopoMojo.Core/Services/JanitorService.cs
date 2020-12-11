@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Collections.Generic;
@@ -147,16 +147,14 @@ namespace TopoMojo.Services
             }).ToArray();
         }
 
-        private Task RemoveVms(string[] ids)
+        private async Task RemoveVms(string[] ids)
         {
             var tasks = new List<Task>();
 
             foreach (var g in ids)
                 tasks.Add(_pod.DeleteAll(g));
 
-            Task.WaitAll(tasks.ToArray());
-
-            return Task.FromResult(0);
+            await Task.WhenAll(tasks.ToArray());
         }
 
         public async Task<JanitorReport[]> Cleanup(JanitorOptions options = null)

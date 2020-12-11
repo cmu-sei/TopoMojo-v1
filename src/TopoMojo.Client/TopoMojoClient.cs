@@ -104,6 +104,47 @@ namespace TopoMojo.Client
             return await Client.GetStringAsync($"templates/{id}");
         }
 
+        public async Task<Registration> Register(RegistrationRequest request)
+        {
+            var result = await Client.PostAsync("register", Json(request));
+
+            if (!result.IsSuccessStatusCode)
+                throw new Exception();
+
+            string data = await result.Content.ReadAsStringAsync();
+
+            var registration = JsonConvert.DeserializeObject<Registration>(data);
+
+            return registration;
+        }
+
+        public async Task<Challenge> Grade(Challenge challenge)
+        {
+            var result = await Client.PostAsync("grade", Json(challenge));
+
+            if (!result.IsSuccessStatusCode)
+                throw new Exception();
+
+            string data = await result.Content.ReadAsStringAsync();
+
+            var graded = JsonConvert.DeserializeObject<Challenge>(data);
+
+            return graded;
+        }
+
+        public async Task<Challenge> Hints(Challenge challenge)
+        {
+            var result = await Client.PostAsync("hints", Json(challenge));
+
+            if (!result.IsSuccessStatusCode)
+                throw new Exception();
+
+            string data = await result.Content.ReadAsStringAsync();
+
+            var hints = JsonConvert.DeserializeObject<Challenge>(data);
+
+            return hints;
+        }
     }
 
 }

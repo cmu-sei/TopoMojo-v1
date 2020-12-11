@@ -172,7 +172,7 @@ namespace TopoMojo.Web.Controllers
             foreach (var game in games)
                 tasklist.Add(_hub.Clients.Group(game.GlobalId).GameEvent(new BroadcastEvent<GameState>(User, "GAME.OVER", game)));
 
-            Task.WaitAll(tasklist.ToArray());
+            await Task.WhenAll(tasklist.ToArray());
 
             return Ok();
         }

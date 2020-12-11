@@ -9,6 +9,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TopoMojo.Extensions;
@@ -22,6 +23,7 @@ namespace TopoMojo.Web
         public const string AuthorizationHeaderName = "Authorization";
         public const string ChallengeHeaderName = "WWW-Authenticate";
         public const string QuerystringField = "access_token";
+        public const string TicketCachePrefix = "tkt:";
 
         public static class ClaimNames
         {
@@ -37,15 +39,18 @@ namespace TopoMojo.Web
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            IDataProtectionProvider dataProtection
+            IDataProtectionProvider dataProtection,
+            IDistributedCache cache
         )
             : base(options, logger, encoder, clock)
         {
             // _dp = dataProtection.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
             _dp = dataProtection.CreateProtector(AppConstants.DataProtectionPurpose);
+            _cache = cache;
         }
 
         private readonly IDataProtector _dp;
+        private readonly IDistributedCache _cache;
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -61,8 +66,8 @@ namespace TopoMojo.Web
                 string[] authHeader = Request.Headers[TicketAuthentication.AuthorizationHeaderName].ToString().Split(' ');
                 string scheme = authHeader[0];
                 if (authHeader.Length > 1
-                    && (scheme.Equals(TicketAuthentication.AuthenticationScheme)
-                    || scheme.Equals(TicketAuthentication.AltSchemeName))
+                    && (scheme.Equals(TicketAuthentication.AuthenticationScheme, StringComparison.OrdinalIgnoreCase)
+                    || scheme.Equals(TicketAuthentication.AltSchemeName, StringComparison.OrdinalIgnoreCase))
                 ) {
                     key = authHeader[1];
                 }
@@ -71,24 +76,36 @@ namespace TopoMojo.Web
             if (string.IsNullOrEmpty(key))
                 return AuthenticateResult.NoResult();
 
-            string[] value = _dp.Unprotect(key).Split(
-                new char[] { ' ', ';', ',', '|'},
-                StringSplitOptions.RemoveEmptyEntries
-            );
+            if (!key.StartsWith(TicketAuthentication.TicketCachePrefix))
+                key = TicketAuthentication.TicketCachePrefix + key;
 
-            bool expired = Int64.TryParse(value.First(), out long ticks)
-                ? DateTime.UtcNow.Ticks > ticks
-                : true;
+            string value = await _cache.GetStringAsync(key);
 
-            string identity = value.Last();
+            if (!value.HasValue())
+                return AuthenticateResult.NoResult();
 
-            string name = identity.Tag();
+            await _cache.RemoveAsync(key);
 
-            string subject = Guid.TryParse(identity.Untagged(), out Guid guid)
+            // string[] value = _dp.Unprotect(key).Split(
+            //     new char[] { ' ', ';', ',', '|'},
+            //     StringSplitOptions.RemoveEmptyEntries
+            // );
+
+            // bool expired = Int64.TryParse(value.First(), out long ticks)
+            //     ? DateTime.UtcNow.Ticks > ticks
+            //     : true;
+
+            // string identity = value.Last();
+
+            string identity = value.Untagged();
+
+            string name = value.Tag();
+
+            string subject = Guid.TryParse(identity, out Guid guid)
                 ? guid.ToString()
                 : "";
 
-            if (subject == null || expired)
+            if (subject == null) // || expired)
                 return AuthenticateResult.NoResult();
 
             var principal = new ClaimsPrincipal(

@@ -43,6 +43,13 @@ namespace TopoMojo.Data
                 .Select(p => p.Gamespace);
         }
 
+        public IQueryable<Gamespace> ListByProfile(string id)
+        {
+            return DbContext.Players
+                .Where(p => p.Person.GlobalId == id)
+                .Select(p => p.Gamespace);
+        }
+
         public override async Task<Gamespace> Load(int id)
         {
             return await base.Load(id, query => query

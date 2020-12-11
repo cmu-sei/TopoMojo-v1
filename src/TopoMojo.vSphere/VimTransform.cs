@@ -31,6 +31,10 @@ namespace TopoMojo.vSphere
                 vmcs.files = new VirtualMachineFileInfo { vmPathName = $"{datastore}/{template.Name}/{template.Name}.vmx" };
             }
 
+            //can't actually be applied via ExtraConfig on 6.7
+            if (template.GuestSettings.Any(c => c.Key == "firmware" && c.Value == "efi"))
+                vmcs.firmware = "efi";
+
             //can't actually be applied via ExtraConfig
             if (template.GuestSettings.Length > 0
                 && template.GuestSettings.Any(s => s.Key == "vhv.enable" && s.Value == "true"))

@@ -7,10 +7,12 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -150,7 +152,17 @@ namespace TopoMojo.Web
                 {
                     options.Clients = ApiKeyClients;
                 })
-                .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {});
+                .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {})
+                .AddCookie(AppConstants.CookieScheme, opt =>
+                {
+                    // opt.ExpireTimeSpan = new TimeSpan(4, 0, 0);
+                    // opt.SlidingExpiration = true;
+                    opt.Cookie = new CookieBuilder
+                    {
+                        Name = AppConstants.CookieScheme
+                    };
+                })
+                ;
 
             services.AddAuthorization(_ =>
             {
@@ -176,6 +188,21 @@ namespace TopoMojo.Web
                 _.AddPolicy("OneTimeTicket", new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
+                    .Build());
+
+                _.AddPolicy("Players", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        JwtBearerDefaults.AuthenticationScheme,
+                        AppConstants.CookieScheme
+                    )
+                    .Build());
+                _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        AppConstants.CookieScheme,
+                        TicketAuthentication.AuthenticationScheme
+                    )
                     .Build());
             });
 

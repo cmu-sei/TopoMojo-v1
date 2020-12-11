@@ -62,50 +62,77 @@ namespace TopoMojo.Services
             return Mapper.Map<Gamespace[]>(list);
         }
 
+        public async Task<GameState> Launch(Registration registration)
+        {
+            return await Launch(
+                await _workspaceStore.Load(registration.ResourceId),
+                registration.GamespaceId
+            );
+        }
+
         public async Task<GameState> Launch(int workspaceId)
+        {
+            return await Launch(
+                await _workspaceStore.Load(workspaceId)
+            );
+        }
+
+        private async Task<GameState> Launch(Data.Workspace workspace, string isolationId = null)
         {
             var gamespaces = await _gamespaceStore
                 .ListByProfile(User.Id)
                 .ToArrayAsync();
 
             var game = gamespaces
-                .Where(m => m.WorkspaceId == workspaceId)
+                .Where(m => m.WorkspaceId == workspace.Id)
                 .SingleOrDefault();
 
             if (game == null)
             {
-                var workspace = await _workspaceStore.Load(workspaceId);
-
-                if (workspace == null)
-                    throw new InvalidOperationException();
-
                 if (gamespaces.Length >= _options.GamespaceLimit)
                     throw new GamespaceLimitReachedException();
 
-                game = new Data.Gamespace
-                {
-                    Name = workspace.Name,
-                    Workspace = workspace,
-                    ShareCode = Guid.NewGuid().ToString("N"),
-                    Audience = "topomojo"
-                };
-
-                game.Players.Add(
-                    new Data.Player
-                    {
-                        PersonId = User.Id,
-                        Permission = Data.Permission.Manager
-                        // LastSeen = DateTime.UtcNow
-                    }
-                );
-
-                await _gamespaceStore.Add(game);
+                game = await Create(workspace, Client.Id, isolationId);
             }
 
-            return await Deploy(await _gamespaceStore.Load(game.Id));
+            await Deploy(game);
+
+            var state = await LoadState(game);
+
+            return state;
         }
 
-        private async Task<GameState> Deploy(Data.Gamespace gamespace)
+        private async Task<Data.Gamespace> Create(
+            Data.Workspace workspace,
+            string client,
+            string isolationId
+        )
+        {
+
+            var game = new Data.Gamespace
+            {
+                GlobalId = isolationId,
+                Name = workspace.Name,
+                Workspace = workspace,
+                ShareCode = Guid.NewGuid().ToString("n"),
+                Audience = client
+            };
+
+            game.Players.Add(
+                new Data.Player
+                {
+                    PersonId = User.Id,
+                    Permission = Data.Permission.Manager
+                    // LastSeen = DateTime.UtcNow
+                }
+            );
+
+            await _gamespaceStore.Add(game);
+
+            return game;
+        }
+
+        private async Task Deploy(Data.Gamespace gamespace)
         {
             var tasks = new List<Task<Vm>>();
 
@@ -120,16 +147,14 @@ namespace TopoMojo.Services
                 );
             }
 
-            Task.WaitAll(tasks.ToArray());
-
-            return await LoadState(gamespace, gamespace.WorkspaceId);
+            await Task.WhenAll(tasks.ToArray());
         }
 
         public async Task<GameState> Load(int id)
         {
             var gamespace = await _gamespaceStore.Load(id);
 
-            return await LoadState(gamespace, gamespace.WorkspaceId);
+            return await LoadState(gamespace);
         }
 
         public async Task<GameState> LoadFromWorkspace(int workspaceId)
@@ -138,56 +163,70 @@ namespace TopoMojo.Services
                 ? await _gamespaceStore.FindByContext(workspaceId, User.Id)
                 : null;
 
-            return await LoadState(gamespace, workspaceId);
+            if (gamespace is Data.Gamespace)
+                return await LoadState(gamespace);
+
+            var workspace = await _workspaceStore.Load(workspaceId);
+
+            return LoadState(workspace).Result;
         }
 
-        private async Task<GameState> LoadState(Data.Gamespace gamespace, int workspaceId)
+        private async Task<GameState> LoadState(Data.Gamespace gamespace)
         {
-            GameState state = null;
+            var state = Mapper.Map<GameState>(gamespace);
 
-            if (gamespace == null)
-            {
-                var workspace = await _workspaceStore.Load(workspaceId);
+            state.Vms = gamespace.Workspace.Templates
+                .Where(t => !t.IsHidden)
+                .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
+                .ToArray();
 
-                if (workspace == null || !workspace.IsPublished)
-                    throw new InvalidOperationException();
-
-                state = new GameState();
-
-                state.Name = gamespace?.Name ?? workspace.Name;
-
-                state.WorkspaceDocument = workspace.Document;
-
-                state.Vms = workspace.Templates
-                    .Where(t => !t.IsHidden)
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                    .ToArray();
-            }
-            else
-            {
-                state = Mapper.Map<GameState>(gamespace);
-
-                state.Vms = gamespace.Workspace.Templates
-                    .Where(t => !t.IsHidden)
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                    .ToArray();
-
-                state.MergeVms(await _pod.Find(gamespace.GlobalId));
-            }
+            state.MergeVms(await _pod.Find(gamespace.GlobalId));
 
             return state;
+        }
+
+        private Task<GameState> LoadState(Data.Workspace workspace)
+        {
+            if (workspace == null || !workspace.IsPublished)
+                throw new InvalidOperationException();
+
+            var state = new GameState();
+
+            state.Name = workspace.Name;
+
+            state.WorkspaceDocument = workspace.Document;
+
+            state.Vms = workspace.Templates
+                .Where(t => !t.IsHidden)
+                .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
+                .ToArray();
+
+            return Task.FromResult(state);
+        }
+
+        public async Task<GameState> Destroy(string id)
+        {
+            var gamespace = await _gamespaceStore.List()
+                .Include(g => g.Players)
+                .SingleOrDefaultAsync(g => g.GlobalId == id);
+
+            return await Destroy(gamespace);
         }
 
         public async Task<GameState> Destroy(int id)
         {
             var gamespace = await _gamespaceStore.Load(id);
+            return await Destroy(gamespace);
+        }
 
+        private async Task<GameState> Destroy(Data.Gamespace gamespace)
+        {
             if (gamespace == null || !gamespace.CanEdit(User))
-                throw new InvalidOperationException();
+                return null;
 
             await _pod.DeleteAll(gamespace.GlobalId);
 
-            await _gamespaceStore.Delete(id);
+            await _gamespaceStore.Delete(gamespace.Id);
 
             return Mapper.Map<GameState>(gamespace);
         }

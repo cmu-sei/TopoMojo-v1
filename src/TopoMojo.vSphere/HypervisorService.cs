@@ -231,7 +231,7 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
         public async Task StopAll(string target)
@@ -245,7 +245,7 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
 
@@ -261,38 +261,47 @@ namespace TopoMojo.vSphere
 
             if (tasks.Count > 0)
             {
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
         }
 
         public async Task<Vm> ChangeConfiguration(string id, VmKeyValue change)
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
+
             Vm vm = await Load(id);
+
             if (vm == null)
                 throw new InvalidOperationException();
 
             VimClient host = FindHostByVm(id);
             VmOptions vmo = null;
+
+            var segments = change.Value.Split(':');
+            string val = segments.First();
+            string tag = segments.Length > 1
+                ? $":{segments.Last()}"
+                : "";
+
             //sanitize inputs
             if (change.Key == "iso")
             {
                 // vmo = await GetVmIsoOptions(vm.Name.Tag());
                 // if (!vmo.Iso.Contains(change.Value))
                 //     throw new InvalidOperationException();
-                var isopath = new DatastorePath(change.Value);
+                var isopath = new DatastorePath(val);
                 isopath.Merge(host.Options.IsoStore);
                 change = new VmKeyValue
                 {
                     Key = "iso",
-                    Value = isopath.ToString()
+                    Value = isopath.ToString() + tag
                 };
             }
 
             if (change.Key == "net")
             {
                 vmo = await GetVmNetOptions(vm.Name.Tag());
-                if (!vmo.Net.Contains(change.Value))
+                if (!vmo.Net.Contains(val))
                     throw new InvalidOperationException();
             }
 

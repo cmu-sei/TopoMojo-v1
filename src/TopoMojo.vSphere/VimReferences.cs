@@ -17,5 +17,6 @@ namespace TopoMojo.vSphere
         public string UplinkSwitch { get; set; }
         public string DvsUuid { get; set; }
         public string ExcludeNetworkMask { get; set; } = "topomojo";
+        public string NetworkAllowAllSuffix { get; set; } = "-aa";
     }
 }

@@ -25,6 +25,8 @@ namespace TopoMojo.Data
             DbContext = dbContext;
 
             IdMap = idmap;
+
+            ScopedCache = new Dictionary<int, TEntity>();
             // _cache = cache;
 
             // _serializeSettings = new JsonSerializerSettings
@@ -42,7 +44,7 @@ namespace TopoMojo.Data
         public TopoMojoDbContext DbContext { get; }
         protected IMemoryCache IdMap { get; }
         // protected IDistributedCache _cache { get; }
-        protected Dictionary<int, TEntity> ScopedCache => new Dictionary<int, TEntity>();
+        protected Dictionary<int, TEntity> ScopedCache { get; }
         // protected Dictionary<string, int> IdMap => new Dictionary<string, int>();
         // protected JsonSerializerSettings _serializeSettings => new JsonSerializerSettings
         // {

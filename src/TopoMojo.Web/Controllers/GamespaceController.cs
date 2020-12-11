@@ -2,11 +2,15 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
@@ -14,7 +18,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Policy="Players")]
     [ApiController]
     public class GamespaceController : _Controller
     {
@@ -23,17 +27,20 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             GamespaceService gamespaceService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<TopologyHub, ITopoEvent> hub,
+            IDistributedCache cache
         ) : base(logger, identityResolver)
         {
             _gamespaceService = gamespaceService;
             _pod = podService;
             _hub = hub;
+            _cache = cache;
         }
 
         private readonly IHypervisorService _pod;
         private readonly GamespaceService _gamespaceService;
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IDistributedCache _cache;
 
         /// <summary>
         /// List user's running gamespaces.
@@ -86,6 +93,74 @@ namespace TopoMojo.Web.Controllers
             Log("launched", result);
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Start a gamespace with a registration token.
+        /// </summary>
+        /// <param name="token">registration token</param>
+        /// <returns></returns>
+        [HttpPost("api/launch/{token}")]
+        public async Task<GameState> LaunchRegistered(string token)
+        {
+            string data = await _cache.GetStringAsync($"{AppConstants.RegistrationCachePrefix}{token}");
+
+            if (string.IsNullOrEmpty(data))
+                throw new GamespaceNotRegistered();
+
+            try
+            {
+
+                var registration = JsonSerializer.Deserialize<Registration>(data);
+
+                var result = await _gamespaceService.Launch(registration);
+
+                result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
+
+                Log("launched", result);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+
+                throw new GamespaceNotRegistered(ex.Message);
+
+            }
+
+        }
+
+        /// <summary>
+        /// End a registered gamespace.
+        /// </summary>
+        /// <param name="token">Registration Token</param>
+        /// <returns></returns>
+        [HttpDelete("api/launch/{token}")]
+        public async Task<ActionResult> Destroy(string token)
+        {
+            string data = await _cache.GetStringAsync($"{AppConstants.RegistrationCachePrefix}{token}");
+
+            if (string.IsNullOrEmpty(data))
+                return Ok();
+
+            var registration = JsonSerializer.Deserialize<Registration>(data);
+
+            var result = await _gamespaceService.Destroy(registration.GamespaceId);
+
+            if (result != null)
+            {
+                Log("destroyed", result);
+
+                SendBroadcast(result, "OVER");
+            }
+
+            await _cache.RemoveAsync($"{AppConstants.RegistrationCachePrefix}{token}");
+
+            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
+                await HttpContext.SignOutAsync(AppConstants.CookieScheme);
+
+            return Ok();
         }
 
         /// <summary>

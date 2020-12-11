@@ -35,6 +35,13 @@ namespace TopoMojo.vSphere
                 spec.policy.security = new HostNetworkSecurityPolicy();
                 spec.policy.security.allowPromiscuous = true;
                 spec.policy.security.allowPromiscuousSpecified = true;
+                if (eth.Net.Untagged().EndsWith(_client.NetworkAllowAllSuffix))
+                {
+                    spec.policy.security.forgedTransmits = true;
+                    spec.policy.security.forgedTransmitsSpecified = true;
+                    spec.policy.security.macChanges = true;
+                    spec.policy.security.macChangesSpecified = true;
+                }
 
                 await _client.vim.AddPortGroupAsync(_client.net, spec);
 
