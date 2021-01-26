@@ -375,7 +375,19 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        _netman.UpdateEthernetCardBacking(card, newvalue);
+                        if (newvalue.Equals("_disconnected_"))
+                        {
+                            card.connectable = new VirtualDeviceConnectInfo()
+                            {
+                                connected = false,
+                                startConnected = false,
+                            };
+                        }
+                        else
+                        {
+                            _netman.UpdateEthernetCardBacking(card, newvalue);
+                            card.connectable.connected = true;
+                        }
 
                         vmcs.deviceChange = new VirtualDeviceConfigSpec[] {
                             new VirtualDeviceConfigSpec {
