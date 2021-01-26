@@ -298,7 +298,7 @@ namespace TopoMojo.vSphere
                 };
             }
 
-            if (change.Key == "net")
+            if (change.Key == "net" && !change.Value.Equals("_none_"))
             {
                 vmo = await GetVmNetOptions(vm.Name.Tag());
                 if (!vmo.Net.Contains(val))
