@@ -375,7 +375,7 @@ namespace TopoMojo.vSphere
 
                     if (card != null)
                     {
-                        if (newvalue.Equals("_none_"))
+                        if (newvalue.StartsWith("_none_"))
                         {
                             card.connectable = new VirtualDeviceConnectInfo()
                             {
