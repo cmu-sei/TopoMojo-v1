@@ -220,6 +220,13 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
+        [HttpPut("api/workspace/{id}/challenge")]
+        public async Task<IActionResult> Challenge([FromRoute]int id, [FromBody]ChallengeSpec model)
+        {
+            await _workspaceService.UpdateChallenge(id, model);
+
+            return Ok();
+        }
     }
 
 }

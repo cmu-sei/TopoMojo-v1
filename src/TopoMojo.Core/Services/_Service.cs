@@ -2,6 +2,8 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
@@ -22,11 +24,21 @@ namespace TopoMojo.Services
             _options = options;
             _identityResolver = identityResolver;
             Mapper = mapper;
+
+            jsonOptions = new JsonSerializerOptions
+            {
+                AllowTrailingCommas = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            jsonOptions.Converters.Add(
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+            );
         }
 
         protected IMapper Mapper { get; }
         protected ILogger _logger { get; }
         protected CoreOptions _options { get; }
+        protected JsonSerializerOptions jsonOptions { get; }
         private IIdentityResolver _identityResolver { get; }
         // private Data.Profile _user;
         // protected Data.Profile User

@@ -19,6 +19,7 @@ namespace TopoMojo.Data
         public bool IsPublished { get; set; }
         public string Detail { get; set; }
         public int? ParentId { get; set; }
+        public int Replicas { get; set; }
         public virtual Template Parent { get; set; }
         public int? WorkspaceId { get; set; }
         public virtual Workspace Workspace { get; set; }

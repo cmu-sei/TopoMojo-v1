@@ -27,6 +27,11 @@ namespace TopoMojo.Services
                 .ForMember(d => d.CanEdit, opt => opt.MapFrom((s) => s.Permission.CanEdit()))
             ;
 
+            CreateMap<ChallengeSpec, Challenge>();
+
+            CreateMap<QuestionSpec, Question>()
+                .ForMember(d => d.Answer, opt => opt.Ignore())
+            ;
         }
     }
 }

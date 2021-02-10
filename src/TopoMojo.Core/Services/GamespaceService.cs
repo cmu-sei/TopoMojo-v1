@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -31,12 +33,13 @@ namespace TopoMojo.Services
             _pod = podService;
             _gamespaceStore = gamespaceStore;
             _workspaceStore = workspaceStore;
+            _random = new Random();
         }
 
         private readonly IHypervisorService _pod;
         private readonly IGamespaceStore _gamespaceStore;
         private readonly IWorkspaceStore _workspaceStore;
-
+        private readonly Random _random;
         public async Task<Gamespace[]> List(string filter, CancellationToken ct = default(CancellationToken))
         {
             if (filter == "all")
@@ -109,7 +112,7 @@ namespace TopoMojo.Services
         )
         {
 
-            var game = new Data.Gamespace
+            var gamespace = new Data.Gamespace
             {
                 GlobalId = isolationId,
                 Name = workspace.Name,
@@ -118,7 +121,7 @@ namespace TopoMojo.Services
                 Audience = client
             };
 
-            game.Players.Add(
+            gamespace.Players.Add(
                 new Data.Player
                 {
                     PersonId = User.Id,
@@ -127,19 +130,133 @@ namespace TopoMojo.Services
                 }
             );
 
-            await _gamespaceStore.Add(game);
+            // glean randomize targets
+            var regex = new Regex("##[^#]*##");
 
-            return game;
+            var map = new Dictionary<string, string>();
+
+            foreach (var t in gamespace.Workspace.Templates)
+            {
+                foreach (Match match in regex.Matches(t.Guestinfo ?? ""))
+                    map.TryAdd(match.Value, "");
+
+                foreach (Match match in regex.Matches(t.Detail ?? t.Parent?.Detail ?? ""))
+                    map.TryAdd(match.Value, "");
+            }
+
+            // clone challenge
+            var spec = new ChallengeSpec();
+            if (!string.IsNullOrEmpty(workspace.Challenge))
+            {
+                spec = JsonSerializer.Deserialize<ChallengeSpec>(workspace.Challenge ?? "{}", jsonOptions);
+
+                foreach (string answer in spec.Questions.Select(q => q.Answer))
+                    foreach (Match match in regex.Matches(answer))
+                        map.TryAdd(match.Value, "");
+            }
+
+            // resolve macros
+            foreach (string key in map.Keys.ToArray())
+                map[key] = ResolveRandom(key);
+
+            // apply macros to spec answers
+            foreach (var q in spec.Questions)
+                foreach (string key in map.Keys)
+                    q.Answer = q.Answer.Replace(key, map[key]);
+
+            spec.Randoms = map;
+
+            gamespace.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
+
+            await _gamespaceStore.Add(gamespace);
+
+            return gamespace;
+        }
+
+        private string ResolveRandom(string key)
+        {
+            string result = "";
+
+            string[] seg = key.Replace("#", "").Split(':');
+
+            int count = 8;
+
+            switch (seg[1])
+            {
+                case "uid":
+                result = Guid.NewGuid().ToString("N");
+                break;
+
+                case "hex":
+                if (seg.Length < 3 || !int.TryParse(seg[2], out count))
+                    count = 8;
+                count = Math.Min(count, 64);
+
+                while (result.Length < count)
+                    result += _random.Next().ToString("x8");
+
+                break;
+
+                case "b64":
+                if (seg.Length < 3 || !int.TryParse(seg[2], out count))
+                    count = 16;
+                count = Math.Min(count, 64);
+                byte[] buffer = new byte[count];
+                _random.NextBytes(buffer);
+                result = Convert.ToBase64String(buffer);
+                break;
+
+                case "int":
+                default:
+                int min = 0;
+                int max = int.MaxValue;
+                if (seg.Length > 2)
+                {
+                    string[] range = seg[2].Split('-');
+                    if (range.Length > 1)
+                    {
+                        int.TryParse(range[0], out min);
+                        int.TryParse(range[1], out max);
+                    }
+                    else
+                    {
+                        int.TryParse(range[0], out max);
+                    }
+                }
+                result = _random.Next(min, max).ToString();
+                break;
+            }
+
+            return result;
+
+            // ##target:type:range##
+            // ##jam:hex:8##
+            // ##jam:b64:24##
+            // ##jam:uid:0##
+            // ##jam:int:99-9999##
+            // ##jam:net:x.x.x.0##
+            // ##jam:ip4:x.x.x.x##
         }
 
         private async Task Deploy(Data.Gamespace gamespace)
         {
             var tasks = new List<Task<Vm>>();
 
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
+
             var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Workspace.Templates);
 
             foreach (var template in templates)
             {
+                // apply template macro substitutions
+                foreach (string key in spec.Randoms.Keys)
+                {
+                    template.Guestinfo = template.Guestinfo?.Replace(key, spec.Randoms[key]);
+                    template.Detail = template.Detail?.Replace(key, spec.Randoms[key]);
+                }
+
+                // TODO: add template replicas
+
                 tasks.Add(
                     _pod.Deploy(
                         template.ToVirtualTemplate(gamespace.GlobalId)

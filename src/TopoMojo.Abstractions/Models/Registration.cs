@@ -24,10 +24,26 @@ namespace TopoMojo.Models
         public string ResourceId { get; set; }
     }
 
+    public class ChallengeSpec
+    {
+        public ICollection<QuestionSpec> Questions { get; set; } = new List<QuestionSpec>();
+        public Dictionary<string,string> Randoms { get; set; } = new Dictionary<string, string>();
+    }
+
+    public class QuestionSpec
+    {
+        public string Text { get; set; }
+        public string Hint { get; set; }
+        public string Answer { get; set; }
+        public float Weight { get; set; }
+        public AnswerGrader Grader { get; set; }
+    }
+
     public class Challenge
     {
         public string GamespaceId { get; set; }
-        public ICollection<Question> Questions { get; set; }
+        public ICollection<Question> Questions { get; set; } = new List<Question>();
+        public float Score { get; set; }
     }
 
     public class Question
@@ -35,8 +51,14 @@ namespace TopoMojo.Models
         public string Text { get; set; }
         public string Hint { get; set; }
         public string Answer { get; set; }
-        public float Points { get; set; }
-        public bool IsCorrect => Points > 0;
+        public float Weight { get; set; }
+        public bool IsCorrect { get; set; }
     }
 
+    public enum AnswerGrader
+    {
+        Match,
+        MatchAll,
+        MatchAny
+    }
 }
