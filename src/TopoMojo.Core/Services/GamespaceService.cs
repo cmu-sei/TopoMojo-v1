@@ -150,14 +150,38 @@ namespace TopoMojo.Services
             {
                 spec = JsonSerializer.Deserialize<ChallengeSpec>(workspace.Challenge ?? "{}", jsonOptions);
 
-                foreach (string answer in spec.Questions.Select(q => q.Answer))
-                    foreach (Match match in regex.Matches(answer))
-                        map.TryAdd(match.Value, "");
+                foreach (var question in spec.Questions)
+                    foreach (Match match in regex.Matches(question.Answer))
+                    {
+                        string key = match.Value;
+                        string val = "";
+
+                        if (key.Contains(":list##"))
+                        {
+                            string[] list = question.Answer
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                .Skip(1)
+                                .ToArray();
+
+                            if (list.Length > 0)
+                            {
+                                val = list[_random.Next(list.Length)];
+
+                                question.Answer = key;
+
+                                if (map.ContainsKey(key))
+                                    map[key] = val;
+                            }
+                        }
+
+                        map.TryAdd(key, val);
+                    }
             }
 
             // resolve macros
             foreach (string key in map.Keys.ToArray())
-                map[key] = ResolveRandom(key);
+                if (string.IsNullOrEmpty(map[key]))
+                    map[key] = ResolveRandom(key);
 
             // apply macros to spec answers
             foreach (var q in spec.Questions)
@@ -234,6 +258,7 @@ namespace TopoMojo.Services
             // ##jam:b64:24##
             // ##jam:uid:0##
             // ##jam:int:99-9999##
+            // ##jam:list## one two three
             // ##jam:net:x.x.x.0##
             // ##jam:ip4:x.x.x.x##
         }
