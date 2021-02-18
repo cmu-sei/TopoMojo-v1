@@ -18,6 +18,7 @@ namespace TopoMojo.Data
         public string Audience { get; set; }
         public int WorkspaceId { get; set; }
         public virtual Workspace Workspace { get; set; }
+        public string Challenge { get; set; }
         public virtual ICollection<Player> Players { get; set; } = new List<Player>();
     }
 

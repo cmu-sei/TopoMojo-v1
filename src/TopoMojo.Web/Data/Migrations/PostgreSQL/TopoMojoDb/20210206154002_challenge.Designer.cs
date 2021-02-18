@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TopoMojo.Data;
@@ -9,9 +10,10 @@ using TopoMojo.Data;
 namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContextPostgreSQL))]
-    partial class TopoMojoDbContextPostgreSQLModelSnapshot : ModelSnapshot
+    [Migration("20210206154002_challenge")]
+    partial class challenge
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,8 +66,7 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(64);
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("character varying(4096)")
-                        .HasMaxLength(4096);
+                        .HasColumnType("text");
 
                     b.Property<string>("GlobalId")
                         .IsRequired()
@@ -171,8 +172,8 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(255);
 
                     b.Property<string>("Detail")
-                        .HasColumnType("character varying(4096)")
-                        .HasMaxLength(4096);
+                        .HasColumnType("character varying(2048)")
+                        .HasMaxLength(2048);
 
                     b.Property<string>("GlobalId")
                         .IsRequired()
@@ -181,8 +182,8 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(36);
 
                     b.Property<string>("Guestinfo")
-                        .HasColumnType("character varying(1024)")
-                        .HasMaxLength(1024);
+                        .HasColumnType("character varying(255)")
+                        .HasMaxLength(255);
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("boolean");
@@ -298,8 +299,7 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(64);
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("character varying(4096)")
-                        .HasMaxLength(4096);
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("character varying(255)")

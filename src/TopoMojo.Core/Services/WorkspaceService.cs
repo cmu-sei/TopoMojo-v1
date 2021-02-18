@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -171,6 +172,34 @@ namespace TopoMojo.Services
             await _workspaceStore.Update(entity);
 
             return Mapper.Map<Workspace>(entity, WithActor());
+        }
+
+        public async Task UpdateChallenge(int id, ChallengeSpec spec)
+        {
+            var entity = await _workspaceStore.Load(id);
+
+            if (entity == null || !entity.CanEdit(User))
+                throw new InvalidOperationException();
+
+            // spec.Randoms.Clear();
+
+            // hydrate question weights
+            var unweighted = spec.Questions.Where(q => q.Weight == 0).ToArray();
+            float max = spec.Questions.Sum(q => q.Weight);
+            if (unweighted.Any())
+            {
+                float val = (1 - max) / unweighted.Length;
+                foreach(var q in unweighted.Take(unweighted.Length - 1))
+                {
+                    q.Weight = val;
+                    max += val;
+                }
+                unweighted.Last().Weight = 1 - max;
+            }
+
+            entity.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
+
+            await _workspaceStore.Update(entity);
         }
 
         /// <summary>

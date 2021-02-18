@@ -24,6 +24,7 @@ namespace TopoMojo.Data
         public bool UseUplinkSwitch { get; set; }
         public int LaunchCount { get; set; }
         public DateTime LastActivity { get; set; }
+        public string Challenge { get; set; }
         public virtual ICollection<Worker> Workers { get; set; } = new List<Worker>();
         public virtual ICollection<Gamespace> Gamespaces { get; set; } = new List<Gamespace>();
         public virtual ICollection<Template> Templates { get; set; } = new List<Template>();

@@ -271,12 +271,12 @@ namespace TopoMojo.Services
 
         public async Task Destroy(string globalId)
         {
+            await _pod.DeleteAll(globalId);
+
             var gamespace = await _gamespaceStore.Load(globalId);
 
             if (gamespace == null)
-                throw new InvalidOperationException();
-
-            await _pod.DeleteAll(gamespace.GlobalId);
+                return;
 
             await _gamespaceStore.Delete(gamespace.Id);
         }
@@ -431,14 +431,14 @@ namespace TopoMojo.Services
             string id = game?.GlobalId ?? Guid.NewGuid().ToString();
             string token = Guid.NewGuid().ToString("n");
 
-            var challenge = new Challenge
+            Challenge challenge = null;
+            try
             {
-                GamespaceId = id,
-                Questions = new Question[] {
-                    new Question { Text = "What is flag A?" },
-                    new Question { Text = "What is flag B?" },
-                }
-            };
+                var spec = JsonSerializer.Deserialize<ChallengeSpec>(workspace.Challenge, jsonOptions);
+                challenge = Mapper.Map<Challenge>(spec);
+                challenge.GamespaceId = id;
+            }
+            catch {}
 
             return new Registration{
                 SubjectId = registration.SubjectId,
@@ -454,27 +454,81 @@ namespace TopoMojo.Services
 
         public async Task<Challenge> Grade(Challenge challenge)
         {
-            // TODO: Demo only, implement actual
-            foreach(var q in challenge.Questions)
+            var gamespace = await _gamespaceStore.Load(challenge.GamespaceId);
+
+            if (gamespace == null || string.IsNullOrEmpty(gamespace.Challenge))
+                throw new ResourceNotFound();
+
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge, jsonOptions);
+
+            int index = -1;
+
+            foreach (var q in challenge.Questions)
             {
-                if (q.Answer.Equals(challenge.GamespaceId))
-                {
-                    q.Points = 50;
-                }
+                index += 1;
+
+                var qs = spec.Questions.Skip(index).Take(1).FirstOrDefault();
+
+                if (qs == null)
+                    continue;
+
+                q.IsCorrect = GradeQuestion(qs.Grader, qs.Answer, q.Answer);
             }
+
+            challenge.Score = challenge.Questions
+                .Where(q => q.IsCorrect)
+                .Select(q => q.Weight)
+                .Sum();
+
             return await Task.FromResult(challenge);
+        }
+
+        private bool GradeQuestion(AnswerGrader grader, string expected, string submitted)
+        {
+            string[] a = expected.ToLower().Replace(" ", "").Split('|');
+            string b = submitted.ToLower().Replace(" ", "");
+
+            switch (grader) {
+
+                case AnswerGrader.Match:
+                return a.First().Equals(b);
+
+                case AnswerGrader.MatchAny:
+                return a.Contains(b);
+
+                case AnswerGrader.MatchAll:
+                return a.Intersect(
+                    b.Split(new char[] { ',', ';', ':', '|'})
+                ).ToArray().Length == a.Length;
+
+            }
+
+            return false;
         }
 
         public async Task<Challenge> Hints(Challenge challenge)
         {
-            // TODO: Demo only, implement actual
-            foreach(var q in challenge.Questions)
+            var gamespace = await _gamespaceStore.Load(challenge.GamespaceId);
+
+            if (gamespace == null || string.IsNullOrEmpty(gamespace.Challenge))
+                throw new ResourceNotFound();
+
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge, jsonOptions);
+
+            int index = -1;
+
+            foreach (var q in challenge.Questions)
             {
-                if (q.Points == 0)
-                {
-                    q.Hint = "Try the Gamespace Id.";
-                }
+                index += 1;
+
+                var qs = spec.Questions.Skip(index).Take(1).FirstOrDefault();
+
+                if (qs == null)
+                    continue;
+
+                q.Hint = qs.Hint;
             }
+
             return await Task.FromResult(challenge);
         }
     }
