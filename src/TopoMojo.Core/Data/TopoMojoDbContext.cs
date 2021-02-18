@@ -24,6 +24,7 @@ namespace TopoMojo.Data
                 b.Property(w => w.Audience).HasMaxLength(64);
                 b.Property(w => w.DocumentUrl).HasMaxLength(128);
                 b.Property(w => w.Description).HasMaxLength(255);
+                b.Property(w => w.Challenge).HasMaxLength(4096);
             });
 
             builder.Entity<Gamespace>(b => {
@@ -31,6 +32,7 @@ namespace TopoMojo.Data
                 b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Audience).HasMaxLength(64);
+                b.Property(w => w.Challenge).HasMaxLength(4096);
             });
 
             builder.Entity<Template>(b => {
@@ -38,9 +40,9 @@ namespace TopoMojo.Data
                 b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Description).HasMaxLength(255);
-                b.Property(w => w.Guestinfo).HasMaxLength(255);
+                b.Property(w => w.Guestinfo).HasMaxLength(1024);
                 b.Property(w => w.Networks).HasMaxLength(64);
-                b.Property(w => w.Detail).HasMaxLength(2048);
+                b.Property(w => w.Detail).HasMaxLength(4096);
             });
 
             builder.Entity<User>(b => {

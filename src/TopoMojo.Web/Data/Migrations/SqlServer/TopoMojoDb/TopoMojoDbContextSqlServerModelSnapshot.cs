@@ -64,7 +64,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(64);
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(4096);
 
                     b.Property<string>("GlobalId")
                         .IsRequired()
@@ -170,8 +171,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(255);
 
                     b.Property<string>("Detail")
-                        .HasColumnType("nvarchar(2048)")
-                        .HasMaxLength(2048);
+                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(4096);
 
                     b.Property<string>("GlobalId")
                         .IsRequired()
@@ -180,8 +181,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(36);
 
                     b.Property<string>("Guestinfo")
-                        .HasColumnType("nvarchar(255)")
-                        .HasMaxLength(255);
+                        .HasColumnType("nvarchar(1024)")
+                        .HasMaxLength(1024);
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("bit");
@@ -297,7 +298,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(64);
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(4096);
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(255)")
