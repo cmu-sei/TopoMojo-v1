@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TopoMojo.Abstractions;
@@ -75,7 +76,9 @@ namespace TopoMojo.Client
 
         public async Task<ConsoleSummary> Ticket(string vmId)
         {
-            string data = await Client.GetStringAsync($"vm-console/{vmId}");
+            string data = await Client.GetStringAsync(
+                HttpUtility.UrlEncode($"vm-console/{vmId}")
+            );
             var info = JsonConvert.DeserializeObject<ConsoleSummary>(data);
             return info;
         }
