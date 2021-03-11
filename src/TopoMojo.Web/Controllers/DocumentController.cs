@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
+using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web.Models;
 
@@ -24,24 +26,28 @@ namespace TopoMojo.Web.Controllers
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
             WorkspaceService workspaceService,
-            FileUploadOptions uploadOptions
+            FileUploadOptions uploadOptions,
+            IHubContext<TopologyHub, ITopoEvent> hub
         ) : base(logger, identityResolver)
         {
             _uploadOptions = uploadOptions;
             _workspaceService = workspaceService;
+            _hub = hub;
         }
 
         private readonly WorkspaceService _workspaceService;
         private readonly FileUploadOptions _uploadOptions;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         /// <summary>
         /// Save markdown as document.
         /// </summary>
         /// <param name="id">Workspace Id</param>
         /// <param name="text">Markdown text</param>
+        /// <param name="fromTyping">Cause of save was automatic from user typing</param>
         /// <returns></returns>
         [HttpPut("api/document/{id}")]
-        public async Task<ActionResult> Save(string id, [FromBody]string text)
+        public async Task<ActionResult> Save(string id, [FromBody]string text, bool fromTyping = false)
         {
             if (!await _workspaceService.CanEdit(id))
                 return Forbid();
@@ -49,8 +55,10 @@ namespace TopoMojo.Web.Controllers
             string path = BuildPath();
 
             path = System.IO.Path.Combine(path, id + ".md");
-
             System.IO.File.WriteAllText(path, text);
+            
+            if (fromTyping)
+                SendBroadcast(id, "saved", text);
 
             return Ok();
         }
@@ -137,6 +145,22 @@ namespace TopoMojo.Web.Controllers
                 System.IO.Directory.CreateDirectory(path);
 
             return path;
+        }
+
+        private void SendBroadcast(string roomId, string action, string text)
+        {
+            _hub.Clients
+                .Group(roomId)
+                .DocumentEvent(
+                    new BroadcastEvent<Document>(
+                        User,
+                        "DOCUMENT." + action.ToUpper(),
+                        new Document {
+                            Text = text,
+                            WhenSaved = DateTime.UtcNow.ToString("u")
+                        }
+                    )
+                );
         }
 
     }
