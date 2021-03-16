@@ -58,7 +58,7 @@ namespace TopoMojo.Web.Controllers
             System.IO.File.WriteAllText(path, text);
             
             if (fromTyping)
-                SendBroadcast(id, "saved", text);
+                SendBroadcast($"{id}-doc", "saved", text);
 
             return Ok();
         }
