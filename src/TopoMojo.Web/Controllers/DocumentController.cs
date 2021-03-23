@@ -44,10 +44,9 @@ namespace TopoMojo.Web.Controllers
         /// </summary>
         /// <param name="id">Workspace Id</param>
         /// <param name="text">Markdown text</param>
-        /// <param name="fromTyping">Cause of save was automatic from user typing</param>
         /// <returns></returns>
         [HttpPut("api/document/{id}")]
-        public async Task<ActionResult> Save(string id, [FromBody]string text, bool fromTyping = false)
+        public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
             if (!await _workspaceService.CanEdit(id))
                 return Forbid();
@@ -57,7 +56,6 @@ namespace TopoMojo.Web.Controllers
             path = System.IO.Path.Combine(path, id + ".md");
             System.IO.File.WriteAllText(path, text);
             
-            if (fromTyping)
                 SendBroadcast($"{id}-doc", "saved", text);
 
             return Ok();
