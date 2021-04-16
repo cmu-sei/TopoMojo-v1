@@ -120,14 +120,14 @@ namespace TopoMojo.Data
                 .AnyAsync(g => g.WorkspaceId == id);
         }
 
-        public async Task<Workspace[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true)
+        public async Task<Workspace[]> DeleteStale(DateTime staleMarker, bool published, bool dryrun = true)
         {
             var query = published
-                ? DbContext.Workspaces.Where(w => w.IsPublished || w.Audience.Length > 0)
-                : DbContext.Workspaces.Where(w => !w.IsPublished && w.Audience.Length == 0);
+                ? DbContext.Workspaces.Where(w => w.IsPublished || !string.IsNullOrWhiteSpace(w.Audience))
+                : DbContext.Workspaces.Where(w => !w.IsPublished && string.IsNullOrWhiteSpace(w.Audience));
 
             var results = await query
-                .Where(g => g.LastActivity < staleAfter)
+                .Where(g => g.LastActivity < staleMarker)
                 .ToArrayAsync();
 
             if (!dryrun)

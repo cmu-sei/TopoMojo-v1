@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace TopoMojo.Extensions
 {
     public static class StringExtensions
     {
-public static bool HasValue(this string s)
+        public static bool HasValue(this string s)
         {
             return (!String.IsNullOrWhiteSpace(s));
         }

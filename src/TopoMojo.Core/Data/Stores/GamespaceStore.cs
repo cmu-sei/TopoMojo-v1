@@ -116,10 +116,10 @@ namespace TopoMojo.Data
             await base.Delete(id);
         }
 
-        public async Task<Gamespace[]> DeleteStale(DateTime staleAfter, bool dryrun = true)
+        public async Task<Gamespace[]> DeleteStale(DateTime staleMarker, bool dryrun = true)
         {
             var results = await DbContext.Gamespaces
-                .Where(g => g.LastActivity < staleAfter)
+                .Where(g => g.LastActivity < staleMarker)
                 .ToArrayAsync();
 
             if (!dryrun)
