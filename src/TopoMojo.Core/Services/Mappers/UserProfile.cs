@@ -18,6 +18,8 @@ namespace TopoMojo.Services
             ;
 
             CreateMap<ChangedUser, Data.User>();
+
+            CreateMap<ChangedUser, User>();
         }
     }
 }

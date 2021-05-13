@@ -104,6 +104,13 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
+        [HttpPost("api/user/register")]
+        public async Task<User> Register([FromBody] ChangedUser model)
+        {
+            model.GlobalId = User.Subject();
+            return await _userService.GetOrAdd(model);
+        }
+
         /// <summary>
         /// Get one-time auth ticket.
         /// </summary>

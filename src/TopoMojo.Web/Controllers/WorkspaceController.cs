@@ -67,6 +67,18 @@ namespace TopoMojo.Web.Controllers
 
             return Ok(workspace);
         }
+        /// <summary>
+        /// Load a workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/v2/workspace/{id}")]
+        public async Task<ActionResult<Workspace>> Load(string id)
+        {
+            Workspace workspace = await _workspaceService.Load(id);
+
+            return Ok(workspace);
+        }
 
         /// <summary>
         /// Create a new workspace.
@@ -202,9 +214,9 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/worker/{code}")]
         public async Task<ActionResult> Enlist(string code)
         {
-            await _workspaceService.Enlist(code);
-
-            return Ok();
+            return Ok(
+                await _workspaceService.Enlist(code)
+            );
         }
 
         /// <summary>

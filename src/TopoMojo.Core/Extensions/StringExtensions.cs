@@ -215,7 +215,7 @@ namespace TopoMojo.Extensions
                 if (!exclude.Contains(c))
                     p += c;
 
-            return p;
+            return p.Replace(" ", "_");
         }
 
         public static string SanitizeFilename(this string target)

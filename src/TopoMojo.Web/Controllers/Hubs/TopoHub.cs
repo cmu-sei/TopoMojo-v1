@@ -35,7 +35,10 @@ namespace TopoMojo.Web.Controllers
         public Task Listen(string channelId)
         {
             _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
+            // TODO: verify worker
+
             Groups.AddToGroupAsync(Context.ConnectionId, channelId);
+
             var cc = new CachedConnection
             {
                 Id = Context.ConnectionId,
@@ -43,15 +46,20 @@ namespace TopoMojo.Web.Controllers
                 ProfileName = Context.User?.FindFirstValue("name"),
                 Room = channelId
             };
+
             _cache.Connections.TryAdd(cc.Id, cc);
+
             return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
 
         public Task Leave(string channelId)
         {
             _logger.LogDebug($"leave {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
+
             Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
+
             _cache.Connections.TryRemove(Context.ConnectionId, out CachedConnection cc);
+
             return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.DEPARTED"));
         }
 
@@ -152,10 +160,11 @@ namespace TopoMojo.Web.Controllers
     {
         public static Actor AsActor(this System.Security.Principal.IPrincipal user)
         {
+            var principal = user as ClaimsPrincipal;
             return new Actor
             {
-                Id = ((ClaimsPrincipal)user).FindFirstValue(JwtRegisteredClaimNames.Sub),
-                Name = ((ClaimsPrincipal)user).FindFirstValue("name")
+                Id = principal.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                Name = principal.FindFirstValue("name")
             };
         }
     }

@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -109,6 +110,16 @@ namespace TopoMojo.Services
         /// <param name="id"></param>
         /// <returns>Workspace</returns>
         public async Task<Workspace> Load(int id)
+        {
+            Data.Workspace topo = await _workspaceStore.Load(id);
+
+            if (topo == null)
+                throw new InvalidOperationException();
+
+            return Mapper.Map<Workspace>(topo, WithActor());
+        }
+
+        public async Task<Workspace> Load(string id)
         {
             Data.Workspace topo = await _workspaceStore.Load(id);
 
@@ -312,7 +323,7 @@ namespace TopoMojo.Services
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        public async Task Enlist(string code)
+        public async Task<WorkspaceSummary> Enlist(string code)
         {
             var workspace = await _workspaceStore.FindByShareCode(code);
 
@@ -330,6 +341,8 @@ namespace TopoMojo.Services
 
                 await _workspaceStore.Update(workspace);
             }
+
+            return Mapper.Map<WorkspaceSummary>(workspace, WithActor());
         }
 
         /// <summary>

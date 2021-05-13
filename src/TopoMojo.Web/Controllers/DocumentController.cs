@@ -4,6 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -40,6 +42,41 @@ namespace TopoMojo.Web.Controllers
         private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         /// <summary>
+        /// Load workspace document
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <param name="ct">Cancellation Token</param>
+        /// <returns></returns>
+        [HttpGet("api/document/{id}")]
+        public async Task<ActionResult<string>> Load(string id, CancellationToken ct)
+        {
+            if (!await _workspaceService.CanEdit(id))
+                return Forbid();
+
+            string path = BuildPath();
+
+            path = System.IO.Path.Combine(path, id + ".md");
+
+            if (!System.IO.File.Exists(path))
+                return Ok("");
+
+            string result = await System.IO.File.ReadAllTextAsync(path, ct);
+
+            if (string.IsNullOrEmpty(result))
+                return Ok("");
+
+            // string token = new Random().Next().ToString("x");
+            // string find = "(\\[.*\\]\\([^)]*)";
+            // string replace = $"$1?t={token}";
+
+            // result = Regex.Replace(result, "\\?t=[^)]*", "");
+            // result = Regex.Replace(result, find, replace);
+            // // add token/id to cache for 30s
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Save markdown as document.
         /// </summary>
         /// <param name="id">Workspace Id</param>
@@ -74,8 +111,8 @@ namespace TopoMojo.Web.Controllers
 
             string path = Path.Combine(_uploadOptions.DocRoot, id);
 
-            // if (!Directory.Exists(path))
-            //     return Ok(new ImageFile[]{});
+            if (!Directory.Exists(path))
+                return Ok(new ImageFile[]{});
 
             return Ok(
                 Directory.GetFiles(path)
@@ -122,6 +159,16 @@ namespace TopoMojo.Web.Controllers
 
             string filename = file.FileName.SanitizeFilename();
 
+            if (filename.Length > 50)
+                filename = filename.Substring(0, 50);
+
+            string ext = Path.GetExtension(filename);
+
+            filename = filename.Replace(
+                ext,
+                $"-{new Random().Next()}{ext}"
+            );
+
             path = Path.Combine(path, filename);
 
             using (var stream = new FileStream(path, FileMode.Create))
@@ -139,7 +186,7 @@ namespace TopoMojo.Web.Controllers
             foreach (string s in segments)
                 path = System.IO.Path.Combine(path, s);
 
-            if (!System.IO.Directory.Exists(path))
+            if (!System.IO.Directory.Exists(path) && !System.IO.File.Exists(path))
                 System.IO.Directory.CreateDirectory(path);
 
             return path;

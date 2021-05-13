@@ -107,5 +107,18 @@ namespace TopoMojo.Services
             return await _userStore.MemberOf(globalId, User);
         }
 
+        public async Task<User> GetOrAdd(ChangedUser model)
+        {
+            var user = await Load(model.GlobalId);
+
+            if (user == null)
+            {
+                user = await Add(
+                    Mapper.Map<User>(model)
+                );
+            }
+
+            return user;
+        }
     }
 }

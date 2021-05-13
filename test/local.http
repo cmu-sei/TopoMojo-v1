@@ -1,6 +1,8 @@
-@api = http://localhost:5004/api
-# @api = https://topomojo.cyberforce.site/api
+# @api = http://localhost:5004/api
+@api = https://topomojo.cyberforce.site/api
 @json = Content-Type: application/json
+@apikey = x-api-key: MJmWAjxMrTBNPwUtFzlJwW6smZthpRaY
+#123456
 
 ###
 GET {{api}}/workspaces
@@ -29,3 +31,18 @@ POST http://localhost:5000/api/resource/devimport
         }
     ]
 }
+
+###
+POST {{api}}/engine/register
+{{apikey}}
+{{json}}
+
+{
+    "subjectId": "74d8b503-50be-40ec-a553-895a6afc1f37",
+    "subjectName": "Jeff.Mattson",
+    "resourceId": "e4b2d5a9-e0db-4562-9366-cbc0f69c95aa"
+}
+
+###
+DELETE {{api}}/engine/gamespace/edc58568-d7bf-4563-988e-0725b5a17b7d
+{{apikey}}
