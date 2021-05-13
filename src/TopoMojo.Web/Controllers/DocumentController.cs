@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
+using TopoMojo.Models;
 using TopoMojo.Services;
 using TopoMojo.Web.Models;
 
@@ -24,15 +26,18 @@ namespace TopoMojo.Web.Controllers
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
             WorkspaceService workspaceService,
-            FileUploadOptions uploadOptions
+            FileUploadOptions uploadOptions,
+            IHubContext<TopologyHub, ITopoEvent> hub
         ) : base(logger, identityResolver)
         {
             _uploadOptions = uploadOptions;
             _workspaceService = workspaceService;
+            _hub = hub;
         }
 
         private readonly WorkspaceService _workspaceService;
         private readonly FileUploadOptions _uploadOptions;
+        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
 
         /// <summary>
         /// Save markdown as document.
@@ -49,8 +54,9 @@ namespace TopoMojo.Web.Controllers
             string path = BuildPath();
 
             path = System.IO.Path.Combine(path, id + ".md");
-
             System.IO.File.WriteAllText(path, text);
+            
+                SendBroadcast($"{id}-doc", "saved", text);
 
             return Ok();
         }
@@ -137,6 +143,24 @@ namespace TopoMojo.Web.Controllers
                 System.IO.Directory.CreateDirectory(path);
 
             return path;
+        }
+
+        private void SendBroadcast(string roomId, string action, string text)
+        {
+            DateTime currentDatetime = DateTime.UtcNow;
+            _hub.Clients
+                .Group(roomId)
+                .DocumentEvent(
+                    new BroadcastEvent<Document>(
+                        User,
+                        "DOCUMENT." + action.ToUpper(),
+                        new Document {
+                            Text = text,
+                            WhenSaved = currentDatetime.ToString("u"),
+                            Timestamp = currentDatetime.ToString("ss.ffff")
+                        }
+                    )
+                );
         }
 
     }

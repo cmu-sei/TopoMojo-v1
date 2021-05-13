@@ -84,6 +84,21 @@ namespace TopoMojo.Web.Controllers
             return Clients.OthersInGroup(model.WorkspaceGlobalId).TemplateEvent(new BroadcastEvent<Template>(Context.User, action, model));
         }
 
+        public Task Edited(string channelId, object textDiff)
+        {
+            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<object>(Context.User, "DOCUMENT.UPDATED", textDiff));
+        }
+
+        public Task CursorChanged(string channelId, object positions)
+        {
+            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<object>(Context.User, "DOCUMENT.CURSOR", positions));
+        }
+
+        public Task Editing(string channelId, bool val)
+        {
+            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<Document>(Context.User, (val) ? "DOCUMENT.TYPING" : "DOCUMENT.IDLE", null));
+        }
+
     }
 
     public interface ITopoEvent
@@ -92,6 +107,8 @@ namespace TopoMojo.Web.Controllers
         Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
         Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
         Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
+        Task DocumentEvent(BroadcastEvent<object> broadcastEvent);
+        Task DocumentEvent(BroadcastEvent<Document> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
         Task PresenceEvent(BroadcastEvent broadcastEvent);
         Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
@@ -138,7 +155,7 @@ namespace TopoMojo.Web.Controllers
             return new Actor
             {
                 Id = ((ClaimsPrincipal)user).FindFirstValue(JwtRegisteredClaimNames.Sub),
-                Name = user.Identity.Name
+                Name = ((ClaimsPrincipal)user).FindFirstValue("name")
             };
         }
     }
