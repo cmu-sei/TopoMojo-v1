@@ -27,7 +27,7 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             GamespaceService gamespaceService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub,
+            IHubContext<AppHub, IHubEvent> hub,
             IDistributedCache cache
         ) : base(logger, identityResolver)
         {
@@ -39,7 +39,7 @@ namespace TopoMojo.Web.Controllers
 
         private readonly IHypervisorService _pod;
         private readonly GamespaceService _gamespaceService;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly IDistributedCache _cache;
 
         /// <summary>

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -112,6 +113,7 @@ namespace TopoMojo.Web
 
             services.AddSignalR(options => {});
             services.AddSingleton<HubCache>();
+            services.AddSingleton<IUserIdProvider, SubjectProvider>();
 
             services.AddFileUpload(FileUploadOptions);
 
@@ -240,7 +242,7 @@ namespace TopoMojo.Web
 
             app.UseEndpoints(ep =>
             {
-                ep.MapHub<TopologyHub>("/hub");
+                ep.MapHub<AppHub>("/hub");
 
                 ep.MapControllers().RequireAuthorization();
             });

@@ -19,7 +19,7 @@ namespace TopoMojo.Web.Controllers
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
             ChatService chatService,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<AppHub, IHubEvent> hub
         ) : base(logger, identityResolver)
         {
             _chatService = chatService;
@@ -27,7 +27,7 @@ namespace TopoMojo.Web.Controllers
         }
 
         private readonly ChatService _chatService;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         [HttpGet("api/chats/{id}")]
         public async Task<ActionResult<Message[]>> List(string id, int marker, int take = 25)

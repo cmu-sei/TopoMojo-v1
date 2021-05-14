@@ -25,7 +25,7 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             TemplateService templateService,
             WorkspaceService workspaceService,
-            IHubContext<TopologyHub, ITopoEvent> hub,
+            IHubContext<AppHub, IHubEvent> hub,
             UserService userService,
             IHypervisorService podService,
             CoreOptions options
@@ -43,7 +43,7 @@ namespace TopoMojo.Web.Controllers
         private readonly TemplateService _templateService;
         private readonly WorkspaceService _workspaceService;
         private readonly UserService _userService;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly CoreOptions _options;
 
         /// <summary>

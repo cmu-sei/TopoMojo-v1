@@ -10,5 +10,6 @@ namespace TopoMojo.Data.Abstractions
     {
         Task<User> LoadDetail(int id);
         Task<bool> MemberOf(string globalId, Models.User profile);
+        Task<bool> IsMember(string workspaceId, string userId);
     }
 }

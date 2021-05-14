@@ -23,7 +23,7 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             TemplateService templateService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<AppHub, IHubEvent> hub
         ) : base(logger, identityResolver)
         {
             _templateService = templateService;
@@ -33,7 +33,7 @@ namespace TopoMojo.Web.Controllers
 
         private readonly TemplateService _templateService;
         private readonly IHypervisorService _pod;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// List templates.

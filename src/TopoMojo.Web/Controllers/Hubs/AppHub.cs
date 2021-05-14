@@ -1,6 +1,3 @@
-// Copyright 2020 Carnegie Mellon University. All Rights Reserved.
-// Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
-
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,23 +5,58 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using TopoMojo.Data.Abstractions;
 using TopoMojo.Models;
+using TopoMojo.Services;
 using TopoMojo.Web.Services;
 
 namespace TopoMojo.Web.Controllers
 {
-    [Authorize(Policy = "OneTimeTicket")]
-    public class TopologyHub : Hub<ITopoEvent>
+    public interface IHubEvent
     {
-        public TopologyHub (
-            ILogger<TopologyHub> logger,
+        Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
+        Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
+        Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
+        Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
+        Task DocumentEvent(BroadcastEvent<object> broadcastEvent);
+        Task DocumentEvent(BroadcastEvent<Document> broadcastEvent);
+        Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
+        Task PresenceEvent(BroadcastEvent broadcastEvent);
+        Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
+    }
+
+    public interface IHubAction
+    {
+        Task Listen(string id);
+        Task Leave(string id);
+        Task Greet(string id);
+        Task Typing(string id, bool value);
+        Task TemplateMessage(string action, Template model);
+    }
+
+    [Authorize(Policy = "OneTimeTicket")]
+    public class AppHub : Hub<IHubEvent>, IHubAction
+    {
+        public AppHub (
+            ILogger<AppHub> logger,
+            IUserStore userStore,
             HubCache cache
         ) {
             _logger = logger;
             _cache = cache;
+            _userStore = userStore;
         }
-        private readonly ILogger<TopologyHub> _logger;
+
+        private readonly ILogger<AppHub> _logger;
         private readonly HubCache _cache;
+        private readonly IUserStore _userStore;
+
+        public async override Task OnConnectedAsync()
+        {
+            await base.OnConnectedAsync();
+
+            _logger.LogDebug($"connected {Context.User.FindFirstValue("name")} {Context.UserIdentifier} {Context.ConnectionId}");
+        }
 
         public override async Task OnDisconnectedAsync(Exception ex)
         {
@@ -34,20 +66,21 @@ namespace TopoMojo.Web.Controllers
 
         public Task Listen(string channelId)
         {
-            _logger.LogDebug($"listen {channelId} {Context.User?.Identity.Name} {Context.ConnectionId}");
-            // TODO: verify worker
+
+            if (! _userStore.IsMember(channelId, Context.UserIdentifier).Result)
+                throw new ActionForbiddenException();
 
             Groups.AddToGroupAsync(Context.ConnectionId, channelId);
 
-            var cc = new CachedConnection
-            {
-                Id = Context.ConnectionId,
-                ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
-                ProfileName = Context.User?.FindFirstValue("name"),
-                Room = channelId
-            };
-
-            _cache.Connections.TryAdd(cc.Id, cc);
+            _cache.Connections.TryAdd(Context.ConnectionId,
+                new CachedConnection
+                {
+                    Id = Context.ConnectionId,
+                    ProfileId = Context.User?.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                    ProfileName = Context.User?.FindFirstValue("name"),
+                    Room = channelId
+                }
+            );
 
             return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.ARRIVED"));
         }
@@ -68,25 +101,10 @@ namespace TopoMojo.Web.Controllers
             return Clients.OthersInGroup(channelId).PresenceEvent(new BroadcastEvent(Context.User, "PRESENCE.GREETED"));
         }
 
-        // public Task Post(string channelId, string text)
-        // {
-        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.ADDED", text));
-        // }
-
         public Task Typing(string channelId, bool val)
         {
             return Clients.OthersInGroup(channelId).ChatEvent(new BroadcastEvent<Message>(Context.User, (val) ? "CHAT.TYPING" : "CHAT.IDLE", null));
         }
-
-        // public Task Typed(string channelId)
-        // {
-        //     return Clients.Group(channelId).ChatEvent(new BroadcastEvent<string>(Context.User, "CHAT.TYPED", ""));
-        // }
-
-        // public Task Destroying(string channelId)
-        // {
-        //     return Clients.Group(channelId).TopoEvent(new BroadcastEvent<Topology>(Context.User, "TOPO.DELETED", null));
-        // }
 
         public Task TemplateMessage(string action, Template model){
             return Clients.OthersInGroup(model.WorkspaceGlobalId).TemplateEvent(new BroadcastEvent<Template>(Context.User, action, model));
@@ -107,19 +125,6 @@ namespace TopoMojo.Web.Controllers
             return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<Document>(Context.User, (val) ? "DOCUMENT.TYPING" : "DOCUMENT.IDLE", null));
         }
 
-    }
-
-    public interface ITopoEvent
-    {
-        Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
-        Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
-        Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
-        Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
-        Task DocumentEvent(BroadcastEvent<object> broadcastEvent);
-        Task DocumentEvent(BroadcastEvent<Document> broadcastEvent);
-        Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
-        Task PresenceEvent(BroadcastEvent broadcastEvent);
-        Task GameEvent(BroadcastEvent<GameState> broadcastEvent);
     }
 
     public class BroadcastEvent

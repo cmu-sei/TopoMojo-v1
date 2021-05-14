@@ -55,6 +55,28 @@ namespace TopoMojo.Data
            return await base.Add(user);
         }
 
+        public async Task<bool> IsMember(string globalId, string userId)
+        {
+            var user = await DbContext.Users
+                .Where(u => u.GlobalId == userId)
+                .FirstOrDefaultAsync();
+
+            if (user?.Role == UserRole.Administrator)
+                return true;
+
+            if (await DbContext.Workspaces
+                .Where(w => w.GlobalId == globalId && w.Workers.Any(t => t.Person.GlobalId == userId))
+                .AnyAsync())
+                return true;
+
+            if (await DbContext.Gamespaces
+                .Where(w => w.GlobalId == globalId && w.Players.Any(t => t.Person.GlobalId == userId))
+                .AnyAsync())
+                return true;
+
+            return false;
+        }
+
         public async Task<bool> MemberOf(string globalId, Models.User user)
         {
             if (user == null || string.IsNullOrEmpty(globalId))

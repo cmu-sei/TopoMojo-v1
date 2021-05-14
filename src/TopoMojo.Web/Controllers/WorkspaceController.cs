@@ -24,7 +24,7 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             WorkspaceService workspaceService,
             IHypervisorService podService,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<AppHub, IHubEvent> hub
         ) : base(logger, identityResolver)
         {
             _pod = podService;
@@ -34,7 +34,7 @@ namespace TopoMojo.Web.Controllers
 
         private readonly IHypervisorService _pod;
         private readonly WorkspaceService _workspaceService;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// List workspaces according to search parameters.

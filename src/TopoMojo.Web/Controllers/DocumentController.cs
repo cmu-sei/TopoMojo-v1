@@ -29,7 +29,7 @@ namespace TopoMojo.Web.Controllers
             IIdentityResolver identityResolver,
             WorkspaceService workspaceService,
             FileUploadOptions uploadOptions,
-            IHubContext<TopologyHub, ITopoEvent> hub
+            IHubContext<AppHub, IHubEvent> hub
         ) : base(logger, identityResolver)
         {
             _uploadOptions = uploadOptions;
@@ -39,7 +39,7 @@ namespace TopoMojo.Web.Controllers
 
         private readonly WorkspaceService _workspaceService;
         private readonly FileUploadOptions _uploadOptions;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// Load workspace document
@@ -92,7 +92,7 @@ namespace TopoMojo.Web.Controllers
 
             path = System.IO.Path.Combine(path, id + ".md");
             System.IO.File.WriteAllText(path, text);
-            
+
                 SendBroadcast($"{id}-doc", "saved", text);
 
             return Ok();

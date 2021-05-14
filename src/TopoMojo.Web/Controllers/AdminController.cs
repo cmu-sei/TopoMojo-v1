@@ -23,7 +23,7 @@ namespace TopoMojo.Web.Controllers
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
             ChatService chatService,
-            IHubContext<TopologyHub, ITopoEvent> hub,
+            IHubContext<AppHub, IHubEvent> hub,
             TransferService transferSvc,
             FileUploadOptions fileUploadOptions,
             JanitorService janitor,
@@ -39,7 +39,7 @@ namespace TopoMojo.Web.Controllers
         }
 
         private readonly ChatService _chatService;
-        private readonly IHubContext<TopologyHub, ITopoEvent> _hub;
+        private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly TransferService _transferSvc;
         private readonly FileUploadOptions _uploadOptions;
         private readonly HubCache _hubCache;
