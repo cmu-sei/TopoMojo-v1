@@ -110,19 +110,14 @@ namespace TopoMojo.Web.Controllers
             return Clients.OthersInGroup(model.WorkspaceGlobalId).TemplateEvent(new BroadcastEvent<Template>(Context.User, action, model));
         }
 
-        public Task Edited(string channelId, object textDiff)
+        public Task Edited(string channelId, object edits)
         {
-            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<object>(Context.User, "DOCUMENT.UPDATED", textDiff));
+            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<object>(Context.User, "DOCUMENT.UPDATED", edits));
         }
 
         public Task CursorChanged(string channelId, object positions)
         {
             return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<object>(Context.User, "DOCUMENT.CURSOR", positions));
-        }
-
-        public Task Editing(string channelId, bool val)
-        {
-            return Clients.OthersInGroup(channelId).DocumentEvent(new BroadcastEvent<Document>(Context.User, (val) ? "DOCUMENT.TYPING" : "DOCUMENT.IDLE", null));
         }
 
     }
