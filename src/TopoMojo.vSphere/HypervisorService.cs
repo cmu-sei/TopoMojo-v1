@@ -87,7 +87,7 @@ namespace TopoMojo.vSphere
             //include task
             return vm;
         }
-        public async Task<Vm> Deploy(VmTemplate template)
+        public async Task<Vm> Deploy(VmTemplate template, bool privileged = false)
         {
 
             var vm = await Load(template.Name + "#" + template.IsolationTag);
@@ -97,7 +97,7 @@ namespace TopoMojo.vSphere
             VimClient host = FindHostByAffinity(template.IsolationTag);
             _logger.LogDebug("deploy: host " + host.Name);
 
-            NormalizeTemplate(template, host.Options);
+            NormalizeTemplate(template, host.Options, privileged);
             _logger.LogDebug("deploy: normalized "+ template.Name);
 
             if (!template.Disks.IsEmpty())
@@ -472,7 +472,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        private void NormalizeTemplate(VmTemplate template, HypervisorServiceConfiguration option)
+        private void NormalizeTemplate(VmTemplate template, HypervisorServiceConfiguration option, bool privileged = false)
         {
             if (!template.Iso.HasValue())
             {
@@ -492,6 +492,7 @@ namespace TopoMojo.vSphere
                     dspath.Merge(option.DiskStore);
                     disk.Path = dspath.ToString();
                 }
+
                 if (disk.Source.HasValue() && !disk.Source.StartsWith(option.DiskStore)
                 ) {
                     DatastorePath dspath = new DatastorePath(disk.Source);
@@ -503,16 +504,18 @@ namespace TopoMojo.vSphere
             if (template.IsolationTag.HasValue())
             {
                 string tag = "#" + template.IsolationTag;
+
                 Regex rgx = new Regex("#.*");
+
                 if (!template.Name.EndsWith(template.IsolationTag))
                     template.Name = rgx.Replace(template.Name, "") + tag;
+
                 foreach (VmNet eth in template.Eth)
                 {
-                    //don't add tag if referencing a global vlan
-                    if (!_vlanman.Contains(eth.Net))
-                    {
-                        eth.Net = rgx.Replace(eth.Net, "") + tag;
-                    }
+                    if (privileged && _vlanman.Contains(eth.Net))
+                        continue;
+
+                    eth.Net = rgx.Replace(eth.Net, "") + tag;
                 }
             }
         }

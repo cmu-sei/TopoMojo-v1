@@ -90,7 +90,7 @@ namespace TopoMojo.vSphere
             }
         }
 
-        public async Task<Vm> Deploy(VmTemplate template)
+        public async Task<Vm> Deploy(VmTemplate template, bool privileged = false)
         {
             NormalizeTemplate(template, _optPod);
             string key = template.Name;

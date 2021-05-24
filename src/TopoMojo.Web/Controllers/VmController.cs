@@ -305,7 +305,7 @@ namespace TopoMojo.Web.Controllers
         {
             VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
 
-            Vm vm = await _pod.Deploy(template);
+            Vm vm = await _pod.Deploy(template, _user.Role == UserRole.Administrator || _user.Role == UserRole.Creator);
 
             // SendBroadcast(vm, "deploy");
             VmState state = new VmState
