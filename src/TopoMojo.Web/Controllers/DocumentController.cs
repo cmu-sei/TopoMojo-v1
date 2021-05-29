@@ -93,7 +93,7 @@ namespace TopoMojo.Web.Controllers
             path = System.IO.Path.Combine(path, id + ".md");
             System.IO.File.WriteAllText(path, text);
 
-                SendBroadcast($"{id}-doc", "saved", text);
+            SendBroadcast(id, "saved", text);
 
             return Ok();
         }
@@ -203,7 +203,6 @@ namespace TopoMojo.Web.Controllers
                         "DOCUMENT." + action.ToUpper(),
                         new Document {
                             Text = text,
-                            WhenSaved = currentDatetime.ToString("u"),
                             Timestamp = currentDatetime.ToString("ss.ffff")
                         }
                     )
