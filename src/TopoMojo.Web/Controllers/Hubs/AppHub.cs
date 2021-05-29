@@ -68,7 +68,7 @@ namespace TopoMojo.Web.Controllers
         {
 
             if (! _userStore.IsMember(channelId, Context.UserIdentifier).Result)
-                throw new ActionForbiddenException();
+                throw new ActionForbidden();
 
             Groups.AddToGroupAsync(Context.ConnectionId, channelId);
 

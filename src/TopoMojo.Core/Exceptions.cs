@@ -5,14 +5,19 @@ using System;
 
 namespace TopoMojo
 {
-    public class GamespaceLimitReachedException : Exception { }
-    public class WorkspaceLimitReachedException : Exception { }
-    public class TemplateLimitReachedException : Exception { }
-    public class ParentTemplateException : Exception { }
-    public class WorkspaceNotIsolatedException : Exception { }
-    public class ActionForbiddenException: Exception { }
+    public class ClientGamespaceLimitReached : Exception { }
+    public class PlayerGamespaceLimitReached : Exception { }
+    public class WorkspaceLimitReached : Exception { }
+    public class TemplateLimitReached : Exception { }
+    public class ParentTemplate : Exception { }
+    public class WorkspaceNotIsolated : Exception { }
+    public class ActionForbidden: Exception { }
     public class InvalidClientAudience: Exception { }
     public class ResourceNotFound: Exception { }
+    public class ResourceIsLocked: Exception { }
+    public class SessionLimitReached: Exception { }
+    public class AttemptLimitReached: Exception { }
+    public class GamespaceIsExpired: Exception { }
     public class GamespaceNotRegistered: Exception {
         public GamespaceNotRegistered() : base() { }
         public GamespaceNotRegistered(string message) : base(message) { }

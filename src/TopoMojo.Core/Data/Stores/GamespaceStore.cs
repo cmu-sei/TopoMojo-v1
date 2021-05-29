@@ -29,24 +29,15 @@ namespace TopoMojo.Data
                 entity.Workspace.LastActivity = DateTime.UtcNow;
             }
 
-            entity.LastActivity = DateTime.UtcNow;
-
             var gamespace = await base.Add(entity);
 
             return gamespace;
         }
 
-        public IQueryable<Gamespace> ListByProfile(int id)
-        {
-            return DbContext.Players
-                .Where(p => p.PersonId == id)
-                .Select(p => p.Gamespace);
-        }
-
         public IQueryable<Gamespace> ListByProfile(string id)
         {
             return DbContext.Players
-                .Where(p => p.Person.GlobalId == id)
+                .Where(p => p.SubjectId == id)
                 .Select(p => p.Gamespace);
         }
 
@@ -57,7 +48,6 @@ namespace TopoMojo.Data
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
                 .Include(g => g.Players)
-                    .ThenInclude(w => w.Person)
             );
         }
 
@@ -68,7 +58,6 @@ namespace TopoMojo.Data
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
                 .Include(g => g.Players)
-                    .ThenInclude(w => w.Person)
             );
         }
 
@@ -84,10 +73,22 @@ namespace TopoMojo.Data
                 : null;
         }
 
-        public async Task<Gamespace> FindByContext(int topoId, int profileId)
+        public async Task<Gamespace> FindByContext(int workspaceId, string subjectId)
         {
             int id = await DbContext.Players
-                .Where(g => g.PersonId == profileId && g.Gamespace.WorkspaceId == topoId)
+                .Where(g => g.SubjectId == subjectId && g.Gamespace.WorkspaceId == workspaceId)
+                .Select(p => p.GamespaceId)
+                .SingleOrDefaultAsync();
+
+            return (id > 0)
+                ? await Load(id)
+                : null;
+        }
+
+        public async Task<Gamespace> FindByContext(string subjectId, string workspaceId)
+        {
+            int id = await DbContext.Players
+                .Where(g => g.SubjectId == subjectId && g.WorkspaceId == workspaceId)
                 .Select(p => p.GamespaceId)
                 .SingleOrDefaultAsync();
 
@@ -116,20 +117,5 @@ namespace TopoMojo.Data
             await base.Delete(id);
         }
 
-        public async Task<Gamespace[]> DeleteStale(DateTime staleMarker, bool dryrun = true)
-        {
-            var results = await DbContext.Gamespaces
-                .Where(g => g.LastActivity < staleMarker)
-                .ToArrayAsync();
-
-            if (!dryrun)
-            {
-                DbContext.Gamespaces.RemoveRange(results);
-
-                await DbContext.SaveChangesAsync();
-            }
-
-            return results;
-        }
     }
 }

@@ -1,6 +1,7 @@
 // Copyright 2020 Carnegie Mellon University.
 // Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
+using System;
 using System.Collections.Generic;
 
 namespace TopoMojo.Models
@@ -19,9 +20,18 @@ namespace TopoMojo.Models
 
     public class RegistrationRequest
     {
+        public string ResourceId { get; set; }
+        public string ClientId { get; set; }
         public string SubjectId { get; set; }
         public string SubjectName { get; set; }
-        public string ResourceId { get; set; }
+        public int Variant { get; set; }
+        public int MaxAttempts { get; set; }
+        public int MaxMinutes { get; set; }
+        public int Points { get; set; } = 100;
+        public bool AllowReset { get; set; }
+        public bool AllowPreview { get; set; }
+        public bool StartGamespace { get; set; }
+        public DateTime ExpirationTime { get; set; }
     }
 
     public class ChallengeSpec

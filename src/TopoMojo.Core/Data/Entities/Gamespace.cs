@@ -11,14 +11,17 @@ namespace TopoMojo.Data
     {
         public int Id { get; set; }
         public string GlobalId { get; set; }
+        public string ClientId { get; set; }
         public string Name { get; set; }
-        public DateTime WhenCreated { get; set; }
-        public DateTime LastActivity { get; set; }
         public string ShareCode { get; set; }
-        public string Audience { get; set; }
+        public DateTime WhenCreated { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime StopTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
+        public bool AllowReset { get; set; }
+        public string Challenge { get; set; }
         public int WorkspaceId { get; set; }
         public virtual Workspace Workspace { get; set; }
-        public string Challenge { get; set; }
         public virtual ICollection<Player> Players { get; set; } = new List<Player>();
     }
 

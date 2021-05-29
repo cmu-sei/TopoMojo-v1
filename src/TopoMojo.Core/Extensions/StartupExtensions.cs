@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Linq;
@@ -22,7 +22,6 @@ namespace Microsoft.Extensions.DependencyInjection
         ) {
 
             services.AddSingleton<CoreOptions>(_ => options);
-
             // Auto-discover from EntityService pattern
             foreach (var t in Assembly
                 .GetExecutingAssembly()
@@ -34,6 +33,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 )
             )
             {
+                foreach (Type i in t.GetInterfaces())
+                    services.AddScoped(i, t);
                 services.AddScoped(t);
             }
 
@@ -86,7 +87,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             // Auto-discover from EntityStore and IEntityStore pattern
-            foreach (var type in Assembly
+            foreach (var t in Assembly
                 .GetExecutingAssembly()
                 .ExportedTypes
                 .Where(t =>
@@ -97,12 +98,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 )
             )
             {
-                Type ti = type.GetInterfaces().Where(i => i.Name == $"I{type.Name}").FirstOrDefault();
-
-                if (ti != null)
-                {
-                    services.AddScoped(ti, type);
-                }
+                foreach (Type i in t.GetInterfaces())
+                    services.AddScoped(i, t);
+                services.AddScoped(t);
             }
 
             return services;

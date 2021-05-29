@@ -179,7 +179,7 @@ namespace TopoMojo.Web
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme
                     )
-                    .RequireClaim("role", TopoMojo.Models.UserRole.Administrator.ToString())
+                    .RequireClaim(AppConstants.RoleClaimName, TopoMojo.Models.UserRole.Administrator.ToString())
                     .Build());
 
                 _.AddPolicy("TrustedClients", new AuthorizationPolicyBuilder()
@@ -196,9 +196,11 @@ namespace TopoMojo.Web
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme,
+                        TicketAuthentication.AuthenticationScheme,
                         AppConstants.CookieScheme
                     )
                     .Build());
+
                 _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(

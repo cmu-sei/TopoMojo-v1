@@ -108,7 +108,7 @@ namespace TopoMojo.Web.Controllers
                 && await _workspaceService.HasGames(op.WorkspaceId)
             )
             {
-                throw new WorkspaceNotIsolatedException();
+                throw new WorkspaceNotIsolated();
             }
 
             Vm vm = await _pod.ChangeState(op);
@@ -152,7 +152,7 @@ namespace TopoMojo.Web.Controllers
                 (_user.Role == UserRole.User || _user.Role == UserRole.Builder)
             )
             {
-                throw new ActionForbiddenException();
+                throw new ActionForbidden();
             }
 
             await AuthorizeAction(id, "change");
@@ -312,10 +312,11 @@ namespace TopoMojo.Web.Controllers
             {
                 Id = id.ToString(),
                 Name = vm.Name.Untagged(),
+                IsolationId = vm.Name.Tag(),
                 IsRunning = vm.State == VmPowerState.Running
             };
 
-            await _hub.Clients.Group(vm.Name.Tag()).VmEvent(new BroadcastEvent<VmState>(User, "VM.DEPLOY", state));
+            await _hub.Clients.Group(state.IsolationId).VmEvent(new BroadcastEvent<VmState>(User, "VM.DEPLOY", state));
 
             return Ok(vm);
         }
@@ -346,36 +347,6 @@ namespace TopoMojo.Web.Controllers
             await _pod.ReloadHost(host);
 
             return Ok();
-        }
-
-        // This endpoint is a temporary to support an authless demo
-        [HttpGet("api/vm-demo/{id}/{name}")]
-        [AllowAnonymous]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<ActionResult<ConsoleSummary>> Demo([FromRoute]string id, [FromRoute]string name)
-        {
-            if (!_options.DemoCode.HasValue())
-                throw new InvalidOperationException("Endpoint disabled.");
-
-            if (name == "restart")
-            {
-                try {
-                    await _pod.Stop(id);
-                    await _pod.Start(id);
-                }
-                catch {}
-
-                return Ok(null);
-            }
-
-            var info = await _pod.Display(id);
-
-            if (info.Url.HasValue())
-            {
-                var src = new Uri(info.Url);
-                info.Url = info.Url.Replace(src.Host, _options.ConsoleHost) + $"?vmhost={src.Host}";
-            }
-            return Ok(info);
         }
 
         private async Task AuthorizeAction(string id, string method)

@@ -14,6 +14,7 @@ namespace TopoMojo.Models
         public string Iso { get; set; }
         public string Guestinfo { get; set; }
         public bool IsHidden { get; set; }
+        public int Replicas { get; set; }
         public int WorkspaceId { get; set; }
         public string WorkspaceGlobalId { get; set; }
     }
@@ -28,6 +29,7 @@ namespace TopoMojo.Models
         public bool IsHidden { get; set; }
         public string Guestinfo { get; set; }
         public int WorkspaceId { get; set; }
+        public int Replicas { get; set; }
     }
 
     public class NewTemplateDetail
@@ -78,5 +80,6 @@ namespace TopoMojo.Models
         public int WorkspaceId { get; set; }
         public string WorkspaceGlobalId { get; set; }
         public bool WorkspaceUseUplinkSwitch { get; set; }
+        public int Replicas { get; set; }
     }
 }

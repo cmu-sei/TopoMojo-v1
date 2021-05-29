@@ -11,8 +11,11 @@ namespace TopoMojo.Web
         public const string DataProtectionPurpose = "_dp:TopoMojo";
         public const string SubjectClaimName = "sub";
         public const string NameClaimName = "name";
+        public const string RoleClaimName = "role";
         public const string RegistrationCachePrefix = "lp:";
         public const string CookieScheme = ".TopoMojo.Cookies";
+        public const string MarkdownCutLine = "<!-- cut -->";
+
     }
 
     internal static class AuditId

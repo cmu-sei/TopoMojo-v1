@@ -70,7 +70,7 @@ namespace TopoMojo.Services
                     GlobalId = spec.IsolationId,
                     Name = workspace.Name,
                     Workspace = workspace,
-                    Audience = Client.Id.Untagged()
+                    // Audience = Client.Id.Untagged()
                     // ShareCode = Guid.NewGuid().ToString("N")
                 };
 
@@ -201,70 +201,50 @@ namespace TopoMojo.Services
 
             // gamespace should never be null in the engine service
             if (gamespace == null)
+                throw new InvalidOperationException();
+
+            // get vm's, look up template, add if template not mark as hidden.
+
+            state = Mapper.Map<GameState>(gamespace);
+
+            var vmState = new List<VmState>();
+
+            var vms = await _pod.Find(gamespace.GlobalId);
+
+            foreach (Vm vm in vms)
             {
-                Data.Workspace topo = await _workspaceStore.Load(topoId);
+                string name = vm.Name.Untagged();
 
-                if (topo == null || !topo.IsPublished)
-                    throw new InvalidOperationException();
+                // a vm could be a replica, denoted by `_1` or some number,
+                // so strip that to find template.
+                int x = name.LastIndexOf('_');
 
-                state = new GameState();
+                var tmpl = gamespace.Workspace.Templates
+                    .Where(t => !t.IsHidden && t.Name == name)
+                    .FirstOrDefault();
 
-                state.Name = gamespace?.Name ?? topo.Name;
-
-                state.WorkspaceDocument = topo.Document;
-
-                state.Vms = topo.Templates
-                    .Where(t => !t.IsHidden)
-                    .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                    .ToArray();
-
-            }
-            else
-            {
-                // get vm's, look up template, add if template not mark as hidden.
-
-                state = Mapper.Map<GameState>(gamespace);
-
-                var vmState = new List<VmState>();
-
-                var vms = await _pod.Find(gamespace.GlobalId);
-
-                foreach (Vm vm in vms)
+                if (tmpl == null && x == name.Length - 2)
                 {
-                    string name = vm.Name.Untagged();
+                    name = name.Substring(0, x);
 
-                    // a vm could be a replica, denoted by `_1` or some number,
-                    // so strip that to find template.
-                    int x = name.LastIndexOf('_');
-
-                    var tmpl = gamespace.Workspace.Templates
-                        .Where(t => !t.IsHidden && t.Name == name)
-                        .FirstOrDefault();
-
-                    if (tmpl == null && x == name.Length - 2)
-                    {
-                        name = name.Substring(0, x);
-
-                        tmpl = gamespace.Workspace.Templates
-                        .Where(t => !t.IsHidden && t.Name == name)
-                        .FirstOrDefault();
-                    }
-
-                    if (tmpl != null)
-                    {
-                        vmState.Add(new VmState
-                        {
-                            Id = vm.Id,
-                            Name = vm.Name,
-                            IsRunning = (vm.State == VmPowerState.Running),
-                            TemplateId = tmpl.Id
-                        });
-                    }
+                    tmpl = gamespace.Workspace.Templates
+                    .Where(t => !t.IsHidden && t.Name == name)
+                    .FirstOrDefault();
                 }
 
-                state.Vms = vmState.ToArray();
-
+                if (tmpl != null)
+                {
+                    vmState.Add(new VmState
+                    {
+                        Id = vm.Id,
+                        Name = vm.Name,
+                        IsRunning = (vm.State == VmPowerState.Running)
+                        // TemplateId = tmpl.Id
+                    });
+                }
             }
+
+            state.Vms = vmState.ToArray();
 
             return state;
         }
@@ -287,11 +267,11 @@ namespace TopoMojo.Services
 
             var gamespace = await _gamespaceStore.Load(info.IsolationId);
 
-            if (gamespace != null)
-            {
-                gamespace.LastActivity = DateTime.UtcNow;
-                await _gamespaceStore.Update(gamespace);
-            }
+            // if (gamespace != null)
+            // {
+            //     gamespace.LastActivity = DateTime.UtcNow;
+            //     await _gamespaceStore.Update(gamespace);
+            // }
 
             if (info.Url.HasValue())
             {

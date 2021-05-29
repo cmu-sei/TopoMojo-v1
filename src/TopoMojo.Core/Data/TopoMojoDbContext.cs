@@ -24,15 +24,12 @@ namespace TopoMojo.Data
                 b.Property(w => w.Audience).HasMaxLength(64);
                 b.Property(w => w.DocumentUrl).HasMaxLength(128);
                 b.Property(w => w.Description).HasMaxLength(255);
-                b.Property(w => w.Challenge).HasMaxLength(4096);
             });
 
             builder.Entity<Gamespace>(b => {
                 b.HasAlternateKey(t => t.GlobalId);
                 b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
                 b.Property(w => w.Name).HasMaxLength(64);
-                b.Property(w => w.Audience).HasMaxLength(64);
-                b.Property(w => w.Challenge).HasMaxLength(4096);
             });
 
             builder.Entity<Template>(b => {
@@ -56,6 +53,10 @@ namespace TopoMojo.Data
                 b.Property(w => w.RoomId).IsFixedLength().HasMaxLength(36);
                 b.Property(w => w.AuthorName).HasMaxLength(64);
                 b.Property(w => w.Text).HasMaxLength(2048);
+            });
+
+            builder.Entity<Player>(b => {
+                b.HasIndex("SubjectId", "WorkspaceId");
             });
         }
 

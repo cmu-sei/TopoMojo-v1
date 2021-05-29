@@ -239,6 +239,22 @@ namespace TopoMojo.Web.Controllers
 
             return Ok();
         }
+
+        [HttpGet("api/v2/workspace/{id}/challenge")]
+        public async Task<IActionResult> GetChallenge([FromRoute] string id)
+        {
+            var model = await _workspaceService.GetChallenge(id);
+
+            return Ok(model);
+        }
+
+        [HttpPut("api/v2/workspace/{id}/challenge")]
+        public async Task<IActionResult> ChallengeV2([FromRoute]string id, [FromBody] TopoMojo.Models.v2.ChallengeSpec model)
+        {
+            await _workspaceService.UpdateChallenge(id, model);
+
+            return Ok();
+        }
     }
 
 }

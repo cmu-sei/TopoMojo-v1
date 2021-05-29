@@ -147,7 +147,7 @@ namespace TopoMojo.Services
 
             if (!User.IsCreator
                 && await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
-                throw new TemplateLimitReachedException();
+                throw new TemplateLimitReached();
 
             var newTemplate = new Data.Template
             {
@@ -201,7 +201,7 @@ namespace TopoMojo.Services
                 throw new InvalidOperationException();
 
             if (await _templateStore.IsParentTemplate(id))
-                throw new ParentTemplateException();
+                throw new ParentTemplate();
 
             //delete associated vm
             var deployable = await GetDeployableTemplate(id);

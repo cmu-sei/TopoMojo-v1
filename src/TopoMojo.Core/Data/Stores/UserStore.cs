@@ -70,7 +70,7 @@ namespace TopoMojo.Data
                 return true;
 
             if (await DbContext.Gamespaces
-                .Where(w => w.GlobalId == globalId && w.Players.Any(t => t.Person.GlobalId == userId))
+                .Where(w => w.GlobalId == globalId && w.Players.Any(t => t.SubjectId == userId))
                 .AnyAsync())
                 return true;
 
@@ -96,19 +96,6 @@ namespace TopoMojo.Data
 
             if (result)
                 workspace.LastActivity = DateTime.UtcNow;
-
-            if (!result)
-            {
-                var gamespace = await DbContext.Gamespaces
-                    .Include(g => g.Players)
-                    .Where(t => t.GlobalId == globalId)
-                    .SingleOrDefaultAsync();
-
-                result = gamespace != null & gamespace.CanEdit(user);
-
-                if (result)
-                    gamespace.LastActivity = DateTime.UtcNow;
-            }
 
             await DbContext.SaveChangesAsync();
 

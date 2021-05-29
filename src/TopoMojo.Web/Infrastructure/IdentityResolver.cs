@@ -8,12 +8,9 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Abstractions;
 using TopoMojo.Models;
 using TopoMojo.Services;
-using TopoMojo.Web.Extensions;
 
 namespace TopoMojo.Web.Services
 {
@@ -57,46 +54,17 @@ namespace TopoMojo.Web.Services
 
             string sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-            string name = principal.FindFirstValue("name");
+            string name = principal.FindFirstValue(AppConstants.NameClaimName);
 
-            _user = await _identitySvc.Load(sub);
-
-            if (_user != null)
+            _user = await _identitySvc.Load(sub) ?? new User
             {
-                AddOrUpdateClaim(identity, JwtRegisteredClaimNames.NameId, _user.Id.ToString());
-                AddOrUpdateClaim(identity, "name", _user.Name);
-                AddOrUpdateClaim(identity, "role", _user.Role.ToString());
-
-                return principal;
-            }
-
-            // prevents auto-registration from happening more than once
-            await semaphoreSlim.WaitAsync();
-
-            try
-            {
-
-                // try again after getting passed semaphore
-                _user = await _identitySvc.Load(sub);
-
-                if (_user == null)
-                {
-                    _user = await _identitySvc.Add(new User {
-                        GlobalId = sub,
-                        Name = name
-                    });
-                }
-
-            }
-
-            finally
-            {
-                semaphoreSlim.Release();
-            }
+                GlobalId = sub,
+                Name = name
+            };
 
             AddOrUpdateClaim(identity, JwtRegisteredClaimNames.NameId, _user.Id.ToString());
-            AddOrUpdateClaim(identity, "name", _user.Name);
-            AddOrUpdateClaim(identity, "role", _user.Role.ToString());
+            AddOrUpdateClaim(identity, AppConstants.NameClaimName, _user.Name);
+            AddOrUpdateClaim(identity, AppConstants.RoleClaimName, _user.Role.ToString());
 
             return principal;
         }

@@ -54,19 +54,19 @@ namespace TopoMojo.Data.Extensions
                     .Permission.CanEdit() ?? false);
         }
 
-        public static bool CanManage(this Gamespace player, Models.User user)
+        public static bool CanManage(this Gamespace gamespace, Models.User user, string playerId = null)
         {
             return user.IsAdmin
-                || (player.Players
-                    .FirstOrDefault(p => p.PersonId == user.Id)?
+                || (gamespace.Players
+                    .FirstOrDefault(p => p.SubjectId == (playerId ?? user.GlobalId))?
                     .Permission.CanManage() ?? false);
         }
 
-        public static bool CanEdit(this Gamespace player, Models.User user)
+        public static bool CanEdit(this Gamespace player, Models.User user, string playerId = null)
         {
             return user.IsAdmin
                 || (player.Players
-                    .FirstOrDefault(p => p.PersonId == user.Id)?
+                    .FirstOrDefault(p => p.SubjectId == (playerId ?? user.GlobalId))?
                     .Permission.CanEdit() ?? false);
         }
     }

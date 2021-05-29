@@ -41,7 +41,6 @@ namespace TopoMojo.Client
                     {
                         Id = Guid.NewGuid().ToString(),
                         Name = "mock-vm",
-                        TemplateId = 1,
                         IsRunning = true
                     }
                 }

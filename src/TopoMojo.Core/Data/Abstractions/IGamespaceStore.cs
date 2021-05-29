@@ -9,11 +9,11 @@ namespace TopoMojo.Data.Abstractions
 {
     public interface IGamespaceStore : IDataStore<Gamespace>
     {
-        Task<Gamespace> FindByContext(int topoId, int profileId);
-        Task<Gamespace> FindByPlayer(int playerId);
+        Task<Gamespace> FindByContext(int workspaceId, string subjectId);
+        Task<Gamespace> FindByContext(string workspaceId, string subjectId);
         Task<Gamespace> FindByShareCode(string code);
-        IQueryable<Gamespace> ListByProfile(int id);
-        IQueryable<Gamespace> ListByProfile(string id);
-        Task<Gamespace[]> DeleteStale(DateTime staleAfter, bool dryrun = true);
+        Task<Gamespace> FindByPlayer(int playerId);
+        // IQueryable<Gamespace> ListByProfile(int id);
+        IQueryable<Gamespace> ListByProfile(string subjectId);
     }
 }

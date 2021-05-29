@@ -126,7 +126,7 @@ namespace TopoMojo.Services
                 return true;
             }
 
-            if (await _dbContext.Players.AnyAsync(w => w.Gamespace.GlobalId == roomId && w.Person.GlobalId == User.GlobalId))
+            if (await _dbContext.Players.AnyAsync(w => w.Gamespace.GlobalId == roomId && w.SubjectId == User.GlobalId))
             {
                 _cache.Set(key, true, new TimeSpan(0, 5, 0));
                 return true;

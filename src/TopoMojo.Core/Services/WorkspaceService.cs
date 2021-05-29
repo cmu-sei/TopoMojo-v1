@@ -138,7 +138,7 @@ namespace TopoMojo.Services
         {
             if (!User.IsCreator
                 && User.WorkspaceLimit <= await _workspaceStore.GetWorkspaceCount(User.Id))
-                throw new WorkspaceLimitReachedException();
+                throw new WorkspaceLimitReached();
 
             var workspace = Mapper.Map<Data.Workspace>(model);
 
@@ -149,6 +149,8 @@ namespace TopoMojo.Services
             workspace.Author = User.Name;
 
             workspace.LastActivity = DateTime.UtcNow;
+
+            workspace.Challenge = JsonSerializer.Serialize<Models.v2.ChallengeSpec>(new Models.v2.ChallengeSpec());
 
             workspace = await _workspaceStore.Add(workspace);
 
@@ -213,6 +215,31 @@ namespace TopoMojo.Services
             await _workspaceStore.Update(entity);
         }
 
+        public async Task<Models.v2.ChallengeSpec> GetChallenge(string id)
+        {
+            var entity = await _workspaceStore.Load(id);
+
+            if (entity == null || !entity.CanEdit(User))
+                throw new InvalidOperationException();
+
+            string spec = entity.Challenge ??
+                JsonSerializer.Serialize<Models.v2.ChallengeSpec>(new Models.v2.ChallengeSpec());
+
+            return JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(spec, jsonOptions);
+        }
+
+        public async Task UpdateChallenge(string id, Models.v2.ChallengeSpec spec)
+        {
+            var entity = await _workspaceStore.Load(id);
+
+            if (entity == null || !entity.CanEdit(User))
+                throw new InvalidOperationException();
+
+            entity.Challenge = JsonSerializer.Serialize<Models.v2.ChallengeSpec>(spec, jsonOptions);
+
+            await _workspaceStore.Update(entity);
+        }
+
         /// <summary>
         /// Delete a workspace
         /// </summary>
@@ -246,38 +273,6 @@ namespace TopoMojo.Services
                 : false;
         }
 
-        // /// <summary>
-        // /// Change workspace state options.
-        // /// </summary>
-        // /// <param name="action"></param>
-        // /// <returns></returns>
-        // public async Task<WorkspaceState> ChangeState(WorkspaceStateAction action)
-        // {
-        //     WorkspaceState state = null;
-
-        //     switch (action.Type)
-        //     {
-        //         case WorkspaceStateActionType.Share:
-        //         state = await Share(action.Id, false);
-        //         break;
-
-        //         case WorkspaceStateActionType.Unshare:
-        //         state = await Share(action.Id, true);
-        //         break;
-
-        //         case WorkspaceStateActionType.Publish:
-        //         state = await Publish(action.Id, false);
-        //         break;
-
-        //         case WorkspaceStateActionType.Unpublish:
-        //         state = await Publish(action.Id, true);
-        //         break;
-
-        //     }
-
-        //     return state;
-        // }
-
         /// <summary>
         /// Generate a new invitation code for a workspace.
         /// </summary>
@@ -297,26 +292,6 @@ namespace TopoMojo.Services
 
             return Mapper.Map<WorkspaceInvitation>(workspace);
         }
-
-        // /// <summary>
-        // /// Toggle the publish status of a workspace.
-        // /// </summary>
-        // /// <param name="id"></param>
-        // /// <param name="revoke"></param>
-        // /// <returns></returns>
-        // public async Task<WorkspaceState> Publish(int id, bool revoke)
-        // {
-        //     var workspace = await _workspaceStore.Load(id);
-
-        //     if (workspace == null || !workspace.CanEdit(User))
-        //         throw new InvalidOperationException();
-
-        //     workspace.IsPublished = !revoke;
-
-        //     await _workspaceStore.Update(workspace);
-
-        //     return Mapper.Map<WorkspaceState>(workspace);
-        // }
 
         /// <summary>
         /// Redeem an invitation code to join user to workspace.

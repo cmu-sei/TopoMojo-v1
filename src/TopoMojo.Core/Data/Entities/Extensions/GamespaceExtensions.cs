@@ -1,0 +1,54 @@
+using System;
+using System.Linq;
+using TopoMojo.Extensions;
+
+namespace TopoMojo.Data.Extensions
+{
+    public static class GamespaceExtensions
+    {
+        public static bool IsActive(this Gamespace gamespace)
+        {
+            return
+                gamespace.StartTime > DateTime.MinValue &&
+                gamespace.StopTime == DateTime.MinValue &&
+                !IsExpired(gamespace);
+        }
+
+        public static bool IsExpired(this Gamespace gamespace)
+        {
+            return gamespace.ExpirationTime.CompareTo(DateTime.UtcNow) < 0;
+        }
+
+        public static bool HasStarted(this Gamespace gamespace)
+        {
+            return gamespace.StartTime > DateTime.MinValue;
+        }
+
+        public static bool IsTemplateVisible(this Gamespace gamespace, string name)
+        {
+            name = name.Untagged();
+
+            // a vm could be a replica, denoted by `_1` or some number,
+            // so strip that to find template.
+            int x = name.LastIndexOf('_');
+
+            // check full name
+            var tmpl = gamespace.Workspace.Templates
+                .Where(t => !t.IsHidden && t.Name == name)
+                .FirstOrDefault();
+
+            // check without replica index
+            if (tmpl == null && x == name.Length - 2)
+            {
+                name = name.Substring(0, x);
+
+                tmpl = gamespace.Workspace.Templates
+                .Where(t => !t.IsHidden && t.Name == name)
+                .FirstOrDefault();
+            }
+
+            return (!tmpl?.IsHidden) ?? false;
+        }
+
+    }
+}

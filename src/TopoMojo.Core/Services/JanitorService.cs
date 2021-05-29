@@ -41,27 +41,28 @@ namespace TopoMojo.Services
         {
             var items = new List<JanitorReport>();
 
-            var gamespaces = (await _gamespaceStore.DeleteStale(
-                options.IdleGamespaceExpiration.ToDatePast(),
-                options.DryRun
-            )).ToList();
+            // var gamespaces = (await _gamespaceStore.DeleteStale(
+            //     options.IdleGamespaceExpiration.ToDatePast(),
+            //     options.DryRun
+            // )).ToList();
 
-            if (!options.DryRun)
-            {
-                await RemoveVms(gamespaces
-                    .Select(w => w.GlobalId)
-                    .ToArray()
-                );
-            }
+            // if (!options.DryRun)
+            // {
+            //     await RemoveVms(gamespaces
+            //         .Select(w => w.GlobalId)
+            //         .ToArray()
+            //     );
+            // }
 
-            return gamespaces.Select(g => new JanitorReport
-            {
-                Reason = "IdleGamespace",
-                Id = g.Id,
-                Name = g.Name,
-                Age = g.LastActivity
-            }).ToArray();
+            // return gamespaces.Select(g => new JanitorReport
+            // {
+            //     Reason = "IdleGamespace",
+            //     Id = g.Id,
+            //     Name = g.Name,
+            //     Age = g.LastActivity
+            // }).ToArray();
 
+            return items.ToArray();
         }
 
         public async Task<JanitorReport[]> CleanupInactiveWorkspaces(JanitorOptions options)

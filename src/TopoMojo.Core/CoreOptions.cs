@@ -13,8 +13,8 @@ namespace TopoMojo
         public bool AllowUnprivilegedVmReconfigure { get; set; }
         public string GameEngineIsoFolder { get; set; } = "static";
         public string ConsoleHost { get; set; }
-        public string DemoCode { get; set; }
-        public string LaunchUrl { get; set; } = "/lp/?t=";
+        public string LaunchUrl { get; set; } = "/lp";
+        public string DocPath { get; set; } = "wwwroot/docs";
         public JanitorOptions Expirations { get; set; } = new JanitorOptions();
 
     }

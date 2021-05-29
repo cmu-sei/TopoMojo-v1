@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -14,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using TopoMojo.Abstractions;
 using TopoMojo.Data.Abstractions;
 using TopoMojo.Data.Extensions;
+using TopoMojo.Extensions;
 using TopoMojo.Models;
 
 namespace TopoMojo.Services
@@ -27,19 +27,24 @@ namespace TopoMojo.Services
             ILogger<GamespaceService> logger,
             IMapper mapper,
             CoreOptions options,
-            IIdentityResolver identityResolver
+            IIdentityResolver identityResolver,
+            ILockService lockService
+
         ) : base (logger, mapper, options, identityResolver)
         {
             _pod = podService;
             _gamespaceStore = gamespaceStore;
             _workspaceStore = workspaceStore;
+            _locker = lockService;
             _random = new Random();
         }
 
         private readonly IHypervisorService _pod;
         private readonly IGamespaceStore _gamespaceStore;
         private readonly IWorkspaceStore _workspaceStore;
+        private readonly ILockService _locker;
         private readonly Random _random;
+
         public async Task<Gamespace[]> List(string filter, CancellationToken ct = default(CancellationToken))
         {
             if (filter == "all")
@@ -47,7 +52,7 @@ namespace TopoMojo.Services
                 return await ListAll(ct);
             }
 
-            var list = await _gamespaceStore.ListByProfile(User.Id).ToArrayAsync(ct);
+            var list = await _gamespaceStore.ListByProfile(User.GlobalId).ToArrayAsync(ct);
 
             return Mapper.Map<Gamespace[]>(list);
         }
@@ -59,160 +64,218 @@ namespace TopoMojo.Services
 
             var list = await _gamespaceStore.List()
                 .Include(g => g.Players)
-                .ThenInclude(p => p.Person)
                 .ToArrayAsync(ct);
 
             return Mapper.Map<Gamespace[]>(list);
         }
 
-        public async Task<GameState> Launch(Registration registration)
+        public async Task<GameState> Preview(string resourceId)
         {
-            return await Launch(
-                await _workspaceStore.Load(registration.ResourceId),
-                registration.GamespaceId
-            );
-        }
+            var ctx = LoadContext();
 
-        public async Task<GameState> Launch(int workspaceId)
-        {
-            return await Launch(
-                await _workspaceStore.Load(workspaceId)
-            );
-        }
+            ctx.Workspace = await _workspaceStore.Load(resourceId);
 
-        private async Task<GameState> Launch(Data.Workspace workspace, string isolationId = null)
-        {
-            var gamespaces = await _gamespaceStore
-                .ListByProfile(User.Id)
-                .ToArrayAsync();
+            if (!ctx.WorkspaceExists)
+                throw new ResourceNotFound();
 
-            var game = gamespaces
-                .Where(m => m.WorkspaceId == workspace.Id)
-                .SingleOrDefault();
+            if (!ctx.IsValidAudience)
+                throw new InvalidClientAudience();
 
-            if (game == null)
+            if (ctx.UserExists)
             {
-                if (gamespaces.Length >= _options.GamespaceLimit)
-                    throw new GamespaceLimitReachedException();
-
-                game = await Create(workspace, Client.Id, isolationId);
+                ctx.Gamespace = await _gamespaceStore
+                    .FindByContext(ctx.Workspace.Id, User.GlobalId);
             }
 
-            await Deploy(game);
+            return ctx.GamespaceExists
+                ? await LoadState(ctx.Gamespace)
+                : new GameState
+                    {
+                        Name = ctx.Workspace.Name,
 
-            var state = await LoadState(game);
-
-            return state;
+                        Markdown = (await System.IO.File.ReadAllTextAsync(
+                            System.IO.Path.Combine("wwwroot/docs", ctx.Workspace.GlobalId) + ".md"
+                        )).Split("<!-- cut -->").First()
+                    };
         }
 
-        private async Task<Data.Gamespace> Create(
-            Data.Workspace workspace,
-            string client,
-            string isolationId
-        )
+        public async Task<GameState> Register(RegistrationRequest request)
         {
+            var gamespace = await _Register(request);
+
+            if (request.StartGamespace)
+                await Deploy(gamespace);
+
+            return await LoadState(gamespace, request.AllowPreview);
+        }
+
+        private async Task<Data.Gamespace> _Register(RegistrationRequest request)
+        {
+            if (User.Id > 0)
+            {
+                request.SubjectId = User.GlobalId;
+                request.SubjectName = User.Name;
+            }
+
+            var gamespace = await _gamespaceStore.FindByContext(request.SubjectId, request.ResourceId);
+
+            if (gamespace is Data.Gamespace)
+                return gamespace;
+
+            string lockKey = $"{request.SubjectId}{request.ResourceId}";
+
+            var ctx = LoadContext(request);
+
+            ctx.Workspace = await _workspaceStore.Load(request.ResourceId);
+
+            if (!ctx.WorkspaceExists)
+                throw new ResourceNotFound();
+
+            if (!ctx.IsValidAudience)
+                throw new InvalidClientAudience();
+
+            if (Client.GamespaceLimit > 0 && await _gamespaceStore.List().CountAsync(g => g.ClientId == Client.Id) >= Client.GamespaceLimit)
+                throw new ClientGamespaceLimitReached();
+
+            if (Client.PlayerGamespaceLimit > 0 && await _gamespaceStore.ListByProfile(ctx.Request.SubjectId).CountAsync(g => g.ClientId == Client.Id) >= Client.PlayerGamespaceLimit)
+                throw new PlayerGamespaceLimitReached();
+
+            if (! await _locker.Lock(lockKey))
+                throw new ResourceIsLocked();
+
+            try
+            {
+                await Create(ctx);
+            }
+            finally
+            {
+                await _locker.Unlock(lockKey);
+            }
+
+            return ctx.Gamespace;
+        }
+
+        public async Task<GameState> Load(string id)
+        {
+            var ctx = await LoadContext(id);
+
+            return await LoadState(ctx.Gamespace);
+        }
+
+        public async Task<GameState> Start(string id)
+        {
+            var ctx = await LoadContext(id);
+
+            if (!ctx.Gamespace.IsExpired())
+                await Deploy(ctx.Gamespace);
+
+            return await LoadState(ctx.Gamespace);
+        }
+
+        public async Task<GameState> Stop(string id)
+        {
+            var ctx = await LoadContext(id);
+
+            await _pod.DeleteAll(id);
+
+            return await LoadState(ctx.Gamespace);
+        }
+
+        public async Task<GameState> Complete(string id)
+        {
+            var ctx = await LoadContext(id);
+
+            if (ctx.Gamespace.IsActive())
+            {
+                ctx.Gamespace.StopTime = DateTime.UtcNow;
+
+                await _gamespaceStore.Update(ctx.Gamespace);
+            }
+
+            await _pod.DeleteAll(id);
+
+            return await LoadState(ctx.Gamespace);
+        }
+
+        private async Task Create(RegistrationContext ctx)
+        {
+
+            var ts = DateTime.UtcNow;
 
             var gamespace = new Data.Gamespace
             {
-                GlobalId = isolationId,
-                Name = workspace.Name,
-                Workspace = workspace,
-                ShareCode = Guid.NewGuid().ToString("n"),
-                Audience = client
+                Name = ctx.Workspace.Name,
+                Workspace = ctx.Workspace,
+                ClientId = ctx.Client.Id,
+                AllowReset = ctx.Request.AllowReset,
+                WhenCreated = ts,
+                ExpirationTime = ctx.Request.ResolveExpiration(ts, ctx.Client.MaxMinutes)
             };
 
             gamespace.Players.Add(
                 new Data.Player
                 {
-                    PersonId = User.Id,
+                    WorkspaceId = ctx.Workspace.GlobalId,
+                    SubjectId = ctx.Request.SubjectId,
+                    SubjectName = ctx.Request.SubjectName,
                     Permission = Data.Permission.Manager
-                    // LastSeen = DateTime.UtcNow
                 }
             );
 
-            // glean randomize targets
-            var regex = new Regex("##[^#]*##");
-
-            var map = new Dictionary<string, string>();
-
-            foreach (var t in gamespace.Workspace.Templates)
-            {
-                foreach (Match match in regex.Matches(t.Guestinfo ?? ""))
-                    map.TryAdd(match.Value, "");
-
-                foreach (Match match in regex.Matches(t.Detail ?? t.Parent?.Detail ?? ""))
-                    map.TryAdd(match.Value, "");
-            }
-
             // clone challenge
-            var spec = new ChallengeSpec();
-            if (!string.IsNullOrEmpty(workspace.Challenge))
-            {
-                spec = JsonSerializer.Deserialize<ChallengeSpec>(workspace.Challenge ?? "{}", jsonOptions);
+            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(ctx.Workspace.Challenge ?? "{}", jsonOptions);
 
-                foreach (var question in spec.Questions)
-                    foreach (Match match in regex.Matches(question.Answer))
-                    {
-                        string key = match.Value;
-                        string val = "";
+            //resolve transforms
+            foreach (var kvp in spec.Transforms)
+                kvp.Value = ResolveRandom(kvp.Value);
 
-                        if (key.Contains(":list##"))
-                        {
-                            string[] list = question.Answer
-                                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                                .Skip(1)
-                                .ToArray();
+            // TODO: if customize-script, run and update transforms
 
-                            if (list.Length > 0)
-                            {
-                                val = list[_random.Next(list.Length)];
+            // select variant, adjusting from 1-based to 0-based index
+            int v = ctx.Request.Variant > 0
+                ? Math.Min(ctx.Request.Variant, spec.Variants.Count) - 1
+                : _random.Next(spec.Variants.Count);
 
-                                question.Answer = key;
+            spec.Challenge = spec.Variants
+                .Skip(v).Take(1)
+                .FirstOrDefault();
 
-                                if (map.ContainsKey(key))
-                                    map[key] = val;
-                            }
-                        }
+            // initialize selected challenge
+            spec.Challenge.SetQuestionWeights();
 
-                        map.TryAdd(key, val);
-                    }
-            }
+            spec.MaxPoints = ctx.Request.Points;
 
-            // resolve macros
-            foreach (string key in map.Keys.ToArray())
-                if (string.IsNullOrEmpty(map[key]))
-                    map[key] = ResolveRandom(key);
+            spec.MaxAttempts = ctx.Request.MaxAttempts;
 
-            // apply macros to spec answers
-            foreach (var q in spec.Questions)
-                foreach (string key in map.Keys)
-                    q.Answer = q.Answer.Replace(key, map[key]);
-
-            spec.Randoms = map;
+            spec.Variants = null;
 
             gamespace.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
 
+            // apply transforms
+            foreach (var kvp in spec.Transforms)
+                gamespace.Challenge = gamespace.Challenge.Replace($"##{kvp.Key}##", kvp.Value);
+
             await _gamespaceStore.Add(gamespace);
 
-            return gamespace;
+            ctx.Gamespace = gamespace;
         }
 
         private string ResolveRandom(string key)
         {
             string result = "";
 
-            string[] seg = key.Replace("#", "").Split(':');
+            string[] seg = key.Split(':');
 
             int count = 8;
 
-            switch (seg[1])
+            switch (seg[0])
             {
                 case "uid":
                 result = Guid.NewGuid().ToString("N");
                 break;
 
                 case "hex":
-                if (seg.Length < 3 || !int.TryParse(seg[2], out count))
+                if (seg.Length < 2 || !int.TryParse(seg[1], out count))
                     count = 8;
                 count = Math.Min(count, 64);
 
@@ -222,7 +285,7 @@ namespace TopoMojo.Services
                 break;
 
                 case "b64":
-                if (seg.Length < 3 || !int.TryParse(seg[2], out count))
+                if (seg.Length < 2 || !int.TryParse(seg[1], out count))
                     count = 16;
                 count = Math.Min(count, 64);
                 byte[] buffer = new byte[count];
@@ -230,13 +293,21 @@ namespace TopoMojo.Services
                 result = Convert.ToBase64String(buffer);
                 break;
 
+                case "list":
+                if (seg.Length > 1)
+                {
+                    var options = seg[1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    result = options[_random.Next(options.Length)];
+                }
+                break;
+
                 case "int":
                 default:
                 int min = 0;
                 int max = int.MaxValue;
-                if (seg.Length > 2)
+                if (seg.Length > 1)
                 {
-                    string[] range = seg[2].Split('-');
+                    string[] range = seg[1].Split('-');
                     if (range.Length > 1)
                     {
                         int.TryParse(range[0], out min);
@@ -249,39 +320,58 @@ namespace TopoMojo.Services
                 }
                 result = _random.Next(min, max).ToString();
                 break;
+
             }
 
             return result;
-
-            // ##target:type:range##
-            // ##jam:hex:8##
-            // ##jam:b64:24##
-            // ##jam:uid:0##
-            // ##jam:int:99-9999##
-            // ##jam:list## one two three
-            // ##jam:net:x.x.x.0##
-            // ##jam:ip4:x.x.x.x##
         }
 
         private async Task Deploy(Data.Gamespace gamespace)
         {
+
             var tasks = new List<Task<Vm>>();
 
-            var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
+            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
+
+            var isoTargets = (spec.Challenge.Iso.Targets ?? "")
+                .ToLower()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             var templates = Mapper.Map<List<ConvergedTemplate>>(gamespace.Workspace.Templates);
 
-            foreach (var template in templates)
+            foreach (var template in templates.ToList())
             {
                 // apply template macro substitutions
-                foreach (string key in spec.Randoms.Keys)
+                foreach (var kvp in spec.Transforms)
                 {
-                    template.Guestinfo = template.Guestinfo?.Replace(key, spec.Randoms[key]);
-                    template.Detail = template.Detail?.Replace(key, spec.Randoms[key]);
+                    template.Guestinfo = template.Guestinfo?.Replace(kvp.Key, kvp.Value);
+                    template.Detail = template.Detail?.Replace(kvp.Key, kvp.Value);
                 }
 
-                // TODO: add template replicas
+                // apply challenge iso
+                if (string.IsNullOrEmpty(template.Iso) && isoTargets.Contains(template.Name.ToLower()))
+                    template.Iso = $"{spec.Challenge.Iso.File}";
 
+                // expand replicas
+                int replicas = template.Replicas < 0 ? gamespace.Players.Count : Math.Min(template.Replicas, _options.ReplicaLimit);
+
+                if (replicas > 1)
+                {
+                    for (int i = 1; i < replicas; i++)
+                    {
+                        var tt = template.Clone<ConvergedTemplate>();
+
+                        tt.Name += $"_{i+1}";
+
+                        templates.Add(tt);
+                    }
+
+                    template.Name += "_1";
+                }
+            }
+
+            foreach (var template in templates)
+            {
                 tasks.Add(
                     _pod.Deploy(
                         template.ToVirtualTemplate(gamespace.GlobalId)
@@ -290,87 +380,83 @@ namespace TopoMojo.Services
             }
 
             await Task.WhenAll(tasks.ToArray());
+
+            if (gamespace.StartTime == DateTime.MinValue)
+            {
+                gamespace.StartTime = DateTime.UtcNow;
+                await _gamespaceStore.Update(gamespace);
+            }
         }
 
-        public async Task<GameState> Load(int id)
-        {
-            var gamespace = await _gamespaceStore.Load(id);
-
-            return await LoadState(gamespace);
-        }
-
-        public async Task<GameState> LoadFromWorkspace(int workspaceId)
-        {
-            var gamespace = User.Id > 0
-                ? await _gamespaceStore.FindByContext(workspaceId, User.Id)
-                : null;
-
-            if (gamespace is Data.Gamespace)
-                return await LoadState(gamespace);
-
-            var workspace = await _workspaceStore.Load(workspaceId);
-
-            return LoadState(workspace).Result;
-        }
-
-        private async Task<GameState> LoadState(Data.Gamespace gamespace)
+        private async Task<GameState> LoadState(Data.Gamespace gamespace, bool preview = false)
         {
             var state = Mapper.Map<GameState>(gamespace);
 
-            state.Vms = gamespace.Workspace.Templates
-                .Where(t => !t.IsHidden)
-                .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                .ToArray();
+            state.Markdown = await System.IO.File.ReadAllTextAsync(
+                System.IO.Path.Combine(_options.DocPath, gamespace.Workspace.GlobalId) + ".md"
+            );
 
-            state.MergeVms(await _pod.Find(gamespace.GlobalId));
+            if (!preview && !gamespace.HasStarted())
+            {
+                state.Markdown = state.Markdown.Split("<!-- cut -->").FirstOrDefault();
+            }
+
+            if (gamespace.IsActive())
+            {
+                state.Vms = (await _pod.Find(gamespace.GlobalId))
+                    .Select(vm => new VmState
+                    {
+                        Id = vm.Id,
+                        Name = vm.Name.Untagged(),
+                        IsolationId = vm.Name.Tag(),
+                        IsRunning = (vm.State == VmPowerState.Running),
+                        IsVisible = gamespace.IsTemplateVisible(vm.Name)
+                    })
+                    .Where(s => s.IsVisible)
+                    .OrderBy(s => s.Name)
+                    .ToArray();
+            }
+
+            if (preview || gamespace.HasStarted())
+            {
+                var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(gamespace.Challenge, jsonOptions);
+
+                if (spec.Challenge == null)
+                    return state;
+
+                // TODO: get active question set
+
+                // map challenge to safe model
+                state.Challenge = MapChallenge(spec, 0);
+            }
 
             return state;
         }
 
-        private Task<GameState> LoadState(Data.Workspace workspace)
+        private async Task<GameState> LoadState(Data.Workspace workspace)
         {
-            if (workspace == null || !workspace.IsPublished)
-                throw new InvalidOperationException();
+            var state = new GameState
+            {
+                Name = workspace.Name,
 
-            var state = new GameState();
+                Markdown = (await System.IO.File.ReadAllTextAsync(
+                    System.IO.Path.Combine(_options.DocPath, workspace.GlobalId) + ".md"
+                )).Split("<!-- cut -->").First()
+            };
 
-            state.Name = workspace.Name;
-
-            state.WorkspaceDocument = workspace.Document;
-
-            state.Vms = workspace.Templates
-                .Where(t => !t.IsHidden)
-                .Select(t => new VmState { Name = t.Name, TemplateId = t.Id})
-                .ToArray();
-
-            return Task.FromResult(state);
+            return state;
         }
 
-        public async Task<GameState> Destroy(string id)
+        public async Task Delete(string id)
         {
-            var gamespace = await _gamespaceStore.List()
-                .Include(g => g.Players)
-                .SingleOrDefaultAsync(g => g.GlobalId == id);
+            var ctx = await LoadContext(id);
 
-            return await Destroy(gamespace);
-        }
+            if (!ctx.IsMember || !ctx.Gamespace.AllowReset)
+                throw new ActionForbidden();
 
-        public async Task<GameState> Destroy(int id)
-        {
-            var gamespace = await _gamespaceStore.Load(id);
-            return await Destroy(gamespace);
-        }
+            await _pod.DeleteAll(id);
 
-        private async Task<GameState> Destroy(Data.Gamespace gamespace)
-        {
-            if (gamespace == null || !gamespace.CanEdit(User))
-                return null;
-
-            await _pod.DeleteAll(gamespace.GlobalId);
-
-            await _gamespaceStore.Delete(gamespace.Id);
-
-            return Mapper.Map<GameState>(gamespace);
+            await _gamespaceStore.Delete(ctx.Gamespace.Id);
         }
 
         public async Task<Player[]> Players(int id)
@@ -390,11 +476,13 @@ namespace TopoMojo.Services
             if (gamespace == null)
                 throw new InvalidOperationException();
 
-            if (!gamespace.Players.Where(m => m.PersonId == User.Id).Any())
+            if (!gamespace.Players.Where(m => m.SubjectId == User.GlobalId).Any())
             {
                 gamespace.Players.Add(new Data.Player
                 {
-                    PersonId = User.Id,
+                    SubjectId = User.GlobalId,
+                    SubjectName = User.Name,
+                    WorkspaceId = gamespace.Workspace.GlobalId
                 });
 
                 await _gamespaceStore.Update(gamespace);
@@ -406,11 +494,11 @@ namespace TopoMojo.Services
         {
             var gamespace = await _gamespaceStore.FindByPlayer(playerId);
 
-            if (gamespace == null || !gamespace.CanManage(User))
-                throw new InvalidOperationException();
+            if (!gamespace?.CanManage(User) ?? false)
+                throw new ActionForbidden();
 
             var member = gamespace.Players
-                .Where(p => p.PersonId == playerId)
+                .Where(p => p.Id == playerId)
                 .SingleOrDefault();
 
             if (member != null)
@@ -419,7 +507,158 @@ namespace TopoMojo.Services
 
                 await _gamespaceStore.Update(gamespace);
             }
+        }
 
+        public async Task<Models.v2.ChallengeView> Grade(string id, Models.v2.SectionSubmission submission)
+        {
+            if (! await _locker.Lock(id))
+                throw new ResourceIsLocked();
+
+            var ctx = await LoadContext(id);
+
+            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(ctx.Gamespace.Challenge, jsonOptions);
+
+            var section = spec.Challenge.Sections.ElementAtOrDefault(submission.SectionIndex);
+
+            if (section == null)
+                _locker.Unlock(id, new InvalidOperationException()).Wait();
+
+            if (ctx.Gamespace.IsExpired())
+                return MapChallenge(spec, submission.SectionIndex);
+
+            if (spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
+                _locker.Unlock(id, new AttemptLimitReached()).Wait();
+
+            submission.Timestamp = DateTime.UtcNow;
+            spec.Submissions.Add(submission);
+
+            // grade and save
+            int i = 0;
+            foreach (var question in section.Questions)
+                question.Grade(submission.Questions.ElementAtOrDefault(i++)?.Answer ?? "");
+
+            section.Score = section.Questions
+                .Where(q => q.IsCorrect)
+                .Select(q => q.Weight - q.Penalty)
+                .Sum();
+
+            spec.Score = spec.Challenge.Sections
+                .SelectMany(s => s.Questions)
+                .Where(q => q.IsCorrect)
+                .Select(q => q.Weight - q.Penalty)
+                .Sum();
+
+            ctx.Gamespace.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
+
+            await _gamespaceStore.Update(ctx.Gamespace);
+
+            // map return model
+            var result = MapChallenge(spec);
+
+            // merge submission into return model
+            i = 0;
+            foreach (var question in result.Questions)
+                question.Answer = submission.Questions.ElementAtOrDefault(i++)?.Answer ?? "";
+
+            await _locker.Unlock(id);
+
+            return result;
+        }
+
+        private Models.v2.ChallengeView MapChallenge(Models.v2.ChallengeSpec spec, int sectionIndex = 0)
+        {
+            var section = spec.Challenge.Sections.ElementAtOrDefault(sectionIndex);
+
+            var challenge = new Models.v2.ChallengeView
+            {
+                Text = string.Join("\n\n", spec.Text, spec.Challenge.Text),
+                MaxPoints = spec.MaxPoints,
+                Score = Math.Round(spec.Score * spec.MaxPoints, 0, MidpointRounding.AwayFromZero),
+                SectionIndex = sectionIndex,
+                SectionCount = spec.Challenge.Sections.Count,
+                SectionScore = Math.Round(section.Score * spec.MaxPoints, 0, MidpointRounding.AwayFromZero),
+                SectionText = section.Text,
+                Questions = Mapper.Map<Models.v2.QuestionView[]>(section.Questions)
+            };
+
+            foreach(var q in challenge.Questions)
+            {
+                q.Weight = (float) Math.Round(q.Weight * spec.MaxPoints, 0, MidpointRounding.AwayFromZero);
+                q.Penalty = (float) Math.Round(q.Penalty * spec.MaxPoints, 0, MidpointRounding.AwayFromZero);
+            }
+
+            return challenge;
+        }
+
+        private RegistrationContext LoadContext(RegistrationRequest reg)
+        {
+            var ctx = LoadContext();
+            ctx.Request = reg;
+            return ctx;
+        }
+
+        private async Task<RegistrationContext> LoadContext(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                throw new ResourceNotFound();
+
+            var ctx = LoadContext();
+
+            ctx.Gamespace = await _gamespaceStore.Load(id);
+
+            ctx.Workspace = ctx.Gamespace?.Workspace;
+
+            if (ctx.Gamespace == null)
+                throw new ResourceNotFound();
+
+            if (!ctx.IsMember)
+                throw new ActionForbidden();
+
+            return ctx;
+        }
+
+        private RegistrationContext LoadContext()
+        {
+            return new RegistrationContext
+            {
+                User = User,
+                Client = Client,
+            };
+        }
+    }
+
+    public class RegistrationContext
+    {
+        public RegistrationRequest Request { get; set; }
+        public Data.Gamespace Gamespace { get; set; }
+        public Data.Workspace Workspace { get; set; }
+        public Client Client { get; set; }
+        public User User { get; set; }
+
+        public bool UserExists { get { return User is User && User.Id > 0; } }
+
+        public bool WorkspaceExists { get { return Workspace is Data.Workspace; } }
+
+        public bool GamespaceExists { get { return Gamespace is Data.Gamespace; } }
+
+        public bool IsValidAudience
+        {
+            get
+            {
+                return UserExists
+                    ? Workspace.CanEdit(User)
+                    : (Workspace ?? Gamespace.Workspace).HasScope(Client.Scope);
+            }
+        }
+
+        public bool IsMember
+        {
+            get
+            {
+                return UserExists
+                    ? Gamespace.CanManage(User)
+                    : Gamespace.ClientId == Client.Id;
+            }
         }
     }
 }

@@ -2,11 +2,8 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -18,6 +15,7 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Web.Controllers
 {
+    // [Authorize]
     [Authorize(Policy="Players")]
     [ApiController]
     public class GamespaceController : _Controller
@@ -25,6 +23,7 @@ namespace TopoMojo.Web.Controllers
         public GamespaceController(
             ILogger<AdminController> logger,
             IIdentityResolver identityResolver,
+            CoreOptions options,
             GamespaceService gamespaceService,
             IHypervisorService podService,
             IHubContext<AppHub, IHubEvent> hub,
@@ -35,15 +34,17 @@ namespace TopoMojo.Web.Controllers
             _pod = podService;
             _hub = hub;
             _cache = cache;
+            _options = options;
         }
 
         private readonly IHypervisorService _pod;
         private readonly GamespaceService _gamespaceService;
         private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly IDistributedCache _cache;
+        private readonly CoreOptions _options;
 
         /// <summary>
-        /// List user's running gamespaces.
+        /// List running gamespaces.
         /// </summary>
         /// <remarks>
         /// By default, result is filtered to user's gamespaces.
@@ -61,19 +62,69 @@ namespace TopoMojo.Web.Controllers
         }
 
         /// <summary>
-        /// Load a gamespace.
+        /// Preview a gamespace.
         /// </summary>
         /// <remarks>
         /// </remarks>
-        /// <param name="id">Workspace Id</param>
+        /// <param name="id">Resource Id</param>
         /// <returns></returns>
-        [AllowAnonymous]
-        [HttpGet("api/gamespace/{id}")]
-        public async Task<ActionResult<GameState>> Load(int id)
+        [HttpGet("api/preview/{id}")]
+        public async Task<ActionResult<GameState>> Preview(string id)
         {
-            var result = await _gamespaceService.LoadFromWorkspace(id);
+            var result = await _gamespaceService.Preview(id);
 
-            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Load a gamespace state.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <param name="id">Gamespace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/gamespace/{id}")]
+        public async Task<ActionResult<GameState>> Load(string id)
+        {
+            var result = await _gamespaceService.Load(id);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Register a gamespace on behalf of a user
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [HttpPost("api/gamespace")]
+        public async Task<ActionResult<GameState>> Register([FromBody]RegistrationRequest model, CancellationToken ct)
+        {
+            var result = await _gamespaceService.Register(model);
+
+            string token = Guid.NewGuid().ToString("N");
+
+            await _cache.SetStringAsync(
+                $"{TicketAuthentication.TicketCachePrefix}{token}",
+                $"{model.SubjectId}#{model.SubjectName}",
+                new DistributedCacheEntryOptions {
+                    SlidingExpiration = new TimeSpan(0, 0, 60)
+                },
+                ct
+            );
+
+            result.LaunchpointUrl = $"{_options.LaunchUrl}?t={token}&g={result.GlobalId}";
+
+            // if url is relative, make absolute
+            if (!result.LaunchpointUrl.Contains("://"))
+            {
+                result.LaunchpointUrl = string.Format("{0}://{1}{2}{3}",
+                    Request.Scheme,
+                    Request.Host,
+                    Request.PathBase,
+                    result.LaunchpointUrl
+                );
+            }
 
             return Ok(result);
         }
@@ -81,118 +132,73 @@ namespace TopoMojo.Web.Controllers
         /// <summary>
         /// Start a gamespace.
         /// </summary>
-        /// <param name="id">Workspace Id</param>
+        /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
-        [HttpPost("api/gamespace/{id}")]
-        public async Task<ActionResult<GameState>> Launch(int id)
+        [HttpPost("api/gamespace/{id}/start")]
+        public async Task<ActionResult<GameState>> Start(string id)
         {
-            var result = await _gamespaceService.Launch(id);
-
-            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
-
-            Log("launched", result);
+            var result = await _gamespaceService.Start(id);
 
             return Ok(result);
         }
 
         /// <summary>
-        /// Start a gamespace with a registration token.
+        /// Stop a gamespace.
         /// </summary>
-        /// <param name="token">registration token</param>
+        /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
-        [HttpPost("api/launch/{token}")]
-        public async Task<GameState> LaunchRegistered(string token)
+        [HttpPost("api/gamespace/{id}/stop")]
+        public async Task<ActionResult<GameState>> Stop(string id)
         {
-            string data = await _cache.GetStringAsync($"{AppConstants.RegistrationCachePrefix}{token}");
+            var result = await _gamespaceService.Stop(id);
 
-            if (string.IsNullOrEmpty(data))
-                throw new GamespaceNotRegistered();
-
-            try
-            {
-
-                var registration = JsonSerializer.Deserialize<Registration>(data);
-
-                var result = await _gamespaceService.Launch(registration);
-
-                result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
-
-                Log("launched", result);
-
-                return result;
-
-            }
-            catch (Exception ex)
-            {
-
-                throw new GamespaceNotRegistered(ex.Message);
-
-            }
-
+            return Ok(result);
         }
 
         /// <summary>
-        /// End a registered gamespace.
+        /// Complete a gamespace.
         /// </summary>
-        /// <param name="token">Registration Token</param>
+        /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
-        [HttpDelete("api/launch/{token}")]
-        public async Task<ActionResult> Destroy(string token)
+        [HttpPost("api/gamespace/{id}/complete")]
+        public async Task<ActionResult<GameState>> Complete(string id)
         {
-            string data = await _cache.GetStringAsync($"{AppConstants.RegistrationCachePrefix}{token}");
+            var result = await _gamespaceService.Complete(id);
 
-            if (string.IsNullOrEmpty(data))
-                return Ok();
-
-            var registration = JsonSerializer.Deserialize<Registration>(data);
-
-            var result = await _gamespaceService.Destroy(registration.GamespaceId);
-
-            if (result != null)
-            {
-                Log("destroyed", result);
-
-                SendBroadcast(result, "OVER");
-            }
-
-            await _cache.RemoveAsync($"{AppConstants.RegistrationCachePrefix}{token}");
-
-            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
-                await HttpContext.SignOutAsync(AppConstants.CookieScheme);
-
-            return Ok();
+            return Ok(result);
         }
 
         /// <summary>
-        /// End a gamespace.
+        /// Grade a challenge.
         /// </summary>
+        /// <param name="id">Gamespace Id</param>
+        /// <param name="model">ChallengeView</param>
+        /// <returns></returns>
+        [HttpPost("api/v2/gamespace/{id}/grade")]
+        public async Task<ActionResult<TopoMojo.Models.v2.ChallengeView>> Grade(string id, [FromBody]TopoMojo.Models.v2.SectionSubmission model)
+        {
+            var result = await _gamespaceService.Grade(id, model);
+
+            // Log("launched", result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Delete a gamespace.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpDelete("api/gamespace/{id}")]
-        public async Task<ActionResult> Destroy(int id)
+        public async Task<ActionResult> Delete(string id)
         {
-            var result = await _gamespaceService.Destroy(id);
+            await _gamespaceService.Delete(id);
 
-            Log("destroyed", result);
-
-            SendBroadcast(result, "OVER");
+            SendBroadcast(new GameState{GlobalId = id}, "OVER");
 
             return Ok();
-        }
-
-        /// <summary>
-        /// Get current game state.
-        /// </summary>
-        /// <param name="id">Gamespace Id</param>
-        /// <returns></returns>
-        [HttpGet("api/gamestate/{id}")]
-        public async Task<ActionResult<GameState>> CheckState(int id)
-        {
-            var result = await _gamespaceService.Load(id);
-
-            result.WorkspaceDocument = ApplyPathBase(result.WorkspaceDocument);
-
-            return Ok(result);
         }
 
         /// <summary>
