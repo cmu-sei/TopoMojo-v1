@@ -69,6 +69,7 @@ namespace TopoMojo.Models
         Stop,
         Save,
         Revert,
-        Delete
+        Delete,
+        Reset
     }
 }

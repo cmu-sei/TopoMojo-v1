@@ -164,6 +164,11 @@ namespace TopoMojo.vSphere
                 vm = await Start(op.Id);
                 break;
 
+                case VmOperationType.Reset:
+                vm = await Stop(op.Id);
+                vm = await Start(op.Id);
+                break;
+
                 case VmOperationType.Stop:
                 vm = await Stop(op.Id);
                 break;

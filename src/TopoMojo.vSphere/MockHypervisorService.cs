@@ -132,7 +132,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Load(string id)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             int test = _rand.Next(9);
             if (test == 0)
             {
@@ -164,6 +164,11 @@ namespace TopoMojo.vSphere
                 vm = await Stop(op.Id);
                 break;
 
+                case VmOperationType.Reset:
+                vm = await Stop(op.Id);
+                vm = await Start(op.Id);
+                break;
+
                 case VmOperationType.Save:
                 vm = await Save(op.Id);
                 break;
@@ -181,7 +186,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Start(string id)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             await Delay();
             vm.State = VmPowerState.Running;
             return vm;
@@ -189,7 +194,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Stop(string id)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             await Delay();
             vm.State = VmPowerState.Off;
             return vm;
@@ -200,7 +205,7 @@ namespace TopoMojo.vSphere
             if (_tasks.ContainsKey(id))
                 throw new InvalidOperationException();
 
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             vm.Task = new VmTask { Id = id, Name = "saving", WhenCreated = DateTime.UtcNow};
             _tasks.Add(vm.Name, vm.Task);
             await Delay();
@@ -209,7 +214,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Revert(string id)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             await Delay();
             vm.State = VmPowerState.Off;
             return vm;
@@ -217,7 +222,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> Delete(string id)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             await Delay();
             _vms.Remove(id);
             vm.State = VmPowerState.Off;
@@ -227,7 +232,7 @@ namespace TopoMojo.vSphere
 
         public async Task<Vm> ChangeConfiguration(string id, VmKeyValue change)
         {
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             await Delay();
             return vm;
         }
@@ -344,16 +349,23 @@ namespace TopoMojo.vSphere
         public async Task<ConsoleSummary> Display(string id)
         {
             await Task.Delay(0);
+            var vm = TryFind(id);
             return new ConsoleSummary
             {
                 Id = id,
-                Name = _vms[id].Name.Untagged(),
-                IsolationId = _vms[id].Name.Tag(),
+                Name = vm.Name.Untagged(),
+                IsolationId = vm.Name.Tag(),
                 Url = "https://mock.topomojo.local/ticket/12345678",
-                IsRunning = _vms[id].State == VmPowerState.Running
+                IsRunning = vm.State == VmPowerState.Running
             };
         }
 
+        private Vm TryFind(string id)
+        {
+            return _vms.ContainsKey(id)
+                ? _vms[id]
+                : _vms.Values.Where(v => v.Name == id).FirstOrDefault();
+        }
         public string Version
         {
             get
@@ -486,7 +498,7 @@ namespace TopoMojo.vSphere
         public async Task<Vm> Answer(string id, VmAnswer answer)
         {
             await Task.Delay(0);
-            Vm vm = _vms[id];
+            Vm vm = TryFind(id);
             vm.Question = null;
             return vm;
         }
