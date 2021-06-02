@@ -524,7 +524,8 @@ namespace TopoMojo.Services
                 _locker.Unlock(id, new InvalidOperationException()).Wait();
 
             if (ctx.Gamespace.IsExpired())
-                return MapChallenge(spec, submission.SectionIndex);
+                _locker.Unlock(id, new GamespaceIsExpired()).Wait();
+                // return MapChallenge(spec, submission.SectionIndex);
 
             if (spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
                 _locker.Unlock(id, new AttemptLimitReached()).Wait();

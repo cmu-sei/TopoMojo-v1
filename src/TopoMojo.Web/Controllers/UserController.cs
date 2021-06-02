@@ -108,7 +108,19 @@ namespace TopoMojo.Web.Controllers
         public async Task<User> Register([FromBody] ChangedUser model)
         {
             model.GlobalId = User.Subject();
-            return await _userService.GetOrAdd(model);
+            var user =  await _userService.GetOrAdd(model);
+
+            if (User.Identity.AuthenticationType != AppConstants.CookieScheme)
+            {
+                await HttpContext.SignInAsync(
+                    AppConstants.CookieScheme,
+                    new ClaimsPrincipal(
+                        new ClaimsIdentity(User.Claims, AppConstants.CookieScheme)
+                    )
+                );
+            }
+
+            return user;
         }
 
         /// <summary>
@@ -119,7 +131,7 @@ namespace TopoMojo.Web.Controllers
         /// in an `Authorization: Ticket [ticket]` or `Authorization: Bearer [ticket]` header.
         /// </remarks>
         /// <returns></returns>
-        [Authorize(Policy="Players")]
+        [Authorize(Policy = "Players")]
         [HttpGet("/api/user/ticket")]
         public async Task<IActionResult> GetTicket()
         {
@@ -143,7 +155,7 @@ namespace TopoMojo.Web.Controllers
         /// Used to exhange one-time-ticket for an auth cookie
         /// </remarks>
         /// <returns></returns>
-        [Authorize(Policy="TicketOrCookie")]
+        [Authorize(Policy = "Players")]
         [HttpPost("/api/user/login")]
         public async Task<IActionResult> GetAuthCookie()
         {

@@ -2,13 +2,10 @@
 // Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -39,17 +36,13 @@ namespace TopoMojo.Web
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            IDataProtectionProvider dataProtection,
             IDistributedCache cache
         )
             : base(options, logger, encoder, clock)
         {
-            // _dp = dataProtection.CreateProtector($"_dp:{Assembly.GetEntryAssembly().FullName}");
-            _dp = dataProtection.CreateProtector(AppConstants.DataProtectionPurpose);
             _cache = cache;
         }
 
-        private readonly IDataProtector _dp;
         private readonly IDistributedCache _cache;
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -85,17 +78,6 @@ namespace TopoMojo.Web
                 return AuthenticateResult.NoResult();
 
             await _cache.RemoveAsync(key);
-
-            // string[] value = _dp.Unprotect(key).Split(
-            //     new char[] { ' ', ';', ',', '|'},
-            //     StringSplitOptions.RemoveEmptyEntries
-            // );
-
-            // bool expired = Int64.TryParse(value.First(), out long ticks)
-            //     ? DateTime.UtcNow.Ticks > ticks
-            //     : true;
-
-            // string identity = value.Last();
 
             string identity = value.Untagged();
 

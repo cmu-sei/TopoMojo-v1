@@ -84,7 +84,7 @@ namespace TopoMojo.Models
             if (request.ExpirationTime == DateTime.MinValue)
                 request.ExpirationTime = ts.AddMinutes(request.MaxMinutes);
 
-            if (request.ExpirationTime.Subtract(ts).TotalMinutes > max)
+            if (max > 0 && request.ExpirationTime.Subtract(ts).TotalMinutes > max)
                 request.ExpirationTime = ts.AddMinutes(max);
 
             return request.ExpirationTime;

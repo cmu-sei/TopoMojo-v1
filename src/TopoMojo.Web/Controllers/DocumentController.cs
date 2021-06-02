@@ -194,7 +194,6 @@ namespace TopoMojo.Web.Controllers
 
         private void SendBroadcast(string roomId, string action, string text)
         {
-            DateTime currentDatetime = DateTime.UtcNow;
             _hub.Clients
                 .Group(roomId)
                 .DocumentEvent(
@@ -203,7 +202,7 @@ namespace TopoMojo.Web.Controllers
                         "DOCUMENT." + action.ToUpper(),
                         new Document {
                             Text = text,
-                            Timestamp = currentDatetime.ToString("ss.ffff")
+                            Timestamp = (long)DateTimeOffset.UtcNow.Subtract(DateTimeOffset.UnixEpoch).TotalMilliseconds // DateTime.UtcNow.ToString("ss.ffff")
                         }
                     )
                 );

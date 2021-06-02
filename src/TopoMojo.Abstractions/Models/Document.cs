@@ -8,6 +8,6 @@ namespace TopoMojo.Models
     public class Document
     {
         public string Text { get; set; }
-        public string Timestamp { get; set; }
+        public long Timestamp { get; set; }
     }
 }
