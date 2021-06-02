@@ -59,13 +59,17 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("Audience")
-                        .HasColumnType("character varying(64)")
-                        .HasMaxLength(64);
+                    b.Property<bool>("AllowReset")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("character varying(4096)")
-                        .HasMaxLength(4096);
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("GlobalId")
                         .IsRequired()
@@ -73,15 +77,18 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .IsFixedLength(true)
                         .HasMaxLength(36);
 
-                    b.Property<DateTime>("LastActivity")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<string>("Name")
                         .HasColumnType("character varying(64)")
                         .HasMaxLength(64);
 
                     b.Property<string>("ShareCode")
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("StopTime")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("WhenCreated")
                         .HasColumnType("timestamp without time zone");
@@ -147,14 +154,25 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<int>("Permission")
                         .HasColumnType("integer");
 
-                    b.Property<int>("PersonId")
+                    b.Property<string>("SubjectId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubjectName")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("WorkspaceId")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GamespaceId");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SubjectId", "WorkspaceId");
 
                     b.ToTable("Players");
                 });
@@ -298,8 +316,7 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(64);
 
                     b.Property<string>("Challenge")
-                        .HasColumnType("character varying(4096)")
-                        .HasMaxLength(4096);
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("character varying(255)")
@@ -364,11 +381,9 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TopoMojo.Data.User", "Person")
+                    b.HasOne("TopoMojo.Data.User", null)
                         .WithMany("Gamespaces")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("TopoMojo.Data.Template", b =>
