@@ -13,6 +13,7 @@ using TopoMojo.Services;
 namespace TopoMojo.Web.Controllers
 {
     [Authorize]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class ChatController : _Controller
     {
         public ChatController(

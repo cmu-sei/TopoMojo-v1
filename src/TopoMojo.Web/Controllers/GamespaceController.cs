@@ -174,7 +174,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <param name="model">ChallengeView</param>
         /// <returns></returns>
-        [HttpPost("api/v2/gamespace/{id}/grade")]
+        [HttpPost("api/gamespace/{id}/grade")]
         public async Task<ActionResult<TopoMojo.Models.v2.ChallengeView>> Grade(string id, [FromBody]TopoMojo.Models.v2.SectionSubmission model)
         {
             var result = await _gamespaceService.Grade(id, model);

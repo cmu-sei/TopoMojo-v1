@@ -18,7 +18,7 @@ namespace TopoMojo.Web.Controllers
 {
     [Authorize(Policy = "TrustedClients")]
     [ApiController]
-    // [ApiExplorerSettings(IgnoreApi = true)]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class EngineController : _Controller
     {
         public EngineController(

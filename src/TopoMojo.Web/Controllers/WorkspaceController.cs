@@ -61,18 +61,6 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/workspace/{id}")]
-        public async Task<ActionResult<Workspace>> Load(int id)
-        {
-            Workspace workspace = await _workspaceService.Load(id);
-
-            return Ok(workspace);
-        }
-        /// <summary>
-        /// Load a workspace.
-        /// </summary>
-        /// <param name="id">Workspace Id</param>
-        /// <returns></returns>
-        [HttpGet("api/v2/workspace/{id}")]
         public async Task<ActionResult<Workspace>> Load(string id)
         {
             Workspace workspace = await _workspaceService.Load(id);
@@ -232,15 +220,7 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
-        [HttpPut("api/workspace/{id}/challenge")]
-        public async Task<IActionResult> Challenge([FromRoute]int id, [FromBody]ChallengeSpec model)
-        {
-            await _workspaceService.UpdateChallenge(id, model);
-
-            return Ok();
-        }
-
-        [HttpGet("api/v2/workspace/{id}/challenge")]
+        [HttpGet("api/workspace/{id}/challenge")]
         public async Task<IActionResult> GetChallenge([FromRoute] string id)
         {
             var model = await _workspaceService.GetChallenge(id);
@@ -248,7 +228,7 @@ namespace TopoMojo.Web.Controllers
             return Ok(model);
         }
 
-        [HttpPut("api/v2/workspace/{id}/challenge")]
+        [HttpPut("api/workspace/{id}/challenge")]
         public async Task<IActionResult> ChallengeV2([FromRoute]string id, [FromBody] TopoMojo.Models.v2.ChallengeSpec model)
         {
             await _workspaceService.UpdateChallenge(id, model);
