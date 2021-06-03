@@ -463,20 +463,20 @@ namespace TopoMojo.Services
             return await Task.FromResult(challenge);
         }
 
-        private bool GradeQuestion(AnswerGrader grader, string expected, string submitted)
+        private bool GradeQuestion(AnswerGraderOld grader, string expected, string submitted)
         {
             string[] a = expected.ToLower().Replace(" ", "").Split('|');
             string b = submitted.ToLower().Replace(" ", "");
 
             switch (grader) {
 
-                case AnswerGrader.Match:
+                case AnswerGraderOld.Match:
                 return a.First().Equals(b);
 
-                case AnswerGrader.MatchAny:
+                case AnswerGraderOld.MatchAny:
                 return a.Contains(b);
 
-                case AnswerGrader.MatchAll:
+                case AnswerGraderOld.MatchAll:
                 return a.Intersect(
                     b.Split(new char[] { ',', ';', ':', '|'})
                 ).ToArray().Length == a.Length;

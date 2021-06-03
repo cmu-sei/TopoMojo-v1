@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using TopoMojo.Extensions;
+using TopoMojo.Models.v2;
 
 namespace TopoMojo.Models
 {
@@ -29,30 +30,30 @@ namespace TopoMojo.Models
         public static void Grade(this Models.v2.QuestionSpec question, string submission)
         {
             if (string.IsNullOrWhiteSpace(submission))
-            {
-                question.IsCorrect |= false;
-                question.IsGraded = true;
                 return;
-            }
+
+            if (question.IsCorrect)
+                return;
 
             string[] a = question.Answer.ToLower().Replace(" ", "").Split('|');
-            string b = submission.ToLower().Replace(" ", "");
+            string b = submission.ToLower();
+            string c = b.Replace(" ", "");
 
             switch (question.Grader) {
 
-                case (v2.AnswerGrader)AnswerGrader.MatchAny:
-                question.IsCorrect = a.Contains(b);
-                break;
-
-                case (v2.AnswerGrader)AnswerGrader.MatchAll:
+                case AnswerGrader.MatchAll:
                 question.IsCorrect = a.Intersect(
-                    b.Split(new char[] { ',', ';', ':', '|'})
+                    b.Split(new char[] { ' ', ',', ';', ':', '|'}, StringSplitOptions.RemoveEmptyEntries)
                 ).ToArray().Length == a.Length;
                 break;
 
-                case (v2.AnswerGrader)AnswerGrader.Match:
+                case AnswerGrader.MatchAny:
+                question.IsCorrect = a.Contains(c);
+                break;
+
+                case AnswerGrader.Match:
                 default:
-                question.IsCorrect = a.First().Equals(b);
+                question.IsCorrect = a.First().Equals(c);
                 break;
             }
 

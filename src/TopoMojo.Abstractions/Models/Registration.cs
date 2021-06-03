@@ -46,7 +46,7 @@ namespace TopoMojo.Models
         public string Hint { get; set; }
         public string Answer { get; set; }
         public float Weight { get; set; }
-        public AnswerGrader Grader { get; set; }
+        public AnswerGraderOld Grader { get; set; }
     }
 
     public class Challenge
@@ -65,7 +65,7 @@ namespace TopoMojo.Models
         public bool IsCorrect { get; set; }
     }
 
-    public enum AnswerGrader
+    public enum AnswerGraderOld
     {
         Match,
         MatchAll,
