@@ -226,8 +226,7 @@ namespace TopoMojo.Services
             var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(ctx.Workspace.Challenge ?? "{}", jsonOptions);
 
             //resolve transforms
-            foreach (var kvp in spec.Transforms)
-                kvp.Value = ResolveRandom(kvp.Value);
+            ResolveTransforms(spec);
 
             // TODO: if customize-script, run and update transforms
 
@@ -258,6 +257,30 @@ namespace TopoMojo.Services
             await _gamespaceStore.Add(gamespace);
 
             ctx.Gamespace = gamespace;
+        }
+
+        private void ResolveTransforms(Models.v2.ChallengeSpec spec)
+        {
+            foreach(var kvp in spec.Transforms.ToArray())
+            {
+                kvp.Value = ResolveRandom(kvp.Value);
+
+                // insert `key_index: value` for any multi-token values (i.e. list-resolver)
+                var tokens =  kvp.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                if (tokens.Length > 1)
+                {
+                    int i = 0;
+                    foreach (string token in tokens)
+                    {
+                        spec.Transforms.Add(new Models.v2.StringKeyValue
+                        {
+                            Key = $"{kvp.Key}_{++i}",
+                            Value = token
+                        });
+                    }
+                }
+            }
+
         }
 
         private string ResolveRandom(string key)
@@ -294,11 +317,22 @@ namespace TopoMojo.Services
                 break;
 
                 case "list":
-                if (seg.Length > 1)
+                if (seg.Length < 3 || !int.TryParse(seg[1], out count))
+                    count = 1;
+
+                var options = seg.Last()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .ToList();
+
+                while (count > 0 && options.Count > 0)
                 {
-                    var options = seg[1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    result = options[_random.Next(options.Length)];
+                    string val = options[_random.Next(options.Count)];
+                    result += val + " ";
+                    options.Remove(val);
+                    count -= 1;
                 }
+
+                result = result.Trim();
                 break;
 
                 case "int":
