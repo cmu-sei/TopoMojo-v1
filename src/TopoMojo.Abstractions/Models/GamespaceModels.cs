@@ -1,6 +1,7 @@
 // Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 
 namespace TopoMojo.Models
@@ -31,6 +32,10 @@ namespace TopoMojo.Models
         public string Audience { get; set; }
         public string LaunchpointUrl { get; set; }
         public Player[] Players { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime StopTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
+        public bool IsActive { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
         public Models.v2.ChallengeView Challenge { get; set; }
 

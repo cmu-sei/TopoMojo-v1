@@ -93,9 +93,8 @@ namespace TopoMojo.Services
                     {
                         Name = ctx.Workspace.Name,
 
-                        Markdown = (await System.IO.File.ReadAllTextAsync(
-                            System.IO.Path.Combine("wwwroot/docs", ctx.Workspace.GlobalId) + ".md"
-                        )).Split("<!-- cut -->").First()
+                        Markdown = (await LoadMarkdown(ctx.Workspace.GlobalId)).Split("<!-- cut -->").First()
+                            ?? $"# {ctx.Workspace.Name}"
                     };
         }
 
@@ -426,9 +425,8 @@ namespace TopoMojo.Services
         {
             var state = Mapper.Map<GameState>(gamespace);
 
-            state.Markdown = await System.IO.File.ReadAllTextAsync(
-                System.IO.Path.Combine(_options.DocPath, gamespace.Workspace.GlobalId) + ".md"
-            );
+            state.Markdown = await LoadMarkdown(gamespace.Workspace.GlobalId)
+                ?? $"# {gamespace.Name}";
 
             if (!preview && !gamespace.HasStarted())
             {
@@ -461,25 +459,23 @@ namespace TopoMojo.Services
                 // TODO: get active question set
 
                 // map challenge to safe model
-                state.Challenge = MapChallenge(spec, 0);
+                state.Challenge = MapChallenge(spec, gamespace.IsActive(), 0);
             }
 
             return state;
         }
 
-        private async Task<GameState> LoadState(Data.Workspace workspace)
-        {
-            var state = new GameState
-            {
-                Name = workspace.Name,
+        // private async Task<GameState> LoadState(Data.Workspace workspace)
+        // {
+        //     var state = new GameState
+        //     {
+        //         Name = workspace.Name,
 
-                Markdown = (await System.IO.File.ReadAllTextAsync(
-                    System.IO.Path.Combine(_options.DocPath, workspace.GlobalId) + ".md"
-                )).Split("<!-- cut -->").First()
-            };
+        //         Markdown = (await LoadMarkdown(ctx)).Split("<!-- cut -->").First()
+        //     };
 
-            return state;
-        }
+        //     return state;
+        // }
 
         public async Task Delete(string id)
         {
@@ -559,7 +555,6 @@ namespace TopoMojo.Services
 
             if (ctx.Gamespace.IsExpired())
                 _locker.Unlock(id, new GamespaceIsExpired()).Wait();
-                // return MapChallenge(spec, submission.SectionIndex);
 
             if (spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
                 _locker.Unlock(id, new AttemptLimitReached()).Wait();
@@ -585,10 +580,23 @@ namespace TopoMojo.Services
 
             ctx.Gamespace.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
 
+            // handle completion if max attempts reached or full score
+            if (
+                spec.Score == 1 ||
+                (
+                    spec.MaxAttempts > 0 &&
+                    spec.Submissions.Count == spec.MaxAttempts
+                )
+            )
+            {
+                ctx.Gamespace.StopTime = DateTime.UtcNow;
+                await Stop(ctx.Gamespace.GlobalId);
+            }
+
             await _gamespaceStore.Update(ctx.Gamespace);
 
             // map return model
-            var result = MapChallenge(spec);
+            var result = MapChallenge(spec, ctx.Gamespace.IsActive());
 
             // merge submission into return model
             i = 0;
@@ -600,14 +608,17 @@ namespace TopoMojo.Services
             return result;
         }
 
-        private Models.v2.ChallengeView MapChallenge(Models.v2.ChallengeSpec spec, int sectionIndex = 0)
+        private Models.v2.ChallengeView MapChallenge(Models.v2.ChallengeSpec spec, bool isActive, int sectionIndex = 0)
         {
             var section = spec.Challenge.Sections.ElementAtOrDefault(sectionIndex);
 
             var challenge = new Models.v2.ChallengeView
             {
+                IsActive = isActive,
                 Text = string.Join("\n\n", spec.Text, spec.Challenge.Text),
                 MaxPoints = spec.MaxPoints,
+                MaxAttempts = spec.MaxAttempts,
+                Attempts = spec.Submissions.Count,
                 Score = Math.Round(spec.Score * spec.MaxPoints, 0, MidpointRounding.AwayFromZero),
                 SectionIndex = sectionIndex,
                 SectionCount = spec.Challenge.Sections.Count,
@@ -659,6 +670,18 @@ namespace TopoMojo.Services
                 User = User,
                 Client = Client,
             };
+        }
+
+        private async Task<string> LoadMarkdown(string id)
+        {
+            string path = System.IO.Path.Combine(
+                _options.DocPath,
+                id
+            ) + ".md";
+
+            return System.IO.File.Exists(path)
+                ? await System.IO.File.ReadAllTextAsync(path)
+                : null;
         }
     }
 

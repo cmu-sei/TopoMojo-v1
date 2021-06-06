@@ -20,6 +20,7 @@ namespace TopoMojo.Services
             CreateMap<Data.Gamespace, GameState>()
                 .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Workspace.Name))
+                .ForMember(d => d.IsActive, opt => opt.MapFrom(s => s.IsActive()))
                 .ForMember(d => d.Challenge, opt => opt.Ignore())
             ;
 

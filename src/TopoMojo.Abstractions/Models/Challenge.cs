@@ -74,8 +74,11 @@ namespace TopoMojo.Models.v2
 
     public class ChallengeView
     {
+        public bool IsActive { get; set; }
         public string Text { get; set; }
         public int MaxPoints { get; set; }
+        public int MaxAttempts { get; set; }
+        public int Attempts { get; set; }
         public double Score { get; set; }
         public int SectionCount { get; set; }
         public int SectionIndex { get; set; }

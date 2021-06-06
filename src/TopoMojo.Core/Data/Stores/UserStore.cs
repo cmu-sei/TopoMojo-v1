@@ -97,6 +97,16 @@ namespace TopoMojo.Data
             if (result)
                 workspace.LastActivity = DateTime.UtcNow;
 
+            if (!result)
+            {
+                var gamespace = await DbContext.Gamespaces
+                    .Include(g => g.Players)
+                    .Where(t => t.GlobalId == globalId)
+                    .SingleOrDefaultAsync();
+
+                result = gamespace != null & gamespace.CanEdit(user);
+            }
+
             await DbContext.SaveChangesAsync();
 
             return result;

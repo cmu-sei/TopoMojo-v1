@@ -62,10 +62,10 @@ namespace TopoMojo.Data.Extensions
                     .Permission.CanManage() ?? false);
         }
 
-        public static bool CanEdit(this Gamespace player, Models.User user, string playerId = null)
+        public static bool CanEdit(this Gamespace gamespace, Models.User user, string playerId = null)
         {
             return user.IsAdmin
-                || (player.Players
+                || (gamespace.Players
                     .FirstOrDefault(p => p.SubjectId == (playerId ?? user.GlobalId))?
                     .Permission.CanEdit() ?? false);
         }
