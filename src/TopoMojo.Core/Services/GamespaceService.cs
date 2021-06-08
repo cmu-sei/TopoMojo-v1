@@ -377,8 +377,8 @@ namespace TopoMojo.Services
                 // apply template macro substitutions
                 foreach (var kvp in spec.Transforms)
                 {
-                    template.Guestinfo = template.Guestinfo?.Replace(kvp.Key, kvp.Value);
-                    template.Detail = template.Detail?.Replace(kvp.Key, kvp.Value);
+                    template.Guestinfo = template.Guestinfo?.Replace($"##{kvp.Key}##", kvp.Value);
+                    template.Detail = template.Detail?.Replace($"##{kvp.Key}##", kvp.Value);
                 }
 
                 // apply challenge iso
