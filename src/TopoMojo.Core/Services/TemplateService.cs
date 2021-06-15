@@ -94,7 +94,7 @@ namespace TopoMojo.Services
             if (!User.IsAdmin)
                 throw new InvalidOperationException();
 
-            model.Detail = new TemplateUtility("", model.Name).ToString();
+            model.Detail = new TemplateUtility(model.Detail, model.Name).ToString();
 
             var t = Mapper.Map<Data.Template>(model);
 
