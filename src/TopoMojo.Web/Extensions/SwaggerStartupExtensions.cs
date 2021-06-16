@@ -99,7 +99,7 @@ namespace Microsoft.Extensions.DependencyInjection
             app.UseSwaggerUI(cfg =>
             {
                 cfg.RoutePrefix = "api";
-                cfg.SwaggerEndpoint("/api/v1/openapi.json", $"{brandingOptions.ApplicationName} (v1)");
+                cfg.SwaggerEndpoint(brandingOptions.PathBase + "/api/v1/openapi.json", $"{brandingOptions.ApplicationName} (v1)");
                 cfg.OAuthClientId(authOptions.SwaggerClient?.ClientId);
                 cfg.OAuthAppName(authOptions.SwaggerClient?.ClientName ?? authOptions.SwaggerClient?.ClientId);
             });

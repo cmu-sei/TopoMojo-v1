@@ -92,14 +92,14 @@ namespace TopoMojo.Services
             await _userStore.Update(entity);
         }
 
-        public async Task Delete(int id)
+        public async Task Delete(string id)
         {
             var entity = await _userStore.Load(id);
 
             if (entity == null || (!User.IsAdmin && User.Id != entity.Id))
                 throw new InvalidOperationException();
 
-            await _userStore.Delete(id);
+            await _userStore.Delete(entity.Id);
         }
 
         public async Task<bool> MemberOf(string globalId)

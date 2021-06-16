@@ -94,9 +94,9 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("api/user/{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
-            if (!_user.IsAdmin && _user.Id != id)
+            if (!_user.IsAdmin && _user.GlobalId != id)
                 return Forbid();
 
             await _userService.Delete(id);

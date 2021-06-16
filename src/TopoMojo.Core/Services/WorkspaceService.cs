@@ -111,22 +111,23 @@ namespace TopoMojo.Services
         /// <returns>Workspace</returns>
         public async Task<Workspace> Load(int id)
         {
-            Data.Workspace topo = await _workspaceStore.Load(id);
+            Data.Workspace entity = await _workspaceStore.Load(id);
 
-            if (topo == null)
-                throw new InvalidOperationException();
+            if (entity == null || !entity.CanEdit(User))
+                throw new ActionForbidden();
 
-            return Mapper.Map<Workspace>(topo, WithActor());
+
+            return Mapper.Map<Workspace>(entity, WithActor());
         }
 
         public async Task<Workspace> Load(string id)
         {
-            Data.Workspace topo = await _workspaceStore.Load(id);
+            Data.Workspace entity = await _workspaceStore.Load(id);
 
-            if (topo == null)
-                throw new InvalidOperationException();
+            if (entity == null || !entity.CanEdit(User))
+                throw new ActionForbidden();
 
-            return Mapper.Map<Workspace>(topo, WithActor());
+            return Mapper.Map<Workspace>(entity, WithActor());
         }
 
         /// <summary>
