@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 
 namespace TopoMojo.Data.Abstractions
 {
-    public interface IGamespaceStore : IDataStore<Gamespace>
+    public interface IGamespaceStore : IStore<Gamespace>
     {
-        Task<Gamespace> FindByContext(int workspaceId, string subjectId);
-        Task<Gamespace> FindByContext(string workspaceId, string subjectId);
+        Task<Gamespace> Load(int id);
+        Task<Gamespace> Load(string id);
+        Task<Gamespace> LoadActiveByContext(string workspaceId, string subjectId);
+        Task<Gamespace[]> ListByContext(string workspaceId, string subjectId);
         Task<Gamespace> FindByShareCode(string code);
         Task<Gamespace> FindByPlayer(int playerId);
-        // IQueryable<Gamespace> ListByProfile(int id);
         IQueryable<Gamespace> ListByProfile(string subjectId);
+        Task<Player[]> LoadPlayers(string id);
+        Task<bool> CanInteract(string id, string actorId);
     }
 }

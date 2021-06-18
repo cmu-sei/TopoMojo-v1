@@ -16,7 +16,6 @@ using TopoMojo.Services;
 
 namespace TopoMojo.Web.Controllers
 {
-    // [Authorize]
     [Authorize(Policy = "Players")]
     [ApiController]
     public class GamespaceController : _Controller
@@ -28,8 +27,9 @@ namespace TopoMojo.Web.Controllers
             GamespaceService gamespaceService,
             IHypervisorService podService,
             IHubContext<AppHub, IHubEvent> hub,
-            IDistributedCache cache
-        ) : base(logger, identityResolver)
+            IDistributedCache cache,
+            GamespaceValidator validator
+        ) : base(logger, identityResolver, validator)
         {
             _gamespaceService = gamespaceService;
             _pod = podService;
@@ -51,15 +51,19 @@ namespace TopoMojo.Web.Controllers
         /// By default, result is filtered to user's gamespaces.
         /// An administrator can override default filter with filter = "all".
         /// </remarks>
-        /// <param name="filter"></param>
+        /// <param name="model"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpGet("api/gamespaces")]
-        public async Task<ActionResult<Gamespace[]>> List(string filter, CancellationToken ct)
+        public async Task<ActionResult<Gamespace[]>> List(GamespaceSearch model, CancellationToken ct)
         {
-            var result = await _gamespaceService.List(filter, ct);
+            await Validate(model);
 
-            return Ok(result);
+            AuthorizeAll();
+
+            return Ok(
+                await _gamespaceService.List(model, Actor, ct)
+            );
         }
 
         /// <summary>
@@ -71,9 +75,11 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/preview/{id}")]
         public async Task<ActionResult<GameState>> Preview(string id)
         {
-            var result = await _gamespaceService.Preview(id);
+            AuthorizeAll();
 
-            return Ok(result);
+            return Ok(
+                await _gamespaceService.Preview(id)
+            );
         }
 
         /// <summary>
@@ -193,6 +199,13 @@ namespace TopoMojo.Web.Controllers
         [HttpDelete("api/gamespace/{id}")]
         public async Task<ActionResult> Delete(string id)
         {
+            await Validate(new Entity{ Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _gamespaceService.IsMember(id, Actor.GlobalId ?? Actor.Client.Id).Result
+            );
+
             await _gamespaceService.Delete(id);
 
             SendBroadcast(new GameState{GlobalId = id}, "OVER");
@@ -208,7 +221,7 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/player/{code}")]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
-            await _gamespaceService.Enlist(code);
+            await _gamespaceService.Enlist(code, Actor);
 
             return Ok();
         }
@@ -232,19 +245,29 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpGet("api/players/{id}")]
-        public async Task<ActionResult<Player[]>> Players(int id)
+        public async Task<ActionResult<Player[]>> Players(string id)
         {
-            return Ok(await _gamespaceService.Players(id));
+            await Validate(new Entity{ Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _gamespaceService.IsMember(id, Actor.GlobalId).Result
+            );
+
+            return Ok(
+                await _gamespaceService.Players(id)
+            );
         }
 
         private void SendBroadcast(GameState gameState, string action)
         {
-            _hub.Clients.Group(gameState.GlobalId)
-                .GameEvent(new BroadcastEvent<GameState>(
+            _hub.Clients.Group(gameState.GlobalId).GameEvent(
+                new BroadcastEvent<GameState>(
                     User,
                     "GAME." + action.ToUpper(),
                     gameState
-                ));
+                )
+            );
         }
 
     }

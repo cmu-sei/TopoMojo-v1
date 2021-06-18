@@ -18,18 +18,16 @@ namespace TopoMojo.Services
             ;
 
             CreateMap<Data.Gamespace, GameState>()
-                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
                 .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Workspace.Name))
                 .ForMember(d => d.IsActive, opt => opt.MapFrom(s => s.IsActive()))
                 .ForMember(d => d.Challenge, opt => opt.Ignore())
             ;
 
             CreateMap<Data.Player, Player>()
-                .ForMember(d => d.CanManage, opt => opt.MapFrom((s) => s.Permission.CanManage()))
-                .ForMember(d => d.CanEdit, opt => opt.MapFrom((s) => s.Permission.CanEdit()))
             ;
 
-            CreateMap<ChallengeSpec, Challenge>();
+            CreateMap<ChallengeSpec, Challenge>()
+            ;
 
             CreateMap<QuestionSpec, Question>()
                 .ForMember(d => d.Answer, opt => opt.Ignore())

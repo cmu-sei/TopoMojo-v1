@@ -258,7 +258,7 @@ namespace TopoMojo.Services
             if (gamespace == null)
                 return;
 
-            await _gamespaceStore.Delete(gamespace.Id);
+            await _gamespaceStore.Delete(gamespace.GlobalId);
         }
 
         public async Task<ConsoleSummary> Ticket(string vmId)

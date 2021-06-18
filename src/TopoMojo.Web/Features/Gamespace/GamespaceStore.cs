@@ -5,19 +5,24 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Data.Abstractions;
 
 namespace TopoMojo.Data
 {
-    public class GamespaceStore : DataStore<Gamespace>, IGamespaceStore
+    public class GamespaceStore : Store<Gamespace>, IGamespaceStore
     {
         public GamespaceStore (
-            TopoMojoDbContext db,
-            IMemoryCache memoryCache,
-            IDistributedCache cache = null
-        ) : base(db, memoryCache) { }
+            TopoMojoDbContext db
+        ) : base(db) { }
+
+        public override IQueryable<Gamespace> List(string term)
+        {
+            term = term.ToLower();
+
+            return base.List().Where(g =>
+                g.Name.ToLower().Contains(term)
+            );
+        }
 
         public override async Task<Gamespace> Create(Gamespace entity)
         {
@@ -41,7 +46,7 @@ namespace TopoMojo.Data
                 .Select(p => p.Gamespace);
         }
 
-        public override async Task<Gamespace> Retrieve(int id)
+        public async Task<Gamespace> Load(int id)
         {
             return await base.Retrieve(id, query => query
                 .Include(g => g.Workspace)
@@ -51,7 +56,7 @@ namespace TopoMojo.Data
             );
         }
 
-        public override async Task<Gamespace> Retrieve(string id)
+        public async Task<Gamespace> Load(string id)
         {
             return await base.Retrieve(id, query => query
                 .Include(g => g.Workspace)
@@ -73,27 +78,30 @@ namespace TopoMojo.Data
                 : null;
         }
 
-        public async Task<Gamespace> FindByContext(int workspaceId, string subjectId)
+        public async Task<Gamespace[]> ListByContext(string subjectId, string workspaceId)
         {
-            int id = await DbContext.Players
-                .Where(g => g.SubjectId == subjectId && g.Gamespace.WorkspaceId == workspaceId)
-                .Select(p => p.GamespaceId)
-                .SingleOrDefaultAsync();
-
-            return (id > 0)
-                ? await Retrieve(id)
-                : null;
+            return await DbContext.Gamespaces
+                .Where(g =>
+                    g.Workspace.GlobalId == workspaceId &&
+                    g.Players.Any(p => p.SubjectId == subjectId)
+                )
+                .ToArrayAsync()
+            ;
         }
 
-        public async Task<Gamespace> FindByContext(string subjectId, string workspaceId)
+        public async Task<Gamespace> LoadActiveByContext(string subjectId, string workspaceId)
         {
             int id = await DbContext.Players
-                .Where(g => g.SubjectId == subjectId && g.WorkspaceId == workspaceId)
+                .Where(g =>
+                    g.SubjectId == subjectId &&
+                    g.WorkspaceId == workspaceId &&
+                    g.Gamespace.StopTime == DateTime.MinValue
+                )
                 .Select(p => p.GamespaceId)
-                .SingleOrDefaultAsync();
+                .FirstOrDefaultAsync();
 
             return (id > 0)
-                ? await Retrieve(id)
+                ? await Load(id)
                 : null;
         }
 
@@ -106,16 +114,27 @@ namespace TopoMojo.Data
 
             return (id > 0)
                 ? await Retrieve(id)
-                : null;
+                : null
+            ;
         }
 
-        public override async Task Delete(int id)
+        public async Task<Player[]> LoadPlayers(string id)
         {
-            var entity = await base.Retrieve(id);
-            var list = await DbContext.Messages.Where(m => m.RoomId == entity.GlobalId).ToArrayAsync();
-            DbContext.Messages.RemoveRange(list);
-            await base.Delete(id);
+            return await DbContext.Players
+                .Where(p => p.Gamespace.GlobalId == id)
+                .ToArrayAsync()
+            ;
         }
 
+        public async Task<bool> CanInteract(string id, string actorId)
+        {
+            return await DbContext.Gamespaces
+                .Where(g =>
+                    g.ClientId == actorId ||
+                    g.Players.Any(p => p.SubjectId == actorId)
+                )
+                .AnyAsync()
+            ;
+        }
     }
 }

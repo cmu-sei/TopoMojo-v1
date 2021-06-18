@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TopoMojo.Models
 {
@@ -55,7 +56,13 @@ namespace TopoMojo.Models
         public int Id { get; set; }
         public string SubjectId { get; set; }
         public string SubjectName { get; set; }
-        public bool CanManage { get; set; }
-        public bool CanEdit { get; set; }
+        public Permission Permission { get; set; }
+        public bool IsManager => Permission == Permission.Manager;
+    }
+
+    public class GamespaceSearch: Search
+    {
+        public const string FilterAll = "all";
+        public bool WantsAll => Filter.Contains(FilterAll);
     }
 }

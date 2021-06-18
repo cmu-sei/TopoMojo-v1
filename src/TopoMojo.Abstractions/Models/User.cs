@@ -39,6 +39,8 @@ namespace TopoMojo.Models
         User,
         Builder,
         Creator,
-        Administrator
+        Administrator,
+        Agent
     }
+
 }

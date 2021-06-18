@@ -372,7 +372,7 @@ namespace TopoMojo.Services
             {
                 await _pod.DeleteAll(gamespace.GlobalId);
 
-                await _gamespaceStore.Delete(gamespace.Id);
+                await _gamespaceStore.Delete(gamespace.GlobalId);
             }
 
             return Mapper.Map<GameState[]>(workspace.Gamespaces);

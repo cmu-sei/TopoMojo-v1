@@ -70,9 +70,9 @@ namespace TopoMojo
     public class FileUploadOptions
     {
         public long MaxFileBytes { get; set; }
-        public string IsoRoot { get; set; } = "tm";
-        public string TopoRoot { get; set; } = "tm";
-        public string DocRoot { get; set; } = "tm/_docs";
+        public string TopoRoot { get; set; } = "wwwroot";
+        public string IsoRoot { get; set; } = "wwwroot/isos";
+        public string DocRoot { get; set; } = "wwwroot/docs";
     }
 
     public class HeaderOptions
