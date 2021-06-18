@@ -10,7 +10,7 @@ namespace TopoMojo.Data.Abstractions
         Task<Template> Load(string id);
         Task<bool> HasDescendents(string id);
         Task<bool> AtTemplateLimit(string workspaceId);
-        Task<Template[]> ListChildren(int parentId);
+        Task<Template[]> ListChildren(string parentId);
         Task<string> ResolveKey(string key);
     }
 }

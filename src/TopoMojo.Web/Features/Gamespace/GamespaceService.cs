@@ -214,7 +214,6 @@ namespace TopoMojo.Services
             gamespace.Players.Add(
                 new Data.Player
                 {
-                    WorkspaceId = ctx.Workspace.GlobalId,
                     SubjectId = ctx.Request.SubjectId,
                     SubjectName = ctx.Request.SubjectName,
                     Permission = Permission.Manager
@@ -497,7 +496,6 @@ namespace TopoMojo.Services
                 {
                     SubjectId = actor.GlobalId,
                     SubjectName = actor.Name,
-                    WorkspaceId = gamespace.Workspace.GlobalId
                 });
 
                 await _gamespaceStore.Update(gamespace);

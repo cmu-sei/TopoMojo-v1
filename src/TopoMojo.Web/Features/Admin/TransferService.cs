@@ -42,14 +42,14 @@ namespace TopoMojo.Services
         private Data.User _user;
         private JsonSerializerOptions jsonSerializerSettings;
 
-        public async Task Export(int[] ids, string src, string dest)
+        public async Task Export(string[] ids, string src, string dest)
         {
             if (!User.IsAdmin)
                 throw new InvalidOperationException();
 
             var list = new List<Data.Workspace>();
 
-            foreach (int id in ids)
+            foreach (string id in ids)
             {
                 var topo = await _workspaceStore.LoadWithParents(id);
 
@@ -92,14 +92,14 @@ namespace TopoMojo.Services
 
                 topo.Gamespaces.Clear();
 
-                topo.Id = 0;
+                // topo.Id = 0;
 
                 topo.ShareCode = "";
 
                 foreach (var template in topo.Templates)
                 {
-                    template.Id = 0;
-                    template.WorkspaceId = 0;
+                    // template.Id = 0;
+                    template.WorkspaceGlobalId = null;
                     template.Workspace = null;
                 }
 
@@ -194,12 +194,12 @@ namespace TopoMojo.Services
 
                             if (pt == null)
                             {
-                                template.ParentId = 0;
-                                template.WorkspaceId = 0;
+                                template.ParentGlobalId = null;
+                                template.WorkspaceGlobalId = null;
                                 pt = await _templateStore.Create(template.Parent);
                             }
 
-                            template.ParentId = pt.Id;
+                            template.ParentGlobalId = pt.GlobalId;
                             template.Parent = null;
                         }
                     }

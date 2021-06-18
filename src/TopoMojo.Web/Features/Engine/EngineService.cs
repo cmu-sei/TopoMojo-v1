@@ -77,7 +77,7 @@ namespace TopoMojo.Services
                 await _gamespaceStore.Create(game);
             }
 
-            return await Deploy(await _gamespaceStore.Retrieve(game.Id), spec);
+            return await Deploy(await _gamespaceStore.Retrieve(game.GlobalId), spec);
 
         }
 
@@ -123,7 +123,7 @@ namespace TopoMojo.Services
                 throw ex;
             }
 
-            return await LoadState(gamespace, gamespace.WorkspaceId);
+            return await LoadState(gamespace, gamespace.WorkspaceGlobalId);
         }
 
         // private async Task AddNetworkServer(ICollection<ConvergedTemplate> templates, GamespaceSpec spec)
@@ -195,7 +195,7 @@ namespace TopoMojo.Services
             }
         }
 
-        private async Task<GameState> LoadState(Data.Gamespace gamespace, int topoId)
+        private async Task<GameState> LoadState(Data.Gamespace gamespace, string topoId)
         {
             GameState state = null;
 
@@ -283,7 +283,7 @@ namespace TopoMojo.Services
             return info;
         }
 
-        public async Task<string> GetTemplates(int topoId)
+        public async Task<string> GetTemplates(string topoId)
         {
             var topo = await _workspaceStore.LoadWithParents(topoId);
 

@@ -12,9 +12,9 @@ namespace TopoMojo.Data.Abstractions
         Task<Workspace> Load(int id);
         Task<Workspace> FindByShareCode(string code);
         Task<Workspace> FindByWorker(int id);
-        Task<int> GetWorkspaceCount(int profileId);
+        Task<int> GetWorkspaceCount(string profileId);
         Task<Workspace> LoadWithGamespaces(string id);
-        Task<Workspace> LoadWithParents(int id);
+        Task<Workspace> LoadWithParents(string id);
         Task<bool> HasGames(string id);
         Task<Workspace[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true);
         Task<bool> CheckWorkspaceLimit(string userId);

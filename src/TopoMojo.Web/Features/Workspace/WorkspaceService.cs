@@ -48,7 +48,7 @@ namespace TopoMojo.Services
             var q = _workspaceStore.List(search.Term);
 
             if (!Actor.IsAdmin && !Actor.IsAgent)
-                q = q.Where(p => p.Workers.Select(w => w.PersonId).Contains(Actor.Id));
+                q = q.Where(p => p.Workers.Any(w => w.SubjectId == Actor.GlobalId));
 
             if (Actor.IsAgent)
                 q = q.Where(w => w.Audience.Contains(search.aud));
@@ -78,7 +78,8 @@ namespace TopoMojo.Services
 
             q = q.Include(t => t.Templates)
                     .Include(t => t.Workers)
-                    .ThenInclude(w => w.Person);
+                    // .ThenInclude(w => w.Person)
+            ;
 
             q = search.Sort == "age"
                 ? q.OrderByDescending(w => w.WhenCreated)
@@ -125,7 +126,7 @@ namespace TopoMojo.Services
         /// <param name="model"></param>
         /// <param name="actorId"></param>
         /// <returns>Workspace</returns>
-        public async Task<Workspace> Create(NewWorkspace model, int actorId)
+        public async Task<Workspace> Create(NewWorkspace model, string actorId)
         {
             var workspace = Mapper.Map<Data.Workspace>(model);
 
@@ -144,7 +145,7 @@ namespace TopoMojo.Services
 
             workspace.Workers.Add(new Data.Worker
             {
-                PersonId = actorId,
+                SubjectName = actorId,
                 Permission = Permission.Manager
             });
 
@@ -300,11 +301,12 @@ namespace TopoMojo.Services
             if (workspace == null)
                 throw new ResourceNotFound();
 
-            if (!workspace.Workers.Where(m => m.PersonId == actor.Id).Any())
+            if (!workspace.Workers.Where(m => m.SubjectId == actor.GlobalId).Any())
             {
                 workspace.Workers.Add(new Data.Worker
                 {
-                    PersonId = actor.Id,
+                    SubjectId = actor.GlobalId,
+                    SubjectName = actor.Name,
                     Permission = workspace.Workers.Count > 0
                         ? Permission.Editor
                         : Permission.Manager

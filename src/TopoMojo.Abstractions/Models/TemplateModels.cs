@@ -93,6 +93,6 @@ namespace TopoMojo.Models
         public const string ParentFilter = "parents";
         public bool WantsPublished => Filter.Contains(PublishFilter);
         public bool WantsParents => Filter.Contains(ParentFilter);
-        public int pid { get; set; }
+        public string pid { get; set; }
     }
 }

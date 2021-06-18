@@ -111,7 +111,7 @@ namespace TopoMojo.Services
             return workspaces.Select(g => new JanitorReport
             {
                 Reason = reason,
-                Id = g.Id,
+                Id = g.GlobalId,
                 Name = g.Name,
                 Age = g.LastActivity
             }).ToArray();
@@ -142,7 +142,7 @@ namespace TopoMojo.Services
             return workspaces.Select(g => new JanitorReport
             {
                 Reason = "IdleWorkspaceVms",
-                Id = g.Id,
+                Id = g.GlobalId,
                 Name = g.Name,
                 Age = g.LastActivity
             }).ToArray();

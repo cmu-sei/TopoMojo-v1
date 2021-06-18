@@ -105,7 +105,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/engine/templates/{id}")]
-        public async Task<ActionResult<string>> Templates([FromRoute]int id)
+        public async Task<ActionResult<string>> Templates([FromRoute]string id)
         {
             return Ok(await _engineService.GetTemplates(id));
         }

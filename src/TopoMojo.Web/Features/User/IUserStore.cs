@@ -6,9 +6,9 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Data.Abstractions
 {
-    public interface IUserStore : IDataStore<User>
+    public interface IUserStore : IStore<User>
     {
-        Task<User> LoadDetail(int id);
+        Task<User> Load(string id);
         Task<bool> CanInteract(string isolationId, string userId);
     }
 }

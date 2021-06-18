@@ -7,6 +7,7 @@ namespace TopoMojo.Data
 {
     public class TopoMojoDbContext : DbContext
     {
+        private const int KEYLENGTH = 36;
         public TopoMojoDbContext(DbContextOptions options)
             : base(options)
         {
@@ -15,10 +16,10 @@ namespace TopoMojo.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
+            builder.Entity<Workspace>().HasKey(e => e.GlobalId);
             builder.Entity<Workspace>(b => {
-                b.HasAlternateKey(t => t.GlobalId);
-                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
+                // b.HasAlternateKey(t => t.GlobalId);
+                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Author).HasMaxLength(64);
                 b.Property(w => w.Audience).HasMaxLength(64);
@@ -26,38 +27,80 @@ namespace TopoMojo.Data
                 b.Property(w => w.Description).HasMaxLength(255);
             });
 
+            builder.Entity<Gamespace>().HasKey(e => e.GlobalId);
             builder.Entity<Gamespace>(b => {
-                b.HasAlternateKey(t => t.GlobalId);
-                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
+                // b.HasAlternateKey(t => t.GlobalId);
+                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
             });
+            builder.Entity<Gamespace>()
+                .HasOne(a => a.Workspace).WithMany(t => t.Gamespaces)
+                .HasForeignKey(a => a.WorkspaceGlobalId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
 
+            builder.Entity<Template>().HasKey(e => e.GlobalId);
             builder.Entity<Template>(b => {
-                b.HasAlternateKey(t => t.GlobalId);
-                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
+                // b.HasAlternateKey(t => t.GlobalId);
+                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(w => w.ParentGlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(g => g.WorkspaceGlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Description).HasMaxLength(255);
                 b.Property(w => w.Guestinfo).HasMaxLength(1024);
                 b.Property(w => w.Networks).HasMaxLength(64);
                 b.Property(w => w.Detail).HasMaxLength(4096);
             });
+            builder.Entity<Template>()
+                .HasOne(a => a.Parent).WithMany(t => t.Children)
+                .HasForeignKey(a => a.ParentGlobalId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
+            builder.Entity<Template>()
+                .HasOne(a => a.Workspace).WithMany(t => t.Templates)
+                .HasForeignKey(a => a.WorkspaceGlobalId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
 
+            builder.Entity<User>().HasKey(e => e.GlobalId);
             builder.Entity<User>(b => {
-                b.HasAlternateKey(t => t.GlobalId);
-                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(36);
+                // b.HasAlternateKey(t => t.GlobalId);
+                b.Property(w => w.GlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
-            });
 
-            builder.Entity<Message>(b => {
-                b.HasIndex(t => t.RoomId);
-                b.Property(w => w.RoomId).IsFixedLength().HasMaxLength(36);
-                b.Property(w => w.AuthorName).HasMaxLength(64);
-                b.Property(w => w.Text).HasMaxLength(2048);
             });
 
             builder.Entity<Player>(b => {
-                b.HasIndex("SubjectId", "WorkspaceId");
+                b.Property(g => g.GamespaceGlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
             });
+            builder.Entity<Player>()
+                .HasOne(a => a.Gamespace)
+                .WithMany(u => u.Players)
+                .HasForeignKey(a => a.GamespaceGlobalId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
+
+            builder.Entity<Worker>(b => {
+                b.Property(g => g.WorkspaceGlobalId).IsFixedLength().HasMaxLength(KEYLENGTH);
+            });
+            builder.Entity<Worker>()
+                .HasOne(a => a.Workspace)
+                .WithMany(u => u.Workers)
+                .HasForeignKey(a => a.WorkspaceGlobalId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
+
+            builder.Entity<ApiKey>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.ApiKeys)
+                .HasForeignKey(a => a.UserId)
+                .HasPrincipalKey(u => u.GlobalId)
+            ;
+
+            builder.Entity<ApiKey>(b => {
+                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
+            });
+
         }
 
         public DbSet<Workspace> Workspaces { get; set; }
@@ -66,8 +109,6 @@ namespace TopoMojo.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Player> Players { get; set; }
-        public DbSet<Message> Messages { get; set; }
-        public DbSet<Activity> History { get; set; }
     }
 
     public class TopoMojoDbContextPostgreSQL: TopoMojoDbContext

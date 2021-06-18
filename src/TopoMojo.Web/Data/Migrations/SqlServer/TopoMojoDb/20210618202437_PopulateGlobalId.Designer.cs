@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TopoMojo.Data;
 
 namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContextSqlServer))]
-    partial class TopoMojoDbContextSqlServerModelSnapshot : ModelSnapshot
+    [Migration("20210618202437_PopulateGlobalId")]
+    partial class PopulateGlobalId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,10 +40,10 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 
             modelBuilder.Entity("TopoMojo.Data.Gamespace", b =>
                 {
-                    b.Property<string>("GlobalId")
-                        .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
 
                     b.Property<bool>("AllowReset")
                         .HasColumnType("bit");
@@ -54,6 +56,12 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 
                     b.Property<DateTime>("ExpirationTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("GlobalId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nchar(36)")
+                        .IsFixedLength(true);
 
                     b.Property<string>("Name")
                         .HasMaxLength(64)
@@ -72,11 +80,16 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("datetime2");
 
                     b.Property<string>("WorkspaceGlobalId")
-                        .HasColumnType("nchar(36)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("GlobalId");
+                    b.Property<int>("WorkspaceId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("WorkspaceGlobalId");
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("GlobalId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Gamespaces");
                 });
@@ -93,6 +106,9 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("nchar(36)")
                         .IsFixedLength(true);
 
+                    b.Property<int?>("GamespaceId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Permission")
                         .HasColumnType("int");
 
@@ -104,17 +120,17 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GamespaceGlobalId");
+                    b.HasIndex("GamespaceId");
 
                     b.ToTable("Players");
                 });
 
             modelBuilder.Entity("TopoMojo.Data.Template", b =>
                 {
-                    b.Property<string>("GlobalId")
-                        .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
@@ -123,6 +139,12 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<string>("Detail")
                         .HasMaxLength(4096)
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GlobalId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nchar(36)")
+                        .IsFixedLength(true);
 
                     b.Property<string>("Guestinfo")
                         .HasMaxLength(1024)
@@ -150,6 +172,9 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("nchar(36)")
                         .IsFixedLength(true);
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Replicas")
                         .HasColumnType("int");
 
@@ -161,21 +186,26 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("nchar(36)")
                         .IsFixedLength(true);
 
-                    b.HasKey("GlobalId");
+                    b.Property<int?>("WorkspaceId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ParentGlobalId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("WorkspaceGlobalId");
+                    b.HasAlternateKey("GlobalId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Templates");
                 });
 
             modelBuilder.Entity("TopoMojo.Data.User", b =>
                 {
-                    b.Property<string>("GlobalId")
-                        .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
 
                     b.Property<string>("CallbackUrl")
                         .HasColumnType("nvarchar(max)");
@@ -185,6 +215,12 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
 
                     b.Property<int>("GamespaceMaxMinutes")
                         .HasColumnType("int");
+
+                    b.Property<string>("GlobalId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nchar(36)")
+                        .IsFixedLength(true);
 
                     b.Property<string>("Name")
                         .HasMaxLength(64)
@@ -205,7 +241,7 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<int>("WorkspaceLimit")
                         .HasColumnType("int");
 
-                    b.HasKey("GlobalId");
+                    b.HasKey("Id");
 
                     b.ToTable("Users");
                 });
@@ -231,19 +267,22 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("nchar(36)")
                         .IsFixedLength(true);
 
+                    b.Property<int?>("WorkspaceId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkspaceGlobalId");
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Workers");
                 });
 
             modelBuilder.Entity("TopoMojo.Data.Workspace", b =>
                 {
-                    b.Property<string>("GlobalId")
-                        .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
 
                     b.Property<string>("Audience")
                         .HasMaxLength(64)
@@ -263,6 +302,12 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<string>("DocumentUrl")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("GlobalId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nchar(36)")
+                        .IsFixedLength(true);
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
@@ -289,7 +334,9 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<DateTime>("WhenCreated")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("GlobalId");
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("GlobalId");
 
                     b.ToTable("Workspaces");
                 });
@@ -298,7 +345,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Data.User", "User")
                         .WithMany("ApiKeys")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .HasPrincipalKey("GlobalId");
 
                     b.Navigation("User");
                 });
@@ -307,7 +355,9 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Data.Workspace", "Workspace")
                         .WithMany("Gamespaces")
-                        .HasForeignKey("WorkspaceGlobalId");
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Workspace");
                 });
@@ -316,7 +366,7 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Data.Gamespace", "Gamespace")
                         .WithMany("Players")
-                        .HasForeignKey("GamespaceGlobalId");
+                        .HasForeignKey("GamespaceId");
 
                     b.Navigation("Gamespace");
                 });
@@ -325,11 +375,11 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Data.Template", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentGlobalId");
+                        .HasForeignKey("ParentId");
 
                     b.HasOne("TopoMojo.Data.Workspace", "Workspace")
                         .WithMany("Templates")
-                        .HasForeignKey("WorkspaceGlobalId");
+                        .HasForeignKey("WorkspaceId");
 
                     b.Navigation("Parent");
 
@@ -340,7 +390,7 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Data.Workspace", "Workspace")
                         .WithMany("Workers")
-                        .HasForeignKey("WorkspaceGlobalId");
+                        .HasForeignKey("WorkspaceId");
 
                     b.Navigation("Workspace");
                 });

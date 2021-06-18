@@ -106,10 +106,10 @@ namespace TopoMojo.Web.Controllers
                 () => _svc.CheckWorkspaceLimit(Actor.GlobalId).Result
             );
 
-            Workspace workspace = await _svc.Create(model, Actor.Id);
+            Workspace workspace = await _svc.Create(model, Actor.GlobalId);
 
             return Ok(
-                await _svc.Create(model, Actor.Id)
+                await _svc.Create(model, Actor.GlobalId)
             );
         }
 

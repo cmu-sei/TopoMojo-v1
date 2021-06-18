@@ -68,12 +68,12 @@ namespace TopoMojo.Data
 
         public async Task<Gamespace> FindByShareCode(string code)
         {
-            int id = await DbContext.Gamespaces
+            string id = await DbContext.Gamespaces
                 .Where(g => g.ShareCode == code)
-                .Select(g => g.Id)
+                .Select(g => g.GlobalId)
                 .SingleOrDefaultAsync();
 
-            return (id > 0)
+            return (!string.IsNullOrEmpty(id))
                 ? await Retrieve(id)
                 : null;
         }
@@ -91,31 +91,33 @@ namespace TopoMojo.Data
 
         public async Task<Gamespace> LoadActiveByContext(string subjectId, string workspaceId)
         {
-            int id = await DbContext.Players
+            string id = await DbContext.Gamespaces
                 .Where(g =>
-                    g.SubjectId == subjectId &&
-                    g.WorkspaceId == workspaceId &&
-                    g.Gamespace.StopTime == DateTime.MinValue
+                    g.Workspace.GlobalId == workspaceId &&
+                    g.StopTime == DateTime.MinValue &&
+                    g.Players.Any(p => p.SubjectId == subjectId)
                 )
-                .Select(p => p.GamespaceId)
+                .Select(p => p.GlobalId)
                 .FirstOrDefaultAsync();
 
-            return (id > 0)
+            return (!string.IsNullOrEmpty(id))
                 ? await Load(id)
                 : null;
         }
 
+
         public async Task<Gamespace> FindByPlayer(int playerId)
         {
-            int id = await DbContext.Players
-                .Where(p => p.Id == playerId)
-                .Select(p => p.GamespaceId)
-                .SingleOrDefaultAsync();
+            return null;
+            // int id = await DbContext.Players
+            //     .Where(p => p.Id == playerId)
+            //     .Select(p => p.GamespaceId)
+            //     .SingleOrDefaultAsync();
 
-            return (id > 0)
-                ? await Retrieve(id)
-                : null
-            ;
+            // return (id > 0)
+            //     ? await Retrieve(id)
+            //     : null
+            // ;
         }
 
         public async Task<Player[]> LoadPlayers(string id)

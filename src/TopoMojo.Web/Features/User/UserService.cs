@@ -96,10 +96,10 @@ namespace TopoMojo.Services
         {
             var entity = await _userStore.Retrieve(id);
 
-            if (entity == null || (!User.IsAdmin && User.Id != entity.Id))
+            if (entity == null || (!User.IsAdmin && User.GlobalId != id))
                 throw new InvalidOperationException();
 
-            await _userStore.Delete(entity.Id);
+            await _userStore.Delete(id);
         }
 
         public async Task<bool> CanInteract(string isolationId, string userId)

@@ -10,7 +10,7 @@ namespace TopoMojo.Data
 {
     public class Workspace : IEntity
     {
-        public int Id { get; set; }
+        // public int Id { get; set; }
         public string GlobalId { get; set; }
         public string Name { get; set; }
         public DateTime WhenCreated { get; set; }

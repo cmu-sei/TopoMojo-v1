@@ -42,10 +42,10 @@ namespace TopoMojo.Services
                 .Include(t => t.Workspace) as IQueryable<Data.Template>;
 
             if (sudo)
-                if (search.pid > 0)
-                    q = q.Where(t => t.ParentId == search.pid);
+                if (search.pid.NotEmpty())
+                    q = q.Where(t => t.ParentGlobalId == search.pid);
                 else
-                    q = q.Where(t => (t.ParentId ?? 0) < 1);
+                    q = q.Where(t => t.ParentGlobalId == null);
                     // q = q.Where(t => t.ParentId == null || t.ParentId == 0);
 
             if (!sudo || search.WantsPublished)
@@ -71,20 +71,20 @@ namespace TopoMojo.Services
             return Mapper.Map<Template>(template);
         }
 
-        internal async Task<bool> CanEdit(string id, int actorId)
+        internal async Task<bool> CanEdit(string id, string actorId)
         {
             return await _templateStore.DbContext.Templates
                 .Where(t => t.GlobalId == id)
                 .SelectMany(t => t.Workspace.Workers)
-                .AnyAsync(w => w.PersonId == actorId);
+                .AnyAsync(w => w.SubjectId == actorId);
         }
 
-        internal async Task<bool> CanEditWorkspace(string id, int actorId)
+        internal async Task<bool> CanEditWorkspace(string id, string actorId)
         {
             return await _templateStore.DbContext.Workspaces
                 .Where(t => t.GlobalId == id)
                 .SelectMany(w => w.Workers)
-                .AnyAsync(w => w.PersonId == actorId);
+                .AnyAsync(w => w.SubjectId == actorId);
         }
 
         public async Task<TemplateDetail> LoadDetail(string id)
@@ -143,8 +143,8 @@ namespace TopoMojo.Services
 
             var newTemplate = new Data.Template
             {
-                ParentId = entity.Id,
-                WorkspaceId = workspace.Id,
+                ParentGlobalId = entity.GlobalId,
+                WorkspaceGlobalId = workspace.GlobalId,
                 Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,

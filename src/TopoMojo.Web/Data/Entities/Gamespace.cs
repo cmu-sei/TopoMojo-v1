@@ -9,7 +9,7 @@ namespace TopoMojo.Data
 {
     public class Gamespace : IEntity
     {
-        public int Id { get; set; }
+        // public int Id { get; set; }
         public string GlobalId { get; set; }
         public string ClientId { get; set; }
         public string Name { get; set; }
@@ -20,7 +20,7 @@ namespace TopoMojo.Data
         public DateTime ExpirationTime { get; set; }
         public bool AllowReset { get; set; }
         public string Challenge { get; set; }
-        public int WorkspaceId { get; set; }
+        public string WorkspaceGlobalId { get; set; }
         public virtual Workspace Workspace { get; set; }
         public virtual ICollection<Player> Players { get; set; } = new List<Player>();
     }

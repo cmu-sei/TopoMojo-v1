@@ -42,7 +42,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (workspace.Workers
-                    .FirstOrDefault(p => p.PersonId == user.Id)?
+                    .FirstOrDefault(p => p.SubjectId == user.GlobalId)?
                     .Permission.CanManage() ?? false);
         }
 
@@ -50,7 +50,7 @@ namespace TopoMojo.Data.Extensions
         {
             return user.IsAdmin
                 || (workspace.Workers
-                    .FirstOrDefault(p => p.PersonId == user.Id)?
+                    .FirstOrDefault(p => p.SubjectId == user.GlobalId)?
                     .Permission.CanEdit() ?? false);
         }
 

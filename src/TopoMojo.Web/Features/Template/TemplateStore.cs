@@ -46,18 +46,18 @@ namespace TopoMojo.Data
 
         public async Task<bool> HasDescendents(string id)
         {
-            var entity = await Retrieve(id);
+            // var entity = await Retrieve(id);
 
             return await DbContext.Templates
-                .Where(t => t.ParentId == entity.Id)
+                .Where(t => t.ParentGlobalId == id)
                 .AnyAsync();
         }
 
-        public async Task<Template[]> ListChildren(int parentId)
+        public async Task<Template[]> ListChildren(string parentId)
         {
             return await base.List()
                 .Include(t => t.Workspace)
-                .Where(t => t.ParentId == parentId)
+                .Where(t => t.ParentGlobalId == parentId)
                 .ToArrayAsync();
         }
 

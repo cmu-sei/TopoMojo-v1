@@ -40,7 +40,7 @@ namespace TopoMojo.Data
         {
             return await base.Retrieve(id, query => query
                 .Include(t => t.Templates)
-                .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Workers) //.ThenInclude(w => w.Person)
                 .Include(t => t.Gamespaces)
             );
         }
@@ -49,7 +49,7 @@ namespace TopoMojo.Data
         {
             return await base.Retrieve(id, query => query
                 .Include(t => t.Templates)
-                .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Workers) // .ThenInclude(w => w.Person)
                 .Include(t => t.Gamespaces)
             );
         }
@@ -62,7 +62,7 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Workspace> LoadWithParents(int id)
+        public async Task<Workspace> LoadWithParents(string id)
         {
             return await base.Retrieve(id, query => query
                 .Include(t => t.Workers)
@@ -75,19 +75,19 @@ namespace TopoMojo.Data
         {
             return await DbContext.Workspaces
                 .Include(t => t.Templates)
-                .Include(t => t.Workers).ThenInclude(w => w.Person)
+                .Include(t => t.Workers) // .ThenInclude(w => w.Person)
                 .Where(t => t.ShareCode == code)
                 .SingleOrDefaultAsync();
         }
 
         public async Task<Workspace> FindByWorker(int workerId)
         {
-            int id = await DbContext.Workers
-                .Where(p => p.Id == workerId)
-                .Select(p => p.WorkspaceId)
+            string id = await DbContext.Workspaces
+                .Where(p => p.Workers.Any(w => w.Id == workerId))
+                .Select(p => p.GlobalId)
                 .SingleOrDefaultAsync();
 
-            return (id > 0)
+            return (!string.IsNullOrEmpty(id))
                 ? await Retrieve(id)
                 : null;
         }
@@ -104,10 +104,10 @@ namespace TopoMojo.Data
         //     await DbContext.SaveChangesAsync();
         // }
 
-        public async Task<int> GetWorkspaceCount(int profileId)
+        public async Task<int> GetWorkspaceCount(string profileId)
         {
             return await DbContext.Workers
-                .CountAsync(w => w.PersonId == profileId && w.Permission.HasFlag(Permission.Manager));
+                .CountAsync(w => w.SubjectId == profileId && w.Permission.HasFlag(Permission.Manager));
         }
 
         public async Task<bool> HasGames(string id)
@@ -140,11 +140,14 @@ namespace TopoMojo.Data
         public async Task<bool> CheckWorkspaceLimit(string userId)
         {
             var user = await DbContext.Users
-                .Include(u => u.Workspaces)
+                // .Include(u => u.Workspaces)
                 .FirstOrDefaultAsync(u => u.GlobalId == userId);
 
-            return user is Data.User
-                && user.Workspaces.Count(w => w.Permission == Permission.Manager) < user.WorkspaceLimit;
+            return user is Data.User &&
+                await DbContext.Workers.CountAsync(w =>
+                    w.SubjectId == userId &&
+                    w.Permission == Permission.Manager
+                ) < user.WorkspaceLimit;
 
         }
     }

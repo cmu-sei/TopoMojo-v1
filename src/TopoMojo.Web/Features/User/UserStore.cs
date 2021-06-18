@@ -14,23 +14,21 @@ using TopoMojo.Models;
 
 namespace TopoMojo.Data
 {
-    public class UserStore : CachedStore<User>, IUserStore
+    public class UserStore : Store<User>, IUserStore
     {
         public UserStore (
-            TopoMojoDbContext db,
-            IMemoryCache memoryCache,
-            IDistributedCache cache
-        ) : base(db, memoryCache, cache)
+            TopoMojoDbContext db
+        ) : base(db)
         {
 
         }
 
-        public async Task<User> LoadDetail(int id)
+        public async Task<User> Load(string id)
         {
             return await DbContext.Users
-                .Include(p => p.Workspaces)
-                .Include(p => p.Gamespaces)
-                .Where(p => p.Id == id)
+                // .Include(p => p.Workspaces)
+                // .Include(p => p.Gamespaces)
+                .Where(p => p.GlobalId == id)
                 .FirstAsync();
         }
 
@@ -90,7 +88,7 @@ namespace TopoMojo.Data
             if (found.Equals(false))
                 found = await DbContext.Workers.AnyAsync(w =>
                     w.Workspace.GlobalId == isolationId &&
-                    w.Person.GlobalId == userId
+                    w.SubjectId == userId
                 );
 
             return found;

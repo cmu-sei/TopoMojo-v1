@@ -51,13 +51,13 @@ namespace TopoMojo.Data
 
         public virtual async Task<TEntity> Retrieve(int id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includes = null)
         {
-            if (includes == null)
-                return await DbContext.Set<TEntity>().FindAsync(id);
+            // if (includes == null)
+            //     return await DbContext.Set<TEntity>().FindAsync(id);
 
-            return await includes.Invoke(DbContext.Set<TEntity>())
-                .Where(e => e.Id == id)
-                .SingleOrDefaultAsync();
-
+            // return await includes.Invoke(DbContext.Set<TEntity>())
+            //     .Where(e => e.Id == id)
+            //     .SingleOrDefaultAsync();
+            return null;
         }
 
         public virtual async Task<TEntity> Retrieve(string id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includes = null)

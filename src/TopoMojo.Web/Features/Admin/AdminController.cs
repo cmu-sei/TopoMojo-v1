@@ -73,7 +73,7 @@ namespace TopoMojo.Web.Controllers
         /// <returns></returns>
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
-        public async Task<ActionResult> Export([FromBody] int[] ids)
+        public async Task<ActionResult> Export([FromBody] string[] ids)
         {
             string srcPath = _uploadOptions.TopoRoot;
             string destPath = Path.Combine(

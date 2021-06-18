@@ -73,7 +73,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor.Id).Result
+                () => _svc.CanEdit(id, Actor.GlobalId).Result
             );
 
             return Ok(
@@ -93,7 +93,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(model.GlobalId, Actor.Id).Result
+                () => _svc.CanEdit(model.GlobalId, Actor.GlobalId).Result
             );
 
             var result = await _svc.Update(model);
@@ -115,7 +115,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor.Id).Result
+                () => _svc.CanEdit(id, Actor.GlobalId).Result
             );
 
             var result = await _svc.Delete(id);
@@ -137,7 +137,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEditWorkspace(model.WorkspaceId, Actor.Id).Result
+                () => _svc.CanEditWorkspace(model.WorkspaceId, Actor.GlobalId).Result
             );
 
             var result = await _svc.Link(model, Actor.IsCreator);
@@ -159,7 +159,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(model.TemplateId, Actor.Id).Result
+                () => _svc.CanEdit(model.TemplateId, Actor.GlobalId).Result
             );
 
             var result = await _svc.Unlink(model);
