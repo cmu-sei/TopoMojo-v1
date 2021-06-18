@@ -278,21 +278,15 @@ namespace TopoMojo.vSphere
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
             options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
             options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
-            options.Add(new OptionValue { key = "guestinfo.hostname", value = template.Name });
-            
+            options.Add(new OptionValue { key = "guestinfo.hostname", value = template.Name.Untagged() });
+
             foreach (var setting in template.GuestSettings)
             {
-                // TODO: rework this quick fix for injecting isolation specific settings
-                if (setting.Key.StartsWith("iftag.") && !setting.Value.Contains(template.IsolationTag))
+                options.Add(new OptionValue
                 {
-                    continue;
-                }
-
-                var option = new OptionValue { key = setting.Key, value = setting.Value };
-
-                option.key = option.key.Replace("iftag.", "guestinfo.");
-
-                options.Add(option);
+                    key = setting.Key,
+                    value = setting.Value
+                });
             }
 
             return options.ToArray();
@@ -367,40 +361,6 @@ namespace TopoMojo.vSphere
         //     return devicespec;
         // }
 
-
-        // public static VirtualSwitch VimSwitchtoXnetSwitch(HostVirtualSwitch s)
-        // {
-        //     VirtualSwitch t = new VirtualSwitch();
-        //     t.name = s.name;
-        //     t.ports = s.numPorts;
-        //     if (s.spec.policy.security != null)
-        //         t.promiscuous = (s.spec.policy.security.allowPromiscuous && s.spec.policy.security.allowPromiscuousSpecified) ? 1 : 0;
-        //     else
-        //         t.promiscuous = -1;
-
-        //     if (s.spec.bridge != null)
-        //     {
-        //         Type type = s.spec.bridge.GetType();
-        //         t.bridgetype = type.Name;
-        //         if (type == typeof(HostVirtualSwitchBondBridge))
-        //             t.nic = ((HostVirtualSwitchBondBridge)s.spec.bridge).nicDevice[0];
-        //         if (type == typeof(HostVirtualSwitchSimpleBridge))
-        //             t.nic = ((HostVirtualSwitchSimpleBridge)s.spec.bridge).nicDevice;
-        //     }
-        //     return t;
-        // }
-        // public static VirtualLan VimPortGrouptoXnetLan(HostPortGroup pg)
-        // {
-        //     VirtualLan p = new VirtualLan();
-        //     p.name = pg.spec.name;
-        //     p.vlan = pg.spec.vlanId;
-        //     p.switchname = pg.spec.vswitchName;
-        //     if (pg.spec.policy.security != null)
-        //         p.promiscuous = (pg.spec.policy.security.allowPromiscuous && pg.spec.policy.security.allowPromiscuousSpecified) ? 1 : 0;
-        //     else
-        //         p.promiscuous = -1;
-        //     return p;
-        // }
 
         public static HostNetworkPolicy GetDefaultHostNetworkPolicy()
         {
