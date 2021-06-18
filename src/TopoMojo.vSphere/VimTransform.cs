@@ -278,8 +278,8 @@ namespace TopoMojo.vSphere
             options.Add(new OptionValue { key = "keyboard.typematicMinDelay", value = "2000000" });
             options.Add(new OptionValue { key = "guestinfo.isolationTag", value = template.IsolationTag });
             options.Add(new OptionValue { key = "guestinfo.templateSource", value = template.Id });
-            options.Add(new OptionValue { key = "guestinfo.hostname", value = template.Name });
-            
+            options.Add(new OptionValue { key = "guestinfo.hostname", value = template.Name.Untagged() });
+
             foreach (var setting in template.GuestSettings)
             {
                 // TODO: rework this quick fix for injecting isolation specific settings

@@ -1,20 +1,12 @@
 // Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,54 +22,58 @@ namespace TopoMojo.Web
         {
             Configuration = configuration;
 
-            Oidc = Configuration.GetSection("Authorization").Get<AuthorizationOptions>()
-                ?? new AuthorizationOptions();
+            Settings = Configuration.Get<AppSettings>() ?? new AppSettings();
 
-            Branding = Configuration.GetSection("Branding").Get<BrandingOptions>()
-                ?? new BrandingOptions();
+            // Oidc = Configuration.GetSection("Authorization").Get<AuthorizationOptions>()
+            //     ?? new AuthorizationOptions();
 
-            CacheOptions = Configuration.GetSection("Cache").Get<CacheOptions>()
-                ?? new CacheOptions();
+            // Branding = Configuration.GetSection("Branding").Get<BrandingOptions>()
+            //     ?? new BrandingOptions();
 
-            CacheOptions.SharedFolder = Path.Combine(
+            // CacheOptions = Configuration.GetSection("Cache").Get<CacheOptions>()
+            //     ?? new CacheOptions();
+
+            Settings.Cache.SharedFolder = Path.Combine(
                 env.ContentRootPath,
-                CacheOptions.SharedFolder ?? ""
+                Settings.Cache.SharedFolder ?? ""
             );
 
-            Headers = Configuration.GetSection("Headers").Get<HeaderOptions>()
-                ?? new HeaderOptions();
 
-            Database = Configuration.GetSection("Database").Get<DatabaseOptions>()
-                ?? new DatabaseOptions();
+            // Headers = Configuration.GetSection("Headers").Get<HeaderOptions>()
+            //     ?? new HeaderOptions();
 
-            FileUploadOptions = Configuration.GetSection("FileUpload").Get<FileUploadOptions>()
-                ?? new FileUploadOptions();
+            // Database = Configuration.GetSection("Database").Get<DatabaseOptions>()
+            //     ?? new DatabaseOptions();
 
-            PodOptions = Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>()
-                ?? new TopoMojo.Models.HypervisorServiceConfiguration();
+            // FileUploadOptions = Configuration.GetSection("FileUpload").Get<FileUploadOptions>()
+            //     ?? new FileUploadOptions();
 
-            ApiKeyClients = Configuration.GetSection("ApiKeyClients").Get<List<ApiKeyClient>>()
-                ?? new List<ApiKeyClient>();
+            // PodOptions = Configuration.GetSection("Pod").Get<TopoMojo.Models.HypervisorServiceConfiguration>()
+            //     ?? new TopoMojo.Models.HypervisorServiceConfiguration();
 
-            TopoMojoOptions = Configuration.GetSection("Core").Get<CoreOptions>()
-                ?? new CoreOptions();
+            // ApiKeyClients = Configuration.GetSection("ApiKeyClients").Get<List<ApiKeyClient>>()
+            //     ?? new List<ApiKeyClient>();
+
+            // TopoMojoOptions = Configuration.GetSection("Core").Get<CoreOptions>()
+            //     ?? new CoreOptions();
 
             if (env.IsDevelopment())
             {
-                Oidc.RequireHttpsMetadata = false;
+                Settings.Oidc.RequireHttpsMetadata = false;
             }
         }
 
         public IConfiguration Configuration { get; }
-        public AuthorizationOptions Oidc { get; }
-        private BrandingOptions Branding { get; }
-        private CacheOptions CacheOptions { get; }
-        private DatabaseOptions Database { get; }
-        private HeaderOptions Headers { get; }
-        private FileUploadOptions FileUploadOptions { get; }
-        private TopoMojo.Models.HypervisorServiceConfiguration PodOptions { get; }
-        private List<ApiKeyClient> ApiKeyClients { get; }
-        private CoreOptions TopoMojoOptions { get; }
+        AppSettings Settings { get; }
+        // public AuthorizationOptions Oidc { get; }
+        // private BrandingOptions Branding { get; }
+        // private CacheOptions CacheOptions { get; }
+        // private DatabaseOptions Database { get; }
+        // private HeaderOptions Headers { get; }
+        // private FileUploadOptions FileUploadOptions { get; }
+        // private TopoMojo.Models.HypervisorServiceConfiguration PodOptions { get; }
+        // private List<ApiKeyClient> ApiKeyClients { get; }
+        // private CoreOptions TopoMojoOptions { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -93,39 +89,36 @@ namespace TopoMojo.Web
                 );
             });
 
-            services.ConfigureForwarding(Headers.Forwarding);
+            services.ConfigureForwarding(Settings.Headers.Forwarding);
 
             services.AddCors(
                 opt => opt.AddPolicy(
-                    Headers.Cors.Name,
-                    Headers.Cors.Build()
+                    Settings.Headers.Cors.Name,
+                    Settings.Headers.Cors.Build()
                 )
             );
 
-            if (Branding.IncludeSwagger)
-                services.AddSwagger(Oidc, Branding);
+            if (Settings.OpenApi.Enabled)
+                services.AddSwagger(Settings.Oidc, Settings.OpenApi);
 
-            services.AddCache(() => CacheOptions);
+            services.AddCache(() => Settings.Cache);
 
             services.AddDataProtection()
                 .SetApplicationName(AppConstants.DataProtectionPurpose)
-                .PersistKeys(() => CacheOptions);
+                .PersistKeys(() => Settings.Cache);
 
-            services.AddSignalR(options => {});
-            services.AddSingleton<HubCache>();
-            services.AddSingleton<IUserIdProvider, SubjectProvider>();
+            services.AddSignalRHub();
 
-            services.AddFileUpload(FileUploadOptions);
+            services.AddFileUpload(Settings.FileUpload);
 
             services.AddHostedService<ScheduledTasksService>();
 
-            #region Configure TopoMojo
-
+            // Configure TopoMojo
             services
                 .AddIdentityResolver()
-                .AddTopoMojo(TopoMojoOptions)
-                .AddTopoMojoData(Database.Provider, Database.ConnectionString)
-                .AddTopoMojoHypervisor(() => PodOptions)
+                .AddTopoMojo(Settings.Core)
+                .AddTopoMojoData(Settings.Database.Provider, Settings.Database.ConnectionString)
+                .AddTopoMojoHypervisor(() => Settings.Pod)
                 .AddSingleton<AutoMapper.IMapper>(
                     new AutoMapper.MapperConfiguration(cfg =>
                     {
@@ -133,105 +126,31 @@ namespace TopoMojo.Web
                     }).CreateMapper()
                 );
 
-            #endregion
+            // Configure Auth
+            services.AddConfiguredAuthentication(Settings.Oidc, Settings.ApiKeyClients);
+            services.AddConfiguredAuthorization();
 
-            #region Configure Authentication
-
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.Audience = Oidc.Audience;
-                    options.Authority = Oidc.Authority;
-                    options.RequireHttpsMetadata = Oidc.RequireHttpsMetadata;
-                })
-                .AddApiKey(ApiKeyAuthentication.AuthenticationScheme, options =>
-                {
-                    options.Clients = ApiKeyClients;
-                })
-                .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {})
-                .AddCookie(AppConstants.CookieScheme, opt =>
-                {
-                    // opt.ExpireTimeSpan = new TimeSpan(4, 0, 0);
-                    // opt.SlidingExpiration = true;
-                    opt.Cookie = new CookieBuilder
-                    {
-                        Name = AppConstants.CookieScheme
-                    };
-                })
-                ;
-
-            services.AddAuthorization(_ =>
-            {
-                _.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        JwtBearerDefaults.AuthenticationScheme
-                    ).Build();
-
-                _.AddPolicy("AdminOnly", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        JwtBearerDefaults.AuthenticationScheme
-                    )
-                    .RequireClaim(AppConstants.RoleClaimName, TopoMojo.Models.UserRole.Administrator.ToString())
-                    .Build());
-
-                _.AddPolicy("TrustedClients", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(ApiKeyAuthentication.AuthenticationScheme)
-                    .Build());
-
-                _.AddPolicy("OneTimeTicket", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
-                    .Build());
-
-                _.AddPolicy("Players", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        JwtBearerDefaults.AuthenticationScheme,
-                        TicketAuthentication.AuthenticationScheme,
-                        AppConstants.CookieScheme
-                    )
-                    .Build());
-
-                _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        AppConstants.CookieScheme,
-                        TicketAuthentication.AuthenticationScheme
-                    )
-                    .Build());
-            });
-
-            #endregion
         }
 
         public void Configure(IApplicationBuilder app)
         {
             app.UseJsonExceptions();
 
-            if (!string.IsNullOrEmpty(Branding.PathBase))
-                app.UsePathBase(Branding.PathBase);
+            if (!string.IsNullOrEmpty(Settings.PathBase))
+                app.UsePathBase(Settings.PathBase);
 
-            if (Headers.LogHeaders)
+            if (Settings.Headers.LogHeaders)
                 app.UseHeaderInspection();
 
-            if (!string.IsNullOrEmpty(Headers.Forwarding.TargetHeaders))
+            if (!string.IsNullOrEmpty(Settings.Headers.Forwarding.TargetHeaders))
                 app.UseForwardedHeaders();
 
-            if (Headers.UseHsts)
+            if (Settings.Headers.UseHsts)
                 app.UseHsts();
 
             app.UseRouting();
 
-            app.UseCors(Headers.Cors.Name);
+            app.UseCors(Settings.Headers.Cors.Name);
 
             app.UseStaticFiles();
 
@@ -239,12 +158,12 @@ namespace TopoMojo.Web
 
             app.UseAuthorization();
 
-            if (Branding.IncludeSwagger)
-                app.UseConfiguredSwagger(Oidc, Branding);
+            if (Settings.OpenApi.Enabled)
+                app.UseConfiguredSwagger(Settings.OpenApi, Settings.Oidc.Audience, Settings.PathBase);
 
             app.UseEndpoints(ep =>
             {
-                ep.MapHub<AppHub>("/hub");
+                ep.MapHub<Hubs.AppHub>("/hub").RequireAuthorization();
 
                 ep.MapControllers().RequireAuthorization();
             });

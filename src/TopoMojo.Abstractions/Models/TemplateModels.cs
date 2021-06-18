@@ -1,13 +1,15 @@
 // Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
+using System.Linq;
+
 namespace TopoMojo.Models
 {
     public class Template
     {
         public int Id { get; set; }
+        public string GlobalId { get; set; }
         public int ParentId { get; set; }
-        public bool CanEdit { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
@@ -21,14 +23,13 @@ namespace TopoMojo.Models
 
     public class ChangedTemplate
     {
-        public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
         public bool IsHidden { get; set; }
         public string Guestinfo { get; set; }
-        public int WorkspaceId { get; set; }
         public int Replicas { get; set; }
     }
 
@@ -42,7 +43,7 @@ namespace TopoMojo.Models
 
     public class TemplateDetail
     {
-        public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
@@ -54,6 +55,7 @@ namespace TopoMojo.Models
     public class TemplateSummary
     {
         public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public int WorkspaceId { get; set; }
@@ -66,13 +68,14 @@ namespace TopoMojo.Models
 
     public class TemplateLink
     {
-        public int TemplateId { get; set; }
-        public int WorkspaceId { get; set; }
+        public string TemplateId { get; set; }
+        public string WorkspaceId { get; set; }
     }
 
     public class ConvergedTemplate
     {
         public int Id { get; set; }
+        public string GlobalId { get; set; }
         public string Name { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
@@ -82,5 +85,14 @@ namespace TopoMojo.Models
         public string WorkspaceGlobalId { get; set; }
         public bool WorkspaceUseUplinkSwitch { get; set; }
         public int Replicas { get; set; }
+    }
+
+    public class TemplateSearch: Search
+    {
+        public const string PublishFilter = "published";
+        public const string ParentFilter = "parents";
+        public bool WantsPublished => Filter.Contains(PublishFilter);
+        public bool WantsParents => Filter.Contains(ParentFilter);
+        public int pid { get; set; }
     }
 }

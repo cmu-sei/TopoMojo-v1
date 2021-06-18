@@ -13,4 +13,10 @@ namespace TopoMojo.Models
         public int PlayerGamespaceLimit { get; set; }
         public int MaxMinutes { get; set; }
     }
+
+    public class ClientAudience
+    {
+        public string Scope { get; set; }
+        public string Audience { get; set; }
+    }
 }

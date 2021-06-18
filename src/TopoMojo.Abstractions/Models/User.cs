@@ -12,7 +12,20 @@ namespace TopoMojo.Models
         public int WorkspaceLimit { get; set; }
         public string WhenCreated { get; set; }
         public bool IsAdmin => Role == UserRole.Administrator;
-        public bool IsCreator => Role == UserRole.Creator || Role == UserRole.Administrator;
+        public bool IsCreator =>
+            Role == UserRole.Creator ||
+            Role == UserRole.Administrator
+        ;
+        public bool IsBuilder =>
+            Role == UserRole.Builder ||
+            Role == UserRole.Creator ||
+            Role == UserRole.Administrator
+        ;
+        public bool IsAgent =>
+            string.IsNullOrEmpty(GlobalId) &&
+            !string.IsNullOrEmpty(Client.Id)
+        ;
+        public Client Client { get; set; }
     }
 
     public class ChangedUser
@@ -20,7 +33,6 @@ namespace TopoMojo.Models
         public string GlobalId { get; set; }
         public string Name { get; set; }
     }
-
 
     public enum UserRole
     {
