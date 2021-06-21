@@ -1,0 +1,71 @@
+# Example tests with REST Client (VSCode Extension)
+
+@url = http://localhost:5004/api
+@json = content-type: application/json
+@auth = Authorization: Bearer {{login.response.body.access_token}}
+
+###
+GET {{url}}/workspaces?term=
+{{auth}}
+
+###
+GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd
+{{auth}}
+
+###
+POST {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/clone
+{{auth}}###
+
+###
+DELETE {{url}}/workspace/cf4d217717b5454ca893b3ee8469c796
+{{auth}}
+
+
+
+###
+# Obtain access token from IdentityServer
+# @name login
+#
+POST http://localhost:5000/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+&client_id=dev-client
+&client_secret=dev-secret
+&scope=openid dev-api
+&username=admin@this.ws
+&password=321ChangeMe!
+
+###
+# Configure OIDC resources with IdentityServer
+#
+POST http://localhost:5000/api/resource/devimport
+Content-Type: application/json
+
+{
+    "Apis": [
+        {
+            "Name": "dev-api",
+            "Scopes": "dev-api",
+            "UserClaims": ""
+        }
+    ],
+    "Clients": [
+        {
+            "Id": "dev-client",
+            "Secret": "dev-secret",
+            "GrantType": "client_credentials password",
+            "Scopes": " dev-api dev-api-admin openid profile"
+        },
+        {
+            "Id": "dev-code",
+            "GrantType": "authorization_code",
+            "Scopes": "dev-api openid profile email org",
+            "RedirectUrl": [
+                "http://localhost:4200/oidc",
+                "http://localhost:5004/api/oauth2-redirect.html"
+            ]
+
+        }
+    ]
+}

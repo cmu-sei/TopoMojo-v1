@@ -8,7 +8,7 @@ ENV ASPNETCORE_URLS=http://*:5000 \
 
 COPY . /app
 
-WORKDIR /app/src/TopoMojo.Web
+WORKDIR /app/src/TopoMojo.Api
 RUN dotnet publish -c Release -o /app/dist
 CMD ["dotnet", "run"]
 
@@ -23,4 +23,4 @@ COPY --from=dev /app/LICENSE.md /app/LICENSE.md
 WORKDIR /app
 EXPOSE 80
 ENV ASPNETCORE_URLS=http://*:80
-CMD [ "dotnet", "TopoMojo.Web.dll" ]
+CMD [ "dotnet", "TopoMojo.Api.dll" ]
