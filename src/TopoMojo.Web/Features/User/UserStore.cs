@@ -23,57 +23,23 @@ namespace TopoMojo.Data
 
         }
 
-        public async Task<User> Load(string id)
-        {
-            return await DbContext.Users
-                // .Include(p => p.Workspaces)
-                // .Include(p => p.Gamespaces)
-                .Where(p => p.GlobalId == id)
-                .FirstAsync();
-        }
-
         public override async Task<User> Create(User user)
         {
             string name = user.Name.ExtractBefore("@");
 
-            if (!name.NotEmpty())
+            if (name.IsEmpty())
                 user.Name = "Anonymous";
 
-            if (!user.GlobalId.NotEmpty())
-                user.GlobalId = Guid.NewGuid().ToString();
+            if (user.Id.IsEmpty())
+                user.Id = Guid.NewGuid().ToString();
 
             user.WhenCreated = DateTime.UtcNow;
 
-            if (!(await DbContext.Users.AnyAsync()))
-            {
-                // user.IsAdmin = true;
+            if (!(await DbSet.AnyAsync()))
                 user.Role = UserRole.Administrator;
-            }
 
-           return await base.Create(user);
+            return await base.Create(user);
         }
-
-        // public async Task<bool> IsMember(string globalId, string userId)
-        // {
-        //     var user = await DbContext.Users
-        //         .Where(u => u.GlobalId == userId)
-        //         .FirstOrDefaultAsync();
-
-        //     if (user?.Role == UserRole.Administrator)
-        //         return true;
-
-        //     if (await DbContext.Workspaces
-        //         .Where(w => w.GlobalId == globalId && w.Workers.Any(t => t.Person.GlobalId == userId))
-        //         .AnyAsync())
-        //         return true;
-
-        //     if (await DbContext.Gamespaces
-        //         .Where(w => w.GlobalId == globalId && w.Players.Any(t => t.SubjectId == userId))
-        //         .AnyAsync())
-        //         return true;
-
-        //     return false;
-        // }
 
         public async Task<bool> CanInteract(string isolationId, string userId)
         {
@@ -81,53 +47,46 @@ namespace TopoMojo.Data
                 return false;
 
             bool found = await DbContext.Players.AnyAsync(w =>
-                w.Gamespace.GlobalId == isolationId &&
-                w.SubjectId == userId
+                w.SubjectId == userId &&
+                w.GamespaceId == isolationId
             );
 
             if (found.Equals(false))
                 found = await DbContext.Workers.AnyAsync(w =>
-                    w.Workspace.GlobalId == isolationId &&
-                    w.SubjectId == userId
+                    w.SubjectId == userId &&
+                    w.WorkspaceId == isolationId
                 );
 
             return found;
         }
 
-        // public async Task<bool> MemberOf(string globalId, Models.User user)
-        // {
-        //     if (user == null || string.IsNullOrEmpty(globalId))
-        //         return false;
+        public Task<User> LoadWithKeys(string id)
+        {
+            return DbSet
+                .Include(u => u.ApiKeys)
+                .FirstOrDefaultAsync(
+                    u => u.Id == id
+                )
+            ;
+        }
 
-        //     if (user.IsAdmin)
-        //         return true;
+        public async Task DeleteApiKey(string id)
+        {
+            var entity = await DbContext.ApiKeys.FindAsync(id);
 
-        //     bool result = false;
+            if (entity == null)
+                return;
 
-        //     var workspace = await DbContext.Workspaces
-        //         .Include(t => t.Workers)
-        //         .Where(t => t.GlobalId == globalId)
-        //         .SingleOrDefaultAsync();
+            DbContext.ApiKeys.Remove(entity);
 
-        //     result = workspace != null && workspace.CanEdit(user);
+            await DbContext.SaveChangesAsync();
+        }
 
-        //     if (result)
-        //         workspace.LastActivity = DateTime.UtcNow;
-
-        //     if (!result)
-        //     {
-        //         var gamespace = await DbContext.Gamespaces
-        //             .Include(g => g.Players)
-        //             .Where(t => t.GlobalId == globalId)
-        //             .SingleOrDefaultAsync();
-
-        //         result = gamespace != null & gamespace.CanEdit(user);
-        //     }
-
-        //     await DbContext.SaveChangesAsync();
-
-        //     return result;
-        // }
-
+        public async Task<User> ResolveApiKey(string hash)
+        {
+            return await DbSet.FirstOrDefaultAsync(u =>
+                u.ApiKeys.Any(k => k.Hash == hash)
+            );
+        }
     }
 }

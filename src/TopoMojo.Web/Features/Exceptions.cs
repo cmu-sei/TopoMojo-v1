@@ -15,14 +15,11 @@ namespace TopoMojo
     public class ActionForbidden: Exception { }
     public class AuthenticationFailedException : Exception {}
     public class InvalidClientAudience: Exception { }
+    public class InvalidInvitation: Exception { }
     public class ResourceNotFound: Exception { }
     public class ResourceIsLocked: Exception { }
     public class SessionLimitReached: Exception { }
     public class AttemptLimitReached: Exception { }
     public class GamespaceIsExpired: Exception { }
-    public class GamespaceNotRegistered: Exception {
-        public GamespaceNotRegistered() : base() { }
-        public GamespaceNotRegistered(string message) : base(message) { }
-        public GamespaceNotRegistered(string message, Exception ex) : base(message, ex) { }
-    }
+    public class GamespaceNotRegistered: Exception {}
 }

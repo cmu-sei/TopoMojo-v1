@@ -11,6 +11,9 @@ using TopoMojo.Abstractions;
 using TopoMojo.Models;
 using TopoMojo.Web;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+using TopoMojo.Hubs;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace TopoMojo.Web.Controllers
 {
@@ -18,29 +21,35 @@ namespace TopoMojo.Web.Controllers
     {
         public _Controller(
             ILogger logger,
-            IIdentityResolver identityResolver,
+            IHubContext<AppHub, IHubEvent> hub,
             params IModelValidator[] validators
         )
         {
-            _logger = logger;
-            _identityResolver = identityResolver;
+            Logger = logger;
+            Hub = hub;
             _validators = validators;
         }
 
-        protected User Actor;
-        protected User _user;
-        protected Client _client;
-        protected readonly IIdentityResolver _identityResolver;
+        protected User Actor { get; set; }
+        protected ILogger Logger { get; }
+        protected IHubContext<AppHub, IHubEvent> Hub { get; }
         private readonly IModelValidator[] _validators;
-        protected readonly ILogger _logger;
 
+
+        /// <summary>
+        /// Resolve the ClaimsPrincipal User model
+        /// </summary>
+        /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             Actor = User.ToModel();
-            // _user = _identityResolver.User;
-            // _client = _identityResolver.Client;
         }
 
+        /// <summary>
+        /// Validate a model against all validators registered
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         protected async Task Validate(object model)
         {
             foreach (var v in _validators)
@@ -48,6 +57,10 @@ namespace TopoMojo.Web.Controllers
 
         }
 
+        /// <summary>
+        /// Authorize if all requirements are met
+        /// </summary>
+        /// <param name="requirements"></param>
         protected void AuthorizeAll(params Func<Boolean>[] requirements)
         {
             bool valid = true;
@@ -59,8 +72,15 @@ namespace TopoMojo.Web.Controllers
                 throw new ActionForbidden();
         }
 
+        /// <summary>
+        /// Authorized if any requirement is met
+        /// </summary>
+        /// <param name="requirements"></param>
         protected void AuthorizeAny(params Func<Boolean>[] requirements)
         {
+            if (Actor.IsAdmin)
+                return;
+
             bool valid = false;
 
             foreach(var requirement in requirements)
@@ -76,28 +96,28 @@ namespace TopoMojo.Web.Controllers
         internal void Log(string action, dynamic item, string msg = "")
         {
             string entry = String.Format("{0} [{1}] {2} {3} {4} [{5}] {6}",
-                _user?.Name, _user?.GlobalId, action, item?.GetType().Name, item?.Name, item?.Id, msg);
+                Actor?.Name, Actor?.Id, action, item?.GetType().Name, item?.Name, item?.Id, msg);
 
-            _logger.LogInformation(entry);
+            Logger.LogInformation(entry);
         }
 
-        /// <summary>
-        /// Apply PathBase to urls generated in service
-        /// </summary>
-        /// <param name="target"></param>
-        internal string ApplyPathBase(string target)
-        {
-            if (
-                !string.IsNullOrEmpty(Request.PathBase)
-                && !string.IsNullOrEmpty(target)
-                && !target.Contains("://")
-            )
-            {
-                return Request.PathBase + target;
-            }
+        // / <summary>
+        // / Apply PathBase to urls generated in service
+        // / </summary>
+        // / <param name="target"></param>
+        // internal string ApplyPathBase(string target)
+        // {
+        //     if (
+        //         !string.IsNullOrEmpty(Request.PathBase)
+        //         && !string.IsNullOrEmpty(target)
+        //         && !target.Contains("://")
+        //     )
+        //     {
+        //         return Request.PathBase + target;
+        //     }
 
-            return target;
-        }
+        //     return target;
+        // }
 
     }
 

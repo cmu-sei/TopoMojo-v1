@@ -16,8 +16,6 @@ namespace TopoMojo.Data.Abstractions
 
         Task<IEnumerable<TEntity>> Create(IEnumerable<TEntity> range);
 
-        Task<TEntity> Retrieve(int id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includes = null);
-
         Task<TEntity> Retrieve(string id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includes = null);
 
         Task Update(TEntity entity);

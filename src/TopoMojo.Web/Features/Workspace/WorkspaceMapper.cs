@@ -52,8 +52,8 @@ namespace TopoMojo.Services
 
             CreateMap<NewWorkspace, Data.Workspace>()
                 .ForMember(d => d.Challenge, opt => opt.MapFrom(s => s.Challenge ??
-                    JsonSerializer.Serialize<Models.v2.ChallengeSpec>(
-                        new Models.v2.ChallengeSpec(),
+                    JsonSerializer.Serialize<ChallengeSpec>(
+                        new ChallengeSpec(),
                         null
                     )
                 ))
@@ -61,12 +61,7 @@ namespace TopoMojo.Services
 
             CreateMap<ChangedWorkspace, Data.Workspace>();
 
-            CreateMap<Data.Worker, Worker>()
-
-                .ForMember(d => d.CanManage, opt => opt.MapFrom((s) => s.CanManage()))
-
-                .ForMember(d => d.CanEdit, opt => opt.MapFrom((s) => s.CanEdit()))
-            ;
+            CreateMap<Data.Worker, Worker>();
 
         }
     }

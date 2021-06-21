@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Data.Extensions;
 
 namespace TopoMojo.Data
 {
@@ -19,9 +20,21 @@ namespace TopoMojo.Data
         {
             term = term.ToLower();
 
-            return base.List().Where(g =>
-                g.Name.ToLower().Contains(term)
-            );
+            return base.List()
+                .Where(g =>
+                    g.Name.ToLower().Contains(term)
+                )
+            ;
+        }
+
+        public IQueryable<Gamespace> ListByUser(string subjectId)
+        {
+            return base.List()
+                .Where(g =>
+                    g.ManagerId == subjectId ||
+                    g.Players.Any(p => p.SubjectId == subjectId)
+                )
+            ;
         }
 
         public override async Task<Gamespace> Create(Gamespace entity)
@@ -39,23 +52,6 @@ namespace TopoMojo.Data
             return gamespace;
         }
 
-        public IQueryable<Gamespace> ListByProfile(string id)
-        {
-            return DbContext.Players
-                .Where(p => p.SubjectId == id)
-                .Select(p => p.Gamespace);
-        }
-
-        public async Task<Gamespace> Load(int id)
-        {
-            return await base.Retrieve(id, query => query
-                .Include(g => g.Workspace)
-                    .ThenInclude(t => t.Templates)
-                        .ThenInclude(tm => tm.Parent)
-                .Include(g => g.Players)
-            );
-        }
-
         public async Task<Gamespace> Load(string id)
         {
             return await base.Retrieve(id, query => query
@@ -66,77 +62,86 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Gamespace> FindByShareCode(string code)
+        public async Task<Gamespace> LoadFromInvitation(string code)
         {
-            string id = await DbContext.Gamespaces
+            return await DbSet
                 .Where(g => g.ShareCode == code)
-                .Select(g => g.GlobalId)
-                .SingleOrDefaultAsync();
-
-            return (!string.IsNullOrEmpty(id))
-                ? await Retrieve(id)
-                : null;
-        }
-
-        public async Task<Gamespace[]> ListByContext(string subjectId, string workspaceId)
-        {
-            return await DbContext.Gamespaces
-                .Where(g =>
-                    g.Workspace.GlobalId == workspaceId &&
-                    g.Players.Any(p => p.SubjectId == subjectId)
-                )
-                .ToArrayAsync()
+                .SingleOrDefaultAsync()
             ;
         }
 
         public async Task<Gamespace> LoadActiveByContext(string subjectId, string workspaceId)
         {
-            string id = await DbContext.Gamespaces
-                .Where(g =>
-                    g.Workspace.GlobalId == workspaceId &&
-                    g.StopTime == DateTime.MinValue &&
+            string id = await DbSet.Where(g =>
+                    g.WorkspaceId == workspaceId &&
+                    g.EndTime == DateTime.MinValue &&
                     g.Players.Any(p => p.SubjectId == subjectId)
                 )
-                .Select(p => p.GlobalId)
-                .FirstOrDefaultAsync();
+                .Select(p => p.Id)
+                .FirstOrDefaultAsync()
+            ;
 
             return (!string.IsNullOrEmpty(id))
                 ? await Load(id)
                 : null;
         }
 
-
-        public async Task<Gamespace> FindByPlayer(int playerId)
-        {
-            return null;
-            // int id = await DbContext.Players
-            //     .Where(p => p.Id == playerId)
-            //     .Select(p => p.GamespaceId)
-            //     .SingleOrDefaultAsync();
-
-            // return (id > 0)
-            //     ? await Retrieve(id)
-            //     : null
-            // ;
-        }
-
         public async Task<Player[]> LoadPlayers(string id)
         {
             return await DbContext.Players
-                .Where(p => p.Gamespace.GlobalId == id)
+                .Where(p => p.Gamespace.Id == id)
                 .ToArrayAsync()
             ;
         }
 
         public async Task<bool> CanInteract(string id, string actorId)
         {
-            return await DbContext.Gamespaces
-                .Where(g =>
-                    g.ClientId == actorId ||
+            return await DbSet.AnyAsync(g =>
+                g.Id == id &&
+                (
+                    g.ManagerId == actorId ||
                     g.Players.Any(p => p.SubjectId == actorId)
                 )
-                .AnyAsync()
+            );
+        }
+
+        public async Task<bool> CanManage(string id, string subjectId)
+        {
+            var gamespace = await DbSet.FindAsync(id);
+
+            return gamespace.ManagerId.Equals(subjectId);
+        }
+
+        public async Task<bool> HasScope(string workspaceId, string scope)
+        {
+            var workspace = await DbContext.Workspaces.FindAsync(workspaceId);
+
+            return workspace.HasScope(scope);
+        }
+
+        public async Task<bool> IsBelowGamespaceLimit(string subjectId, int limit)
+        {
+            return
+                limit == 0 ||
+                limit > await DbSet.CountAsync(g => g.ManagerId == subjectId)
             ;
+        }
+
+        public async Task<Player> FindPlayer(string id, string subjectId)
+        {
+            return await DbContext.Players.FindAsync(subjectId, id);
+        }
+
+        public async Task DeletePlayer(string id, string subjectId)
+        {
+            var player = await FindPlayer(id, subjectId);
+
+            if (player is Data.Player)
+            {
+                DbContext.Players.Remove(player);
+
+                await DbContext.SaveChangesAsync();
+            }
         }
     }
 }

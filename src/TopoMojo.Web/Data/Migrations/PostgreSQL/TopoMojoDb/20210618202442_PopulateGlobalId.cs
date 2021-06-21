@@ -42,13 +42,6 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                 name: "IX_Players_UserId",
                 table: "Players");
 
-            migrationBuilder.DropColumn(
-                name: "PersonId",
-                table: "Workers");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Players");
 
             migrationBuilder.DropColumn(
                 name: "WorkspaceId",
@@ -192,26 +185,24 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-                        // set data for subsequent migration which will change PK
+            // set data for subsequent migration which will change PK
             migrationBuilder.Sql(@"
                 UPDATE ""Workers"" w SET ""WorkspaceGlobalId"" = a.""GlobalId"" FROM ""Workspaces"" a WHERE w.""WorkspaceId"" = a.""Id"";
                 UPDATE ""Gamespaces"" w SET ""WorkspaceGlobalId"" = a.""GlobalId"" FROM ""Workspaces"" a WHERE w.""WorkspaceId"" = a.""Id"";
                 UPDATE ""Players"" w SET ""GamespaceGlobalId"" = a.""GlobalId"" FROM ""Gamespaces"" a WHERE w.""GamespaceId"" = a.""Id"";
                 UPDATE ""Templates"" w SET ""ParentGlobalId"" = a.""GlobalId"" FROM ""Templates"" a WHERE w.""ParentId"" = a.""Id"";
                 UPDATE ""Templates"" w SET ""WorkspaceGlobalId"" = a.""GlobalId"" FROM ""Workspaces"" a WHERE w.""WorkspaceId"" = a.""Id"";
-                UPDATE ""Templates"" set ""GlobalId""=replace(""GlobalId"", '-', '');
-                UPDATE ""Templates"" set ""ParentGlobalId""=replace(""ParentGlobalId"", '-', '');
-                UPDATE ""Templates"" set ""WorkspaceGlobalId""=replace(""WorkspaceGlobalId"", '-', '');
-                UPDATE ""Gamespaces"" set ""WorkspaceGlobalId""=replace(""WorkspaceGlobalId"", '-', '');
-                UPDATE ""Gamespaces"" set ""GlobalId""=replace(""GlobalId"", '-', '');
-                UPDATE ""Workspaces"" set ""GlobalId""=replace(""GlobalId"", '-', '');
-                UPDATE ""Workers"" set ""WorkspaceGlobalId""=replace(""WorkspaceGlobalId"", '-', '');
-                UPDATE ""Players"" set ""GamespaceGlobalId""=replace(""GamespaceGlobalId"", '-', '');
+                UPDATE ""Workers"" w SET ""SubjectId"" = a.""GlobalId"" FROM ""Users"" a WHERE w.""PersonId"" = a.""Id"";
+                UPDATE ""Players"" w SET ""SubjectId"" = a.""GlobalId"" FROM ""Users"" a WHERE w.""UserId"" = a.""Id"";
             ");
-            // UPDATE ""Players"" SET ""GamespaceGlobalId"" = g.""GlobalId"" FROM ""Players"" p INNER JOIN ""Gamespaces"" g ON p.""GamespaceId"" = g.""Id"";
-            // UPDATE ""Workers"" SET ""WorkspaceGlobalId"" = g.""GlobalId"" FROM ""Workers"" p INNER JOIN ""Workspaces"" g ON p.""WorkspaceId"" = g.""Id"";
-            // UPDATE ""Templates"" SET ""ParentGlobalId"" = g.""GlobalId"" FROM ""Templates"" p LEFT JOIN ""Templates"" g ON p.""ParentId"" = g.""Id"";
 
+            migrationBuilder.DropColumn(
+                name: "PersonId",
+                table: "Workers");
+
+            migrationBuilder.DropColumn(
+                name: "UserId",
+                table: "Players");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

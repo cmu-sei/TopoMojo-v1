@@ -45,12 +45,12 @@ namespace TopoMojo.Web.Extensions
 
                     foreach (var u in seedData.Users)
                     {
-                        if (!dbContext.Users.Any(p => p.GlobalId == u.GlobalId))
+                        if (!dbContext.Users.Any(p => p.Id == u.GlobalId))
                         {
                             dbContext.Users.Add(new TopoMojo.Data.User
                             {
                                 Name = u.Name,
-                                GlobalId = u.GlobalId,
+                                Id = u.GlobalId,
                                 WhenCreated = DateTime.UtcNow,
                                 Role = TopoMojo.Models.UserRole.Administrator
                             });

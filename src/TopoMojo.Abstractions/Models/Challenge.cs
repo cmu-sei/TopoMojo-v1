@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TopoMojo.Models.v2
+namespace TopoMojo.Models
 {
     public class ChallengeSpec
     {
@@ -86,7 +86,6 @@ namespace TopoMojo.Models.v2
         public string SectionText { get; set; }
         public ICollection<QuestionView> Questions { get; set; } = new List<QuestionView>();
     }
-
 
     public class SectionView
     {

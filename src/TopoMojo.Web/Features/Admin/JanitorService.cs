@@ -37,32 +37,34 @@ namespace TopoMojo.Services
         private readonly IWorkspaceStore _workspaceStore;
         private readonly IGamespaceStore _gamespaceStore;
 
-        public async Task<JanitorReport[]> CleanupIdleGamespaces(JanitorOptions options)
+        public async Task EndExpired()
         {
-            var items = new List<JanitorReport>();
+            var expired = await _gamespaceStore.List()
+                .Where(g =>
+                    g.EndTime == DateTime.MinValue &&
+                    g.ExpirationTime > DateTime.UtcNow
+                )
+                .ToArrayAsync();
 
-            // var gamespaces = (await _gamespaceStore.DeleteStale(
-            //     options.IdleGamespaceExpiration.ToDatePast(),
-            //     options.DryRun
-            // )).ToList();
+            var processed = new List<Data.Gamespace>();
 
-            // if (!options.DryRun)
-            // {
-            //     await RemoveVms(gamespaces
-            //         .Select(w => w.GlobalId)
-            //         .ToArray()
-            //     );
-            // }
+            foreach (var gs in expired)
+            {
+                if (gs.ExpirationTime.AddMinutes(gs.CleanupGraceMinutes) < DateTime.UtcNow)
+                {
+                    _logger.LogInformation($"Ending expired gamespace {gs.Id}");
 
-            // return gamespaces.Select(g => new JanitorReport
-            // {
-            //     Reason = "IdleGamespace",
-            //     Id = g.Id,
-            //     Name = g.Name,
-            //     Age = g.LastActivity
-            // }).ToArray();
+                    gs.EndTime = gs.ExpirationTime;
 
-            return items.ToArray();
+                    processed.Add(gs);
+                }
+            }
+
+            await _gamespaceStore.Update(processed);
+
+            await RemoveVms(
+                processed.Select(g => g.Id).ToArray()
+            );
         }
 
         public async Task<JanitorReport[]> CleanupInactiveWorkspaces(JanitorOptions options)
@@ -103,7 +105,7 @@ namespace TopoMojo.Services
             if (!dryrun)
             {
                 await RemoveVms(workspaces
-                    .Select(w => w.GlobalId)
+                    .Select(w => w.Id)
                     .ToArray()
                 );
             }
@@ -111,7 +113,7 @@ namespace TopoMojo.Services
             return workspaces.Select(g => new JanitorReport
             {
                 Reason = reason,
-                Id = g.GlobalId,
+                Id = g.Id,
                 Name = g.Name,
                 Age = g.LastActivity
             }).ToArray();
@@ -134,7 +136,7 @@ namespace TopoMojo.Services
             if (!options.DryRun)
             {
                 await RemoveVms(workspaces
-                    .Select(w => w.GlobalId)
+                    .Select(w => w.Id)
                     .ToArray()
                 );
             }
@@ -142,7 +144,7 @@ namespace TopoMojo.Services
             return workspaces.Select(g => new JanitorReport
             {
                 Reason = "IdleWorkspaceVms",
-                Id = g.GlobalId,
+                Id = g.Id,
                 Name = g.Name,
                 Age = g.LastActivity
             }).ToArray();
@@ -163,8 +165,6 @@ namespace TopoMojo.Services
             var result = new List<JanitorReport>();
 
             var opt = options ?? _options.Expirations;
-
-            result.AddRange(await CleanupIdleGamespaces(opt));
 
             result.AddRange(await CleanupIdleWorkspaceVms(opt));
 

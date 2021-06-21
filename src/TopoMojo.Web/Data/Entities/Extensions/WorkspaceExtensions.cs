@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Linq;
@@ -12,9 +12,13 @@ namespace TopoMojo.Data.Extensions
         {
             var delims = new char[] { ' ', ',', ';' };
 
-            var client = scope.Split(delims, StringSplitOptions.RemoveEmptyEntries);
+            var client = scope.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
 
-            var resource = workspace.Audience.Split(delims, StringSplitOptions.RemoveEmptyEntries);
+            var resource = workspace.Audience.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
 
             return client.Intersect(resource).Any();
         }

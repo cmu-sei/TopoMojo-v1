@@ -16,6 +16,11 @@ namespace TopoMojo
         public const string ClientIdClaimName = "client_id";
         public const string ClientScopeClaimName = "client_scope";
         public const string ClientUrlClaimName = "client_url";
+        public const string UserScopeClaim = "u_scope";
+        public const string UserWorkspaceLimitClaim = "u_wsl";
+        public const string UserGamespaceLimitClaim = "u_gsl";
+        public const string UserGamespaceMaxMinutesClaim = "u_gmm";
+        public const string UserGamespaceCleanupGraceMinutesClaim = "u_gcg";
         public const string RegistrationCachePrefix = "lp:";
         public const string CookieScheme = ".TopoMojo.Cookies";
         public const string MarkdownCutLine = "<!-- cut -->";

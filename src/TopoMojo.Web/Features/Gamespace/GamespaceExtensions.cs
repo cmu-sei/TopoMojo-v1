@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using TopoMojo.Extensions;
-using TopoMojo.Models.v2;
 
 namespace TopoMojo.Models
 {
@@ -27,7 +26,7 @@ namespace TopoMojo.Models
             }
         }
 
-        public static void Grade(this Models.v2.QuestionSpec question, string submission)
+        public static void Grade(this QuestionSpec question, string submission)
         {
             if (string.IsNullOrWhiteSpace(submission))
                 return;
@@ -60,7 +59,7 @@ namespace TopoMojo.Models
             question.IsGraded = true;
         }
 
-        public static void SetQuestionWeights(this Models.v2.VariantSpec spec)
+        public static void SetQuestionWeights(this VariantSpec spec)
         {
             var questions = spec.Sections.SelectMany(s => s.Questions).ToArray();
             var unweighted = questions.Where(q => q.Weight == 0).ToArray();
@@ -77,7 +76,7 @@ namespace TopoMojo.Models
             }
         }
 
-        public static DateTime ResolveExpiration(this RegistrationRequest request, DateTime ts, int max)
+        public static DateTime ResolveExpiration(this GamespaceRegistration request, DateTime ts, int max)
         {
             if (max > 0)
                 request.MaxMinutes = Math.Min(request.MaxMinutes, max);

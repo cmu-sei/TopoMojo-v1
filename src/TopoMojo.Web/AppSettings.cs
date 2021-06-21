@@ -14,7 +14,6 @@ namespace TopoMojo
         public DatabaseOptions Database { get; set; } = new DatabaseOptions();
         public FileUploadOptions FileUpload { get; set; } = new FileUploadOptions();
         public HeaderOptions Headers { get; set; } = new HeaderOptions();
-        public ICollection<ApiKeyClient> ApiKeyClients { get; set; } = new List<ApiKeyClient>();
         public OpenApiOptions OpenApi { get; set; } = new OpenApiOptions();
         public HypervisorServiceConfiguration Pod { get; set; } = new HypervisorServiceConfiguration();
 
@@ -136,7 +135,7 @@ namespace TopoMojo
 
     public class CoreOptions
     {
-        public int GamespaceLimit { get; set; } = 0;
+        public int DefaultGamespaceLimit { get; set; } = 0;
         public int DefaultWorkspaceLimit { get; set; } = 0;
         public int DefaultTemplateLimit { get; set; } = 3;
         public int ReplicaLimit { get; set; } = 5;

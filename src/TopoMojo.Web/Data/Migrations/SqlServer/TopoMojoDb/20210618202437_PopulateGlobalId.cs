@@ -42,14 +42,6 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 table: "Players");
 
             migrationBuilder.DropColumn(
-                name: "PersonId",
-                table: "Workers");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Players");
-
-            migrationBuilder.DropColumn(
                 name: "WorkspaceId",
                 table: "Players");
 
@@ -253,6 +245,24 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.Sql(@"
+                UPDATE ""Workers"" SET ""WorkspaceGlobalId"" = g.""GlobalId"" FROM ""Workers"" p INNER JOIN ""Workspaces"" g ON p.""WorkspaceId"" = g.""Id"";
+                UPDATE ""Gamespaces"" SET ""WorkspaceGlobalId"" = g.""GlobalId"" FROM ""Workers"" p INNER JOIN ""Workspaces"" g ON p.""WorkspaceId"" = g.""Id"";
+                UPDATE ""Players"" SET ""GamespaceGlobalId"" = g.""GlobalId"" FROM ""Players"" p INNER JOIN ""Gamespaces"" g ON p.""GamespaceId"" = g.""Id"";
+                UPDATE ""Templates"" SET ""ParentGlobalId"" = g.""GlobalId"" FROM ""Templates"" p LEFT JOIN ""Templates"" g ON p.""ParentId"" = g.""Id"";
+                UPDATE ""Templates"" SET ""WorkspaceGlobalId"" = g.""GlobalId"" FROM ""Templates"" p LEFT JOIN ""Templates"" g ON p.""WorkspaceId"" = g.""Id"";
+                UPDATE ""Workers"" SET ""SubjectId"" = g.""GlobalId"" FROM ""Workers"" p INNER JOIN ""Users"" g ON p.""PersonId"" = g.""Id"";
+                UPDATE ""Players"" SET ""SubjectId"" = g.""GlobalId"" FROM ""Players"" p INNER JOIN ""Users"" g ON p.""UserId"" = g.""Id"";
+            ");
+
+            migrationBuilder.DropColumn(
+                name: "PersonId",
+                table: "Workers");
+
+            migrationBuilder.DropColumn(
+                name: "UserId",
+                table: "Players");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

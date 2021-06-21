@@ -1,17 +1,25 @@
 // Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
+using System;
+using System.Linq;
+
 namespace TopoMojo.Models
 {
     public class User
     {
-        public int Id { get; set; }
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
-        public UserRole Role { get; set; }
+        public string Scope { get; set; }
         public int WorkspaceLimit { get; set; }
+        public int GamespaceLimit { get; set; }
+        public int GamespaceMaxMinutes { get; set; }
+        public int GamespaceCleanupGraceMinutes { get; set; }
+        public UserRole Role { get; set; }
         public string WhenCreated { get; set; }
-        public bool IsAdmin => Role == UserRole.Administrator;
+        public bool IsAdmin =>
+            Role == UserRole.Administrator
+        ;
         public bool IsCreator =>
             Role == UserRole.Creator ||
             Role == UserRole.Administrator
@@ -21,17 +29,17 @@ namespace TopoMojo.Models
             Role == UserRole.Creator ||
             Role == UserRole.Administrator
         ;
-        public bool IsAgent =>
-            string.IsNullOrEmpty(GlobalId) &&
-            !string.IsNullOrEmpty(Client.Id)
-        ;
-        public Client Client { get; set; }
     }
 
     public class ChangedUser
     {
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
+        public string Scope { get; set; }
+        public int WorkspaceLimit { get; set; }
+        public int GamespaceLimit { get; set; }
+        public int GamespaceMaxMinutes { get; set; }
+        public UserRole Role { get; set; }
     }
 
     public enum UserRole
@@ -39,8 +47,31 @@ namespace TopoMojo.Models
         User,
         Builder,
         Creator,
-        Administrator,
-        Agent
+        Administrator
     }
 
+    public class UserSearch: Search
+    {
+        public bool WantsAdmins => Filter.Contains(UserRole.Administrator.ToString().ToLower());
+        public bool WantsCreators => Filter.Contains(UserRole.Creator.ToString().ToLower());
+        public bool WantsBuilders => Filter.Contains(UserRole.Builder.ToString().ToLower());
+    }
+
+    public class UserRegistration
+    {
+        public string Id { get; set; }
+        public string Name{ get; set; }
+    }
+
+    public class ApiKeyResult
+    {
+        public string Value { get; set; }
+    }
+
+    public class ApiKey
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public DateTime WhenCreated { get; set; }
+    }
 }

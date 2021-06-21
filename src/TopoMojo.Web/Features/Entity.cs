@@ -7,4 +7,8 @@ namespace TopoMojo.Models
     {
         public string Id { get; set; }
     }
+    public class WorkspaceEntity
+    {
+        public string Id { get; set; }
+    }
 }

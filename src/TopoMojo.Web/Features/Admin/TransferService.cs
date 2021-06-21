@@ -23,9 +23,8 @@ namespace TopoMojo.Services
             ITemplateStore templateStore,
             ILogger<TransferService> logger,
             IMapper mapper,
-            CoreOptions options,
-            IIdentityResolver identityResolver
-        ) : base(logger, mapper, options, identityResolver)
+            CoreOptions options
+        ) : base(logger, mapper, options)
         {
             _workspaceStore = workspaceStore;
             _templateStore = templateStore;
@@ -44,8 +43,8 @@ namespace TopoMojo.Services
 
         public async Task Export(string[] ids, string src, string dest)
         {
-            if (!User.IsAdmin)
-                throw new InvalidOperationException();
+            // if (!User.IsAdmin)
+            //     throw new InvalidOperationException();
 
             var list = new List<Data.Workspace>();
 
@@ -78,7 +77,7 @@ namespace TopoMojo.Services
 
             foreach (var topo in list)
             {
-                string folder = Path.Combine(dest, topo.GlobalId);
+                string folder = Path.Combine(dest, topo.Id);
 
                 Directory.CreateDirectory(folder);
 
@@ -99,7 +98,7 @@ namespace TopoMojo.Services
                 foreach (var template in topo.Templates)
                 {
                     // template.Id = 0;
-                    template.WorkspaceGlobalId = null;
+                    template.WorkspaceId = null;
                     template.Workspace = null;
                 }
 
@@ -112,13 +111,13 @@ namespace TopoMojo.Services
                 try
                 {
                     CopyFile(
-                        Path.Combine(docSrc, topo.GlobalId) + ".md",
-                        Path.Combine(docDest, topo.GlobalId) + ".md"
+                        Path.Combine(docSrc, topo.Id) + ".md",
+                        Path.Combine(docDest, topo.Id) + ".md"
                     );
 
                     CopyFolder(
-                        Path.Combine(docSrc, topo.GlobalId),
-                        Path.Combine(docDest, topo.GlobalId)
+                        Path.Combine(docSrc, topo.Id),
+                        Path.Combine(docDest, topo.Id)
                     );
 
                 } catch {}
@@ -151,8 +150,8 @@ namespace TopoMojo.Services
 
         public async Task<IEnumerable<string>> Import(string repoPath, string docPath)
         {
-            if (!User.IsAdmin)
-                throw new InvalidOperationException();
+            // if (!User.IsAdmin)
+            //     throw new InvalidOperationException();
 
             var results = new List<string>();
 
@@ -179,7 +178,7 @@ namespace TopoMojo.Services
                     );
 
                     //enforce uniqueness :(
-                    var found = await _workspaceStore.Retrieve(topo.GlobalId);
+                    var found = await _workspaceStore.Retrieve(topo.Id);
 
                     if (found != null)
                         continue;
@@ -190,16 +189,16 @@ namespace TopoMojo.Services
                     {
                         if (template.Parent != null)
                         {
-                            var pt = await _templateStore.Retrieve(template.Parent.GlobalId);
+                            var pt = await _templateStore.Retrieve(template.Parent.Id);
 
                             if (pt == null)
                             {
-                                template.ParentGlobalId = null;
-                                template.WorkspaceGlobalId = null;
+                                template.ParentId = null;
+                                template.WorkspaceId = null;
                                 pt = await _templateStore.Create(template.Parent);
                             }
 
-                            template.ParentGlobalId = pt.GlobalId;
+                            template.ParentId = pt.Id;
                             template.Parent = null;
                         }
                     }

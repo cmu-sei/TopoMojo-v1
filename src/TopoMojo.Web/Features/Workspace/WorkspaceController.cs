@@ -1,7 +1,6 @@
 // Copyright 2020 Carnegie Mellon University. All Rights Reserved.
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,50 +21,46 @@ namespace TopoMojo.Web.Controllers
     {
         public WorkspaceController(
             ILogger<WorkspaceController> logger,
-            IIdentityResolver identityResolver,
-            WorkspaceService workspaceService,
+            IHubContext<AppHub, IHubEvent> hub,
             WorkspaceValidator validator,
             IHypervisorService podService,
-            IHubContext<AppHub, IHubEvent> hub
-        ) : base(logger, identityResolver, validator)
+            WorkspaceService workspaceService
+        ) : base(logger, hub, validator)
         {
             _pod = podService;
             _svc = workspaceService;
-
-            _hub = hub;
         }
 
         private readonly IHypervisorService _pod;
         private readonly WorkspaceService _svc;
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// List workspaces according to search parameters.
         /// </summary>
         /// <remarks>
-        /// filter: public, private
-        /// sort: age
+        /// ?aud=value retrieves item published to that audience,
+        /// if the requestor is allowed that scope
+        /// sort: age for newest first; default is alpha
         /// </remarks>
         /// <param name="search"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Authorize]
         [HttpGet("api/workspaces")]
+        [Authorize]
         public async Task<ActionResult<WorkspaceSummary[]>> List([FromQuery]WorkspaceSearch search, CancellationToken ct)
         {
             await Validate(search);
 
-            if (Actor.IsAgent)
-                await Validate(new ClientAudience
-                {
-                    Scope = Actor.Client?.Scope,
-                    Audience = search.aud
-                });
+            await Validate(new ClientAudience
+            {
+                Audience = search.aud,
+                Scope = Actor.Scope
+            });
 
             AuthorizeAll();
 
             return Ok(
-                await _svc.List(search, Actor, ct)
+                await _svc.List(search, Actor.Id, Actor.IsAdmin, ct)
             );
         }
 
@@ -81,7 +76,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -103,13 +98,33 @@ namespace TopoMojo.Web.Controllers
             AuthorizeAny(
                 () => Actor.IsAdmin,
                 () => Actor.IsCreator,
-                () => _svc.CheckWorkspaceLimit(Actor.GlobalId).Result
+                () => _svc.CheckWorkspaceLimit(Actor.Id).Result
             );
 
-            Workspace workspace = await _svc.Create(model, Actor.GlobalId);
+            return Ok(
+                await _svc.Create(model, Actor.Id)
+            );
+        }
+
+        /// <summary>
+        /// Create a new workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id to clone</param>
+        /// <returns>A new workspace.</returns>
+        [HttpPost("api/workspace/{id}/clone")]
+        [Authorize]
+        public async Task<ActionResult<Workspace>> Clone([FromRoute]string id)
+        {
+            await Validate(new Entity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => Actor.IsCreator,
+                () => _svc.CheckWorkspaceLimit(Actor.Id).Result
+            );
 
             return Ok(
-                await _svc.Create(model, Actor.GlobalId)
+                await _svc.Clone(id)
             );
         }
 
@@ -126,13 +141,13 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(model.GlobalId, Actor).Result
+                () => _svc.CanEdit(model.Id, Actor.Id).Result
             );
 
             Workspace workspace = await _svc.Update(model);
 
-            await _hub.Clients
-                .Group(workspace.GlobalId)
+            await Hub.Clients
+                .Group(workspace.Id)
                 .TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.UPDATED", workspace))
             ;
 
@@ -150,15 +165,15 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanManage(id, Actor).Result
+                () => _svc.CanManage(id, Actor.Id).Result
             );
 
             var workspace = await _svc.Delete(id);
 
             Log("deleted", workspace);
 
-            await _hub.Clients
-                .Group(workspace.GlobalId)
+            await Hub.Clients
+                .Group(workspace.Id)
                 .TopoEvent(new BroadcastEvent<Workspace>(User, "TOPO.DELETED", workspace));
 
             return Ok();
@@ -176,7 +191,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -196,7 +211,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -217,7 +232,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -242,7 +257,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             var games = await _svc.KillGames(id);
@@ -251,8 +266,8 @@ namespace TopoMojo.Web.Controllers
 
             foreach (var game in games)
                 tasklist.Add(
-                    _hub.Clients
-                        .Group(game.GlobalId)
+                    Hub.Clients
+                        .Group(game.Id)
                         .GameEvent(new BroadcastEvent<GameState>(User, "GAME.OVER", game))
                 );
 
@@ -274,7 +289,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanManage(id, Actor).Result
+                () => _svc.CanManage(id, Actor.Id).Result
             );
 
             return Ok(
@@ -296,24 +311,26 @@ namespace TopoMojo.Web.Controllers
         public async Task<ActionResult> Enlist(string code)
         {
             return Ok(
-                await _svc.Enlist(code, Actor)
+                await _svc.Enlist(code, Actor.Id, Actor.Name)
             );
         }
 
         /// <summary>
         /// Removes a worker from the workspace.
         /// </summary>
-        /// <param name="id">Worker Id</param>
+        /// <param name="model">Worker</param>
         /// <returns></returns>
-        [HttpDelete("api/worker/{id}")]
-        public async Task<ActionResult> Delist(int id)
+        [HttpDelete("api/worker")]
+        public async Task<ActionResult> Delist([FromBody] Worker model)
         {
+            await Validate(model);
+
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanManage(id, Actor).Result
+                () => _svc.CanManage(model.WorkspaceId, Actor.Id).Result
             );
 
-            await _svc.Delist(id, Actor);
+            await _svc.Delist(model.WorkspaceId, Actor.Id, Actor.IsAdmin);
 
             return Ok();
         }
@@ -326,7 +343,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -336,13 +353,13 @@ namespace TopoMojo.Web.Controllers
 
         [HttpPut("api/workspace/{id}/challenge")]
         [Authorize]
-        public async Task<IActionResult> ChallengeV2([FromRoute]string id, [FromBody] TopoMojo.Models.v2.ChallengeSpec model)
+        public async Task<IActionResult> ChallengeV2([FromRoute]string id, [FromBody] ChallengeSpec model)
         {
             await Validate(model);
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             await _svc.UpdateChallenge(id, model);

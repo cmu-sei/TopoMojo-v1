@@ -5,9 +5,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 using TopoMojo.Data.Abstractions;
+using TopoMojo.Extensions;
 
 namespace TopoMojo.Data
 {
@@ -36,20 +35,11 @@ namespace TopoMojo.Data
             return q.Include(t => t.Workers);
         }
 
-        public async Task<Workspace> Load(int id)
-        {
-            return await base.Retrieve(id, query => query
-                .Include(t => t.Templates)
-                .Include(t => t.Workers) //.ThenInclude(w => w.Person)
-                .Include(t => t.Gamespaces)
-            );
-        }
-
         public async Task<Workspace> Load(string id)
         {
             return await base.Retrieve(id, query => query
                 .Include(t => t.Templates)
-                .Include(t => t.Workers) // .ThenInclude(w => w.Person)
+                .Include(t => t.Workers)
                 .Include(t => t.Gamespaces)
             );
         }
@@ -71,57 +61,59 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Workspace> FindByShareCode(string code)
+        public async Task<Workspace> LoadFromInvitation(string code)
         {
-            return await DbContext.Workspaces
+            return await DbSet
                 .Include(t => t.Templates)
-                .Include(t => t.Workers) // .ThenInclude(w => w.Person)
+                .Include(t => t.Workers)
                 .Where(t => t.ShareCode == code)
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<Workspace> FindByWorker(int workerId)
+        public async Task<bool> CanEdit(string id, string subjectId)
         {
-            string id = await DbContext.Workspaces
-                .Where(p => p.Workers.Any(w => w.Id == workerId))
-                .Select(p => p.GlobalId)
-                .SingleOrDefaultAsync();
-
-            return (!string.IsNullOrEmpty(id))
-                ? await Retrieve(id)
-                : null;
+            return (await FindWorker(id, subjectId))?.CanEdit ?? false;
         }
 
-
-        // public override async Task Delete(string id)
-        // {
-        //     var workspace = await Retrieve(id);
-
-        //     DbContext.Templates.RemoveRange(workspace.Templates);
-
-        //     DbContext.Remove(workspace);
-
-        //     await DbContext.SaveChangesAsync();
-        // }
-
-        public async Task<int> GetWorkspaceCount(string profileId)
+        public async Task<bool> CanManage(string id, string subjectId)
         {
-            return await DbContext.Workers
-                .CountAsync(w => w.SubjectId == profileId && w.Permission.HasFlag(Permission.Manager));
+            return (await FindWorker(id, subjectId))?.CanManage ?? false;
+        }
+
+        public async Task<Worker> FindWorker(string id, string subjectId)
+        {
+            return await DbContext.Workers.FindAsync(subjectId, id);
+        }
+
+        public async Task<int> GetWorkspaceCount(string userId)
+        {
+            return await DbContext.Workers.CountAsync(w =>
+                w.SubjectId == userId &&
+                w.Permission.HasFlag(Permission.Manager)
+            );
+        }
+
+        public async Task<bool> CheckWorkspaceLimit(string userId)
+        {
+            var user = await DbContext.Users.FindAsync(userId);
+
+            int count = await GetWorkspaceCount(userId);
+
+            return count < user.WorkspaceLimit;
         }
 
         public async Task<bool> HasGames(string id)
         {
             return await DbContext.Gamespaces.AnyAsync(g =>
-                g.Workspace.GlobalId == id
+                g.WorkspaceId == id
             );
         }
 
         public async Task<Workspace[]> DeleteStale(DateTime staleMarker, bool published, bool dryrun = true)
         {
             var query = published
-                ? DbContext.Workspaces.Where(w => w.IsPublished || !string.IsNullOrWhiteSpace(w.Audience))
-                : DbContext.Workspaces.Where(w => !w.IsPublished && string.IsNullOrWhiteSpace(w.Audience));
+                ? DbSet.Where(w => w.IsPublished || !string.IsNullOrWhiteSpace(w.Audience))
+                : DbSet.Where(w => !w.IsPublished && string.IsNullOrWhiteSpace(w.Audience));
 
             var results = await query
                 .Where(g => g.LastActivity < staleMarker)
@@ -129,7 +121,7 @@ namespace TopoMojo.Data
 
             if (!dryrun)
             {
-                DbContext.Workspaces.RemoveRange(results);
+                DbSet.RemoveRange(results);
 
                 await DbContext.SaveChangesAsync();
             }
@@ -137,18 +129,40 @@ namespace TopoMojo.Data
             return results;
         }
 
-        public async Task<bool> CheckWorkspaceLimit(string userId)
+        public async Task<Workspace> Clone(string id)
         {
-            var user = await DbContext.Users
-                // .Include(u => u.Workspaces)
-                .FirstOrDefaultAsync(u => u.GlobalId == userId);
+            var entity = await base.List()
+                .AsNoTracking()
+                .Include(t => t.Templates)
+                .Include(t => t.Workers)
+                .FirstOrDefaultAsync(w => w.Id == id)
+            ;
 
-            return user is Data.User &&
-                await DbContext.Workers.CountAsync(w =>
-                    w.SubjectId == userId &&
-                    w.Permission == Permission.Manager
-                ) < user.WorkspaceLimit;
+            entity.Id = Guid.NewGuid().ToString("n");
+            entity.Name += "-CLONE";
 
+            foreach (var worker in entity.Workers)
+                worker.WorkspaceId = entity.Id;
+
+            foreach (Template template in entity.Templates)
+            {
+                template.Id = Guid.NewGuid().ToString("n");
+
+                if (template.Iso.Contains(id))
+                    template.Iso = "";
+
+                if (template.IsLinked)
+                    continue;
+
+                var tu = new Services.TemplateUtility(template.Detail);
+
+                tu.LocalizeDiskPaths(entity.Id, template.Id);
+
+                template.Detail = tu.ToString();
+
+            }
+
+            return await Create(entity);
         }
     }
 }

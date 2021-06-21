@@ -22,6 +22,8 @@ namespace TopoMojo.Web
         {
             Configuration = configuration;
 
+            Environment = env;
+
             Settings = Configuration.Get<AppSettings>() ?? new AppSettings();
 
             // Oidc = Configuration.GetSection("Authorization").Get<AuthorizationOptions>()
@@ -63,6 +65,7 @@ namespace TopoMojo.Web
             }
         }
 
+        public IHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
         AppSettings Settings { get; }
         // public AuthorizationOptions Oidc { get; }
@@ -111,7 +114,8 @@ namespace TopoMojo.Web
 
             services.AddFileUpload(Settings.FileUpload);
 
-            services.AddHostedService<ScheduledTasksService>();
+            if (Environment.IsDevelopment().Equals(false))
+                services.AddHostedService<ScheduledTasksService>();
 
             // Configure TopoMojo
             services
@@ -127,7 +131,7 @@ namespace TopoMojo.Web
                 );
 
             // Configure Auth
-            services.AddConfiguredAuthentication(Settings.Oidc, Settings.ApiKeyClients);
+            services.AddConfiguredAuthentication(Settings.Oidc);
             services.AddConfiguredAuthorization();
 
         }

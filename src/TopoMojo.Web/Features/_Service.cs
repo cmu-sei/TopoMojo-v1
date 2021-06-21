@@ -16,13 +16,11 @@ namespace TopoMojo.Services
         public _Service(
             ILogger logger,
             IMapper mapper,
-            CoreOptions options,
-            IIdentityResolver identityResolver
+            CoreOptions options
         )
         {
             _logger = logger;
             _options = options;
-            _identityResolver = identityResolver;
             Mapper = mapper;
 
             jsonOptions = new JsonSerializerOptions
@@ -39,16 +37,6 @@ namespace TopoMojo.Services
         protected ILogger _logger { get; }
         protected CoreOptions _options { get; }
         protected JsonSerializerOptions jsonOptions { get; }
-        private IIdentityResolver _identityResolver { get; }
-        protected User User => _identityResolver.User;
-        protected Client Client => _identityResolver.Client;
-
-        protected Action<IMappingOperationOptions> WithActor()
-        {
-            return opts => {
-                opts.Items["Actor"] = User;
-            };
-        }
 
     }
 }

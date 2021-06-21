@@ -8,7 +8,9 @@ namespace TopoMojo.Data.Abstractions
 {
     public interface IUserStore : IStore<User>
     {
-        Task<User> Load(string id);
-        Task<bool> CanInteract(string isolationId, string userId);
+        Task<bool> CanInteract(string id, string isolationId);
+        Task<User> LoadWithKeys(string id);
+        Task<User> ResolveApiKey(string hash);
+        Task DeleteApiKey(string id);
     }
 }

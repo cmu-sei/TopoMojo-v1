@@ -21,20 +21,18 @@ namespace TopoMojo.Web.Controllers
     {
         public TemplateController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
+            IHubContext<AppHub, IHubEvent> hub,
+            TemplateValidator validator,
             TemplateService templateService,
-            IHypervisorService podService,
-            IHubContext<AppHub, IHubEvent> hub
-        ) : base(logger, identityResolver)
+            IHypervisorService podService
+        ) : base(logger, hub, validator)
         {
             _svc = templateService;
             _pod = podService;
-            _hub = hub;
         }
 
         private readonly TemplateService _svc;
         private readonly IHypervisorService _pod;
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// List templates.
@@ -73,7 +71,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor.GlobalId).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             return Ok(
@@ -93,7 +91,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(model.GlobalId, Actor.GlobalId).Result
+                () => _svc.CanEdit(model.Id, Actor.Id).Result
             );
 
             var result = await _svc.Update(model);
@@ -115,7 +113,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(id, Actor.GlobalId).Result
+                () => _svc.CanEdit(id, Actor.Id).Result
             );
 
             var result = await _svc.Delete(id);
@@ -137,7 +135,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEditWorkspace(model.WorkspaceId, Actor.GlobalId).Result
+                () => _svc.CanEditWorkspace(model.WorkspaceId, Actor.Id).Result
             );
 
             var result = await _svc.Link(model, Actor.IsCreator);
@@ -159,7 +157,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanEdit(model.TemplateId, Actor.GlobalId).Result
+                () => _svc.CanEdit(model.TemplateId, Actor.Id).Result
             );
 
             var result = await _svc.Unlink(model);
@@ -225,8 +223,8 @@ namespace TopoMojo.Web.Controllers
 
         private void SendBroadcast(Template template, string action)
         {
-            _hub.Clients
-                .Group(template.WorkspaceGlobalId ?? Guid.Empty.ToString())
+            Hub.Clients
+                .Group(template.WorkspaceId ?? Guid.Empty.ToString())
                 .TemplateEvent(
                     new BroadcastEvent<Template>(
                         User,

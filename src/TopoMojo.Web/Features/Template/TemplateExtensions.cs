@@ -15,14 +15,35 @@ namespace TopoMojo
         public static VmTemplate ToVirtualTemplate(this ConvergedTemplate template, string isolationTag = "")
         {
             TemplateUtility tu = new TemplateUtility(template.Detail);
+
             tu.Name = template.Name;
-            tu.Networks = template.Networks ?? "lan";
+
+            tu.Networks = template.Networks;
+
             tu.Iso = template.Iso;
-            tu.IsolationTag = isolationTag.NotEmpty() ? isolationTag : template.WorkspaceGlobalId ?? Guid.Empty.ToString();
-            tu.Id = template.Id.ToString();
+
+            tu.IsolationTag = isolationTag.NotEmpty()
+                ? isolationTag
+                : template.WorkspaceId ?? Guid.Empty.ToString()
+            ;
+
+            tu.Id = template.Id;
+
             tu.UseUplinkSwitch = template.WorkspaceUseUplinkSwitch;
+
             tu.AddGuestSettings(template.Guestinfo ?? "");
+
             return tu.AsTemplate();
+        }
+
+        public static VmTemplate SetHostAffinity(this VmTemplate template, bool requireHostAffinity)
+        {
+            template.HostAffinity = requireHostAffinity;
+
+            if (requireHostAffinity)
+                template.AutoStart = false;
+
+            return template;
         }
 
         // public static void AddSettings(this ConvergedTemplate template, KeyValuePair<string,string>[] settings)

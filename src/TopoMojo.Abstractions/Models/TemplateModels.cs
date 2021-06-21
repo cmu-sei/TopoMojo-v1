@@ -7,23 +7,21 @@ namespace TopoMojo.Models
 {
     public class Template
     {
-        public int Id { get; set; }
-        public string GlobalId { get; set; }
-        public int ParentId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
         public string Guestinfo { get; set; }
         public bool IsHidden { get; set; }
+        public string ParentId { get; set; }
         public int Replicas { get; set; }
-        public int WorkspaceId { get; set; }
-        public string WorkspaceGlobalId { get; set; }
+        public string WorkspaceId { get; set; }
     }
 
     public class ChangedTemplate
     {
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
@@ -43,7 +41,7 @@ namespace TopoMojo.Models
 
     public class TemplateDetail
     {
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Networks { get; set; }
@@ -54,14 +52,12 @@ namespace TopoMojo.Models
 
     public class TemplateSummary
     {
-        public int Id { get; set; }
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public int WorkspaceId { get; set; }
-        public string WorkspaceGlobalId { get; set; }
+        public string WorkspaceId { get; set; }
         public string WorkspaceName { get; set; }
-        public int ParentId { get; set; }
+        public string ParentId { get; set; }
         public string ParentName { get; set; }
         public bool IsPublished { get; set; }
     }
@@ -74,15 +70,13 @@ namespace TopoMojo.Models
 
     public class ConvergedTemplate
     {
-        public int Id { get; set; }
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
         public string Detail { get; set; }
         public string Guestinfo { get; set; }
-        public int WorkspaceId { get; set; }
-        public string WorkspaceGlobalId { get; set; }
+        public string WorkspaceId { get; set; }
         public bool WorkspaceUseUplinkSwitch { get; set; }
         public int Replicas { get; set; }
     }

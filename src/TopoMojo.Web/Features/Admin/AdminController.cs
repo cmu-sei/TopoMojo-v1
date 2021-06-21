@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Abstractions;
 using TopoMojo.Hubs;
 using TopoMojo.Models;
 using TopoMojo.Services;
@@ -22,22 +21,19 @@ namespace TopoMojo.Web.Controllers
     {
         public AdminController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
             IHubContext<AppHub, IHubEvent> hub,
             TransferService transferSvc,
             FileUploadOptions fileUploadOptions,
             JanitorService janitor,
             HubCache hubCache
-        ) : base(logger, identityResolver)
+        ) : base(logger, hub)
         {
             _transferSvc = transferSvc;
             _uploadOptions = fileUploadOptions;
-            _hub = hub;
             _hubCache = hubCache;
             _janitor = janitor;
         }
 
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly TransferService _transferSvc;
         private readonly FileUploadOptions _uploadOptions;
         private readonly HubCache _hubCache;
@@ -121,7 +117,7 @@ namespace TopoMojo.Web.Controllers
 
         private void SendBroadcast(string text = "")
         {
-            _hub.Clients.All.GlobalEvent(
+            Hub.Clients.All.GlobalEvent(
                     new BroadcastEvent<string>(
                         User,
                         "GLOBAL.ANNOUNCE",

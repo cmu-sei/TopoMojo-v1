@@ -6,24 +6,6 @@ namespace TopoMojo.Data.Extensions
 {
     public static class GamespaceExtensions
     {
-        public static bool IsActive(this Gamespace gamespace)
-        {
-            return
-                gamespace.StartTime > DateTime.MinValue &&
-                gamespace.StopTime == DateTime.MinValue &&
-                !IsExpired(gamespace);
-        }
-
-        public static bool IsExpired(this Gamespace gamespace)
-        {
-            return gamespace.ExpirationTime.CompareTo(DateTime.UtcNow) < 0;
-        }
-
-        public static bool HasStarted(this Gamespace gamespace)
-        {
-            return gamespace.StartTime > DateTime.MinValue;
-        }
-
         public static bool IsTemplateVisible(this Gamespace gamespace, string name)
         {
             name = name.Untagged();

@@ -1,5 +1,5 @@
-// Copyright 2020 Carnegie Mellon University. 
-// Released under a MIT (SEI) license. See LICENSE.md in the project root. 
+// Copyright 2020 Carnegie Mellon University.
+// Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
 using System;
 using System.Threading;
@@ -16,6 +16,8 @@ namespace TopoMojo.Web.Services
         private Timer _timer;
         private readonly ILogger _logger;
         private readonly IServiceProvider _services;
+        private int periodCount = 0;
+        private int periodMax = 100;
 
         public ScheduledTasksService(
             IServiceProvider serviceProvider,
@@ -28,13 +30,18 @@ namespace TopoMojo.Web.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            // Randomness here provides some spread in case
+            // the app is being run with multiple replicas.
+
             var rand = new Random();
 
             _timer = new Timer(StaleCheck,
                 null,
-                rand.Next(10, 30) * 60 * 1000,
-                rand.Next(50, 70) * 60 * 1000
+                rand.Next(30, 60) * 1000,
+                rand.Next(60, 90) * 1000
             );
+
+            periodMax = rand.Next(60, 90);
 
             return Task.CompletedTask;
         }
@@ -48,11 +55,22 @@ namespace TopoMojo.Web.Services
 
         private void StaleCheck(object state)
         {
-           using (var scope = _services.CreateScope())
-           {
-               var janitor = scope.ServiceProvider.GetService<JanitorService>();
-               janitor.Cleanup().Wait();
-           }
+            using (var scope = _services.CreateScope())
+            {
+                var janitor = scope.ServiceProvider.GetService<JanitorService>();
+
+                // run every period
+                janitor.EndExpired().Wait();
+
+                // run after multiple periods (intermittently)
+                if (periodCount >= periodMax)
+                {
+                    periodCount = 0;
+                    janitor.Cleanup().Wait();
+                }
+
+                periodCount += 1;
+            }
         }
     }
 }

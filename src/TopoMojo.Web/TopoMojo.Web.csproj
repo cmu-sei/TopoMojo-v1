@@ -13,7 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TopoMojo.Abstractions\TopoMojo.Abstractions.csproj" />
-    <ProjectReference Include="..\TopoMojo.Core\TopoMojo.Core.csproj" />
     <ProjectReference Include="..\TopoMojo.vSphere\TopoMojo.vSphere.csproj" />
   </ItemGroup>
   <ItemGroup>

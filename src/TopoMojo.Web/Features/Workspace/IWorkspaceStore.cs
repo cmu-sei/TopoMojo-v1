@@ -9,14 +9,16 @@ namespace TopoMojo.Data.Abstractions
     public interface IWorkspaceStore : IStore<Workspace>
     {
         Task<Workspace> Load(string id);
-        Task<Workspace> Load(int id);
-        Task<Workspace> FindByShareCode(string code);
-        Task<Workspace> FindByWorker(int id);
-        Task<int> GetWorkspaceCount(string profileId);
+        Task<Workspace> LoadFromInvitation(string code);
         Task<Workspace> LoadWithGamespaces(string id);
         Task<Workspace> LoadWithParents(string id);
+        Task<Worker> FindWorker(string id, string subjectId);
+        Task<bool> CanEdit(string id, string subjectId);
+        Task<bool> CanManage(string id, string subjectId);
+        Task<int> GetWorkspaceCount(string profileId);
+        Task<bool> CheckWorkspaceLimit(string userId);
         Task<bool> HasGames(string id);
         Task<Workspace[]> DeleteStale(DateTime staleAfter, bool published, bool dryrun = true);
-        Task<bool> CheckWorkspaceLimit(string userId);
+        Task<Workspace> Clone(string id);
     }
 }

@@ -26,15 +26,6 @@ namespace TopoMojo.Data
                 );
         }
 
-        public async Task<Template> Load(int id)
-        {
-            return await base.Retrieve(id, query => query
-                .Include(tt => tt.Parent)
-                .Include(tt => tt.Workspace)
-                .ThenInclude(t => t.Workers)
-            );
-        }
-
         public async Task<Template> Load(string id)
         {
             return await base.Retrieve(id, query => query
@@ -48,8 +39,8 @@ namespace TopoMojo.Data
         {
             // var entity = await Retrieve(id);
 
-            return await DbContext.Templates
-                .Where(t => t.ParentGlobalId == id)
+            return await DbSet
+                .Where(t => t.ParentId == id)
                 .AnyAsync();
         }
 
@@ -57,28 +48,28 @@ namespace TopoMojo.Data
         {
             return await base.List()
                 .Include(t => t.Workspace)
-                .Where(t => t.ParentGlobalId == parentId)
+                .Where(t => t.ParentId == parentId)
                 .ToArrayAsync();
         }
 
         public async Task<bool> AtTemplateLimit(string id)
         {
             return await DbContext.Workspaces
-                .Where(w => w.GlobalId == id)
+                .Where(w => w.Id == id)
                 .Select(w => w.TemplateLimit >= w.Templates.Count)
                 .FirstOrDefaultAsync();
         }
 
         public async Task<string> ResolveKey(string key)
         {
-            var name = await DbContext.Workspaces.Where(t => t.GlobalId == key)
+            var name = await DbContext.Workspaces.Where(t => t.Id == key)
                 .Select(t => t.Name)
                 .SingleOrDefaultAsync();
 
             if (!string.IsNullOrEmpty(name))
                 return "workspace: " + name;
 
-            name = await DbContext.Gamespaces.Where(g => g.GlobalId == key)
+            name = await DbContext.Gamespaces.Where(g => g.Id == key)
                 .Select(g => g.Name)
                 .SingleOrDefaultAsync();
 

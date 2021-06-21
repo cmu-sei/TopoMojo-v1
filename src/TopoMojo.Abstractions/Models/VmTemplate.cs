@@ -17,6 +17,7 @@ namespace TopoMojo.Models
         public string Floppy { get; set; }
         public string Version { get; set; }
         public string IsolationTag { get; set; }
+        public bool HostAffinity {get; set; }
         public bool UseUplinkSwitch {get; set; }
         public int Ram { get; set; }
         public int VideoRam { get; set; }

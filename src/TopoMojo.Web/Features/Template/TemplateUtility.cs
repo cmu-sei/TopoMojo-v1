@@ -162,7 +162,7 @@ namespace TopoMojo.Services
 
         public void LocalizeDiskPaths(string workspaceKey, string templateKey)
         {
-            if (!workspaceKey.NotEmpty() || !templateKey.NotEmpty())
+            if (workspaceKey.IsEmpty() || templateKey.IsEmpty())
                 throw new InvalidOperationException();
 
             string path = $"[ds] {workspaceKey}/{templateKey}";

@@ -21,37 +21,38 @@ namespace TopoMojo.Services
     public class GamespaceService : _Service
     {
         public GamespaceService(
-            IGamespaceStore gamespaceStore,
-            IWorkspaceStore workspaceStore,
-            IHypervisorService podService,
             ILogger<GamespaceService> logger,
             IMapper mapper,
             CoreOptions options,
-            IIdentityResolver identityResolver,
+            IHypervisorService podService,
+            IGamespaceStore gamespaceStore,
+            IWorkspaceStore workspaceStore,
             ILockService lockService
 
-        ) : base (logger, mapper, options, identityResolver)
+        ) : base (logger, mapper, options)
         {
             _pod = podService;
-            _gamespaceStore = gamespaceStore;
+            _store = gamespaceStore;
             _workspaceStore = workspaceStore;
             _locker = lockService;
             _random = new Random();
         }
 
         private readonly IHypervisorService _pod;
-        private readonly IGamespaceStore _gamespaceStore;
+        private readonly IGamespaceStore _store;
         private readonly IWorkspaceStore _workspaceStore;
         private readonly ILockService _locker;
         private readonly Random _random;
-        private RegistrationContext _ctx = null;
 
-        public async Task<Gamespace[]> List(GamespaceSearch search, User actor, CancellationToken ct = default(CancellationToken))
+        public async Task<Gamespace[]> List(GamespaceSearch search, string subjectId, bool sudo, CancellationToken ct = default(CancellationToken))
         {
-            var query =  (actor.IsAdmin && search.WantsAll)
-                ? _gamespaceStore.List(search.Term).Include(g => g.Players)
-                : _gamespaceStore.ListByProfile(actor.GlobalId)
+            var query =  (sudo && search.WantsAll)
+                ? _store.List(search.Term)
+                : _store.ListByUser(subjectId)
             ;
+
+            if (search.WantsActive)
+                query = query.Where(g => g.EndTime == DateTime.MinValue);
 
             query = query.OrderBy(g => g.WhenCreated);
 
@@ -68,36 +69,32 @@ namespace TopoMojo.Services
 
         public async Task<GameState> Preview(string resourceId)
         {
-            var ctx = LoadContext();
+            var ctx = await LoadContext(null, resourceId);
 
-            ctx.Workspace = await _workspaceStore.Retrieve(resourceId);
+            // if (!ctx.WorkspaceExists)
+            //     throw new ResourceNotFound();
 
-            if (!ctx.WorkspaceExists)
-                throw new ResourceNotFound();
+            // if (!ctx.IsValidAudience)
+            //     throw new InvalidClientAudience();
 
-            if (!ctx.IsValidAudience)
-                throw new InvalidClientAudience();
+            // if (ctx.UserExists)
+            // {
+            //     ctx.Gamespace = await _store
+            //         .LoadActiveByContext(ctx.Workspace.Id, User.Id);
+            // }
 
-            if (ctx.UserExists)
+            return new GameState
             {
-                ctx.Gamespace = await _gamespaceStore
-                    .LoadActiveByContext(ctx.Workspace.GlobalId, User.GlobalId);
-            }
+                Name = ctx.Workspace.Name,
 
-            return ctx.GamespaceExists
-                ? await LoadState(ctx.Gamespace)
-                : new GameState
-                    {
-                        Name = ctx.Workspace.Name,
-
-                        Markdown = (await LoadMarkdown(ctx.Workspace.GlobalId)).Split("<!-- cut -->").First()
-                            ?? $"# {ctx.Workspace.Name}"
-                    };
+                Markdown = (await LoadMarkdown(ctx.Workspace.Id)).Split("<!-- cut -->").First()
+                    ?? $"# {ctx.Workspace.Name}"
+            };
         }
 
-        public async Task<GameState> Register(RegistrationRequest request)
+        public async Task<GameState> Register(GamespaceRegistration request, User actor)
         {
-            var gamespace = await _Register(request);
+            var gamespace = await _Register(request, actor);
 
             if (request.StartGamespace)
                 await Deploy(gamespace);
@@ -105,46 +102,30 @@ namespace TopoMojo.Services
             return await LoadState(gamespace, request.AllowPreview);
         }
 
-        private async Task<Data.Gamespace> _Register(RegistrationRequest request)
+        private async Task<Data.Gamespace> _Register(GamespaceRegistration request, User actor)
         {
-            if (User.Id > 0)
-            {
-                request.SubjectId = User.GlobalId;
-                request.SubjectName = User.Name;
-            }
 
-            var gamespace = await _gamespaceStore.LoadActiveByContext(
-                request.SubjectId,
-                request.ResourceId
+            var gamespace = await _store.LoadActiveByContext(
+                request.ResourceId,
+                request.SubjectId
             );
 
             if (gamespace is Data.Gamespace)
                 return gamespace;
 
-            string lockKey = $"{request.SubjectId}{request.ResourceId}";
-
-            var ctx = LoadContext(request);
-
-            ctx.Workspace = await _workspaceStore.Retrieve(request.ResourceId);
-
-            if (!ctx.WorkspaceExists)
-                throw new ResourceNotFound();
-
-            if (!ctx.IsValidAudience)
-                throw new InvalidClientAudience();
-
-            if (Client.GamespaceLimit > 0 && await _gamespaceStore.List().CountAsync(g => g.ClientId == Client.Id) >= Client.GamespaceLimit)
+            if (! await _store.IsBelowGamespaceLimit(actor.Id, actor.GamespaceLimit))
                 throw new ClientGamespaceLimitReached();
 
-            if (Client.PlayerGamespaceLimit > 0 && await _gamespaceStore.ListByProfile(ctx.Request.SubjectId).CountAsync(g => g.ClientId == Client.Id) >= Client.PlayerGamespaceLimit)
-                throw new PlayerGamespaceLimitReached();
+            string lockKey = $"{request.SubjectId}{request.ResourceId}";
+
+            var ctx = await LoadContext(request);
 
             if (! await _locker.Lock(lockKey))
                 throw new ResourceIsLocked();
 
             try
             {
-                await Create(ctx);
+                await Create(ctx, actor);
             }
             finally
             {
@@ -165,7 +146,7 @@ namespace TopoMojo.Services
         {
             var ctx = await LoadContext(id);
 
-            if (!ctx.Gamespace.IsExpired())
+            if (ctx.WorkspaceExists && !ctx.Gamespace.IsExpired)
                 await Deploy(ctx.Gamespace);
 
             return await LoadState(ctx.Gamespace);
@@ -184,11 +165,11 @@ namespace TopoMojo.Services
         {
             var ctx = await LoadContext(id);
 
-            if (ctx.Gamespace.IsActive())
+            if (ctx.Gamespace.IsActive)
             {
-                ctx.Gamespace.StopTime = DateTime.UtcNow;
+                ctx.Gamespace.EndTime = DateTime.UtcNow;
 
-                await _gamespaceStore.Update(ctx.Gamespace);
+                await _store.Update(ctx.Gamespace);
             }
 
             await _pod.DeleteAll(id);
@@ -196,7 +177,7 @@ namespace TopoMojo.Services
             return await LoadState(ctx.Gamespace);
         }
 
-        private async Task Create(RegistrationContext ctx)
+        private async Task Create(RegistrationContext ctx, User actor)
         {
 
             var ts = DateTime.UtcNow;
@@ -205,23 +186,26 @@ namespace TopoMojo.Services
             {
                 Name = ctx.Workspace.Name,
                 Workspace = ctx.Workspace,
-                ClientId = ctx.Client.Id,
+                ManagerId = actor.Id,
                 AllowReset = ctx.Request.AllowReset,
+                CleanupGraceMinutes = actor.GamespaceCleanupGraceMinutes,
                 WhenCreated = ts,
-                ExpirationTime = ctx.Request.ResolveExpiration(ts, ctx.Client.MaxMinutes)
+                ExpirationTime = ctx.Request.ResolveExpiration(ts, actor.GamespaceMaxMinutes)
             };
 
-            gamespace.Players.Add(
-                new Data.Player
-                {
-                    SubjectId = ctx.Request.SubjectId,
-                    SubjectName = ctx.Request.SubjectName,
-                    Permission = Permission.Manager
-                }
-            );
+            foreach (var player in ctx.Request.Players)
+            {
+                gamespace.Players.Add(
+                    new Data.Player
+                    {
+                        SubjectId = player.SubjectId,
+                        SubjectName = player.SubjectName
+                    }
+                );
+            }
 
             // clone challenge
-            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(ctx.Workspace.Challenge ?? "{}", jsonOptions);
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(ctx.Workspace.Challenge ?? "{}", jsonOptions);
 
             //resolve transforms
             ResolveTransforms(spec);
@@ -252,12 +236,12 @@ namespace TopoMojo.Services
             foreach (var kvp in spec.Transforms)
                 gamespace.Challenge = gamespace.Challenge.Replace($"##{kvp.Key}##", kvp.Value);
 
-            await _gamespaceStore.Create(gamespace);
+            await _store.Create(gamespace);
 
             ctx.Gamespace = gamespace;
         }
 
-        private void ResolveTransforms(Models.v2.ChallengeSpec spec)
+        private void ResolveTransforms(ChallengeSpec spec)
         {
             foreach(var kvp in spec.Transforms.ToArray())
             {
@@ -270,7 +254,7 @@ namespace TopoMojo.Services
                     int i = 0;
                     foreach (string token in tokens)
                     {
-                        spec.Transforms.Add(new Models.v2.StringKeyValue
+                        spec.Transforms.Add(new StringKeyValue
                         {
                             Key = $"{kvp.Key}_{++i}",
                             Value = token
@@ -360,10 +344,9 @@ namespace TopoMojo.Services
 
         private async Task Deploy(Data.Gamespace gamespace)
         {
-
             var tasks = new List<Task<Vm>>();
 
-            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
 
             var isoTargets = (spec.Challenge.Iso.Targets ?? "")
                 .ToLower()
@@ -406,17 +389,29 @@ namespace TopoMojo.Services
             {
                 tasks.Add(
                     _pod.Deploy(
-                        template.ToVirtualTemplate(gamespace.GlobalId)
+                        template
+                        .ToVirtualTemplate(gamespace.Id)
+                        .SetHostAffinity(gamespace.Workspace.HostAffinity)
                     )
                 );
             }
 
             await Task.WhenAll(tasks.ToArray());
 
+            if (gamespace.Workspace.HostAffinity)
+            {
+                var vms = tasks.Select(t => t.Result).ToArray();
+
+                await _pod.SetAffinity(gamespace.Id, vms, true);
+
+                foreach (var vm in vms)
+                    vm.State = VmPowerState.Running;
+            }
+
             if (gamespace.StartTime == DateTime.MinValue)
             {
                 gamespace.StartTime = DateTime.UtcNow;
-                await _gamespaceStore.Update(gamespace);
+                await _store.Update(gamespace);
             }
         }
 
@@ -424,17 +419,17 @@ namespace TopoMojo.Services
         {
             var state = Mapper.Map<GameState>(gamespace);
 
-            state.Markdown = await LoadMarkdown(gamespace.Workspace.GlobalId)
+            state.Markdown = await LoadMarkdown(gamespace.Workspace?.Id)
                 ?? $"# {gamespace.Name}";
 
-            if (!preview && !gamespace.HasStarted())
+            if (!preview && !gamespace.HasStarted)
             {
                 state.Markdown = state.Markdown.Split("<!-- cut -->").FirstOrDefault();
             }
 
-            if (gamespace.IsActive())
+            if (gamespace.IsActive)
             {
-                state.Vms = (await _pod.Find(gamespace.GlobalId))
+                state.Vms = (await _pod.Find(gamespace.Id))
                     .Select(vm => new VmState
                     {
                         Id = vm.Id,
@@ -448,9 +443,9 @@ namespace TopoMojo.Services
                     .ToArray();
             }
 
-            if (preview || gamespace.HasStarted())
+            if (preview || gamespace.HasStarted)
             {
-                var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(gamespace.Challenge, jsonOptions);
+                var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge, jsonOptions);
 
                 if (spec.Challenge == null)
                     return state;
@@ -458,7 +453,7 @@ namespace TopoMojo.Services
                 // TODO: get active question set
 
                 // map challenge to safe model
-                state.Challenge = MapChallenge(spec, gamespace.IsActive(), 0);
+                state.Challenge = MapChallenge(spec, gamespace.IsActive, 0);
             }
 
             return state;
@@ -468,75 +463,64 @@ namespace TopoMojo.Services
         {
             var ctx = await LoadContext(id);
 
-            if (!ctx.IsMember || !ctx.Gamespace.AllowReset)
-                throw new ActionForbidden();
-
             await _pod.DeleteAll(id);
 
-            await _gamespaceStore.Delete(ctx.Gamespace.GlobalId);
+            if (!ctx.Gamespace.AllowReset)
+                throw new ActionForbidden();
+
+            await _store.Delete(ctx.Gamespace.Id);
         }
 
         public async Task<Player[]> Players(string id)
         {
             return Mapper.Map<Player[]>(
-                await _gamespaceStore.LoadPlayers(id)
+                await _store.LoadPlayers(id)
             );
         }
 
         public async Task Enlist(string code, User actor)
         {
-            var gamespace = await _gamespaceStore.FindByShareCode(code);
+            var gamespace = await _store.LoadFromInvitation(code);
 
             if (gamespace == null)
-                throw new InvalidOperationException();
+                throw new InvalidInvitation();
 
-            if (!gamespace.Players.Where(m => m.SubjectId == actor.GlobalId).Any())
+            if (gamespace.Players.Any(m => m.SubjectId == actor.Id))
+                return;
+
+            gamespace.Players.Add(new Data.Player
             {
-                gamespace.Players.Add(new Data.Player
-                {
-                    SubjectId = actor.GlobalId,
-                    SubjectName = actor.Name,
-                });
+                SubjectId = actor.Id,
+                SubjectName = actor.Name,
+            });
 
-                await _gamespaceStore.Update(gamespace);
-            }
+            await _store.Update(gamespace);
 
         }
 
-        public async Task Delist(int playerId)
+        public async Task Delist(Player player)
         {
-            var gamespace = await _gamespaceStore.FindByPlayer(playerId);
-
-            if (!gamespace?.CanManage(User) ?? false)
-                throw new ActionForbidden();
-
-            var member = gamespace.Players
-                .Where(p => p.Id == playerId)
-                .SingleOrDefault();
-
-            if (member != null)
-            {
-                gamespace.Players.Remove(member);
-
-                await _gamespaceStore.Update(gamespace);
-            }
+            await _store.DeletePlayer(
+                player.GamespaceId,
+                player.SubjectId
+            );
         }
 
-        public async Task<Models.v2.ChallengeView> Grade(string id, Models.v2.SectionSubmission submission)
+        public async Task<ChallengeView> Grade(string id, SectionSubmission submission)
         {
             if (! await _locker.Lock(id))
                 throw new ResourceIsLocked();
 
             var ctx = await LoadContext(id);
 
-            var spec = JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(ctx.Gamespace.Challenge, jsonOptions);
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(ctx.Gamespace.Challenge, jsonOptions);
 
             var section = spec.Challenge.Sections.ElementAtOrDefault(submission.SectionIndex);
 
             if (section == null)
                 _locker.Unlock(id, new InvalidOperationException()).Wait();
 
-            if (ctx.Gamespace.IsExpired())
+            if (!ctx.Gamespace.IsActive)
                 _locker.Unlock(id, new GamespaceIsExpired()).Wait();
 
             if (spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
@@ -572,14 +556,14 @@ namespace TopoMojo.Services
                 )
             )
             {
-                ctx.Gamespace.StopTime = DateTime.UtcNow;
-                await Stop(ctx.Gamespace.GlobalId);
+                ctx.Gamespace.EndTime = DateTime.UtcNow;
+                await Stop(ctx.Gamespace.Id);
             }
 
-            await _gamespaceStore.Update(ctx.Gamespace);
+            await _store.Update(ctx.Gamespace);
 
             // map return model
-            var result = MapChallenge(spec, ctx.Gamespace.IsActive());
+            var result = MapChallenge(spec, ctx.Gamespace.IsActive);
 
             // merge submission into return model
             i = 0;
@@ -591,11 +575,11 @@ namespace TopoMojo.Services
             return result;
         }
 
-        private Models.v2.ChallengeView MapChallenge(Models.v2.ChallengeSpec spec, bool isActive, int sectionIndex = 0)
+        private ChallengeView MapChallenge(ChallengeSpec spec, bool isActive, int sectionIndex = 0)
         {
             var section = spec.Challenge.Sections.ElementAtOrDefault(sectionIndex);
 
-            var challenge = new Models.v2.ChallengeView
+            var challenge = new ChallengeView
             {
                 IsActive = isActive,
                 Text = string.Join("\n\n", spec.Text, spec.Challenge.Text),
@@ -607,7 +591,7 @@ namespace TopoMojo.Services
                 SectionCount = spec.Challenge.Sections.Count,
                 SectionScore = Math.Round(section.Score * spec.MaxPoints, 0, MidpointRounding.AwayFromZero),
                 SectionText = section.Text,
-                Questions = Mapper.Map<Models.v2.QuestionView[]>(section.Questions)
+                Questions = Mapper.Map<QuestionView[]>(section.Questions)
             };
 
             foreach(var q in challenge.Questions)
@@ -619,39 +603,30 @@ namespace TopoMojo.Services
             return challenge;
         }
 
-        private RegistrationContext LoadContext(RegistrationRequest reg)
+        private async Task<RegistrationContext> LoadContext(GamespaceRegistration reg)
         {
-            var ctx = LoadContext();
-            ctx.Request = reg;
-            return ctx;
+            return new RegistrationContext
+            {
+                Request = reg,
+                Workspace = await _workspaceStore.Load(reg.ResourceId)
+            };
         }
 
-        private async Task<RegistrationContext> LoadContext(string id)
+        private async Task<RegistrationContext> LoadContext(string id, string resourceId = null)
         {
-            var ctx = LoadContext();
+            var ctx = new RegistrationContext();
 
-            ctx.Gamespace = await _gamespaceStore.Load(id);
+            if (id.NotEmpty())
+            {
+                ctx.Gamespace = await _store.Load(id);
 
-            ctx.Workspace = ctx.Gamespace?.Workspace;
+                ctx.Workspace = ctx.Gamespace?.Workspace;
+            }
 
-            if (ctx.Gamespace == null)
-                throw new ResourceNotFound();
-
-            if (!ctx.IsMember)
-                throw new ActionForbidden();
+            if (resourceId.NotEmpty())
+                ctx.Workspace = await _workspaceStore.Load(resourceId);
 
             return ctx;
-        }
-
-        private RegistrationContext LoadContext()
-        {
-            return
-                new RegistrationContext
-                {
-                    User = User,
-                    Client = Client,
-                }
-            ;
         }
 
         private async Task<string> LoadMarkdown(string id)
@@ -661,49 +636,33 @@ namespace TopoMojo.Services
                 id
             ) + ".md";
 
-            return System.IO.File.Exists(path)
+            return id.NotEmpty() && System.IO.File.Exists(path)
                 ? await System.IO.File.ReadAllTextAsync(path)
                 : null;
         }
 
-        public async Task<bool> IsMember(string id, string actorId)
+        public async Task<bool> CanManage(string id, string actorId)
         {
-            return await _gamespaceStore.CanInteract(id, actorId);
+            return await _store.CanManage(id, actorId);
+        }
+
+        public async Task<bool> CanInteract(string id, string actorId)
+        {
+            return await _store.CanInteract(id, actorId);
+        }
+
+        public async Task<bool> HasScope(string id, string scope)
+        {
+            return await _store.HasScope(id, scope);
         }
     }
 
     public class RegistrationContext
     {
-        public RegistrationRequest Request { get; set; }
         public Data.Gamespace Gamespace { get; set; }
         public Data.Workspace Workspace { get; set; }
-        public Client Client { get; set; }
-        public User User { get; set; }
-
-        public bool UserExists { get { return User is User && User.Id > 0; } }
-
+        public GamespaceRegistration Request { get; set; }
         public bool WorkspaceExists { get { return Workspace is Data.Workspace; } }
-
         public bool GamespaceExists { get { return Gamespace is Data.Gamespace; } }
-
-        public bool IsValidAudience
-        {
-            get
-            {
-                return UserExists
-                    ? Workspace.CanEdit(User)
-                    : (Workspace ?? Gamespace.Workspace).HasScope(Client.Scope);
-            }
-        }
-
-        public bool IsMember
-        {
-            get
-            {
-                return UserExists
-                    ? Gamespace.CanManage(User)
-                    : Gamespace.ClientId == Client.Id;
-            }
-        }
     }
 }

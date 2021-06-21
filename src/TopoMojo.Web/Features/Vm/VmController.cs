@@ -23,25 +23,23 @@ namespace TopoMojo.Web.Controllers
     {
         public VmController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
-            TemplateService templateService,
             IHubContext<AppHub, IHubEvent> hub,
+            VmValidator validator,
+            TemplateService templateService,
             UserService userService,
             IHypervisorService podService,
             CoreOptions options
-        ) : base(logger, identityResolver)
+        ) : base(logger, hub, validator)
         {
             _templateService = templateService;
             _userService = userService;
             _pod = podService;
-            _hub = hub;
             _options = options;
         }
 
         private readonly IHypervisorService _pod;
         private readonly TemplateService _templateService;
         private readonly UserService _userService;
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
         private readonly CoreOptions _options;
 
         /// <summary>
@@ -82,7 +80,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             return Ok(
@@ -105,7 +103,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(op.Id, Actor.GlobalId).Result
+                () => CanManageVm(op.Id, Actor.Id).Result
             );
 
             Vm vm = await _pod.ChangeState(op);
@@ -125,7 +123,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             Vm vm = await _pod.Delete(id);
@@ -146,7 +144,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             // need elevated privileges to change vm to special nets
@@ -178,7 +176,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             Vm vm = await _pod.Answer(id, answer);
@@ -198,7 +196,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             return Ok(
@@ -218,7 +216,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             return Ok(
@@ -238,7 +236,7 @@ namespace TopoMojo.Web.Controllers
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(id, Actor.GlobalId).Result
+                () => CanManageVm(id, Actor.Id).Result
             );
 
             var info = await _pod.Display(id);
@@ -246,7 +244,7 @@ namespace TopoMojo.Web.Controllers
             if (info.Url.IsEmpty())
                 return Ok(info);
 
-            _logger.LogDebug($"mks url: {info.Url}");
+            Logger.LogDebug($"mks url: {info.Url}");
 
             var src = new Uri(info.Url);
             string target = "";
@@ -284,7 +282,7 @@ namespace TopoMojo.Web.Controllers
 
             info.Url += qs;
 
-            _logger.LogDebug($"mks url: {info.Url}");
+            Logger.LogDebug($"mks url: {info.Url}");
 
             return Ok(info);
         }
@@ -303,7 +301,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(name, Actor.GlobalId).Result
+                () => CanManageVm(name, Actor.Id).Result
             );
 
             return Ok(
@@ -319,16 +317,29 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/vm-template/{id}")]
         public async Task<ActionResult<Vm>> Deploy(string id)
         {
-            VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
+            VmTemplate template  = await _templateService
+                .GetDeployableTemplate(id, null)
+            ;
 
             string name = $"{template.Name}#{template.IsolationTag}";
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(name, Actor.GlobalId).Result
+                () => CanManageVm(name, Actor.Id).Result
             );
 
             Vm vm = await _pod.Deploy(template, Actor.IsCreator);
+
+            if (template.HostAffinity)
+            {
+                await _pod.SetAffinity(
+                    template.IsolationTag,
+                    new Vm[] { vm },
+                    true
+                );
+
+                vm.State = VmPowerState.Running;
+            }
 
             // SendBroadcast(vm, "deploy");
             VmState state = new VmState
@@ -339,7 +350,7 @@ namespace TopoMojo.Web.Controllers
                 IsRunning = vm.State == VmPowerState.Running
             };
 
-            await _hub.Clients
+            await Hub.Clients
                 .Group(state.IsolationId)
                 .VmEvent(new BroadcastEvent<VmState>(User, "VM.DEPLOY", state))
             ;
@@ -361,7 +372,7 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => CanManageVm(name, Actor.GlobalId).Result
+                () => CanManageVm(name, Actor.Id).Result
             );
 
             return Ok(
@@ -383,11 +394,11 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
-        private async Task<bool> CanManageVm(string id, string userId)
+        private async Task<bool> CanManageVm(string id, string subjectId)
         {
             return await _userService.CanInteract(
-                await GetVmIsolationTag(id),
-                userId
+                subjectId,
+                await GetVmIsolationTag(id)
             );
         }
 
@@ -408,7 +419,7 @@ namespace TopoMojo.Web.Controllers
                 IsRunning = vm.State == VmPowerState.Running
             };
 
-            _hub.Clients
+            Hub.Clients
                 .Group(vm.Name.Tag())
                 .VmEvent(new BroadcastEvent<VmState>(User, "VM." + action.ToUpper(), state))
             ;

@@ -46,7 +46,7 @@ namespace TopoMojo
 
         private async Task _validate(TemplateDetail model)
         {
-            if ((await Exists(model.GlobalId)).Equals(false))
+            if ((await Exists(model.Id)).Equals(false))
                 throw new ResourceNotFound();
 
             await Task.CompletedTask;
@@ -68,7 +68,7 @@ namespace TopoMojo
             if (model.Name.IsEmpty())
                 throw new ArgumentException("ChangedTemplate.Name");
 
-            if ((await Exists(model.GlobalId)).Equals(false))
+            if ((await Exists(model.Id)).Equals(false))
                 throw new ResourceNotFound();
 
             await Task.CompletedTask;

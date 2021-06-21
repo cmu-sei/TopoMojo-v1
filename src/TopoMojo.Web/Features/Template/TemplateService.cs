@@ -24,28 +24,27 @@ namespace TopoMojo.Services
             IHypervisorService podService,
             ILogger<TemplateService> logger,
             IMapper mapper,
-            CoreOptions options,
-            IIdentityResolver identityResolver
-        ) : base(logger, mapper, options, identityResolver)
+            CoreOptions options
+        ) : base(logger, mapper, options)
         {
-            _templateStore = templateStore;
+            _store = templateStore;
 
             _pod = podService;
         }
 
-        private readonly ITemplateStore _templateStore;
+        private readonly ITemplateStore _store;
         private readonly IHypervisorService _pod;
 
         public async Task<TemplateSummary[]> List(TemplateSearch search, bool sudo, CancellationToken ct = default(CancellationToken))
         {
-            var q = _templateStore.List(search.Term)
+            var q = _store.List(search.Term)
                 .Include(t => t.Workspace) as IQueryable<Data.Template>;
 
             if (sudo)
                 if (search.pid.NotEmpty())
-                    q = q.Where(t => t.ParentGlobalId == search.pid);
+                    q = q.Where(t => t.ParentId == search.pid);
                 else
-                    q = q.Where(t => t.ParentGlobalId == null);
+                    q = q.Where(t => t.ParentId == null);
                     // q = q.Where(t => t.ParentId == null || t.ParentId == 0);
 
             if (!sudo || search.WantsPublished)
@@ -66,30 +65,30 @@ namespace TopoMojo.Services
 
         public async Task<Template> Load(string id)
         {
-            var template = await _templateStore.Retrieve(id);
+            var template = await _store.Retrieve(id);
 
             return Mapper.Map<Template>(template);
         }
 
         internal async Task<bool> CanEdit(string id, string actorId)
         {
-            return await _templateStore.DbContext.Templates
-                .Where(t => t.GlobalId == id)
+            return await _store.DbContext.Templates
+                .Where(t => t.Id == id)
                 .SelectMany(t => t.Workspace.Workers)
                 .AnyAsync(w => w.SubjectId == actorId);
         }
 
         internal async Task<bool> CanEditWorkspace(string id, string actorId)
         {
-            return await _templateStore.DbContext.Workspaces
-                .Where(t => t.GlobalId == id)
+            return await _store.DbContext.Workspaces
+                .Where(t => t.Id == id)
                 .SelectMany(w => w.Workers)
                 .AnyAsync(w => w.SubjectId == actorId);
         }
 
         public async Task<TemplateDetail> LoadDetail(string id)
         {
-            var template = await _templateStore.Retrieve(id);
+            var template = await _store.Retrieve(id);
 
             return Mapper.Map<TemplateDetail>(template);
         }
@@ -100,51 +99,51 @@ namespace TopoMojo.Services
 
             var t = Mapper.Map<Data.Template>(model);
 
-            await _templateStore.Create(t);
+            await _store.Create(t);
 
             return Mapper.Map<TemplateDetail>(t);
         }
 
         public async Task<TemplateDetail> Configure(TemplateDetail template)
         {
-            var entity = await _templateStore.Retrieve(template.GlobalId);
+            var entity = await _store.Retrieve(template.Id);
 
             Mapper.Map<TemplateDetail, Data.Template>(template, entity);
 
-            await _templateStore.Update(entity);
+            await _store.Update(entity);
 
             return Mapper.Map<TemplateDetail>(entity);
         }
 
         public async Task<Template> Update(ChangedTemplate template)
         {
-            var entity = await _templateStore.Retrieve(template.GlobalId);
+            var entity = await _store.Retrieve(template.Id);
 
             Mapper.Map<ChangedTemplate, Data.Template>(template, entity);
 
-            await _templateStore.Update(entity);
+            await _store.Update(entity);
 
             return Mapper.Map<Template>(entity);
         }
 
         public async Task<Template> Link(TemplateLink newlink, bool sudo)
         {
-            var entity = await _templateStore.Retrieve(newlink.TemplateId);
+            var entity = await _store.Retrieve(newlink.TemplateId);
 
             if (entity.IsPublished.Equals(false))
                 throw new TemplateNotPublished();
 
-            if (!sudo && await _templateStore.AtTemplateLimit(newlink.WorkspaceId))
+            if (!sudo && await _store.AtTemplateLimit(newlink.WorkspaceId))
                 throw new TemplateLimitReached();
 
-            var workspace = await _templateStore.DbContext.Workspaces
-                .FirstOrDefaultAsync(w => w.GlobalId == newlink.WorkspaceId)
+            var workspace = await _store.DbContext.Workspaces
+                .FirstOrDefaultAsync(w => w.Id == newlink.WorkspaceId)
             ;
 
             var newTemplate = new Data.Template
             {
-                ParentGlobalId = entity.GlobalId,
-                WorkspaceGlobalId = workspace.GlobalId,
+                ParentId = entity.Id,
+                WorkspaceId = workspace.Id,
                 Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,
@@ -152,16 +151,16 @@ namespace TopoMojo.Services
                 Guestinfo = entity.Guestinfo
             };
 
-            await _templateStore.Create(newTemplate);
+            await _store.Create(newTemplate);
 
             return Mapper.Map<Template>(
-                await _templateStore.Load(newTemplate.GlobalId)
+                await _store.Load(newTemplate.Id)
             );
         }
 
         public async Task<Template> Unlink(TemplateLink link) //CLONE
         {
-            var entity = await _templateStore.Retrieve(link.TemplateId);
+            var entity = await _store.Retrieve(link.TemplateId);
 
             if (entity.IsLinked)
             {
@@ -169,25 +168,25 @@ namespace TopoMojo.Services
 
                 tu.Name = entity.Name;
 
-                tu.LocalizeDiskPaths(entity.Workspace.GlobalId, entity.GlobalId);
+                tu.LocalizeDiskPaths(entity.Workspace.Id, entity.Id);
 
                 entity.Detail = tu.ToString();
 
                 entity.Parent = null;
 
-                await _templateStore.Update(entity);
+                await _store.Update(entity);
             }
 
             return Mapper.Map<Template>(
-                await _templateStore.Load(link.TemplateId)
+                await _store.Load(link.TemplateId)
             );
         }
 
         public async Task<Template> Delete(string id)
         {
-            var entity = await _templateStore.Retrieve(id);
+            var entity = await _store.Retrieve(id);
 
-            if (await _templateStore.HasDescendents(id))
+            if (await _store.HasDescendents(id))
                 throw new TemplateHasDescendents();
 
             // delete associated vm
@@ -199,16 +198,19 @@ namespace TopoMojo.Services
             if (entity.IsLinked.Equals(false))
                 await _pod.DeleteDisks(deployable);
 
-            await _templateStore.Delete(id);
+            await _store.Delete(id);
 
             return Mapper.Map<Template>(entity);
         }
 
         public async Task<VmTemplate> GetDeployableTemplate(string id, string tag = "")
         {
-            var entity = await _templateStore.Load(id);
+            var entity = await _store.Load(id);
 
-            return Mapper.Map<ConvergedTemplate>(entity).ToVirtualTemplate();
+            return Mapper.Map<ConvergedTemplate>(entity)
+                .ToVirtualTemplate()
+                .SetHostAffinity(entity.Workspace.HostAffinity)
+            ;
         }
 
         public async Task<Dictionary<string, string>> ResolveKeys(string[] keys)
@@ -217,7 +219,7 @@ namespace TopoMojo.Services
 
             foreach (string key in keys.Distinct())
             {
-                var val = await _templateStore.ResolveKey(key);
+                var val = await _store.ResolveKey(key);
 
                 map.Add(key, $"{val ?? "__orphaned"}#{key}");
             }

@@ -26,16 +26,15 @@ namespace TopoMojo.Services
             IHypervisorService podService,
             ILogger<WorkspaceService> logger,
             IMapper mapper,
-            CoreOptions options,
-            IIdentityResolver identityResolver
-        ) : base (logger, mapper, options, identityResolver)
+            CoreOptions options
+        ) : base (logger, mapper, options)
         {
-            _workspaceStore = workspaceStore;
+            _store = workspaceStore;
             _gamespaceStore = gamespaceStore;
             _pod = podService;
         }
 
-        private readonly IWorkspaceStore _workspaceStore;
+        private readonly IWorkspaceStore _store;
         private readonly IGamespaceStore _gamespaceStore;
         private readonly IHypervisorService _pod;
 
@@ -43,15 +42,15 @@ namespace TopoMojo.Services
         /// List workspace summaries.
         /// </summary>
         /// <returns>Array of WorkspaceSummary</returns>
-        public async Task<WorkspaceSummary[]> List(WorkspaceSearch search, User Actor, CancellationToken ct = default(CancellationToken))
+        public async Task<WorkspaceSummary[]> List(WorkspaceSearch search, string subjectId, bool sudo, CancellationToken ct = default(CancellationToken))
         {
-            var q = _workspaceStore.List(search.Term);
+            var q = _store.List(search.Term);
 
-            if (!Actor.IsAdmin && !Actor.IsAgent)
-                q = q.Where(p => p.Workers.Any(w => w.SubjectId == Actor.GlobalId));
-
-            if (Actor.IsAgent)
+            if (search.WantsAudience)
                 q = q.Where(w => w.Audience.Contains(search.aud));
+
+            else if (!sudo)
+                q = q.Where(p => p.Workers.Any(w => w.SubjectId == subjectId));
 
             q = search.Sort == "age"
                 ? q.OrderByDescending(w => w.WhenCreated)
@@ -74,7 +73,7 @@ namespace TopoMojo.Services
         /// <returns>Array of Workspaces</returns>
         public async Task<Workspace[]> ListDetail(Search search, CancellationToken ct = default(CancellationToken))
         {
-            var q = _workspaceStore.List(search.Term);
+            var q = _store.List(search.Term);
 
             q = q.Include(t => t.Templates)
                     .Include(t => t.Workers)
@@ -96,26 +95,14 @@ namespace TopoMojo.Services
             );
         }
 
-        internal async Task<Boolean> CheckWorkspaceLimit(string id)
+        public async Task<Boolean> CheckWorkspaceLimit(string id)
         {
-            return await _workspaceStore.CheckWorkspaceLimit(id);
+            return await _store.CheckWorkspaceLimit(id);
         }
-
-        /// <summary>
-        /// Load a workspace by id
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns>Workspace</returns>
-        // public async Task<Workspace> Load(int id)
-        // {
-        //     Data.Workspace entity = await _workspaceStore.Load(id);
-
-        //     return Mapper.Map<Workspace>(entity);
-        // }
 
         public async Task<Workspace> Load(string id)
         {
-            Data.Workspace entity = await _workspaceStore.Load(id);
+            Data.Workspace entity = await _store.Load(id);
 
             return Mapper.Map<Workspace>(entity);
         }
@@ -124,9 +111,9 @@ namespace TopoMojo.Services
         /// Create a new workspace
         /// </summary>
         /// <param name="model"></param>
-        /// <param name="actorId"></param>
+        /// <param name="subjectId"></param>
         /// <returns>Workspace</returns>
-        public async Task<Workspace> Create(NewWorkspace model, string actorId)
+        public async Task<Workspace> Create(NewWorkspace model, string subjectId)
         {
             var workspace = Mapper.Map<Data.Workspace>(model);
 
@@ -139,22 +126,29 @@ namespace TopoMojo.Services
             workspace.LastActivity = DateTime.UtcNow;
 
             if (workspace.Challenge.IsEmpty())
-                workspace.Challenge = JsonSerializer.Serialize<Models.v2.ChallengeSpec>(
-                    new Models.v2.ChallengeSpec()
+                workspace.Challenge = JsonSerializer.Serialize<ChallengeSpec>(
+                    new ChallengeSpec()
                 );
 
             workspace.Workers.Add(new Data.Worker
             {
-                SubjectName = actorId,
+                SubjectName = subjectId,
                 Permission = Permission.Manager
             });
 
-            workspace = await _workspaceStore.Create(workspace);
+            workspace = await _store.Create(workspace);
             // await _workspaceStore.Update(workspace);
 
             // TODO: consider handling document here
 
             return Mapper.Map<Workspace>(workspace);
+        }
+
+        public async Task<Workspace> Clone(string id)
+        {
+            return Mapper.Map<Workspace>(
+                await _store.Clone(id)
+            );
         }
 
         /// <summary>
@@ -164,60 +158,32 @@ namespace TopoMojo.Services
         /// <returns></returns>
         public async Task<Workspace> Update(ChangedWorkspace model)
         {
-            var entity = await _workspaceStore.Retrieve(model.GlobalId);
+            var entity = await _store.Retrieve(model.Id);
 
             Mapper.Map<ChangedWorkspace, Data.Workspace>(model, entity);
 
-            await _workspaceStore.Update(entity);
+            await _store.Update(entity);
 
             return Mapper.Map<Workspace>(entity);
         }
 
-        public async Task UpdateChallenge(int id, ChallengeSpec spec)
+        public async Task<ChallengeSpec> GetChallenge(string id)
         {
-            var entity = await _workspaceStore.Retrieve(id);
-
-            if (entity == null || !entity.CanEdit(User))
-                throw new InvalidOperationException();
-
-            // spec.Randoms.Clear();
-
-            // hydrate question weights
-            var unweighted = spec.Questions.Where(q => q.Weight == 0).ToArray();
-            float max = spec.Questions.Sum(q => q.Weight);
-            if (unweighted.Any())
-            {
-                float val = (1 - max) / unweighted.Length;
-                foreach(var q in unweighted.Take(unweighted.Length - 1))
-                {
-                    q.Weight = val;
-                    max += val;
-                }
-                unweighted.Last().Weight = 1 - max;
-            }
-
-            entity.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
-
-            await _workspaceStore.Update(entity);
-        }
-
-        public async Task<Models.v2.ChallengeSpec> GetChallenge(string id)
-        {
-            var entity = await _workspaceStore.Retrieve(id);
+            var entity = await _store.Retrieve(id);
 
             string spec = entity.Challenge ??
-                JsonSerializer.Serialize<Models.v2.ChallengeSpec>(new Models.v2.ChallengeSpec());
+                JsonSerializer.Serialize<ChallengeSpec>(new ChallengeSpec());
 
-            return JsonSerializer.Deserialize<Models.v2.ChallengeSpec>(spec, jsonOptions);
+            return JsonSerializer.Deserialize<ChallengeSpec>(spec, jsonOptions);
         }
 
-        public async Task UpdateChallenge(string id, Models.v2.ChallengeSpec spec)
+        public async Task UpdateChallenge(string id, ChallengeSpec spec)
         {
-            var entity = await _workspaceStore.Retrieve(id);
+            var entity = await _store.Retrieve(id);
 
-            entity.Challenge = JsonSerializer.Serialize<Models.v2.ChallengeSpec>(spec, jsonOptions);
+            entity.Challenge = JsonSerializer.Serialize<ChallengeSpec>(spec, jsonOptions);
 
-            await _workspaceStore.Update(entity);
+            await _store.Update(entity);
         }
 
         /// <summary>
@@ -227,49 +193,37 @@ namespace TopoMojo.Services
         /// <returns>Workspace</returns>
         public async Task<Workspace> Delete(string id)
         {
-            var entity = await _workspaceStore.Retrieve(id);
+            var entity = await _store.Retrieve(id);
 
             await _pod.DeleteAll(id);
 
-            await _workspaceStore.Delete(id);
+            // TODO: cleanly delete workspace templates
+
+            await _store.Delete(id);
 
             return Mapper.Map<Workspace>(entity);
         }
 
         /// <summary>
-        /// Determine if current user can edit workspace.
+        /// Determine if subject can edit workspace.
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="actor"></param>
+        /// <param name="subjectId"></param>
         /// <returns></returns>
-        public async Task<bool> CanEdit(string id, User actor)
+        public async Task<bool> CanEdit(string id, string subjectId)
         {
-            var entity = await _workspaceStore.Retrieve(id);
-
-            return entity?.CanEdit(actor) ?? false;
+            return await _store.CanEdit(id, subjectId);
         }
 
         /// <summary>
-        /// Determine if current user can manage workspace.
+        /// Determine if subject can manage workspace.
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="actor"></param>
+        /// <param name="subjectId"></param>
         /// <returns></returns>
-        public async Task<bool> CanManage(string id, User actor)
+        public async Task<bool> CanManage(string id, string subjectId)
         {
-            var entity = await _workspaceStore.Retrieve(id);
-
-            return entity?.CanManage(actor) ?? false;
-        }
-
-        public async Task<bool> CanManage(int id, User actor)
-        {
-            var entity = await _workspaceStore.Retrieve(id);
-
-            if (entity is null)
-                entity = await _workspaceStore.FindByWorker(id);
-
-            return entity?.CanManage(actor) ?? false;
+            return await _store.CanManage(id, subjectId);
         }
 
         /// <summary>
@@ -279,11 +233,11 @@ namespace TopoMojo.Services
         /// <returns></returns>
         public async Task<WorkspaceInvitation> Invite(string id)
         {
-            var workspace = await _workspaceStore.Retrieve(id);
+            var workspace = await _store.Retrieve(id);
 
             workspace.ShareCode = Guid.NewGuid().ToString("N");
 
-            await _workspaceStore.Update(workspace);
+            await _store.Update(workspace);
 
             return Mapper.Map<WorkspaceInvitation>(workspace);
         }
@@ -292,27 +246,28 @@ namespace TopoMojo.Services
         /// Redeem an invitation code to join user to workspace.
         /// </summary>
         /// <param name="code"></param>
-        /// <param name="actor"></param>
+        /// <param name="subjectId"></param>
+        /// <param name="subjectName"></param>
         /// <returns></returns>
-        public async Task<WorkspaceSummary> Enlist(string code, User actor)
+        public async Task<WorkspaceSummary> Enlist(string code, string subjectId, string subjectName)
         {
-            var workspace = await _workspaceStore.FindByShareCode(code);
+            var workspace = await _store.LoadFromInvitation(code);
 
             if (workspace == null)
                 throw new ResourceNotFound();
 
-            if (!workspace.Workers.Where(m => m.SubjectId == actor.GlobalId).Any())
+            if (!workspace.Workers.Where(m => m.SubjectId == subjectId).Any())
             {
                 workspace.Workers.Add(new Data.Worker
                 {
-                    SubjectId = actor.GlobalId,
-                    SubjectName = actor.Name,
+                    SubjectId = subjectId,
+                    SubjectName = subjectName,
                     Permission = workspace.Workers.Count > 0
                         ? Permission.Editor
                         : Permission.Manager
                 });
 
-                await _workspaceStore.Update(workspace);
+                await _store.Update(workspace);
             }
 
             return Mapper.Map<WorkspaceSummary>(workspace);
@@ -321,32 +276,33 @@ namespace TopoMojo.Services
         /// <summary>
         /// Remove a worker from a workspace.
         /// </summary>
-        /// <param name="workerId"></param>
-        /// <param name="actor"></param>
+        /// <param name="id"></param>
+        /// <param name="subjectId"></param>
+        /// <param name="sudo"></param>
         /// <returns></returns>
-        public async Task Delist(int workerId, User actor)
+        public async Task Delist(string id, string subjectId, bool sudo)
         {
-            var workspace = await _workspaceStore.FindByWorker(workerId);
+            var workspace = await _store.Load(id);
 
             var member = workspace.Workers
-                .Where(p => p.Id == workerId)
+                .Where(p => p.SubjectId == subjectId)
                 .SingleOrDefault();
+
+            if (member == null)
+                return;
 
             int managers = workspace.Workers
                 .Count(w => w.Permission.HasFlag(Permission.Manager));
 
             // Only admins can remove the last remaining workspace manager
-            if (!actor.IsAdmin
-                && member.CanManage()
+            if (!sudo
+                && member.CanManage
                 && managers == 1)
-                throw new InvalidOperationException();
+                throw new ActionForbidden();
 
-            if (member != null)
-            {
-                workspace.Workers.Remove(member);
+            workspace.Workers.Remove(member);
 
-                await _workspaceStore.Update(workspace);
-            }
+            await _store.Update(workspace);
         }
 
         /// <summary>
@@ -356,7 +312,7 @@ namespace TopoMojo.Services
         /// <returns></returns>
         public async Task<GameState[]> GetGames(string id)
         {
-            var workspace = await _workspaceStore.LoadWithGamespaces(id);
+            var workspace = await _store.LoadWithGamespaces(id);
 
             return Mapper.Map<GameState[]>(workspace.Gamespaces);
         }
@@ -368,13 +324,13 @@ namespace TopoMojo.Services
         /// <returns></returns>
         public async Task<GameState[]> KillGames(string id)
         {
-            var workspace = await _workspaceStore.LoadWithGamespaces(id);
+            var workspace = await _store.LoadWithGamespaces(id);
 
             foreach (var gamespace in workspace.Gamespaces)
             {
-                await _pod.DeleteAll(gamespace.GlobalId);
+                await _pod.DeleteAll(gamespace.Id);
 
-                await _gamespaceStore.Delete(gamespace.GlobalId);
+                await _gamespaceStore.Delete(gamespace.Id);
             }
 
             return Mapper.Map<GameState[]>(workspace.Gamespaces);

@@ -22,22 +22,24 @@ namespace TopoMojo
 
         public static class ClaimNames
         {
-            public const string ClientId = "client_id";
-            public const string ClientScope = "client_scope";
-            public const string ClientUrl = "client_url";
+            public const string Subject = AppConstants.SubjectClaimName;
         }
 
     }
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
+        private readonly IApiKeyAuthenticationService _svc;
+
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock
+            ISystemClock clock,
+            IApiKeyAuthenticationService svc
         )
             : base(options, logger, encoder, clock)
         {
+            _svc = svc;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -61,17 +63,15 @@ namespace TopoMojo
                 }
             }
 
-            var client = Options.Clients.Where(c => c.Key == key).SingleOrDefault();
+            string subjectId = await _svc.ResolveApiKey(key);
 
-            if (client == null)
+            if (string.IsNullOrEmpty(subjectId))
                 return AuthenticateResult.NoResult();
 
             var principal = new ClaimsPrincipal(
                 new ClaimsIdentity(
                     new Claim[] {
-                        new Claim(ApiKeyAuthentication.ClaimNames.ClientId, client.Id ?? "invalid"),
-                        new Claim(ApiKeyAuthentication.ClaimNames.ClientScope, client.Scope ?? "public"),
-                        new Claim(ApiKeyAuthentication.ClaimNames.ClientUrl, client.Url ?? "")
+                        new Claim(ApiKeyAuthentication.ClaimNames.Subject, subjectId)
                     },
                     Scheme.Name
                 )
@@ -92,15 +92,11 @@ namespace TopoMojo
 
     public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     {
-        public ICollection<ApiKeyClient> Clients { get; set; } = new List<ApiKeyClient>();
     }
 
-    public class ApiKeyClient
+    public interface IApiKeyAuthenticationService
     {
-        public string Id { get; set; }
-        public string Key { get; set; }
-        public string Scope { get; set; } = "public";
-        public string Url { get; set; }
+        Task<string> ResolveApiKey(string key);
     }
 
 }

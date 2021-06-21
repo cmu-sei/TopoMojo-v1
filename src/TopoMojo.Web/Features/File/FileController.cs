@@ -3,17 +3,15 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using DiscUtils.Iso9660;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
+using TopoMojo.Hubs;
 using TopoMojo.Services;
-using TopoMojo.Web.Services;
 
 namespace TopoMojo.Web.Controllers
 {
@@ -23,12 +21,12 @@ namespace TopoMojo.Web.Controllers
     {
         public FileController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
+            IHubContext<AppHub, IHubEvent> hub,
             IFileUploadHandler uploader,
             IFileUploadMonitor monitor,
             FileUploadOptions uploadOptions,
             WorkspaceService workspaceService
-        ) : base(logger, identityResolver)
+        ) : base(logger, hub)
         {
             _monitor = monitor;
             _config = uploadOptions;
@@ -87,7 +85,7 @@ namespace TopoMojo.Web.Controllers
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (key != publicTarget && !_workspaceService.CanEdit(key, Actor).Result)
+                    if (key != publicTarget && !_workspaceService.CanEdit(key, Actor.Id).Result)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);

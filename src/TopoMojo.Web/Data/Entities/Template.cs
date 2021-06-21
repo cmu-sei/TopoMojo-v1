@@ -9,8 +9,7 @@ namespace TopoMojo.Data
 {
     public class Template : IEntity
     {
-        // public int Id { get; set; }
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public System.DateTime WhenCreated { get; set; }
         public string Description { get; set; }
@@ -20,12 +19,12 @@ namespace TopoMojo.Data
         public bool IsHidden { get; set; }
         public bool IsPublished { get; set; }
         public string Detail { get; set; }
-        public string ParentGlobalId { get; set; }
+        public string ParentId { get; set; }
         public int Replicas { get; set; }
         public virtual Template Parent { get; set; }
-        public string WorkspaceGlobalId { get; set; }
+        public string WorkspaceId { get; set; }
         public virtual Workspace Workspace { get; set; }
         public virtual ICollection<Template> Children { get; set; } = new List<Template>();
-        [NotMapped] public bool IsLinked => string.IsNullOrEmpty(ParentGlobalId).Equals(false);
+        [NotMapped] public bool IsLinked => string.IsNullOrEmpty(ParentId).Equals(false);
     }
 }

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace TopoMojo.Extensions
 {
@@ -231,6 +233,17 @@ namespace TopoMojo.Extensions
         public static string SanitizePath(this string target)
         {
             return target.Sanitize(Path.GetInvalidPathChars());
+        }
+
+        public static string ToSha256(this string input)
+        {
+            using (SHA256 alg = SHA256.Create())
+            {
+                return BitConverter.ToString(alg
+                    .ComputeHash(Encoding.UTF8.GetBytes(input)))
+                    .Replace("-", "")
+                    .ToLower();
+            }
         }
     }
 }

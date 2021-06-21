@@ -9,8 +9,7 @@ namespace TopoMojo.Models
 {
     public class Gamespace
     {
-        public int Id { get; set; }
-        public string GlobalId { get; set; }
+        public string Id { get; set; }
         public string ClientId { get; set; }
         public string Audience { get; set; }
         public string Name { get; set; }
@@ -23,9 +22,8 @@ namespace TopoMojo.Models
 
     public class GameState
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
-        public string GlobalId { get; set; }
         public string WhenCreated { get; set; }
         public string WorkspaceDocument { get; set; }
         public string Markdown { get; set; }
@@ -38,7 +36,7 @@ namespace TopoMojo.Models
         public DateTime ExpirationTime { get; set; }
         public bool IsActive { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
-        public Models.v2.ChallengeView Challenge { get; set; }
+        public ChallengeView Challenge { get; set; }
 
     }
 
@@ -53,7 +51,7 @@ namespace TopoMojo.Models
 
     public class Player
     {
-        public int Id { get; set; }
+        public string GamespaceId { get; set; }
         public string SubjectId { get; set; }
         public string SubjectName { get; set; }
         public Permission Permission { get; set; }
@@ -63,6 +61,31 @@ namespace TopoMojo.Models
     public class GamespaceSearch: Search
     {
         public const string FilterAll = "all";
+        public const string FilterActive = "active";
         public bool WantsAll => Filter.Contains(FilterAll);
+        public bool WantsActive => Filter.Contains(FilterActive);
+
+    }
+
+    public class GamespaceRegistration
+    {
+        public string ResourceId { get; set; }
+        public string SubjectId { get; set; }
+        public string SubjectName { get; set; }
+        public int Variant { get; set; }
+        public int MaxAttempts { get; set; }
+        public int MaxMinutes { get; set; }
+        public int Points { get; set; } = 100;
+        public bool AllowReset { get; set; }
+        public bool AllowPreview { get; set; }
+        public bool StartGamespace { get; set; }
+        public DateTime ExpirationTime { get; set; }
+        public RegistrationPlayer[] Players { get; set; } = new RegistrationPlayer[] {};
+    }
+
+    public class RegistrationPlayer
+    {
+        public string SubjectId { get; set; }
+        public string SubjectName { get; set; }
     }
 }

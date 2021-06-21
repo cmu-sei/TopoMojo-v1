@@ -8,66 +8,66 @@ namespace TopoMojo.Data.Extensions
 {
     public static class PermissionExtensions
     {
-        public static bool CanManage(this Permission flag)
-        {
-            return flag.HasFlag(Permission.Manager);
-        }
+        // public static bool CanManage(this Permission flag)
+        // {
+        //     return flag.HasFlag(Permission.Manager);
+        // }
 
-        public static bool CanEdit(this Permission flag)
-        {
-            return flag.HasFlag(Permission.Editor);
-        }
+        // public static bool CanEdit(this Permission flag)
+        // {
+        //     return flag.HasFlag(Permission.Editor);
+        // }
 
-        public static bool CanManage(this Worker worker)
-        {
-            return worker.Permission.CanManage();
-        }
+        // public static bool CanManage(this Worker worker)
+        // {
+        //     return worker.Permission.CanManage();
+        // }
 
-        public static bool CanEdit(this Worker worker)
-        {
-            return worker.Permission.CanEdit();
-        }
+        // public static bool CanEdit(this Worker worker)
+        // {
+        //     return worker.Permission.CanEdit();
+        // }
 
-        public static bool CanManage(this Player player)
-        {
-            return player.Permission.CanManage();
-        }
+        // public static bool CanManage(this Player player)
+        // {
+        //     return player.Permission.CanManage();
+        // }
 
-        public static bool CanEdit(this Player player)
-        {
-            return player.Permission.CanEdit();
-        }
+        // public static bool CanEdit(this Player player)
+        // {
+        //     return player.Permission.CanEdit();
+        // }
 
-        public static bool CanManage(this Workspace workspace, Models.User user)
-        {
-            return user.IsAdmin
-                || (workspace.Workers
-                    .FirstOrDefault(p => p.SubjectId == user.GlobalId)?
-                    .Permission.CanManage() ?? false);
-        }
+        // public static bool CanManage(this Workspace workspace, Models.User user)
+        // {
+        //     return user.IsAdmin
+        //         || (workspace.Workers
+        //             .FirstOrDefault(p => p.SubjectId == user.Id)?
+        //             .Permission.CanManage() ?? false);
+        // }
 
-        public static bool CanEdit(this Workspace workspace, Models.User user)
-        {
-            return user.IsAdmin
-                || (workspace.Workers
-                    .FirstOrDefault(p => p.SubjectId == user.GlobalId)?
-                    .Permission.CanEdit() ?? false);
-        }
+        // public static bool CanEdit(this Workspace workspace, Models.User user)
+        // {
+        //     return user.IsAdmin
+        //         || (workspace.Workers
+        //             .FirstOrDefault(p => p.SubjectId == user.Id)?
+        //             .Permission.CanEdit() ?? false);
+        // }
 
-        public static bool CanManage(this Gamespace gamespace, Models.User user, string playerId = null)
-        {
-            return user.IsAdmin
-                || (gamespace.Players
-                    .FirstOrDefault(p => p.SubjectId == (playerId ?? user.GlobalId))?
-                    .Permission.CanManage() ?? false);
-        }
+        // public static bool CanManage(this Gamespace gamespace, Models.User user, string playerId = null)
+        // {
+        //     return user.IsAdmin
+        //         || (gamespace.Players
+        //             .FirstOrDefault(p => p.SubjectId == (playerId ?? user.Id))?
+        //             .Permission.CanManage() ?? false);
+        // }
 
-        public static bool CanEdit(this Gamespace gamespace, Models.User user, string playerId = null)
-        {
-            return user.IsAdmin
-                || (gamespace.Players
-                    .FirstOrDefault(p => p.SubjectId == (playerId ?? user.GlobalId))?
-                    .Permission.CanEdit() ?? false);
-        }
+        // public static bool CanEdit(this Gamespace gamespace, Models.User user, string playerId = null)
+        // {
+        //     return user.IsAdmin
+        //         || (gamespace.Players
+        //             .FirstOrDefault(p => p.SubjectId == (playerId ?? user.Id))?
+        //             .Permission.CanEdit() ?? false);
+        // }
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,8 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConfiguredAuthentication(
             this IServiceCollection services,
-            OidcOptions oidc,
-            ICollection<ApiKeyClient> clients
+            OidcOptions oidc
         ) {
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -31,10 +29,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.RequireHttpsMetadata = oidc.RequireHttpsMetadata;
                 })
 
-                .AddApiKey(ApiKeyAuthentication.AuthenticationScheme, options =>
-                {
-                    options.Clients = clients;
-                })
+                .AddApiKey(ApiKeyAuthentication.AuthenticationScheme, options => {})
 
                 .AddTicketAuthentication(TicketAuthentication.AuthenticationScheme, options => {})
 

@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +11,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Abstractions;
 using TopoMojo.Extensions;
 using TopoMojo.Hubs;
 using TopoMojo.Models;
@@ -27,20 +25,17 @@ namespace TopoMojo.Web.Controllers
     {
         public DocumentController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
+            IHubContext<AppHub, IHubEvent> hub,
             WorkspaceService workspaceService,
-            FileUploadOptions uploadOptions,
-            IHubContext<AppHub, IHubEvent> hub
-        ) : base(logger, identityResolver)
+            FileUploadOptions uploadOptions
+        ) : base(logger, hub)
         {
             _uploadOptions = uploadOptions;
-            _workspaceService = workspaceService;
-            _hub = hub;
+            _svc = workspaceService;
         }
 
-        private readonly WorkspaceService _workspaceService;
+        private readonly WorkspaceService _svc;
         private readonly FileUploadOptions _uploadOptions;
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
 
         /// <summary>
         /// Load workspace document
@@ -51,7 +46,7 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/document/{id}")]
         public async Task<ActionResult<string>> Load(string id, CancellationToken ct)
         {
-            if (!await _workspaceService.CanEdit(id, Actor))
+            if (!await _svc.CanEdit(id, Actor.Id))
                 return Forbid();
 
             string path = BuildPath();
@@ -86,7 +81,7 @@ namespace TopoMojo.Web.Controllers
         [HttpPut("api/document/{id}")]
         public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
-            if (!await _workspaceService.CanEdit(id, Actor))
+            if (!await _svc.CanEdit(id, Actor.Id))
                 return Forbid();
 
             string path = BuildPath();
@@ -107,7 +102,7 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/images/{id}")]
         public async Task<ActionResult<ImageFile[]>> Images(string id)
         {
-            if (!await _workspaceService.CanEdit(id, Actor))
+            if (!await _svc.CanEdit(id, Actor.Id))
                 return Forbid();
 
             string path = Path.Combine(_uploadOptions.DocRoot, id);
@@ -131,7 +126,7 @@ namespace TopoMojo.Web.Controllers
         [HttpDelete("api/image/{id}")]
         public async Task<IActionResult> Delete(string id, string filename)
         {
-            if (!await _workspaceService.CanEdit(id, Actor))
+            if (!await _svc.CanEdit(id, Actor.Id))
                 return Forbid();
 
             string path = BuildPath(id, filename);
@@ -153,7 +148,7 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/image/{id}")]
         public async Task<ActionResult<ImageFile>> Upload(string id, IFormFile file)
         {
-            if (!await _workspaceService.CanEdit(id, Actor))
+            if (!await _svc.CanEdit(id, Actor.Id))
                 return Forbid();
 
             string path = BuildPath(id);
@@ -195,7 +190,7 @@ namespace TopoMojo.Web.Controllers
 
         private void SendBroadcast(string roomId, string action, string text)
         {
-            _hub.Clients
+            Hub.Clients
                 .Group(roomId)
                 .DocumentEvent(
                     new BroadcastEvent<Document>(

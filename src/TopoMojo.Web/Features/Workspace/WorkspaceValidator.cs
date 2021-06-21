@@ -33,8 +33,8 @@ namespace TopoMojo
             if (model is ClientAudience)
                 return _validate(model as ClientAudience);
 
-            if (model is Models.v2.ChallengeSpec)
-                return _validate(model as Models.v2.ChallengeSpec);
+            if (model is ChallengeSpec)
+                return _validate(model as ChallengeSpec);
 
             if (model is WorkspaceSearch)
                 return _validate(model as WorkspaceSearch);
@@ -57,13 +57,13 @@ namespace TopoMojo
             if (model.Name.IsEmpty())
                 throw new ArgumentException("ChangedWorkspace.Name");
 
-            if ((await Exists(model.GlobalId)).Equals(false))
+            if ((await Exists(model.Id)).Equals(false))
                 throw new ResourceNotFound();
 
             await Task.CompletedTask;
         }
 
-        private async Task _validate(Models.v2.ChallengeSpec model)
+        private async Task _validate(ChallengeSpec model)
         {
             await Task.CompletedTask;
         }
@@ -79,9 +79,8 @@ namespace TopoMojo
         private async Task _validate(ClientAudience model)
         {
             if (
-                model.Audience.IsEmpty() ||
-                model.Scope.IsEmpty() ||
-                model.Scope.Split(' ').Contains(model.Audience).Equals(false)
+                model.Audience.NotEmpty() &&
+                model.Scope.Split(' ', ',', ';').Contains(model.Audience).Equals(false)
             )
             {
                 throw new InvalidClientAudience();

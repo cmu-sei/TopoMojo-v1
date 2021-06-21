@@ -19,25 +19,19 @@ namespace TopoMojo.Services
 
             CreateMap<Data.Gamespace, GameState>()
                 .ForMember(d => d.Name, opt => opt.MapFrom(s => s.Workspace.Name))
-                .ForMember(d => d.IsActive, opt => opt.MapFrom(s => s.IsActive()))
                 .ForMember(d => d.Challenge, opt => opt.Ignore())
             ;
 
             CreateMap<Data.Player, Player>()
             ;
 
-            CreateMap<ChallengeSpec, Challenge>()
+            CreateMap<ChallengeSpec, ChallengeView>()
             ;
 
-            CreateMap<QuestionSpec, Question>()
-                .ForMember(d => d.Answer, opt => opt.Ignore())
+            CreateMap<SectionSpec, SectionView>()
             ;
 
-            CreateMap<Models.v2.ChallengeSpec, Models.v2.ChallengeView>()
-            ;
-            CreateMap<Models.v2.SectionSpec, Models.v2.SectionView>()
-            ;
-            CreateMap<Models.v2.QuestionSpec, Models.v2.QuestionView>()
+            CreateMap<QuestionSpec, QuestionView>()
                 .ForMember(d => d.Answer, opt => opt.Ignore())
             ;
         }

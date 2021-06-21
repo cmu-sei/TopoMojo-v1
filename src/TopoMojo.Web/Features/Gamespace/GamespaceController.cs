@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -22,27 +23,29 @@ namespace TopoMojo.Web.Controllers
     {
         public GamespaceController(
             ILogger<AdminController> logger,
-            IIdentityResolver identityResolver,
+            IHubContext<AppHub, IHubEvent> hub,
+            GamespaceValidator validator,
             CoreOptions options,
             GamespaceService gamespaceService,
             IHypervisorService podService,
-            IHubContext<AppHub, IHubEvent> hub,
-            IDistributedCache cache,
-            GamespaceValidator validator
-        ) : base(logger, identityResolver, validator)
+            IDistributedCache distributedCache
+        ) : base(logger, hub, validator)
         {
-            _gamespaceService = gamespaceService;
+            _svc = gamespaceService;
             _pod = podService;
-            _hub = hub;
-            _cache = cache;
+            _distCache = distributedCache;
             _options = options;
+
+            _cacheOpts = new DistributedCacheEntryOptions {
+                SlidingExpiration = new TimeSpan(0, 0, 60)
+            };
         }
 
         private readonly IHypervisorService _pod;
-        private readonly GamespaceService _gamespaceService;
-        private readonly IHubContext<AppHub, IHubEvent> _hub;
-        private readonly IDistributedCache _cache;
+        private readonly GamespaceService _svc;
+        private readonly IDistributedCache _distCache;
         private readonly CoreOptions _options;
+        private DistributedCacheEntryOptions _cacheOpts;
 
         /// <summary>
         /// List running gamespaces.
@@ -62,7 +65,7 @@ namespace TopoMojo.Web.Controllers
             AuthorizeAll();
 
             return Ok(
-                await _gamespaceService.List(model, Actor, ct)
+                await _svc.List(model, Actor.Id, Actor.IsAdmin, ct)
             );
         }
 
@@ -75,10 +78,15 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/preview/{id}")]
         public async Task<ActionResult<GameState>> Preview(string id)
         {
-            AuthorizeAll();
+            await Validate(new WorkspaceEntity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.HasScope(id, Actor.Scope).Result
+            );
 
             return Ok(
-                await _gamespaceService.Preview(id)
+                await _svc.Preview(id)
             );
         }
 
@@ -91,9 +99,16 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/gamespace/{id}")]
         public async Task<ActionResult<GameState>> Load(string id)
         {
-            var result = await _gamespaceService.Load(id);
+            await Validate(new Entity { Id = id });
 
-            return Ok(result);
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanInteract(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.Load(id)
+            );
         }
 
         /// <summary>
@@ -103,22 +118,31 @@ namespace TopoMojo.Web.Controllers
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpPost("api/gamespace")]
-        public async Task<ActionResult<GameState>> Register([FromBody]RegistrationRequest model, CancellationToken ct)
+        public async Task<ActionResult<GameState>> Register([FromBody]GamespaceRegistration model, CancellationToken ct)
         {
-            var result = await _gamespaceService.Register(model);
+            await Validate(model);
 
-            string token = Guid.NewGuid().ToString("N");
-
-            await _cache.SetStringAsync(
-                $"{TicketAuthentication.TicketCachePrefix}{token}",
-                $"{model.SubjectId}#{model.SubjectName}",
-                new DistributedCacheEntryOptions {
-                    SlidingExpiration = new TimeSpan(0, 0, 60)
-                },
-                ct
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.HasScope(model.ResourceId, Actor.Scope).Result
             );
 
-            result.LaunchpointUrl = $"{_options.LaunchUrl}?t={token}&g={result.GlobalId}";
+            var result = await _svc.Register(model, Actor);
+
+            string token = Guid.NewGuid().ToString("n");
+
+            if (model.Players.Any())
+            {
+                string key = $"{TicketAuthentication.TicketCachePrefix}{token}";
+
+                string value = model.Players
+                    .Select(p => $"{p.SubjectId}#{p.SubjectName}")
+                    .First();
+
+                await _distCache.SetStringAsync(key, value, _cacheOpts, ct);
+            }
+
+            result.LaunchpointUrl = $"{_options.LaunchUrl}?t={token}&g={result.Id}";
 
             // if url is relative, make absolute
             if (!result.LaunchpointUrl.Contains("://"))
@@ -142,9 +166,16 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/gamespace/{id}/start")]
         public async Task<ActionResult<GameState>> Start(string id)
         {
-            var result = await _gamespaceService.Start(id);
+            await Validate(new Entity{ Id = id });
 
-            return Ok(result);
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanInteract(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.Start(id)
+            );
         }
 
         /// <summary>
@@ -155,9 +186,16 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/gamespace/{id}/stop")]
         public async Task<ActionResult<GameState>> Stop(string id)
         {
-            var result = await _gamespaceService.Stop(id);
+            await Validate(new Entity{ Id = id });
 
-            return Ok(result);
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanInteract(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.Stop(id)
+            );
         }
 
         /// <summary>
@@ -168,25 +206,37 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/gamespace/{id}/complete")]
         public async Task<ActionResult<GameState>> Complete(string id)
         {
-            var result = await _gamespaceService.Complete(id);
+            await Validate(new Entity{ Id = id });
 
-            return Ok(result);
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanInteract(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.Complete(id)
+            );
         }
 
         /// <summary>
         /// Grade a challenge.
         /// </summary>
         /// <param name="id">Gamespace Id</param>
-        /// <param name="model">ChallengeView</param>
+        /// <param name="model">SectionSubmission</param>
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/grade")]
-        public async Task<ActionResult<TopoMojo.Models.v2.ChallengeView>> Grade(string id, [FromBody]TopoMojo.Models.v2.SectionSubmission model)
+        public async Task<ActionResult<ChallengeView>> Grade(string id, [FromBody] SectionSubmission model)
         {
-            var result = await _gamespaceService.Grade(id, model);
+            await Validate(new Entity{ Id = id });
 
-            // Log("launched", result);
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanInteract(id, Actor.Id).Result
+            );
 
-            return Ok(result);
+            return Ok(
+                await _svc.Grade(id, model)
+            );
         }
 
         /// <summary>
@@ -203,12 +253,12 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _gamespaceService.IsMember(id, Actor.GlobalId ?? Actor.Client.Id).Result
+                () => _svc.CanInteract(id, Actor.Id).Result
             );
 
-            await _gamespaceService.Delete(id);
+            await _svc.Delete(id);
 
-            SendBroadcast(new GameState{GlobalId = id}, "OVER");
+            SendBroadcast(new GameState{Id = id}, "OVER");
 
             return Ok();
         }
@@ -221,7 +271,7 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/player/{code}")]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
-            await _gamespaceService.Enlist(code, Actor);
+            await _svc.Enlist(code, Actor);
 
             return Ok();
         }
@@ -229,12 +279,19 @@ namespace TopoMojo.Web.Controllers
         /// <summary>
         /// Remove a player from a gamespace.
         /// </summary>
-        /// <param name="id">Player Id</param>
+        /// <param name="model">Player Id</param>
         /// <returns></returns>
         [HttpDelete("api/player/{id}")]
-        public async Task<ActionResult<bool>> Delist(int id)
+        public async Task<ActionResult<bool>> Delist(Player model)
         {
-            await _gamespaceService.Delist(id);
+            await Validate(model);
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanManage(model.GamespaceId, Actor.Id).Result
+            );
+
+            await _svc.Delist(model);
 
             return Ok();
         }
@@ -251,17 +308,17 @@ namespace TopoMojo.Web.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _gamespaceService.IsMember(id, Actor.GlobalId).Result
+                () => _svc.CanInteract(id, Actor.Id).Result
             );
 
             return Ok(
-                await _gamespaceService.Players(id)
+                await _svc.Players(id)
             );
         }
 
         private void SendBroadcast(GameState gameState, string action)
         {
-            _hub.Clients.Group(gameState.GlobalId).GameEvent(
+            Hub.Clients.Group(gameState.Id).GameEvent(
                 new BroadcastEvent<GameState>(
                     User,
                     "GAME." + action.ToUpper(),

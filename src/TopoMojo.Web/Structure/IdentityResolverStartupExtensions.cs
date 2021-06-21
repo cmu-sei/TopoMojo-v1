@@ -16,11 +16,12 @@ namespace TopoMojo.Web.Extensions
         public static IServiceCollection AddIdentityResolver(
             this IServiceCollection services
         ) {
-            return services
-                .AddScoped<IdentityResolver>()
-                .AddScoped<Abstractions.IIdentityResolver>(sp => sp.GetService<Services.IdentityResolver>())
-                // .AddScoped<IClaimsTransformation>(sp => sp.GetService<Services.IdentityResolver>())
-                .AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            return services;
+            // return services
+            //     .AddScoped<IdentityResolver>()
+            //     .AddScoped<Abstractions.IIdentityResolver>(sp => sp.GetService<Services.IdentityResolver>())
+            //     // .AddScoped<IClaimsTransformation>(sp => sp.GetService<Services.IdentityResolver>())
+            //     .AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
     }
 }

@@ -18,10 +18,17 @@ grant_type=password
 &password=321ChangeMe!
 
 ###
-
-GET {{url}}/templates
+POST {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/clone
 {{auth}}
-
+###
+GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd
+{{auth}}
+###
+GET {{url}}/workspaces?term=
+{{auth}}
+###
+DELETE {{url}}/workspace/cf4d217717b5454ca893b3ee8469c796
+{{auth}}
 ###
 
 POST {{url}}/template
