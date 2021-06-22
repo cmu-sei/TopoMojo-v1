@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public interface ILockService
     {

@@ -10,14 +10,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Hubs;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Validators;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
-    [Authorize(Policy = "Players")]
+    [Authorize]
     [ApiController]
     public class GamespaceController : _Controller
     {
@@ -58,6 +59,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpGet("api/gamespaces")]
+        [Authorize]
         public async Task<ActionResult<Gamespace[]>> List(GamespaceSearch model, CancellationToken ct)
         {
             await Validate(model);
@@ -76,13 +78,14 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Resource Id</param>
         /// <returns></returns>
         [HttpGet("api/preview/{id}")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Preview(string id)
         {
             await Validate(new WorkspaceEntity { Id = id });
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.HasScope(id, Actor.Scope).Result
+                () => _svc.HasValidUserScope(id, Actor.Scope).Result
             );
 
             return Ok(
@@ -97,6 +100,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpGet("api/gamespace/{id}")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Load(string id)
         {
             await Validate(new Entity { Id = id });
@@ -118,13 +122,14 @@ namespace TopoMojo.Web.Controllers
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpPost("api/gamespace")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Register([FromBody]GamespaceRegistration model, CancellationToken ct)
         {
             await Validate(model);
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.HasScope(model.ResourceId, Actor.Scope).Result
+                () => _svc.HasValidUserScope(model.ResourceId, Actor.Scope).Result
             );
 
             var result = await _svc.Register(model, Actor);
@@ -164,6 +169,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/start")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Start(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -184,6 +190,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/stop")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Stop(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -204,6 +211,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/complete")]
+        [Authorize]
         public async Task<ActionResult<GameState>> Complete(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -225,6 +233,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model">SectionSubmission</param>
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/grade")]
+        [Authorize]
         public async Task<ActionResult<ChallengeView>> Grade(string id, [FromBody] SectionSubmission model)
         {
             await Validate(new Entity{ Id = id });
@@ -247,6 +256,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpDelete("api/gamespace/{id}")]
+        [Authorize]
         public async Task<ActionResult> Delete(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -263,12 +273,29 @@ namespace TopoMojo.Web.Controllers
             return Ok();
         }
 
+        [HttpPost("api/gamespace/{id}/invite")]
+        [Authorize]
+        public async Task<ActionResult<JoinCode>> GenerateInvitation (string id)
+        {
+            await Validate(new Entity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanManage(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.GenerateInvitation(id)
+            );
+        }
+
         /// <summary>
         /// Accept an invitation to a gamespace.
         /// </summary>
         /// <param name="code">Invitation Code</param>
         /// <returns></returns>
         [HttpPost("api/player/{code}")]
+        [Authorize]
         public async Task<ActionResult<bool>> Enlist(string code)
         {
             await _svc.Enlist(code, Actor);
@@ -279,19 +306,21 @@ namespace TopoMojo.Web.Controllers
         /// <summary>
         /// Remove a player from a gamespace.
         /// </summary>
-        /// <param name="model">Player Id</param>
+        /// <param name="id">Gamespace Id</param>
+        /// <param name="sid">Subject Id of target member</param>
         /// <returns></returns>
-        [HttpDelete("api/player/{id}")]
-        public async Task<ActionResult<bool>> Delist(Player model)
+        [HttpDelete("api/gamespace/{id}/player/{sid}")]
+        [Authorize]
+        public async Task<ActionResult<bool>> Delist([FromRoute] string id, string sid)
         {
-            await Validate(model);
+            await Validate(new Entity{ Id = id });
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanManage(model.GamespaceId, Actor.Id).Result
+                () => _svc.CanManage(id, Actor.Id).Result
             );
 
-            await _svc.Delist(model);
+            await _svc.Delist(id, sid);
 
             return Ok();
         }
@@ -302,6 +331,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Gamespace Id</param>
         /// <returns></returns>
         [HttpGet("api/players/{id}")]
+        [Authorize]
         public async Task<ActionResult<Player[]>> Players(string id)
         {
             await Validate(new Entity{ Id = id });

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using TopoMojo;
-using TopoMojo.Web;
+using TopoMojo.Api;
 
 namespace  Microsoft.Extensions.DependencyInjection
 {
@@ -15,43 +15,45 @@ namespace  Microsoft.Extensions.DependencyInjection
                 _.DefaultPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(
-                        JwtBearerDefaults.AuthenticationScheme
-                    ).Build();
+                        JwtBearerDefaults.AuthenticationScheme,
+                        ApiKeyAuthentication.AuthenticationScheme,
+                        AppConstants.CookieScheme
+                    ).Build()
+                ;
 
-                _.AddPolicy("AdminOnly", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        JwtBearerDefaults.AuthenticationScheme
-                    )
-                    .RequireClaim(AppConstants.RoleClaimName, TopoMojo.Models.UserRole.Administrator.ToString())
-                    .Build());
-
-                _.AddPolicy("TrustedClients", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(ApiKeyAuthentication.AuthenticationScheme)
-                    .Build());
-
-                _.AddPolicy("OneTimeTicket", new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
-                    .Build());
-
-                _.AddPolicy("Players", new AuthorizationPolicyBuilder()
+                _.AddPolicy(AppConstants.AdminOnlyPolicy, new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme,
-                        TicketAuthentication.AuthenticationScheme,
+                        ApiKeyAuthentication.AuthenticationScheme,
                         AppConstants.CookieScheme
                     )
-                    .Build());
+                    .RequireClaim(AppConstants.RoleClaimName, TopoMojo.Api.Models.UserRole.Administrator.ToString())
+                    .Build()
+                );
 
-                _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
+                _.AddPolicy(AppConstants.TicketOnlyPolicy, new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
-                    .AddAuthenticationSchemes(
-                        AppConstants.CookieScheme,
-                        TicketAuthentication.AuthenticationScheme
-                    )
-                    .Build());
+                    .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
+                    .Build()
+                );
+
+                // _.AddPolicy("Players", new AuthorizationPolicyBuilder()
+                //     .RequireAuthenticatedUser()
+                //     .AddAuthenticationSchemes(
+                //         JwtBearerDefaults.AuthenticationScheme,
+                //         TicketAuthentication.AuthenticationScheme,
+                //         AppConstants.CookieScheme
+                //     )
+                //     .Build());
+
+                // _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
+                //     .RequireAuthenticatedUser()
+                //     .AddAuthenticationSchemes(
+                //         AppConstants.CookieScheme,
+                //         TicketAuthentication.AuthenticationScheme
+                //     )
+                //     .Build());
             });
 
             return services;

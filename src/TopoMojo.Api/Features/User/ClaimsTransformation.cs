@@ -3,10 +3,10 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Caching.Memory;
-using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
 
-namespace TopoMojo
+namespace TopoMojo.Api
 {
     public class UserClaimsTransformation: IClaimsTransformation
     {

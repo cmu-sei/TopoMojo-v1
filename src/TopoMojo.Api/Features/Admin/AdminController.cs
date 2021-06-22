@@ -8,14 +8,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Hubs;
-using TopoMojo.Models;
-using TopoMojo.Services;
-using TopoMojo.Web.Services;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(AppConstants.AdminOnlyPolicy)]
     [ApiController]
     public class AdminController : _Controller
     {

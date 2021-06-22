@@ -5,16 +5,14 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.DependencyInjection;
-using TopoMojo.Models;
-using TopoMojo.Web;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Models;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using TopoMojo.Hubs;
-using Microsoft.Extensions.Caching.Memory;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Validators;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     public class _Controller : Controller
     {

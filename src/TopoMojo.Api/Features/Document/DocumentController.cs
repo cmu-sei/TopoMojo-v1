@@ -11,13 +11,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Extensions;
-using TopoMojo.Hubs;
-using TopoMojo.Models;
-using TopoMojo.Services;
-using TopoMojo.Web.Models;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     [Authorize]
     [ApiController]
@@ -46,8 +45,11 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/document/{id}")]
         public async Task<ActionResult<string>> Load(string id, CancellationToken ct)
         {
-            if (!await _svc.CanEdit(id, Actor.Id))
-                return Forbid();
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
 
             string path = BuildPath();
 
@@ -81,13 +83,15 @@ namespace TopoMojo.Web.Controllers
         [HttpPut("api/document/{id}")]
         public async Task<ActionResult> Save(string id, [FromBody]string text)
         {
-            if (!await _svc.CanEdit(id, Actor.Id))
-                return Forbid();
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
 
             string path = BuildPath();
 
             path = System.IO.Path.Combine(path, id + ".md");
-            System.IO.File.WriteAllText(path, text);
+            await System.IO.File.WriteAllTextAsync(path, text);
 
             SendBroadcast(id, "saved", text);
 
@@ -102,8 +106,10 @@ namespace TopoMojo.Web.Controllers
         [HttpGet("api/images/{id}")]
         public async Task<ActionResult<ImageFile[]>> Images(string id)
         {
-            if (!await _svc.CanEdit(id, Actor.Id))
-                return Forbid();
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
 
             string path = Path.Combine(_uploadOptions.DocRoot, id);
 
@@ -124,19 +130,20 @@ namespace TopoMojo.Web.Controllers
         /// <param name="filename"></param>
         /// <returns></returns>
         [HttpDelete("api/image/{id}")]
-        public async Task<IActionResult> Delete(string id, string filename)
+        public IActionResult Delete(string id, string filename)
         {
-            if (!await _svc.CanEdit(id, Actor.Id))
-                return Forbid();
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
 
             string path = BuildPath(id, filename);
-            if (filename.NotEmpty() && System.IO.File.Exists(path))
-            {
-                System.IO.File.Delete(path);
-                return Ok();
-            }
 
-            return BadRequest();
+            if (filename.IsEmpty() || !System.IO.File.Exists(path))
+                return BadRequest();
+
+            System.IO.File.Delete(path);
+            return Ok();
         }
 
         /// <summary>
@@ -148,8 +155,10 @@ namespace TopoMojo.Web.Controllers
         [HttpPost("api/image/{id}")]
         public async Task<ActionResult<ImageFile>> Upload(string id, IFormFile file)
         {
-            if (!await _svc.CanEdit(id, Actor.Id))
-                return Forbid();
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
 
             string path = BuildPath(id);
 

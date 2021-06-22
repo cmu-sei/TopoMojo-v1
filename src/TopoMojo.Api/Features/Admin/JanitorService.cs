@@ -7,12 +7,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class JanitorService
     {

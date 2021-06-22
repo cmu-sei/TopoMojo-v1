@@ -30,9 +30,9 @@ namespace TopoMojo.Hypervisor.vSphere
         private readonly SddcConfiguration _config;
         private HttpClient _sddc;
         private DateTime authExpiration = DateTime.MinValue;
-        private string authToken = "";
         private string _apiUrl = "";
         private string _apiSegments = "policy/api/v1/infra/tier-1s/cgw/segments";
+        // private string authToken = "";
 
         private async Task InitClient()
         {

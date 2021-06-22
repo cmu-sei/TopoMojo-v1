@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public interface IFileUploadHandler
     {

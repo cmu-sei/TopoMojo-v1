@@ -4,33 +4,38 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public class Gamespace
     {
         public string Id { get; set; }
-        public string ClientId { get; set; }
+        public string ManagerId { get; set; }
+        public string ManagerName { get; set; }
         public string Audience { get; set; }
         public string Name { get; set; }
-        public string Slug { get; set; }
-        public string WhenCreated { get; set; }
-        public string WorkspaceDocument { get; set; }
-        public int WorkspaceId { get; set; }
+        public string Slug => Name.ToSlug();
+        public bool IsActive { get; set; }
         public Player[] Players { get; set; }
+        public DateTime WhenCreated { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
+
     }
 
     public class GameState
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public string WhenCreated { get; set; }
-        public string WorkspaceDocument { get; set; }
+        public string ManagerId { get; set; }
+        public string ManagerName { get; set; }
         public string Markdown { get; set; }
-        public string ShareCode { get; set; }
         public string Audience { get; set; }
         public string LaunchpointUrl { get; set; }
         public Player[] Players { get; set; }
+        public string WhenCreated { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime StopTime { get; set; }
         public DateTime ExpirationTime { get; set; }
@@ -40,13 +45,15 @@ namespace TopoMojo.Models
 
     }
 
-    public class VmState
+    public class GameStateSummary
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public string IsolationId { get; set; }
-        public bool IsRunning { get; set; }
-        public bool IsVisible { get; set; }
+        public Player[] Players { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime StopTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
+
     }
 
     public class Player
@@ -70,8 +77,6 @@ namespace TopoMojo.Models
     public class GamespaceRegistration
     {
         public string ResourceId { get; set; }
-        public string SubjectId { get; set; }
-        public string SubjectName { get; set; }
         public int Variant { get; set; }
         public int MaxAttempts { get; set; }
         public int MaxMinutes { get; set; }

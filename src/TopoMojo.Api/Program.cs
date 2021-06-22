@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using TopoMojo.Web.Extensions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Api
 {
     public class Program
     {

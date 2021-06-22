@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TopoMojo.Extensions
+namespace TopoMojo.Api.Extensions
 {
     public static class StringExtensions
     {
@@ -244,6 +244,36 @@ namespace TopoMojo.Extensions
                     .Replace("-", "")
                     .ToLower();
             }
+        }
+
+        public static bool HasAnyToken(this string a, string b)
+        {
+            var delims = new char[] { ' ', ',', ';' };
+
+            var A = a.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
+
+            var B = b.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
+
+            return A.Intersect(B).Any();
+        }
+
+        public static bool HasAllTokens(this string a, string b)
+        {
+            var delims = new char[] { ' ', ',', ';' };
+
+            var A = a.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
+
+            var B = b.ToLower()
+                .Split(delims, StringSplitOptions.RemoveEmptyEntries)
+            ;
+
+            return A.Intersect(B).Count() == B.Length;
         }
     }
 }

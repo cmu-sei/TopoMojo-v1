@@ -3,23 +3,23 @@
 
 using System.Text.Json;
 using AutoMapper;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api
 {
     public class WorkspaceProfile : Profile
     {
         public WorkspaceProfile()
         {
             CreateMap<Data.Workspace, Workspace>()
-
-                .ForMember(d => d.GamespaceCount, opt => opt.MapFrom(s => s.Gamespaces.Count))
             ;
 
             CreateMap<Data.Workspace, WorkspaceSummary>()
             ;
 
-            CreateMap<Data.Workspace, WorkspaceInvitation>();
+            CreateMap<Data.Workspace, JoinCode>()
+                .ForMember(d => d.Code, opt => opt.MapFrom(s => s.ShareCode))
+            ;
 
             CreateMap<NewWorkspace, Data.Workspace>()
                 .ForMember(d => d.Challenge, opt => opt.MapFrom(s => s.Challenge ??

@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class TemplateService : _Service
     {
@@ -44,10 +45,9 @@ namespace TopoMojo.Services
                     q = q.Where(t => t.ParentId == search.pid);
                 else
                     q = q.Where(t => t.ParentId == null);
-                    // q = q.Where(t => t.ParentId == null || t.ParentId == 0);
 
             if (!sudo || search.WantsPublished)
-                q = q.Where(t => t.IsPublished);
+                q = q.Where(t => t.IsPublished && t.Audience == null);
 
             q = q.OrderBy(t => t.Name);
 

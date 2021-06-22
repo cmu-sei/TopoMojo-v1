@@ -9,10 +9,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class TransferService : _Service
     {

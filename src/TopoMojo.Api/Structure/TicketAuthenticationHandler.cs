@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo
+namespace TopoMojo.Api
 {
     public static class TicketAuthentication
     {

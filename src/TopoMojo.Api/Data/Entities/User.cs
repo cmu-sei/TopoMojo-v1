@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class User: IEntity
     {

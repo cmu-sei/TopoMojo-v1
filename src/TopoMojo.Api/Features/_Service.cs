@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public abstract class _Service
     {

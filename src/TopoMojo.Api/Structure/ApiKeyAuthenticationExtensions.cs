@@ -3,7 +3,7 @@
 
 using System;
 using Microsoft.AspNetCore.Authentication;
-using TopoMojo;
+using TopoMojo.Api;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

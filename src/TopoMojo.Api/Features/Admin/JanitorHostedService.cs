@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Services;
+using TopoMojo.Api.Services;
 
-namespace TopoMojo.Web.Services
+namespace TopoMojo.HostedServices
 {
-    public class ScheduledTasksService : IHostedService
+    public class JanitorHostedService : IHostedService
     {
         private Timer _timer;
         private readonly ILogger _logger;
@@ -19,9 +19,9 @@ namespace TopoMojo.Web.Services
         private int periodCount = 0;
         private int periodMax = 100;
 
-        public ScheduledTasksService(
+        public JanitorHostedService(
             IServiceProvider serviceProvider,
-            ILogger<ScheduledTasksService> logger
+            ILogger<JanitorHostedService> logger
         )
         {
             _services = serviceProvider;

@@ -3,10 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using TopoMojo.Data.Abstractions;
+using TopoMojo.Api.Data.Abstractions;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class Workspace : IEntity
     {
@@ -17,6 +16,7 @@ namespace TopoMojo.Data
         public string Author { get; set; }
         public string Audience { get; set; }
         public string ShareCode { get; set; }
+        public string TemplateScope { get; set; }
         public bool IsPublished { get; set; }
         public int TemplateLimit { get; set; }
         public bool HostAffinity { get; set; }

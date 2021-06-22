@@ -4,7 +4,7 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class Worker
     {

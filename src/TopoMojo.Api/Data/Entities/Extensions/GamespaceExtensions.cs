@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Data.Extensions
+namespace TopoMojo.Api.Data.Extensions
 {
     public static class GamespaceExtensions
     {

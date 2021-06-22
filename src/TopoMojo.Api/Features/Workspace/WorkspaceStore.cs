@@ -5,10 +5,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class WorkspaceStore : Store<Workspace>, IWorkspaceStore
     {
@@ -40,16 +40,18 @@ namespace TopoMojo.Data
             return await base.Retrieve(id, query => query
                 .Include(t => t.Templates)
                 .Include(t => t.Workers)
-                .Include(t => t.Gamespaces)
             );
         }
 
-        public async Task<Workspace> LoadWithGamespaces(string id)
+        public async Task<Gamespace[]> LoadActiveGamespaces(string id)
         {
-            return await base.Retrieve(id, query => query
-                .Include(t => t.Gamespaces)
-                .Include(t => t.Workers)
-            );
+            return await DbContext.Gamespaces
+                .Where(g =>
+                    g.WorkspaceId == id &&
+                    g.EndTime == DateTime.MinValue
+                )
+                .ToArrayAsync()
+            ;
         }
 
         public async Task<Workspace> LoadWithParents(string id)
@@ -85,7 +87,7 @@ namespace TopoMojo.Data
             return await DbContext.Workers.FindAsync(subjectId, id);
         }
 
-        public async Task<int> GetWorkspaceCount(string userId)
+        public async Task<int> CheckUserWorkspaceCount(string userId)
         {
             return await DbContext.Workers.CountAsync(w =>
                 w.SubjectId == userId &&
@@ -93,20 +95,26 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<bool> CheckWorkspaceLimit(string userId)
+        public async Task<bool> CheckUserWorkspaceLimit(string userId)
         {
             var user = await DbContext.Users.FindAsync(userId);
 
-            int count = await GetWorkspaceCount(userId);
+            int count = await CheckUserWorkspaceCount(userId);
 
             return count < user.WorkspaceLimit;
         }
 
-        public async Task<bool> HasGames(string id)
+        public async Task<int> CheckGamespaceCount(string id)
         {
-            return await DbContext.Gamespaces.AnyAsync(g =>
-                g.WorkspaceId == id
+            return await DbContext.Gamespaces.CountAsync(g =>
+                g.WorkspaceId == id &&
+                g.EndTime == DateTime.MinValue
             );
+        }
+
+        public async Task<bool> HasActiveGames(string id)
+        {
+            return (await CheckGamespaceCount(id)) > 0;
         }
 
         public async Task<Workspace[]> DeleteStale(DateTime staleMarker, bool published, bool dryrun = true)
@@ -163,6 +171,18 @@ namespace TopoMojo.Data
             }
 
             return await Create(entity);
+        }
+
+        public IQueryable<Template> ListScopedTemplates()
+        {
+            return DbContext.Templates
+                .Include(t => t.Workspace)
+                .Where(t =>
+                    t.ParentId == null &&
+                    t.IsPublished &&
+                    t.Audience != null
+                )
+            ;
         }
     }
 }

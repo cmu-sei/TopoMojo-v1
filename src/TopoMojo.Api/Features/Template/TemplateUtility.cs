@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class TemplateUtility
     {

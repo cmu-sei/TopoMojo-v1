@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
+namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 {
     public partial class PopulateGlobalId : Migration
     {
@@ -252,8 +252,8 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 UPDATE ""Players"" SET ""GamespaceGlobalId"" = g.""GlobalId"" FROM ""Players"" p INNER JOIN ""Gamespaces"" g ON p.""GamespaceId"" = g.""Id"";
                 UPDATE ""Templates"" SET ""ParentGlobalId"" = g.""GlobalId"" FROM ""Templates"" p LEFT JOIN ""Templates"" g ON p.""ParentId"" = g.""Id"";
                 UPDATE ""Templates"" SET ""WorkspaceGlobalId"" = g.""GlobalId"" FROM ""Templates"" p LEFT JOIN ""Templates"" g ON p.""WorkspaceId"" = g.""Id"";
-                UPDATE ""Workers"" SET ""SubjectId"" = g.""GlobalId"" FROM ""Workers"" p INNER JOIN ""Users"" g ON p.""PersonId"" = g.""Id"";
-                UPDATE ""Players"" SET ""SubjectId"" = g.""GlobalId"" FROM ""Players"" p INNER JOIN ""Users"" g ON p.""UserId"" = g.""Id"";
+                UPDATE ""Workers"" SET ""SubjectId"" = g.""GlobalId"", ""SubjectName"" = g.""Name"" FROM ""Workers"" p INNER JOIN ""Users"" g ON p.""PersonId"" = g.""Id"";
+                UPDATE ""Players"" SET ""SubjectId"" = g.""GlobalId"", ""SubjectName"" = g.""Name"" FROM ""Players"" p INNER JOIN ""Users"" g ON p.""UserId"" = g.""Id"";
             ");
 
             migrationBuilder.DropColumn(

@@ -10,10 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TopoMojo.Data;
-using TopoMojo.Web.Models;
+using TopoMojo.Api.Data;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Web.Extensions
+namespace TopoMojo.Api.Extensions
 {
     public static class DatabaseExtensions
     {
@@ -47,12 +47,12 @@ namespace TopoMojo.Web.Extensions
                     {
                         if (!dbContext.Users.Any(p => p.Id == u.GlobalId))
                         {
-                            dbContext.Users.Add(new TopoMojo.Data.User
+                            dbContext.Users.Add(new TopoMojo.Api.Data.User
                             {
                                 Name = u.Name,
                                 Id = u.GlobalId,
                                 WhenCreated = DateTime.UtcNow,
-                                Role = TopoMojo.Models.UserRole.Administrator
+                                Role = TopoMojo.Api.Models.UserRole.Administrator
                             });
                         }
                     }

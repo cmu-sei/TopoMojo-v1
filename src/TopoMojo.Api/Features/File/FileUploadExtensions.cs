@@ -8,7 +8,7 @@ using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public static class MultipartRequestExtensions
     {

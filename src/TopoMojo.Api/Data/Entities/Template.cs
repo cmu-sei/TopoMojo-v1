@@ -3,9 +3,9 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using TopoMojo.Data.Abstractions;
+using TopoMojo.Api.Data.Abstractions;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class Template : IEntity
     {
@@ -13,6 +13,7 @@ namespace TopoMojo.Data
         public string Name { get; set; }
         public System.DateTime WhenCreated { get; set; }
         public string Description { get; set; }
+        public string Audience { get; set; }
         public string Iso { get; set; }
         public string Networks { get; set; }
         public string Guestinfo { get; set; }

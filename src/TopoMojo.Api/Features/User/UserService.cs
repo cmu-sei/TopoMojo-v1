@@ -9,11 +9,11 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class UserService: _Service, IApiKeyAuthenticationService
     {
@@ -110,6 +110,8 @@ namespace TopoMojo.Services
 
                 entity.GamespaceLimit = _options.DefaultGamespaceLimit;
 
+                entity.Scope = _options.DefaultUserScope;
+
                 await _store.Create(entity);
             }
 
@@ -174,9 +176,21 @@ namespace TopoMojo.Services
 
         public async Task<string> ResolveApiKey(string key)
         {
+            if (key.IsEmpty())
+                return null;
+
             var entity = await _store.ResolveApiKey(key.ToSha256());
 
             return entity?.Id;
+        }
+
+        internal async Task<object> LoadUserKeys(string id)
+        {
+            return Mapper.Map<ApiKey[]>(
+                await _store.DbContext.ApiKeys
+                    .Where(a => a.UserId == id)
+                    .ToArrayAsync()
+            );
         }
     }
 }

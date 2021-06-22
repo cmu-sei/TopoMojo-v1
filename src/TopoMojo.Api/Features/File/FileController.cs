@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Extensions;
-using TopoMojo.Hubs;
-using TopoMojo.Services;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Hubs;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     [Authorize]
     [ApiController]
@@ -30,14 +30,24 @@ namespace TopoMojo.Web.Controllers
         {
             _monitor = monitor;
             _config = uploadOptions;
-            _workspaceService = workspaceService;
+            _svc = workspaceService;
             _uploader = uploader;
         }
 
         private readonly IFileUploadMonitor _monitor;
         private readonly FileUploadOptions _config;
-        private readonly WorkspaceService _workspaceService;
+        private readonly WorkspaceService _svc;
         private readonly IFileUploadHandler _uploader;
+        private static class Meta
+        {
+            public const string OriginalName = "original-name";
+            public const string Name = "name";
+            public const string GroupKey = "group-key";
+            public const string Size = "size";
+            public const string DestinationPath = "destination-path";
+            public const string IsoVolumeId = "UploadedFile";
+            public const string IsoFileExtension = ".iso";
+        }
 
         /// <summary>
         /// Get file upload progress.
@@ -77,20 +87,20 @@ namespace TopoMojo.Web.Controllers
                 Request,
                 metadata => {
                     string publicTarget = Guid.Empty.ToString();
-                    string original = metadata["original-name"];
-                    string filename = metadata["name"] ?? original;
-                    string key = metadata["group-key"] ?? publicTarget;
-                    long size = Int64.Parse(metadata["size"] ?? "0");
+                    string original = metadata[Meta.OriginalName];
+                    string filename = metadata[Meta.Name] ?? original;
+                    string key = metadata[Meta.GroupKey] ?? publicTarget;
+                    long size = Int64.Parse(metadata[Meta.Size] ?? "0");
 
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (key != publicTarget && !_workspaceService.CanEdit(key, Actor.Id).Result)
+                    if (key != publicTarget && !_svc.CanEdit(key, Actor.Id).Result)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);
                     string dest = BuildDestinationPath(filename, key);
-                    metadata.Add("destination-path", dest);
+                    metadata.Add(Meta.DestinationPath, dest);
                     Log("uploading", null, dest);
 
                     return System.IO.File.Create(dest);
@@ -98,7 +108,7 @@ namespace TopoMojo.Web.Controllers
                 status => {
                     if (status.Error != null)
                     {
-                        string dp = status.Metadata["destination-path"];
+                        string dp = status.Metadata[Meta.DestinationPath];
                         if (System.IO.File.Exists(dp))
                             System.IO.File.Delete(dp);
                     }
@@ -111,15 +121,15 @@ namespace TopoMojo.Web.Controllers
                 },
 
                 metadata => {
-                    string dp = metadata["destination-path"];
+                    string dp = metadata[Meta.DestinationPath];
 
-                    if (!dp.ToLower().EndsWith(".iso") && System.IO.File.Exists(dp))
+                    if (!dp.ToLower().EndsWith(Meta.IsoFileExtension) && System.IO.File.Exists(dp))
                     {
                         CDBuilder builder = new CDBuilder();
                         builder.UseJoliet = true;
-                        builder.VolumeIdentifier = "UploadedFile";
+                        builder.VolumeIdentifier = Meta.IsoVolumeId;
                         builder.AddFile(Path.GetFileName(dp), dp);
-                        builder.Build(dp + ".iso");
+                        builder.Build(dp + Meta.IsoFileExtension);
                         System.IO.File.Delete(dp);
                     }
                 }

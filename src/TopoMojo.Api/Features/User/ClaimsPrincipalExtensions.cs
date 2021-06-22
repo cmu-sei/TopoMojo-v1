@@ -5,9 +5,9 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo
+namespace TopoMojo.Api
 {
     public static class ClaimsPrincipalExtensions
     {

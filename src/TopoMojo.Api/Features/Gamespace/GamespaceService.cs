@@ -10,13 +10,15 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Data.Extensions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Data.Extensions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
+using Microsoft.Extensions.Caching.Distributed;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class GamespaceService : _Service
     {
@@ -27,7 +29,8 @@ namespace TopoMojo.Services
             IHypervisorService podService,
             IGamespaceStore gamespaceStore,
             IWorkspaceStore workspaceStore,
-            ILockService lockService
+            ILockService lockService,
+            IDistributedCache distributedCache
 
         ) : base (logger, mapper, options)
         {
@@ -36,6 +39,7 @@ namespace TopoMojo.Services
             _workspaceStore = workspaceStore;
             _locker = lockService;
             _random = new Random();
+            _distCache = distributedCache;
         }
 
         private readonly IHypervisorService _pod;
@@ -43,6 +47,7 @@ namespace TopoMojo.Services
         private readonly IWorkspaceStore _workspaceStore;
         private readonly ILockService _locker;
         private readonly Random _random;
+        private readonly IDistributedCache _distCache;
 
         public async Task<Gamespace[]> List(GamespaceSearch search, string subjectId, bool sudo, CancellationToken ct = default(CancellationToken))
         {
@@ -102,12 +107,13 @@ namespace TopoMojo.Services
             return await LoadState(gamespace, request.AllowPreview);
         }
 
-        private async Task<Data.Gamespace> _Register(GamespaceRegistration request, User actor)
+        private async Task<TopoMojo.Api.Data.Gamespace> _Register(GamespaceRegistration request, User actor)
         {
+            string playerId = request.Players.FirstOrDefault()?.SubjectId ?? actor.Id;
 
             var gamespace = await _store.LoadActiveByContext(
                 request.ResourceId,
-                request.SubjectId
+                playerId
             );
 
             if (gamespace is Data.Gamespace)
@@ -116,7 +122,7 @@ namespace TopoMojo.Services
             if (! await _store.IsBelowGamespaceLimit(actor.Id, actor.GamespaceLimit))
                 throw new ClientGamespaceLimitReached();
 
-            string lockKey = $"{request.SubjectId}{request.ResourceId}";
+            string lockKey = $"{playerId}{request.ResourceId}";
 
             var ctx = await LoadContext(request);
 
@@ -187,6 +193,7 @@ namespace TopoMojo.Services
                 Name = ctx.Workspace.Name,
                 Workspace = ctx.Workspace,
                 ManagerId = actor.Id,
+                ManagerName = actor.Name,
                 AllowReset = ctx.Request.AllowReset,
                 CleanupGraceMinutes = actor.GamespaceCleanupGraceMinutes,
                 WhenCreated = ts,
@@ -267,6 +274,8 @@ namespace TopoMojo.Services
 
         private string ResolveRandom(string key)
         {
+            byte[] buffer;
+
             string result = "";
 
             string[] seg = key.Split(':');
@@ -282,20 +291,29 @@ namespace TopoMojo.Services
                 case "hex":
                 if (seg.Length < 2 || !int.TryParse(seg[1], out count))
                     count = 8;
-                count = Math.Min(count, 64);
 
-                while (result.Length < count)
-                    result += _random.Next().ToString("x8");
+                count = Math.Min(count, 256);
+
+                buffer = new byte[count];
+
+                _random.NextBytes(buffer);
+
+                result = BitConverter.ToString(buffer).Replace("-", "");
 
                 break;
 
                 case "b64":
                 if (seg.Length < 2 || !int.TryParse(seg[1], out count))
                     count = 16;
-                count = Math.Min(count, 64);
-                byte[] buffer = new byte[count];
+
+                count = Math.Min(count, 256);
+
+                buffer = new byte[count];
+
                 _random.NextBytes(buffer);
+
                 result = Convert.ToBase64String(buffer);
+
                 break;
 
                 case "list":
@@ -342,7 +360,7 @@ namespace TopoMojo.Services
             return result;
         }
 
-        private async Task Deploy(Data.Gamespace gamespace)
+        private async Task Deploy(TopoMojo.Api.Data.Gamespace gamespace)
         {
             var tasks = new List<Task<Vm>>();
 
@@ -415,7 +433,7 @@ namespace TopoMojo.Services
             }
         }
 
-        private async Task<GameState> LoadState(Data.Gamespace gamespace, bool preview = false)
+        private async Task<GameState> LoadState(TopoMojo.Api.Data.Gamespace gamespace, bool preview = false)
         {
             var state = Mapper.Map<GameState>(gamespace);
 
@@ -478,12 +496,55 @@ namespace TopoMojo.Services
             );
         }
 
+        public async Task<JoinCode> GenerateInvitation(string id)
+        {
+            Task[] tasks;
+
+            var opts = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = new TimeSpan(0, 30, 0)
+            };
+
+            // remove existing code/key
+            string codekey = $"in:{id}";
+
+            string code = await _distCache.GetStringAsync(codekey);
+
+            if (code.NotEmpty())
+            {
+                tasks = new Task[] {
+                    _distCache.RemoveAsync(code),
+                    _distCache.RemoveAsync(codekey)
+                };
+
+                await Task.WhenAll(tasks);
+            }
+
+            // store new code/key
+            code = Guid.NewGuid().ToString("n");
+
+            tasks = new Task[] {
+                _distCache.SetStringAsync(code, id, opts),
+                _distCache.SetStringAsync(codekey, code, opts)
+            };
+
+            await Task.WhenAll(tasks);
+
+            return new JoinCode
+            {
+                Id = id,
+                Code = code
+            };
+        }
+
         public async Task Enlist(string code, User actor)
         {
-            var gamespace = await _store.LoadFromInvitation(code);
+            string id = await _distCache.GetStringAsync(code);
 
-            if (gamespace == null)
+            if (id.IsEmpty())
                 throw new InvalidInvitation();
+
+            var gamespace = await _store.Load(id);
 
             if (gamespace.Players.Any(m => m.SubjectId == actor.Id))
                 return;
@@ -498,12 +559,9 @@ namespace TopoMojo.Services
 
         }
 
-        public async Task Delist(Player player)
+        public async Task Delist(string id, string subjectId)
         {
-            await _store.DeletePlayer(
-                player.GamespaceId,
-                player.SubjectId
-            );
+            await _store.DeletePlayer(id, subjectId);
         }
 
         public async Task<ChallengeView> Grade(string id, SectionSubmission submission)
@@ -651,9 +709,9 @@ namespace TopoMojo.Services
             return await _store.CanInteract(id, actorId);
         }
 
-        public async Task<bool> HasScope(string id, string scope)
+        public async Task<bool> HasValidUserScope(string id, string scope)
         {
-            return await _store.HasScope(id, scope);
+            return await _store.HasValidUserScope(id, scope);
         }
     }
 }

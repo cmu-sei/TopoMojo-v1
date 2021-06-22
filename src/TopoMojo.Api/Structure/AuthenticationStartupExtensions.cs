@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
-using TopoMojo;
+using TopoMojo.Api;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

@@ -1,12 +1,18 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
+namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     public partial class AddCompositeKeys : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(@"
+                DELETE FROM ""Players"" WHERE ""SubjectId"" is null;
+                DELETE FROM ""Workers"" WHERE ""SubjectId"" is null;
+            ");
+
             migrationBuilder.DropForeignKey(
                 name: "FK_ApiKey_Users_UserId",
                 table: "ApiKey");
@@ -66,6 +72,11 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 newName: "EndTime");
 
             migrationBuilder.RenameColumn(
+                name: "ShareCode",
+                table: "Gamespaces",
+                newName: "ManagerName");
+
+            migrationBuilder.RenameColumn(
                 name: "ClientId",
                 table: "Gamespaces",
                 newName: "ManagerId");
@@ -78,20 +89,27 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
             migrationBuilder.AddColumn<bool>(
                 name: "HostAffinity",
                 table: "Workspaces",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
+
+            migrationBuilder.AddColumn<string>(
+                name: "TemplateScope",
+                table: "Workspaces",
+                type: "character varying(64)",
+                maxLength: 64,
+                nullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "WorkspaceId",
                 table: "Workers",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: false,
                 defaultValue: "",
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36,
                 oldNullable: true);
@@ -99,57 +117,64 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectName",
                 table: "Workers",
-                type: "nvarchar(64)",
+                type: "character varying(64)",
                 maxLength: 64,
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
+                oldType: "text",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectId",
                 table: "Workers",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: false,
                 defaultValue: "",
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
+                oldType: "text",
                 oldNullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Audience",
+                table: "Templates",
+                type: "character varying(64)",
+                maxLength: 64,
+                nullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectName",
                 table: "Players",
-                type: "nvarchar(64)",
+                type: "character varying(64)",
                 maxLength: 64,
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
+                oldType: "text",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectId",
                 table: "Players",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: false,
                 defaultValue: "",
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
+                oldType: "text",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "GamespaceId",
                 table: "Players",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: false,
                 defaultValue: "",
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36,
                 oldNullable: true);
@@ -157,14 +182,14 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
             migrationBuilder.AddColumn<int>(
                 name: "CleanupGraceMinutes",
                 table: "Gamespaces",
-                type: "int",
+                type: "integer",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<string>(
                 name: "Hash",
                 table: "ApiKeys",
-                type: "nchar(64)",
+                type: "character(64)",
                 fixedLength: true,
                 maxLength: 64,
                 nullable: true);
@@ -172,13 +197,13 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
             migrationBuilder.AddColumn<string>(
                 name: "Name",
                 table: "ApiKeys",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "WhenCreated",
                 table: "ApiKeys",
-                type: "datetime2",
+                type: "timestamp without time zone",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
@@ -274,6 +299,14 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 table: "Workspaces");
 
             migrationBuilder.DropColumn(
+                name: "TemplateScope",
+                table: "Workspaces");
+
+            migrationBuilder.DropColumn(
+                name: "Audience",
+                table: "Templates");
+
+            migrationBuilder.DropColumn(
                 name: "CleanupGraceMinutes",
                 table: "Gamespaces");
 
@@ -299,6 +332,11 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
                 newName: "SessionLimit");
 
             migrationBuilder.RenameColumn(
+                name: "ManagerName",
+                table: "Gamespaces",
+                newName: "ShareCode");
+
+            migrationBuilder.RenameColumn(
                 name: "ManagerId",
                 table: "Gamespaces",
                 newName: "ClientId");
@@ -316,93 +354,95 @@ namespace TopoMojo.Web.Data.Migrations.SqlServer.TopoMojoDb
             migrationBuilder.AddColumn<string>(
                 name: "DocumentUrl",
                 table: "Workspaces",
-                type: "nvarchar(128)",
+                type: "character varying(128)",
                 maxLength: 128,
                 nullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectName",
                 table: "Workers",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(64)",
+                oldType: "character varying(64)",
                 oldMaxLength: 64,
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "WorkspaceId",
                 table: "Workers",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectId",
                 table: "Workers",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36);
 
             migrationBuilder.AddColumn<int>(
                 name: "Id",
                 table: "Workers",
-                type: "int",
+                type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0)
+                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             migrationBuilder.AddColumn<string>(
                 name: "CallbackUrl",
                 table: "Users",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectName",
                 table: "Players",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(64)",
+                oldType: "character varying(64)",
                 oldMaxLength: 64,
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "GamespaceId",
                 table: "Players",
-                type: "nchar(36)",
+                type: "character(36)",
                 fixedLength: true,
                 maxLength: 36,
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36);
 
             migrationBuilder.AlterColumn<string>(
                 name: "SubjectId",
                 table: "Players",
-                type: "nvarchar(max)",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nchar(36)",
+                oldType: "character(36)",
                 oldFixedLength: true,
                 oldMaxLength: 36);
 
             migrationBuilder.AddColumn<int>(
                 name: "Id",
                 table: "Players",
-                type: "int",
+                type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0)
+                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_Workers",

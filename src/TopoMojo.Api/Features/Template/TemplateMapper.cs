@@ -3,10 +3,10 @@
 
 using System.Linq;
 using AutoMapper;
-using TopoMojo.Data.Extensions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Extensions;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api
 {
     public class TemplateProfile : Profile
     {

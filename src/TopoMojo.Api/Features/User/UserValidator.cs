@@ -1,10 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo
+namespace TopoMojo.Api.Validators
 {
     public class UserValidator: IModelValidator
     {
@@ -22,7 +23,15 @@ namespace TopoMojo
             if (model is Entity)
                 return _validate(model as Entity);
 
+            if (model is UserSearch)
+                return _validate(model as UserSearch);
+
             throw new System.NotImplementedException();
+        }
+
+        private async Task _validate(UserSearch model)
+        {
+            await Task.CompletedTask;
         }
 
         private async Task _validate(Entity model)

@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Hubs;
+using TopoMojo.Api.Hubs;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Validators;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     [Authorize]
     [ApiController]
@@ -70,6 +71,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/workspace/{id}")]
+        [Authorize]
         public async Task<ActionResult<Workspace>> Load(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -144,7 +146,7 @@ namespace TopoMojo.Web.Controllers
                 () => _svc.CanEdit(model.Id, Actor.Id).Result
             );
 
-            Workspace workspace = await _svc.Update(model);
+            Workspace workspace = await _svc.Update(model, Actor.IsAdmin);
 
             await Hub.Clients
                 .Group(workspace.Id)
@@ -185,6 +187,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/workspace/{id}/isos")]
+        [Authorize]
         public async Task<ActionResult<VmOptions>> Isos(string id)
         {
             await Validate(new Entity { Id = id });
@@ -205,6 +208,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/workspace/{id}/nets")]
+        [Authorize]
         public async Task<ActionResult<VmOptions>> Nets(string id)
         {
             await Validate(new Entity { Id = id });
@@ -224,9 +228,9 @@ namespace TopoMojo.Web.Controllers
         /// </summary>
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
-        [HttpGet("api/workspace/{id}/games")]
+        [HttpGet("api/workspace/{id}/stats")]
         [Authorize]
-        public async Task<ActionResult<GameState[]>> LoadGames(string id)
+        public async Task<ActionResult<WorkspaceStats>> GetStats(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -236,7 +240,28 @@ namespace TopoMojo.Web.Controllers
             );
 
             return Ok(
-                await _svc.GetGames(id)
+                await _svc.GetStats(id)
+            );
+        }
+
+        /// <summary>
+        /// Load templates availabe to workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <returns></returns>
+        [HttpGet("api/workspace/{id}/templates")]
+        [Authorize]
+        public async Task<ActionResult<TemplateSummary[]>> LoadTemplates(string id)
+        {
+            await Validate(new Entity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanEdit(id, Actor.Id).Result
+            );
+
+            return Ok(
+                await _svc.GetScopedTemplates(id)
             );
         }
 
@@ -251,7 +276,7 @@ namespace TopoMojo.Web.Controllers
         /// <returns></returns>
         [HttpDelete("api/workspace/{id}/games")]
         [Authorize]
-        public async Task<ActionResult> DeleteGames(string id)
+        public async Task<ActionResult<WorkspaceStats>> DeleteGames(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -273,7 +298,9 @@ namespace TopoMojo.Web.Controllers
 
             await Task.WhenAll(tasklist.ToArray());
 
-            return Ok();
+            return Ok(
+                await GetStats(id)
+            );
         }
 
         /// <summary>
@@ -283,7 +310,7 @@ namespace TopoMojo.Web.Controllers
         /// <returns></returns>
         [HttpPut("api/workspace/{id}/invite")]
         [Authorize]
-        public async Task<ActionResult<WorkspaceInvitation>> Invite(string id)
+        public async Task<ActionResult<JoinCode>> Invite(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -298,46 +325,13 @@ namespace TopoMojo.Web.Controllers
         }
 
         /// <summary>
-        /// Accept an invitation to a workspace.
+        /// Get a workspace's challenge spec
         /// </summary>
-        /// <remarks>
-        /// Any user that submits the invitation code is
-        /// added as member of the workspace.
-        /// </remarks>
-        /// <param name="code">Invitation Code</param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPost("api/worker/{code}")]
+        [HttpGet("api/challenge/{id}")]
         [Authorize]
-        public async Task<ActionResult> Enlist(string code)
-        {
-            return Ok(
-                await _svc.Enlist(code, Actor.Id, Actor.Name)
-            );
-        }
-
-        /// <summary>
-        /// Removes a worker from the workspace.
-        /// </summary>
-        /// <param name="model">Worker</param>
-        /// <returns></returns>
-        [HttpDelete("api/worker")]
-        public async Task<ActionResult> Delist([FromBody] Worker model)
-        {
-            await Validate(model);
-
-            AuthorizeAny(
-                () => Actor.IsAdmin,
-                () => _svc.CanManage(model.WorkspaceId, Actor.Id).Result
-            );
-
-            await _svc.Delist(model.WorkspaceId, Actor.Id, Actor.IsAdmin);
-
-            return Ok();
-        }
-
-        [HttpGet("api/workspace/{id}/challenge")]
-        [Authorize]
-        public async Task<IActionResult> GetChallenge([FromRoute] string id)
+        public async Task<ActionResult<ChallengeSpec>> GetChallengeSpec([FromRoute] string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -351,10 +345,18 @@ namespace TopoMojo.Web.Controllers
             );
         }
 
-        [HttpPut("api/workspace/{id}/challenge")]
+        /// <summary>
+        /// Update a workspace's challenge spec
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPut("api/challenge/{id}")]
         [Authorize]
-        public async Task<IActionResult> ChallengeV2([FromRoute]string id, [FromBody] ChallengeSpec model)
+        public async Task<IActionResult> UpdateChallengeSpec([FromRoute]string id, [FromBody] ChallengeSpec model)
         {
+            await Validate(new Entity{ Id = id });
+
             await Validate(model);
 
             AuthorizeAny(
@@ -368,6 +370,48 @@ namespace TopoMojo.Web.Controllers
 
             return Ok();
         }
+
+        /// <summary>
+        /// Accept an invitation to a workspace.
+        /// </summary>
+        /// <remarks>
+        /// Any user that submits the invitation code is
+        /// added as member of the workspace.
+        /// </remarks>
+        /// <param name="code">Invitation Code</param>
+        /// <returns></returns>
+        [HttpPost("api/worker/{code}")]
+        [Authorize]
+        public async Task<ActionResult<WorkspaceSummary>> Enlist(string code)
+        {
+            return Ok(
+                await _svc.Enlist(code, Actor.Id, Actor.Name)
+            );
+        }
+
+        /// <summary>
+        /// Removes a worker from the workspace.
+        /// </summary>
+        /// <param name="id">Workspace Id</param>
+        /// <param name="sid">Subject Id of target member</param>
+        /// <returns></returns>
+        [HttpDelete("api/workspace/{id}/worker/{sid}")]
+        [Authorize]
+        public async Task<ActionResult> Delist([FromRoute] string id, string sid)
+        {
+            await Validate(new Entity{ Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin,
+                () => _svc.CanManage(id, Actor.Id).Result
+            );
+
+            await _svc.Delist(id, sid, Actor.IsAdmin);
+
+            return Ok();
+        }
+
+
     }
 
 }

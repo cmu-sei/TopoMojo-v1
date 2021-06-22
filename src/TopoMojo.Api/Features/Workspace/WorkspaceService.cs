@@ -10,12 +10,13 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Models;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class WorkspaceService : _Service
     {
@@ -96,7 +97,7 @@ namespace TopoMojo.Services
 
         public async Task<Boolean> CheckWorkspaceLimit(string id)
         {
-            return await _store.CheckWorkspaceLimit(id);
+            return await _store.CheckUserWorkspaceLimit(id);
         }
 
         public async Task<Workspace> Load(string id)
@@ -118,10 +119,6 @@ namespace TopoMojo.Services
 
             workspace.TemplateLimit = _options.DefaultTemplateLimit;
 
-            // workspace.ShareCode = Guid.NewGuid().ToString("N");
-
-            // workspace.Author = User.Name;
-
             workspace.LastActivity = DateTime.UtcNow;
 
             if (workspace.Challenge.IsEmpty())
@@ -136,7 +133,6 @@ namespace TopoMojo.Services
             });
 
             workspace = await _store.Create(workspace);
-            // await _workspaceStore.Update(workspace);
 
             // TODO: consider handling document here
 
@@ -154,12 +150,22 @@ namespace TopoMojo.Services
         /// Update an existing workspace.
         /// </summary>
         /// <param name="model"></param>
+        /// <param name="sudo"></param>
         /// <returns></returns>
-        public async Task<Workspace> Update(ChangedWorkspace model)
+        public async Task<Workspace> Update(ChangedWorkspace model, bool sudo = false)
         {
             var entity = await _store.Retrieve(model.Id);
 
-            Mapper.Map<ChangedWorkspace, Data.Workspace>(model, entity);
+            if (sudo.Equals(false))
+                Mapper.Map<RestrictedChangedWorkspace, Data.Workspace>(
+                    Mapper.Map<RestrictedChangedWorkspace>(model),
+                    entity
+                );
+            else
+                Mapper.Map<ChangedWorkspace, Data.Workspace>(
+                    model,
+                    entity
+                );
 
             await _store.Update(entity);
 
@@ -230,7 +236,7 @@ namespace TopoMojo.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<WorkspaceInvitation> Invite(string id)
+        public async Task<JoinCode> Invite(string id)
         {
             var workspace = await _store.Retrieve(id);
 
@@ -238,7 +244,23 @@ namespace TopoMojo.Services
 
             await _store.Update(workspace);
 
-            return Mapper.Map<WorkspaceInvitation>(workspace);
+            return Mapper.Map<JoinCode>(workspace);
+        }
+
+        public async Task<TemplateSummary[]> GetScopedTemplates(string id)
+        {
+            var workspace = await _store.Retrieve(id);
+
+            if (workspace.TemplateScope.IsEmpty())
+                return new TemplateSummary[] {};
+
+            var templates = (await _store.ListScopedTemplates().ToArrayAsync())
+                .Where(t => t.Audience.HasAnyToken(workspace.TemplateScope))
+                .ToArray()
+            ;
+
+            return Mapper.Map<TemplateSummary[]>(templates);
+
         }
 
         /// <summary>
@@ -309,11 +331,19 @@ namespace TopoMojo.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<GameState[]> GetGames(string id)
+        public async Task<WorkspaceStats> GetStats(string id)
         {
-            var workspace = await _store.LoadWithGamespaces(id);
+            var workspace = await _store.Retrieve(id);
 
-            return Mapper.Map<GameState[]>(workspace.Gamespaces);
+            int activeGameCount = await _store.CheckGamespaceCount(id);
+
+            return new WorkspaceStats
+            {
+                Id = id,
+                LastActivity = workspace.LastActivity,
+                LaunchCount = workspace.LaunchCount,
+                ActiveGamespaceCount = activeGameCount
+            };
         }
 
         /// <summary>
@@ -323,16 +353,18 @@ namespace TopoMojo.Services
         /// <returns></returns>
         public async Task<GameState[]> KillGames(string id)
         {
-            var workspace = await _store.LoadWithGamespaces(id);
+            var gamespaces = await _store.LoadActiveGamespaces(id);
 
-            foreach (var gamespace in workspace.Gamespaces)
+            foreach (var gamespace in gamespaces)
             {
                 await _pod.DeleteAll(gamespace.Id);
 
                 await _gamespaceStore.Delete(gamespace.Id);
             }
 
-            return Mapper.Map<GameState[]>(workspace.Gamespaces);
+            return Mapper.Map<GameState[]>(
+                Mapper.Map<GameStateSummary[]>(gamespaces)
+            );
         }
     }
 }

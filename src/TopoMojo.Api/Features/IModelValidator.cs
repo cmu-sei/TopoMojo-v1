@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace TopoMojo
+namespace TopoMojo.Api.Validators
 {
     public interface IModelValidator
     {

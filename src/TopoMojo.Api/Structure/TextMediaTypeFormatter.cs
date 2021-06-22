@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Formatters;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Api
 {
     public class TextMediaTypeFormatter : IInputFormatter
     {

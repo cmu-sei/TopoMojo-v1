@@ -1,11 +1,12 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Exceptions;
 
-namespace TopoMojo
+namespace TopoMojo.Api.Validators
 {
     public class WorkspaceValidator : IModelValidator
     {

@@ -3,7 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class TopoMojoDbContext : DbContext
     {
@@ -22,6 +22,7 @@ namespace TopoMojo.Data
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Author).HasMaxLength(64);
                 b.Property(w => w.Audience).HasMaxLength(64);
+                b.Property(w => w.TemplateScope).HasMaxLength(64);
                 b.Property(w => w.Description).HasMaxLength(255);
             });
 
@@ -37,6 +38,7 @@ namespace TopoMojo.Data
                 b.Property(g => g.WorkspaceId).IsFixedLength().HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Description).HasMaxLength(255);
+                b.Property(w => w.Audience).HasMaxLength(64);
                 b.Property(w => w.Guestinfo).HasMaxLength(1024);
                 b.Property(w => w.Networks).HasMaxLength(64);
                 b.Property(w => w.Detail).HasMaxLength(4096);

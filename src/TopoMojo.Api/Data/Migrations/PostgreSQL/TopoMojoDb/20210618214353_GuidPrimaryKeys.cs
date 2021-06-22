@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
+namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     public partial class GuidPrimaryKeys : Migration
     {

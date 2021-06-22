@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TopoMojo.Data.Abstractions
+namespace TopoMojo.Api.Data.Abstractions
 {
     public interface IStore<TEntity>
         where TEntity : class, IEntity

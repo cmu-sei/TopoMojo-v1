@@ -2,14 +2,16 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System.Linq;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public class Template
     {
         public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string Audience { get; set; }
         public string Networks { get; set; }
         public string Iso { get; set; }
         public string Guestinfo { get; set; }
@@ -44,6 +46,7 @@ namespace TopoMojo.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string Audience { get; set; }
         public string Networks { get; set; }
         public string Guestinfo { get; set; }
         public string Detail { get; set; }
@@ -55,6 +58,7 @@ namespace TopoMojo.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string Audience { get; set; }
         public string WorkspaceId { get; set; }
         public string WorkspaceName { get; set; }
         public string ParentId { get; set; }
@@ -85,8 +89,11 @@ namespace TopoMojo.Models
     {
         public const string PublishFilter = "published";
         public const string ParentFilter = "parents";
+        public bool WantsAudience => aud.NotEmpty();
         public bool WantsPublished => Filter.Contains(PublishFilter);
         public bool WantsParents => Filter.Contains(ParentFilter);
+
+        public string aud { get; set; }
         public string pid { get; set; }
     }
 }

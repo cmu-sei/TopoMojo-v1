@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public interface IFileUploadMonitor
     {

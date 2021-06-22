@@ -2,9 +2,9 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System.Threading.Tasks;
-using TopoMojo.Models;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Data.Abstractions
+namespace TopoMojo.Api.Data.Abstractions
 {
     public interface IUserStore : IStore<User>
     {

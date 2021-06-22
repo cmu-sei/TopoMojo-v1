@@ -38,6 +38,4 @@ It also starts with an in-memory database; not usable for production,
 but nice for quick startup.  Use the appsettings file to switch to
 PostgreSQL or SqlServer.
 
-## Roadmap
-* Add Administrator documentation
-* Support oVirt/kvm hypervisor
+The end of `appsettings.conf` has an example `appsettings.Development.conf`.

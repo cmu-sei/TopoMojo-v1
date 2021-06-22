@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
+namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     public partial class PopulateGlobalId : Migration
     {
@@ -192,8 +192,8 @@ namespace TopoMojo.Web.Data.Migrations.PostgreSQL.TopoMojoDb
                 UPDATE ""Players"" w SET ""GamespaceGlobalId"" = a.""GlobalId"" FROM ""Gamespaces"" a WHERE w.""GamespaceId"" = a.""Id"";
                 UPDATE ""Templates"" w SET ""ParentGlobalId"" = a.""GlobalId"" FROM ""Templates"" a WHERE w.""ParentId"" = a.""Id"";
                 UPDATE ""Templates"" w SET ""WorkspaceGlobalId"" = a.""GlobalId"" FROM ""Workspaces"" a WHERE w.""WorkspaceId"" = a.""Id"";
-                UPDATE ""Workers"" w SET ""SubjectId"" = a.""GlobalId"" FROM ""Users"" a WHERE w.""PersonId"" = a.""Id"";
-                UPDATE ""Players"" w SET ""SubjectId"" = a.""GlobalId"" FROM ""Users"" a WHERE w.""UserId"" = a.""Id"";
+                UPDATE ""Workers"" w SET ""SubjectId"" = a.""GlobalId"", ""SubjectName"" = a.""Name"" FROM ""Users"" a WHERE w.""PersonId"" = a.""Id"";
+                UPDATE ""Players"" w SET ""SubjectId"" = a.""GlobalId"", ""SubjectName"" = a.""Name"" FROM ""Users"" a WHERE w.""UserId"" = a.""Id"";
             ");
 
             migrationBuilder.DropColumn(

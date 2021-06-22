@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Hubs
 {
     public class SubjectProvider : IUserIdProvider
     {

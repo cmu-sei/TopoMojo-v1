@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
 
 namespace TopoMojo
 {

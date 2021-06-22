@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace TopoMojo.Services
+namespace TopoMojo.Api.Services
 {
     public class ServiceHostWrapper<T> : IHostedService
         where T : class

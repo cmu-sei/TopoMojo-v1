@@ -5,10 +5,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Data.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Data.Extensions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class GamespaceStore : Store<Gamespace>, IGamespaceStore
     {
@@ -62,14 +63,6 @@ namespace TopoMojo.Data
             );
         }
 
-        public async Task<Gamespace> LoadFromInvitation(string code)
-        {
-            return await DbSet
-                .Where(g => g.ShareCode == code)
-                .SingleOrDefaultAsync()
-            ;
-        }
-
         public async Task<Gamespace> LoadActiveByContext(string subjectId, string workspaceId)
         {
             string id = await DbSet.Where(g =>
@@ -112,11 +105,11 @@ namespace TopoMojo.Data
             return gamespace.ManagerId.Equals(subjectId);
         }
 
-        public async Task<bool> HasScope(string workspaceId, string scope)
+        public async Task<bool> HasValidUserScope(string workspaceId, string scope)
         {
             var workspace = await DbContext.Workspaces.FindAsync(workspaceId);
 
-            return workspace.HasScope(scope);
+            return workspace.Audience.HasAnyToken(scope);
         }
 
         public async Task<bool> IsBelowGamespaceLimit(string subjectId, int limit)

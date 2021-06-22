@@ -3,7 +3,7 @@
 
 using System.Threading.Tasks;
 
-namespace TopoMojo.Data.Abstractions
+namespace TopoMojo.Api.Data.Abstractions
 {
     public interface ITemplateStore : IStore<Template>
     {

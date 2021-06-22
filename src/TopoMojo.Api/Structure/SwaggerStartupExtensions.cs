@@ -7,7 +7,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi.Models;
-using TopoMojo;
+using TopoMojo.Api;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

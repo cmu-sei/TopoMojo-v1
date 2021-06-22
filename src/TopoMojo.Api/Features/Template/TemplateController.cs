@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Hubs;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Validators;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     [ApiController]
     [Authorize]
@@ -85,6 +86,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut("api/template")]
+        [Authorize]
         public async Task<ActionResult> Update([FromBody]ChangedTemplate model)
         {
             await Validate(model);
@@ -107,6 +109,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("api/template/{id}")]
+        [Authorize]
         public async Task<ActionResult> Delete(string id)
         {
             await Validate(new Entity { Id = id });
@@ -129,6 +132,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template")]
+        [Authorize]
         public async Task<ActionResult<Template>> Link([FromBody]TemplateLink model)
         {
             await Validate(model);
@@ -151,6 +155,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template/unlink")]
+        [Authorize]
         public async Task<ActionResult<Template>> UnLink([FromBody]TemplateLink model)
         {
             await Validate(model);
@@ -173,7 +178,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/template-detail/{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<TemplateDetail>> LoadDetail(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -191,7 +196,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template-detail")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
         {
             await Validate(model);
@@ -209,7 +214,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut("api/template-detail")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult> Configure([FromBody]TemplateDetail model)
         {
             await Validate(model);

@@ -3,10 +3,10 @@
 
 using System;
 using System.Linq;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public static class GamespaceExtension
     {

@@ -11,11 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Hubs;
-using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Validators;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
     [Authorize]
     [ApiController]
@@ -24,9 +25,10 @@ namespace TopoMojo.Web.Controllers
         public UserController(
             ILogger<AdminController> logger,
             IHubContext<AppHub, IHubEvent> hub,
+            UserValidator validator,
             UserService userService,
             IDistributedCache distributedCache
-        ) : base(logger, hub)
+        ) : base(logger, hub, validator)
         {
             _svc = userService;
             _distCache = distributedCache;
@@ -48,7 +50,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpGet("api/users")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<User[]>> List([FromQuery]UserSearch model, CancellationToken ct)
         {
             await Validate(model);
@@ -71,6 +73,9 @@ namespace TopoMojo.Web.Controllers
         public async Task<ActionResult<User>> Load(string id)
         {
             id = id ?? Actor.Id;
+
+            if (id == Actor.Id)
+                return Ok(Actor);
 
             await Validate(new Entity{ Id = id });
 
@@ -130,7 +135,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/user")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<User>> AddOrUpdate([FromBody]User model)
         {
             AuthorizeAny(
@@ -163,12 +168,32 @@ namespace TopoMojo.Web.Controllers
         }
 
         /// <summary>
+        /// Get a user's api key records (no values)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("api/user/{id}/keys")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
+        public async Task<ActionResult<ApiKey[]>> GetUserKeys(string id)
+        {
+            await Validate(new Entity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin
+            );
+
+            return Ok(
+                await _svc.LoadUserKeys(id)
+            );
+        }
+
+        /// <summary>
         /// Generate an ApiKey
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPost("api/apikey/{id}")]
-        [Authorize("AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<ApiKeyResult>> CreateApiKey(string id)
         {
             await Validate(new Entity { Id = id });
@@ -188,7 +213,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="keyId"></param>
         /// <returns></returns>
         [HttpDelete("api/apikey/{id}")]
-        [Authorize("AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult> DeleteApiKey(string keyId)
         {
 
@@ -225,7 +250,7 @@ namespace TopoMojo.Web.Controllers
         /// </remarks>
         /// <returns></returns>
         [HttpGet("/api/user/ticket")]
-        [Authorize(Policy = "Players")]
+        [Authorize]
         public async Task<IActionResult> GetTicket()
         {
             string token = Guid.NewGuid().ToString("n");
@@ -248,7 +273,7 @@ namespace TopoMojo.Web.Controllers
         /// </remarks>
         /// <returns></returns>
         [HttpPost("/api/user/login")]
-        [Authorize(Policy = "Players")]
+        [Authorize]
         public async Task<IActionResult> GetAuthCookie()
         {
             if (User.Identity.AuthenticationType == AppConstants.CookieScheme)

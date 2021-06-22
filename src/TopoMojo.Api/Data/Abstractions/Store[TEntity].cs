@@ -1,11 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TopoMojo.Data.Abstractions;
+using TopoMojo.Api.Data.Abstractions;
 using System;
 using System.Collections.Generic;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class Store<TEntity> : IStore<TEntity>
         where TEntity : class, IEntity

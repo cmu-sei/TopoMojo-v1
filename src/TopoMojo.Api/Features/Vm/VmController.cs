@@ -9,15 +9,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Extensions;
-using TopoMojo.Hubs;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Hubs;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
+using TopoMojo.Api.Validators;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
 
-namespace TopoMojo.Web.Controllers
+namespace TopoMojo.Api.Controllers
 {
-    [Authorize(Policy = "Players")]
+    [Authorize]
     [ApiController]
     public class VmController : _Controller
     {
@@ -48,7 +50,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpGet("api/vms")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<Vm[]>> Find([FromQuery]string filter)
         {
             AuthorizeAll();
@@ -386,7 +388,7 @@ namespace TopoMojo.Web.Controllers
         /// <param name="host"></param>
         /// <returns></returns>
         [HttpPost("api/pod/{host}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> ReloadHost(string host)
         {

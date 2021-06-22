@@ -3,7 +3,7 @@
 
 using System;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public class Entity
     {

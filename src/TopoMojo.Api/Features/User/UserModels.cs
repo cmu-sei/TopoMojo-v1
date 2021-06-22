@@ -4,7 +4,7 @@
 using System;
 using System.Linq;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public enum UserRole
     {
@@ -47,6 +47,7 @@ namespace TopoMojo.Models
         public int WorkspaceLimit { get; set; }
         public int GamespaceLimit { get; set; }
         public int GamespaceMaxMinutes { get; set; }
+        public int GamespaceCleanupGraceMinutes { get; set; }
         public UserRole Role { get; set; }
     }
 

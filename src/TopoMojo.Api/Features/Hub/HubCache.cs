@@ -3,7 +3,7 @@
 
 using System.Collections.Concurrent;
 
-namespace TopoMojo.Web.Services
+namespace TopoMojo.Api.Hubs
 {
     public class HubCache
     {

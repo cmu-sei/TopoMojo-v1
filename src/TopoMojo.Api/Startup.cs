@@ -10,11 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TopoMojo.Web.Controllers;
-using TopoMojo.Web.Extensions;
-using TopoMojo.Web.Services;
+using TopoMojo.HostedServices;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Api
 {
     public class Startup
     {
@@ -76,11 +74,10 @@ namespace TopoMojo.Web
             services.AddFileUpload(Settings.FileUpload);
 
             if (Environment.IsDevelopment().Equals(false))
-                services.AddHostedService<ScheduledTasksService>();
+                services.AddHostedService<JanitorHostedService>();
 
             // Configure TopoMojo
             services
-                .AddIdentityResolver()
                 .AddTopoMojo(Settings.Core)
                 .AddTopoMojoData(Settings.Database.Provider, Settings.Database.ConnectionString)
                 .AddTopoMojoHypervisor(() => Settings.Pod)

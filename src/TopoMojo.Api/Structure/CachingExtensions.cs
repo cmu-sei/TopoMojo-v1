@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using Microsoft.AspNetCore.DataProtection;
 using StackExchange.Redis;
-using TopoMojo;
+using TopoMojo.Api;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

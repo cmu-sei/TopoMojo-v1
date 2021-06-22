@@ -6,7 +6,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Api
 {
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]

@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Data.Extensions;
-using TopoMojo.Extensions;
-using TopoMojo.Models;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Data.Extensions;
+using TopoMojo.Api.Extensions;
+using TopoMojo.Api.Models;
 
-namespace TopoMojo.Data
+namespace TopoMojo.Api.Data
 {
     public class UserStore : Store<User>, IUserStore
     {

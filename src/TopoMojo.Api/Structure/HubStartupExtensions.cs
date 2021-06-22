@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
-using TopoMojo.Web.Controllers;
-using TopoMojo.Web.Services;
+using TopoMojo.Api.Hubs;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

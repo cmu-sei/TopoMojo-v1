@@ -1,10 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Extensions;
 using TopoMojo.Hypervisor;
 
-namespace TopoMojo
+namespace TopoMojo.Api.Validators
 {
         public class VmValidator : IModelValidator
     {
@@ -38,7 +39,7 @@ namespace TopoMojo
                 ? model.Id.Tag()
                 : (await _pod.Load(model.Id))?.Name.Tag();
 
-            if (await _store.HasGames(isolationId))
+            if (await _store.HasActiveGames(isolationId))
                 throw new WorkspaceNotIsolated();
 
             await Task.CompletedTask;

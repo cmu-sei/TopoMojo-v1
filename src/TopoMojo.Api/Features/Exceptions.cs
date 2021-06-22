@@ -3,7 +3,7 @@
 
 using System;
 
-namespace TopoMojo
+namespace TopoMojo.Api.Exceptions
 {
     public class ClientGamespaceLimitReached : Exception { }
     public class PlayerGamespaceLimitReached : Exception { }

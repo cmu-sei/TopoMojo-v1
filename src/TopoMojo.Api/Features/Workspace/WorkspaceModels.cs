@@ -2,9 +2,9 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using TopoMojo.Extensions;
+using TopoMojo.Api.Extensions;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public class Workspace
     {
@@ -14,7 +14,7 @@ namespace TopoMojo.Models
         public string Author { get; set; }
         public string Audience { get; set; }
         public DateTime WhenCreated { get; set; }
-        public int GamespaceCount { get; set; }
+        public int TemplateLimit { get; set; }
         public string Challenge { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
@@ -41,6 +41,15 @@ namespace TopoMojo.Models
         public string Document { get; set; }
     }
 
+    public class RestrictedChangedWorkspace
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Author { get; set; }
+        public string Audience { get; set; }
+    }
+
     public class ChangedWorkspace
     {
         public string Id { get; set; }
@@ -48,13 +57,14 @@ namespace TopoMojo.Models
         public string Description { get; set; }
         public string Author { get; set; }
         public string Audience { get; set; }
+        public string TemplateScope { get; set; }
         public int TemplateLimit { get; set; }
     }
 
-    public class WorkspaceInvitation
+    public class JoinCode
     {
         public string Id { get; set; }
-        public string ShareCode { get; set; }
+        public string Code { get; set; }
     }
 
     public class Worker
@@ -77,5 +87,13 @@ namespace TopoMojo.Models
     {
         public string Scope { get; set; }
         public string Audience { get; set; }
+    }
+
+    public class WorkspaceStats
+    {
+        public string Id { get; set; }
+        public int ActiveGamespaceCount { get; set; }
+        public int LaunchCount { get; set; }
+        public DateTime LastActivity { get; set; }
     }
 }

@@ -1,8 +1,8 @@
 // Copyright 2021 Carnegie Mellon University.
 // Released under a MIT (SEI) license. See LICENSE.md in the project root.
 
-using TopoMojo;
-using TopoMojo.Services;
+using TopoMojo.Api;
+using TopoMojo.Api.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

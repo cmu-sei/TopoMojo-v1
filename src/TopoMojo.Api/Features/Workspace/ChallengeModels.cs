@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TopoMojo.Models
+namespace TopoMojo.Api.Models
 {
     public class ChallengeSpec
     {

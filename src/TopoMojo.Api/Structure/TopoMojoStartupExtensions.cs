@@ -6,13 +6,10 @@ using System.Linq;
 using System.Reflection;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using TopoMojo;
-using TopoMojo.Data;
+using TopoMojo.Api;
+using TopoMojo.Api.Data;
 using TopoMojo.Hypervisor;
-using TopoMojo.Models;
-using TopoMojo.Services;
+using TopoMojo.Api.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,11 +22,12 @@ namespace Microsoft.Extensions.DependencyInjection
         ) {
 
             services.AddSingleton<CoreOptions>(_ => options);
+
             // Auto-discover from EntityService pattern
             foreach (var t in Assembly
                 .GetExecutingAssembly()
                 .ExportedTypes
-                .Where(t => t.Namespace == "TopoMojo.Services"
+                .Where(t => t.Namespace == "TopoMojo.Api.Services"
                     && t.Name.EndsWith("Service")
                     && t.IsClass
                     && !t.IsAbstract
@@ -44,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             foreach (var t in Assembly
                 .GetExecutingAssembly()
                 .ExportedTypes
-                .Where(t => t.Namespace == "TopoMojo"
+                .Where(t => t.Namespace == "TopoMojo.Api.Validators"
                     && t.Name.EndsWith("Validator")
                     && t.IsClass
                     && !t.IsAbstract
@@ -76,7 +74,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
 
             if (string.IsNullOrEmpty(migrationAssembly))
-                migrationAssembly = "TopoMojo.Web"; //Assembly.GetEntryAssembly().GetName().Name;
+                migrationAssembly = Assembly.GetExecutingAssembly().GetName().Name;
 
             switch (provider.ToLower())
             {
@@ -109,7 +107,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .GetExecutingAssembly()
                 .ExportedTypes
                 .Where(t =>
-                    t.Namespace == "TopoMojo.Data"
+                    t.Namespace == "TopoMojo.Api.Data"
                     && t.Name.EndsWith("Store")
                     && t.IsClass
                     && !t.IsAbstract

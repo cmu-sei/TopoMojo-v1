@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Web;
+using TopoMojo.Api;
 
-namespace TopoMojo.Web
+namespace TopoMojo.Api
 {
     public class HeaderInspectionMiddleware
     {

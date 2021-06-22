@@ -5,19 +5,18 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using TopoMojo.Data.Abstractions;
-using TopoMojo.Models;
-using TopoMojo.Services;
-using TopoMojo.Web.Services;
+using TopoMojo.Api.Data.Abstractions;
+using TopoMojo.Api.Exceptions;
+using TopoMojo.Api.Models;
+using TopoMojo.Api.Services;
 
-namespace TopoMojo.Hubs
+namespace TopoMojo.Api.Hubs
 {
     public interface IHubEvent
     {
         Task GlobalEvent(BroadcastEvent<string> broadcastEvent);
         Task TopoEvent(BroadcastEvent<Workspace> broadcastEvent);
         Task TemplateEvent(BroadcastEvent<Template> broadcastEvent);
-        // Task ChatEvent(BroadcastEvent<Message> broadcastEvent);
         Task DocumentEvent(BroadcastEvent<object> broadcastEvent);
         Task DocumentEvent(BroadcastEvent<Document> broadcastEvent);
         Task VmEvent(BroadcastEvent<VmState> broadcastEvent);
@@ -34,7 +33,7 @@ namespace TopoMojo.Hubs
         Task TemplateMessage(string action, Template model);
     }
 
-    [Authorize(Policy = "OneTimeTicket")]
+    [Authorize(AppConstants.TicketOnlyPolicy)]
     public class AppHub : Hub<IHubEvent>, IHubAction
     {
         public AppHub (
