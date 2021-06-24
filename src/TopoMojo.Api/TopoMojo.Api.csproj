@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <!-- <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> -->
   </PropertyGroup>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -26,6 +27,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.1.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="3.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="3.1" />

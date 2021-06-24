@@ -22,7 +22,9 @@ namespace TopoMojo.Api.Data
             return term.IsEmpty()
                 ? base.List()
                 : base.List().Where(t =>
-                    t.Name.ToLower().Contains(term)
+                    t.Name.ToLower().Contains(term) ||
+                    t.Id.StartsWith(term) ||
+                    t.Audience.Contains(term)
                 );
         }
 

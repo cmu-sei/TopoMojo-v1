@@ -208,7 +208,7 @@ namespace TopoMojo.Api.Services
 
             return Mapper.Map<ConvergedTemplate>(entity)
                 .ToVirtualTemplate()
-                .SetHostAffinity(entity.Workspace.HostAffinity)
+                .SetHostAffinity(entity.Workspace?.HostAffinity ?? false)
             ;
         }
 

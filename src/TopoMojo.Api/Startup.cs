@@ -46,9 +46,10 @@ namespace TopoMojo.Api
             .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
             .AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.Converters.Add(
-                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-                );
+                options.JsonSerializerOptions.Converters
+                    .Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+                options.JsonSerializerOptions.Converters
+                    .Add(new JsonDateTimeConverter());
             });
 
             services.ConfigureForwarding(Settings.Headers.Forwarding);

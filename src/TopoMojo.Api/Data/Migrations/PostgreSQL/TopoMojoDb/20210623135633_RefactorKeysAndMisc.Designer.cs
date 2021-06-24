@@ -10,8 +10,8 @@ using TopoMojo.Api.Data;
 namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContextPostgreSQL))]
-    [Migration("20210622032244_AddCompositeKeys")]
-    partial class AddCompositeKeys
+    [Migration("20210623135633_RefactorKeysAndMisc")]
+    partial class RefactorKeysAndMisc
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -25,19 +25,17 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("Hash")
                         .HasMaxLength(64)
-                        .HasColumnType("character(64)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("character(36)");
+                        .HasColumnType("character varying(36)");
 
                     b.Property<DateTime>("WhenCreated")
                         .HasColumnType("timestamp without time zone");
@@ -55,8 +53,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<bool>("AllowReset")
                         .HasColumnType("boolean");
@@ -90,7 +87,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("WorkspaceId")
-                        .HasColumnType("character(36)");
+                        .HasColumnType("character varying(36)");
 
                     b.HasKey("Id");
 
@@ -103,13 +100,11 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("SubjectId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("GamespaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<int>("Permission")
                         .HasColumnType("integer");
@@ -129,8 +124,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("Audience")
                         .HasMaxLength(64)
@@ -167,8 +161,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 
                     b.Property<string>("ParentId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<int>("Replicas")
                         .HasColumnType("integer");
@@ -178,8 +171,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.HasKey("Id");
 
@@ -194,8 +186,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<int>("GamespaceCleanupGraceMinutes")
                         .HasColumnType("integer");
@@ -231,13 +222,11 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("SubjectId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<int>("Permission")
                         .HasColumnType("integer");
@@ -257,8 +246,7 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("character(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("Audience")
                         .HasMaxLength(64)

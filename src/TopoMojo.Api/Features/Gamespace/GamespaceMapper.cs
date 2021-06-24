@@ -13,8 +13,6 @@ namespace TopoMojo.Api
         public GamespaceProfile()
         {
             CreateMap<Data.Gamespace, Gamespace>()
-                .ForMember(d => d.WhenCreated, opt => opt.MapFrom(s => s.WhenCreated.ToString("u")))
-                .ForMember(d => d.Slug, opt => opt.MapFrom(s => s.Name.ToSlug()))
             ;
 
             CreateMap<Data.Gamespace, GameState>()

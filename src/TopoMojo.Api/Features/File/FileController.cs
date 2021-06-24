@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using TopoMojo.Api.Extensions;
 using TopoMojo.Api.Services;
 using TopoMojo.Api.Hubs;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace TopoMojo.Api.Controllers
 {
@@ -61,8 +62,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/file/progress/{id}")]
+        [SwaggerOperation(OperationId = "CheckFileUploadProgress")]
         [ProducesResponseType(typeof(int), 200)]
-        public IActionResult Progress(string id)
+        public IActionResult CheckFileUploadProgress(string id)
         {
             return Json(_monitor.Check(id).Progress);
         }
@@ -79,9 +81,10 @@ namespace TopoMojo.Api.Controllers
         /// </remarks>
         /// <returns></returns>
         [HttpPost("api/file/upload")]
+        [SwaggerOperation(OperationId = "UploadWorkspaceFile")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        public async Task<ActionResult<bool>> Upload()
+        public async Task<ActionResult<bool>> UploadWorkspaceFile()
         {
             await _uploader.Process(
                 Request,

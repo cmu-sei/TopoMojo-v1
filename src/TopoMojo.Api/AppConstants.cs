@@ -25,7 +25,7 @@ namespace TopoMojo.Api
         public const string RegistrationCachePrefix = "lp:";
         public const string CookieScheme = ".TopoMojo.Cookies";
         public const string MarkdownCutLine = "<!-- cut -->";
-
+        public static char[] InlineListSeparators = new char[] { ' ', ',', ';' };
     }
 
     internal static class AuditId

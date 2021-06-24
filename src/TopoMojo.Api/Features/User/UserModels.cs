@@ -24,7 +24,7 @@ namespace TopoMojo.Api.Models
         public int GamespaceMaxMinutes { get; set; }
         public int GamespaceCleanupGraceMinutes { get; set; }
         public UserRole Role { get; set; }
-        public string WhenCreated { get; set; }
+        public DateTime WhenCreated { get; set; }
         public bool IsAdmin =>
             Role == UserRole.Administrator
         ;
@@ -56,6 +56,7 @@ namespace TopoMojo.Api.Models
         public bool WantsAdmins => Filter.Contains(UserRole.Administrator.ToString().ToLower());
         public bool WantsCreators => Filter.Contains(UserRole.Creator.ToString().ToLower());
         public bool WantsBuilders => Filter.Contains(UserRole.Builder.ToString().ToLower());
+        public string scope { get; set; }
     }
 
     public class UserRegistration

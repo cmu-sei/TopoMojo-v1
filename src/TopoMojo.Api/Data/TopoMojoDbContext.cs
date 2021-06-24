@@ -18,7 +18,7 @@ namespace TopoMojo.Api.Data
             base.OnModelCreating(builder);
 
             builder.Entity<Workspace>(b => {
-                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Author).HasMaxLength(64);
                 b.Property(w => w.Audience).HasMaxLength(64);
@@ -28,14 +28,14 @@ namespace TopoMojo.Api.Data
 
             builder.Entity<Gamespace>(b => {
                 b.HasOne(g => g.Workspace).WithMany(w => w.Gamespaces).OnDelete(DeleteBehavior.SetNull);
-                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
             });
 
             builder.Entity<Template>(b => {
-                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
-                b.Property(w => w.ParentId).IsFixedLength().HasMaxLength(KEYLENGTH);
-                b.Property(g => g.WorkspaceId).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
+                b.Property(w => w.ParentId).HasMaxLength(KEYLENGTH);
+                b.Property(g => g.WorkspaceId).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
                 b.Property(w => w.Description).HasMaxLength(255);
                 b.Property(w => w.Audience).HasMaxLength(64);
@@ -45,28 +45,28 @@ namespace TopoMojo.Api.Data
             });
 
             builder.Entity<User>(b => {
-                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.Name).HasMaxLength(64);
             });
 
             builder.Entity<Player>(b => {
                 b.HasKey(g => new { g.SubjectId, g.GamespaceId });
-                b.Property(g => g.GamespaceId).IsFixedLength().HasMaxLength(KEYLENGTH);
-                b.Property(g => g.SubjectId).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(g => g.GamespaceId).HasMaxLength(KEYLENGTH);
+                b.Property(g => g.SubjectId).HasMaxLength(KEYLENGTH);
                 b.Property(g => g.SubjectName).HasMaxLength(64);
             });
 
             builder.Entity<Worker>(b => {
                 b.HasKey(w => new { w.SubjectId, w.WorkspaceId });
-                b.Property(g => g.WorkspaceId).IsFixedLength().HasMaxLength(KEYLENGTH);
-                b.Property(g => g.SubjectId).IsFixedLength().HasMaxLength(KEYLENGTH);
+                b.Property(g => g.WorkspaceId).HasMaxLength(KEYLENGTH);
+                b.Property(g => g.SubjectId).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.SubjectName).HasMaxLength(64);
             });
 
             builder.Entity<ApiKey>(b => {
                 b.HasOne(a => a.User).WithMany(u => u.ApiKeys).OnDelete(DeleteBehavior.Cascade);
-                b.Property(w => w.Id).IsFixedLength().HasMaxLength(KEYLENGTH);
-                b.Property(w => w.Hash).IsFixedLength().HasMaxLength(64);
+                b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
+                b.Property(w => w.Hash).HasMaxLength(64);
                 b.HasIndex(w => w.Hash);
             });
 
@@ -79,6 +79,7 @@ namespace TopoMojo.Api.Data
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<ApiKey> ApiKeys { get; set; }
+
     }
 
     public class TopoMojoDbContextPostgreSQL: TopoMojoDbContext

@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Linq;
 using TopoMojo.Api.Extensions;
 
 namespace TopoMojo.Api.Models
@@ -14,6 +15,7 @@ namespace TopoMojo.Api.Models
         public string Author { get; set; }
         public string Audience { get; set; }
         public DateTime WhenCreated { get; set; }
+        public string TemplateScope { get; set; }
         public int TemplateLimit { get; set; }
         public string Challenge { get; set; }
         public Worker[] Workers { get; set; }
@@ -80,7 +82,9 @@ namespace TopoMojo.Api.Models
     public class WorkspaceSearch : Search
     {
         public string aud { get; set; }
+        public string scope { get; set; }
         public bool WantsAudience => string.IsNullOrEmpty(aud).Equals(false);
+        public bool WantsPlayable => Filter.Contains("play") && scope.NotEmpty();
     }
 
     public class ClientAudience

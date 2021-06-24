@@ -88,5 +88,14 @@ namespace TopoMojo.Api.Data
                 u.ApiKeys.Any(k => k.Hash == hash)
             );
         }
+
+        public async Task<string[]> ListScopes()
+        {
+            return await DbSet
+                .Where(u => !string.IsNullOrEmpty(u.Scope))
+                .Select(u => u.Scope)
+                .ToArrayAsync()
+            ;
+        }
     }
 }

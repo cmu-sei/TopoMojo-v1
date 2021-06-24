@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>library</OutputType>
+    <IsPackable>true</IsPackable>
+    <Nullable>annotations</Nullable>
+    <LangVersion>8.0</LangVersion>
+    <IncludeGeneratorSharedCode>true</IncludeGeneratorSharedCode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="5.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0" />
+  </ItemGroup>
+
+</Project>

@@ -10,8 +10,8 @@ using TopoMojo.Api.Data;
 namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContextSqlServer))]
-    [Migration("20210622032239_AddCompositeKeys")]
-    partial class AddCompositeKeys
+    [Migration("20210623135627_RefactorKeysAndMisc")]
+    partial class RefactorKeysAndMisc
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -25,19 +25,17 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Hash")
                         .HasMaxLength(64)
-                        .HasColumnType("nchar(64)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("nchar(36)");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<DateTime>("WhenCreated")
                         .HasColumnType("datetime2");
@@ -55,8 +53,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<bool>("AllowReset")
                         .HasColumnType("bit");
@@ -90,7 +87,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                         .HasColumnType("datetime2");
 
                     b.Property<string>("WorkspaceId")
-                        .HasColumnType("nchar(36)");
+                        .HasColumnType("nvarchar(36)");
 
                     b.HasKey("Id");
 
@@ -103,13 +100,11 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("SubjectId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("GamespaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<int>("Permission")
                         .HasColumnType("int");
@@ -129,8 +124,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Audience")
                         .HasMaxLength(64)
@@ -167,8 +161,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 
                     b.Property<string>("ParentId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<int>("Replicas")
                         .HasColumnType("int");
@@ -178,8 +171,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.HasKey("Id");
 
@@ -194,8 +186,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<int>("GamespaceCleanupGraceMinutes")
                         .HasColumnType("int");
@@ -231,13 +222,11 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("SubjectId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<int>("Permission")
                         .HasColumnType("int");
@@ -257,8 +246,7 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("nchar(36)")
-                        .IsFixedLength(true);
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Audience")
                         .HasMaxLength(64)

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TopoMojo.Api.Hubs;
 using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
@@ -47,8 +48,9 @@ namespace TopoMojo.Api.Controllers
         /// </remarks>
         /// <returns>TemplateSummary[]</returns>
         [HttpGet("api/templates")]
+        [SwaggerOperation(OperationId = "ListTemplates")]
         [Authorize]
-        public async Task<ActionResult<TemplateSummary[]>> List([FromQuery]TemplateSearch search, CancellationToken ct)
+        public async Task<ActionResult<TemplateSummary[]>> ListTemplates([FromQuery]TemplateSearch search, CancellationToken ct)
         {
             await Validate(search);
 
@@ -65,8 +67,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/template/{id}")]
+        [SwaggerOperation(OperationId = "LoadTemplate")]
         [Authorize]
-        public async Task<ActionResult<Template>> Load(string id)
+        public async Task<ActionResult<Template>> LoadTemplate(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -86,8 +89,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut("api/template")]
+        [SwaggerOperation(OperationId = "UpdateTemplate")]
         [Authorize]
-        public async Task<ActionResult> Update([FromBody]ChangedTemplate model)
+        public async Task<ActionResult> UpdateTemplate([FromBody]ChangedTemplate model)
         {
             await Validate(model);
 
@@ -109,8 +113,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("api/template/{id}")]
+        [SwaggerOperation(OperationId = "DeleteTemplate")]
         [Authorize]
-        public async Task<ActionResult> Delete(string id)
+        public async Task<ActionResult> DeleteTemplate(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -132,8 +137,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template")]
+        [SwaggerOperation(OperationId = "LinkTemplate")]
         [Authorize]
-        public async Task<ActionResult<Template>> Link([FromBody]TemplateLink model)
+        public async Task<ActionResult<Template>> LinkTemplate([FromBody]TemplateLink model)
         {
             await Validate(model);
 
@@ -155,8 +161,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template/unlink")]
+        [SwaggerOperation(OperationId = "UnLinkTemplate")]
         [Authorize]
-        public async Task<ActionResult<Template>> UnLink([FromBody]TemplateLink model)
+        public async Task<ActionResult<Template>> UnLinkTemplate([FromBody]TemplateLink model)
         {
             await Validate(model);
 
@@ -178,8 +185,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/template-detail/{id}")]
+        [SwaggerOperation(OperationId = "LoadTemplateDetail")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<TemplateDetail>> LoadDetail(string id)
+        public async Task<ActionResult<TemplateDetail>> LoadTemplateDetail(string id)
         {
             await Validate(new Entity{ Id = id });
 
@@ -196,8 +204,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/template-detail")]
+        [SwaggerOperation(OperationId = "CreateTemplateDetail")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<TemplateDetail>> Create([FromBody]TemplateDetail model)
+        public async Task<ActionResult<TemplateDetail>> CreateTemplateDetail([FromBody]TemplateDetail model)
         {
             await Validate(model);
 
@@ -214,8 +223,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut("api/template-detail")]
+        [SwaggerOperation(OperationId = "ConfigureTemplateDetail")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult> Configure([FromBody]TemplateDetail model)
+        public async Task<ActionResult> ConfigureTemplateDetail([FromBody]TemplateDetail model)
         {
             await Validate(model);
 

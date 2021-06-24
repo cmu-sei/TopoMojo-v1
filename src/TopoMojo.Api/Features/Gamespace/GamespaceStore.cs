@@ -17,13 +17,17 @@ namespace TopoMojo.Api.Data
             TopoMojoDbContext db
         ) : base(db) { }
 
-        public override IQueryable<Gamespace> List(string term)
+        public override IQueryable<Gamespace> List(string term = null)
         {
+            if (term.IsEmpty())
+                return base.List();
+
             term = term.ToLower();
 
             return base.List()
                 .Where(g =>
-                    g.Name.ToLower().Contains(term)
+                    g.Name.ToLower().Contains(term) ||
+                    g.Id.ToLower().StartsWith(term)
                 )
             ;
         }
@@ -63,12 +67,15 @@ namespace TopoMojo.Api.Data
             );
         }
 
-        public async Task<Gamespace> LoadActiveByContext(string subjectId, string workspaceId)
+        public async Task<Gamespace> LoadActiveByContext(string workspaceId, string subjectId)
         {
             string id = await DbSet.Where(g =>
                     g.WorkspaceId == workspaceId &&
                     g.EndTime == DateTime.MinValue &&
-                    g.Players.Any(p => p.SubjectId == subjectId)
+                    (
+                        g.ManagerId == subjectId ||
+                        g.Players.Any(p => p.SubjectId == subjectId)
+                    )
                 )
                 .Select(p => p.Id)
                 .FirstOrDefaultAsync()

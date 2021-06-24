@@ -37,7 +37,7 @@ namespace TopoMojo.Api.Models
         public Player[] Players { get; set; }
         public string WhenCreated { get; set; }
         public DateTime StartTime { get; set; }
-        public DateTime StopTime { get; set; }
+        public DateTime EndTime { get; set; }
         public DateTime ExpirationTime { get; set; }
         public bool IsActive { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
@@ -51,7 +51,7 @@ namespace TopoMojo.Api.Models
         public string Name { get; set; }
         public Player[] Players { get; set; }
         public DateTime StartTime { get; set; }
-        public DateTime StopTime { get; set; }
+        public DateTime EndTime { get; set; }
         public DateTime ExpirationTime { get; set; }
 
     }

@@ -37,8 +37,13 @@ namespace TopoMojo.Api.Services
         {
             var q = _store.List();
 
-            if (search.Term.NotEmpty())
-                q = q.Where(p => p.Name.ToLower().Contains(search.Term.ToLower()));
+            string term = search.Term?.ToLower();
+
+            if (term.NotEmpty())
+                q = q.Where(p =>
+                    p.Name.ToLower().Contains(term) ||
+                    p.Id.StartsWith(term)
+                );
 
             if (search.WantsAdmins)
                 q = q.Where(p => p.Role == UserRole.Administrator);
@@ -48,6 +53,9 @@ namespace TopoMojo.Api.Services
 
             if (search.WantsBuilders)
                 q = q.Where(p => p.Role == UserRole.Builder);
+
+            if (search.scope.NotEmpty())
+                q = q.Where(p => p.Scope == search.scope);
 
             q = q.OrderBy(p => p.Name);
 
@@ -60,6 +68,15 @@ namespace TopoMojo.Api.Services
             return await Mapper.ProjectTo<User>(q).ToArrayAsync(ct);
         }
 
+        public async Task<string[]> ListScopes()
+        {
+            return (await _store.ListScopes())
+                .SelectMany(s => s.Split(' ', ',', ';'))
+                .Where(s => s.Length > 0)
+                .Distinct()
+                .ToArray();
+        }
+
         public async Task<User> Load(string id)
         {
             return Mapper.Map<User>(
@@ -67,7 +84,7 @@ namespace TopoMojo.Api.Services
             );
         }
 
-        public async Task<User> AddOrUpdate(User model)
+        public async Task<User> AddOrUpdate(ChangedUser model)
         {
             var entity = model.Id.NotEmpty()
                 ? await _store.Retrieve(model.Id)
@@ -150,13 +167,21 @@ namespace TopoMojo.Api.Services
 
         public async Task<ApiKeyResult> CreateApiKey(string id, string subjectName)
         {
-            string key = Guid.NewGuid().ToString("n");
-
             var entity = await _store.Retrieve(id);
+
+            var buffer = new byte[24];
+
+            new Random().NextBytes(buffer);
+
+            string key = Convert.ToBase64String(buffer)
+                .Replace('/','_')
+                .Replace('+','_')
+            ;
 
             entity.ApiKeys.Add(new Data.ApiKey
             {
-                Id = key.ToSha256(),
+                Id = Guid.NewGuid().ToString("n"),
+                Hash = key.ToSha256(),
                 Name = subjectName,
                 WhenCreated = DateTime.UtcNow
             });

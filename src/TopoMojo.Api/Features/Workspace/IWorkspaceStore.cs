@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,5 +24,6 @@ namespace TopoMojo.Api.Data.Abstractions
         Task<Workspace> Clone(string id);
         IQueryable<Template> ListScopedTemplates();
         Task<int> CheckGamespaceCount(string id);
+        Task DeleteWithTemplates(string id, Action<IEnumerable<Template>> templateAction);
     }
 }

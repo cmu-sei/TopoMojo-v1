@@ -2,7 +2,6 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -44,6 +43,13 @@ namespace TopoMojo.Api.Services
         /// <returns>Array of WorkspaceSummary</returns>
         public async Task<WorkspaceSummary[]> List(WorkspaceSearch search, string subjectId, bool sudo, CancellationToken ct = default(CancellationToken))
         {
+            if (search.scope.IsEmpty())
+                search.scope = _options.DefaultUserScope;
+
+            // TODO: change this to use tags (efcore many-to-many)
+            if (search.WantsPlayable)
+                return await ListPlayable(search, ct);
+
             var q = _store.List(search.Term);
 
             if (search.WantsAudience)
@@ -65,6 +71,40 @@ namespace TopoMojo.Api.Services
             return Mapper.Map<WorkspaceSummary[]>(
                 await q.ToArrayAsync(ct)
             );
+        }
+
+        private async Task<WorkspaceSummary[]> ListPlayable(WorkspaceSearch search, CancellationToken ct = default(CancellationToken))
+        {
+            // TODO: change this to use tags (efcore many-to-many)
+
+            var scopes = search.scope.Split(
+                AppConstants.InlineListSeparators,
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+            var data = await _store.List(search.Term)
+                .Where(w => !string.IsNullOrEmpty(w.Audience))
+                .ToArrayAsync()
+            ;
+
+            var q = data.AsQueryable()
+                .Where(w => w.Audience.HasAnyToken(search.scope))
+            ;
+
+            q = search.Sort == "age"
+                ? q.OrderByDescending(w => w.WhenCreated)
+                : q.OrderBy(w => w.Name);
+
+            if (search.Skip > 0)
+                q = q.Skip(search.Skip);
+
+            if (search.Take > 0)
+                q = q.Take(search.Take);
+
+            return Mapper.Map<WorkspaceSummary[]>(
+                q
+            );
+
         }
 
         /// <summary>
@@ -112,8 +152,9 @@ namespace TopoMojo.Api.Services
         /// </summary>
         /// <param name="model"></param>
         /// <param name="subjectId"></param>
+        /// <param name="subjectName"></param>
         /// <returns>Workspace</returns>
-        public async Task<Workspace> Create(NewWorkspace model, string subjectId)
+        public async Task<Workspace> Create(NewWorkspace model, string subjectId, string subjectName)
         {
             var workspace = Mapper.Map<Data.Workspace>(model);
 
@@ -128,7 +169,8 @@ namespace TopoMojo.Api.Services
 
             workspace.Workers.Add(new Data.Worker
             {
-                SubjectName = subjectId,
+                SubjectId = subjectId,
+                SubjectName = subjectName,
                 Permission = Permission.Manager
             });
 
@@ -202,9 +244,16 @@ namespace TopoMojo.Api.Services
 
             await _pod.DeleteAll(id);
 
-            // TODO: cleanly delete workspace templates
+            await _store.DeleteWithTemplates(id, async templates => {
 
-            await _store.Delete(id);
+                var disktasks = Mapper.Map<ConvergedTemplate[]>(templates)
+                    .Select(ct => _pod.DeleteDisks(ct.ToVirtualTemplate()))
+                    .ToArray()
+                ;
+
+                await Task.WhenAll(disktasks);
+
+            });
 
             return Mapper.Map<Workspace>(entity);
         }

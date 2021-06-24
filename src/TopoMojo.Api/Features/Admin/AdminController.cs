@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TopoMojo.Api.Hubs;
 using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
@@ -44,9 +45,14 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("api/version")]
-        public IActionResult CommitVersion()
+        [SwaggerOperation(OperationId = "LoadDocument")]
+        public ActionResult<AppVersionInfo> GetAppVersionInfo()
         {
-            return Ok(new { Version = Environment.GetEnvironmentVariable("COMMIT") ?? "no version info provided"});
+            return Ok(new AppVersionInfo
+            {
+                Commit = Environment.GetEnvironmentVariable("COMMIT")
+                    ?? "no version info provided"
+            });
         }
 
         /// <summary>
@@ -55,7 +61,8 @@ namespace TopoMojo.Api.Controllers
         /// <param name="text"></param>
         /// <returns></returns>
         [HttpPost("api/admin/announce")]
-        public async Task<ActionResult<bool>> Announce([FromBody]string text)
+        [SwaggerOperation(OperationId = "PostAnnouncement")]
+        public async Task<ActionResult<bool>> PostAnnouncement([FromBody]string text)
         {
             await Task.Run(() => SendBroadcast(text));
             return Ok(true);
@@ -68,7 +75,8 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("api/admin/export")]
         [ProducesResponseType(typeof(string[]), 200)]
-        public async Task<ActionResult> Export([FromBody] string[] ids)
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult> ExportWorkspaces([FromBody] string[] ids)
         {
             string srcPath = _uploadOptions.TopoRoot;
             string destPath = Path.Combine(
@@ -85,7 +93,8 @@ namespace TopoMojo.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("api/admin/import")]
-        public async Task<ActionResult<string[]>> Import()
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<string[]>> ImportWorkspaces()
         {
             return Ok(await _transferSvc.Import(
                 _uploadOptions.TopoRoot,
@@ -98,7 +107,8 @@ namespace TopoMojo.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("api/admin/live")]
-        public ActionResult<CachedConnection[]> LiveUsers()
+        [SwaggerOperation(OperationId = "ListActiveUsers")]
+        public ActionResult<CachedConnection[]> ListActiveUsers()
         {
             return Ok(_hubCache.Connections.Values);
         }
@@ -109,7 +119,8 @@ namespace TopoMojo.Api.Controllers
         /// <param name="options"></param>
         /// <returns></returns>
         [HttpPost("api/admin/janitor")]
-        public async Task<ActionResult<JanitorReport[]>> Cleanup([FromBody]JanitorOptions options = null)
+        [SwaggerOperation(OperationId = "RunJanitorCleanup")]
+        public async Task<ActionResult<JanitorReport[]>> RunJanitorCleanup([FromBody]JanitorOptions options = null)
         {
             return Ok(await _janitor.Cleanup(options));
         }

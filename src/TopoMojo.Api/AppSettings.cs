@@ -140,7 +140,7 @@ namespace TopoMojo.Api
         public int DefaultTemplateLimit { get; set; } = 3;
         public int ReplicaLimit { get; set; } = 5;
         public bool AllowUnprivilegedVmReconfigure { get; set; }
-        public string DefaultUserScope { get; set; } = "topomojo";
+        public string DefaultUserScope { get; set; } = "mojo";
         public string GameEngineIsoFolder { get; set; } = "static";
         public string ConsoleHost { get; set; }
         public string LaunchUrl { get; set; } = "/lp";

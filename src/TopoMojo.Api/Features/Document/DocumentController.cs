@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TopoMojo.Api.Extensions;
 using TopoMojo.Api.Hubs;
 using TopoMojo.Api.Models;
@@ -43,7 +44,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="ct">Cancellation Token</param>
         /// <returns></returns>
         [HttpGet("api/document/{id}")]
-        public async Task<ActionResult<string>> Load(string id, CancellationToken ct)
+        [SwaggerOperation(OperationId = "LoadDocument")]
+        [Authorize]
+        public async Task<ActionResult<string>> LoadDocument(string id, CancellationToken ct)
         {
 
             AuthorizeAny(
@@ -81,7 +84,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="text">Markdown text</param>
         /// <returns></returns>
         [HttpPut("api/document/{id}")]
-        public async Task<ActionResult> Save(string id, [FromBody]string text)
+        [SwaggerOperation(OperationId = "SaveDocument")]
+        [Authorize]
+        public async Task<ActionResult> SaveDocument(string id, [FromBody]string text)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -104,7 +109,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/images/{id}")]
-        public async Task<ActionResult<ImageFile[]>> Images(string id)
+        [SwaggerOperation(OperationId = "ListDocumentImages")]
+        [Authorize]
+        public ActionResult<ImageFile[]> ListDocumentImages(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -130,7 +137,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="filename"></param>
         /// <returns></returns>
         [HttpDelete("api/image/{id}")]
-        public IActionResult Delete(string id, string filename)
+        [SwaggerOperation(OperationId = "DeleteDocumentImage")]
+        [Authorize]
+        public IActionResult DeleteDocumentImage(string id, string filename)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -153,7 +162,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="file"></param>
         /// <returns></returns>
         [HttpPost("api/image/{id}")]
-        public async Task<ActionResult<ImageFile>> Upload(string id, IFormFile file)
+        [SwaggerOperation(OperationId = "UploadDocument")]
+        [Authorize]
+        public async Task<ActionResult<ImageFile>> UploadDocument(string id, IFormFile file)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -207,7 +218,7 @@ namespace TopoMojo.Api.Controllers
                         "DOCUMENT." + action.ToUpper(),
                         new Document {
                             Text = text,
-                            Timestamp = (long)DateTimeOffset.UtcNow.Subtract(DateTimeOffset.UnixEpoch).TotalMilliseconds // DateTime.UtcNow.ToString("ss.ffff")
+                            Timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds // DateTime.UtcNow.ToString("ss.ffff")
                         }
                     )
                 );

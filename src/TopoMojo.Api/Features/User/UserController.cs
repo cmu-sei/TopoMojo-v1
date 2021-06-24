@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TopoMojo.Api.Hubs;
 using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
@@ -50,8 +51,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="ct"></param>
         /// <returns></returns>
         [HttpGet("api/users")]
+        [SwaggerOperation(OperationId = "ListUsers")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<User[]>> List([FromQuery]UserSearch model, CancellationToken ct)
+        public async Task<ActionResult<User[]>> ListUsers([FromQuery]UserSearch model, CancellationToken ct)
         {
             await Validate(model);
 
@@ -59,9 +61,23 @@ namespace TopoMojo.Api.Controllers
                 () => Actor.IsAdmin
             );
 
-            var result = await _svc.List(model, ct);
+            return Ok(
+                await _svc.List(model, ct)
+            );
+        }
 
-            return Ok(result);
+        [HttpGet("api/user/scopes")]
+        [SwaggerOperation(OperationId = "ListAllScopes")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
+        public async Task<ActionResult<string[]>> ListAllScopes(CancellationToken ct)
+        {
+            AuthorizeAny(
+                () => Actor.IsAdmin
+            );
+
+            return Ok(
+                await _svc.ListScopes()
+            );
         }
 
         /// <summary>
@@ -70,7 +86,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/user/{id?}")]
-        public async Task<ActionResult<User>> Load(string id)
+        [SwaggerOperation(OperationId = "LoadUser")]
+        [Authorize]
+        public async Task<ActionResult<User>> LoadUser(string id)
         {
             id = id ?? Actor.Id;
 
@@ -95,7 +113,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/user/{id}/workspaces")]
-        public async Task<ActionResult<WorkspaceSummary[]>> LoadWorkspaces(string id)
+        [SwaggerOperation(OperationId = "LoadUserWorkspaces")]
+        [Authorize]
+        public async Task<ActionResult<WorkspaceSummary[]>> LoadUserWorkspaces(string id)
         {
             await Validate(new Entity{ Id = id });
 
@@ -115,7 +135,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/user/{id}/gamespaces")]
-        public async Task<ActionResult<WorkspaceSummary[]>> LoadGamespaces(string id)
+        [SwaggerOperation(OperationId = "LoadUserGamespaces")]
+        [Authorize]
+        public async Task<ActionResult<WorkspaceSummary[]>> LoadUserGamespaces(string id)
         {
             await Validate(new Entity{ Id = id });
 
@@ -135,8 +157,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("api/user")]
+        [SwaggerOperation(OperationId = "AddOrUpdateUser")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<User>> AddOrUpdate([FromBody]User model)
+        public async Task<ActionResult<User>> AddOrUpdateUser([FromBody]ChangedUser model)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin
@@ -153,7 +176,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("api/user/{id}")]
-        public async Task<IActionResult> Delete(string id)
+        [SwaggerOperation(OperationId = "DeleteUser")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser(string id)
         {
             await Validate(new Entity{ Id = id });
 
@@ -173,6 +198,7 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/user/{id}/keys")]
+        [SwaggerOperation(OperationId = "GetUserKeys")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
         public async Task<ActionResult<ApiKey[]>> GetUserKeys(string id)
         {
@@ -193,8 +219,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPost("api/apikey/{id}")]
+        [SwaggerOperation(OperationId = "CreateUserKey")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<ApiKeyResult>> CreateApiKey(string id)
+        public async Task<ActionResult<ApiKeyResult>> CreateUserKey(string id)
         {
             await Validate(new Entity { Id = id });
 
@@ -212,9 +239,10 @@ namespace TopoMojo.Api.Controllers
         /// </summary>
         /// <param name="keyId"></param>
         /// <returns></returns>
-        [HttpDelete("api/apikey/{id}")]
+        [HttpDelete("api/apikey/{keyId}")]
+        [SwaggerOperation(OperationId = "DeleteUserKey")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult> DeleteApiKey(string keyId)
+        public async Task<ActionResult> DeleteUserKey(string keyId)
         {
 
             AuthorizeAny(
@@ -232,7 +260,8 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("api/user/register")]
         [Authorize]
-        public async Task<User> Register()
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<User> RegisterUser()
         {
             return await _svc.AddOrUpdate(new UserRegistration
             {
@@ -251,7 +280,8 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpGet("/api/user/ticket")]
         [Authorize]
-        public async Task<IActionResult> GetTicket()
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> GetOneTimeTicket()
         {
             string token = Guid.NewGuid().ToString("n");
 
@@ -274,6 +304,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("/api/user/login")]
         [Authorize]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetAuthCookie()
         {
             if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
@@ -294,6 +325,7 @@ namespace TopoMojo.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/user/logout")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task Logout()
         {
             if (User.Identity.AuthenticationType == AppConstants.CookieScheme)

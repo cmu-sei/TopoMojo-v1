@@ -76,18 +76,6 @@ namespace TopoMojo.Api.Services
         {
             var ctx = await LoadContext(null, resourceId);
 
-            // if (!ctx.WorkspaceExists)
-            //     throw new ResourceNotFound();
-
-            // if (!ctx.IsValidAudience)
-            //     throw new InvalidClientAudience();
-
-            // if (ctx.UserExists)
-            // {
-            //     ctx.Gamespace = await _store
-            //         .LoadActiveByContext(ctx.Workspace.Id, User.Id);
-            // }
-
             return new GameState
             {
                 Name = ctx.Workspace.Name,

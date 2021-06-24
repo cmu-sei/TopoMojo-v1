@@ -40,7 +40,7 @@ namespace TopoMojo.Api
                     Type type = ex.GetType();
 
                     if (
-                        ex is System.InvalidOperationException ||
+                        ex is InvalidOperationException ||
                         ex is ArgumentException ||
                         type.Namespace.StartsWith("TopoMojo")
                     ) {
@@ -51,7 +51,8 @@ namespace TopoMojo.Api
                             .Last()
                             .Replace("Exception", "");
 
-                        message += $" {ex.Message}";
+                        if (ex is ArgumentException)
+                            message += $" {ex.Message}";
                     }
 
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = message }));

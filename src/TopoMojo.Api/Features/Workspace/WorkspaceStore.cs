@@ -2,6 +2,7 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,8 @@ namespace TopoMojo.Api.Data
                     t.Name.ToLower().Contains(term) ||
                     t.Description.ToLower().Contains(term) ||
                     t.Author.ToLower().Contains(term) ||
-                    t.Audience.ToLower().Contains(term)
+                    t.Audience.ToLower().Contains(term) ||
+                    t.Id.StartsWith(term)
                 );
             }
 
@@ -70,6 +72,19 @@ namespace TopoMojo.Api.Data
                 .Include(t => t.Workers)
                 .Where(t => t.ShareCode == code)
                 .SingleOrDefaultAsync();
+        }
+
+        public async Task DeleteWithTemplates(string id, Action<IEnumerable<Data.Template>> templateAction)
+        {
+            var entity = await Retrieve(id, q =>
+                q.Include(w => w.Templates.Where(t => !t.Children.Any()))
+            );
+
+            templateAction.Invoke(entity.Templates);
+
+            DbSet.Remove(entity);
+
+            await DbContext.SaveChangesAsync();
         }
 
         public async Task<bool> CanEdit(string id, string subjectId)
@@ -156,7 +171,7 @@ namespace TopoMojo.Api.Data
             {
                 template.Id = Guid.NewGuid().ToString("n");
 
-                if (template.Iso.Contains(id))
+                if (template.Iso?.Contains(id) ?? false)
                     template.Iso = "";
 
                 if (template.IsLinked)

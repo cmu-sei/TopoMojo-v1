@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TopoMojo.Api.Exceptions;
 using TopoMojo.Api.Extensions;
 using TopoMojo.Api.Hubs;
-using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
 using TopoMojo.Api.Validators;
 using TopoMojo.Hypervisor;
@@ -50,8 +50,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpGet("api/vms")]
+        [SwaggerOperation(OperationId = "ListVms")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<Vm[]>> Find([FromQuery]string filter)
+        public async Task<ActionResult<Vm[]>> ListVms([FromQuery]string filter)
         {
             AuthorizeAll();
 
@@ -78,7 +79,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/vm/{id}")]
-        public async Task<ActionResult<Vm>> Load(string id)
+        [SwaggerOperation(OperationId = "LoadVm")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> LoadVm(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -99,6 +102,8 @@ namespace TopoMojo.Api.Controllers
         /// <param name="op"></param>
         /// <returns></returns>
         [HttpPut("api/vm")]
+        [SwaggerOperation(OperationId = "ChangeVm")]
+        [Authorize]
         public async Task<ActionResult<Vm>> ChangeVm([FromBody]VmOperation op)
         {
             await Validate(op);
@@ -121,7 +126,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Vm Id</param>
         /// <returns></returns>
         [HttpDelete("api/vm/{id}")]
-        public async Task<ActionResult<Vm>> Delete(string id)
+        [SwaggerOperation(OperationId = "DeleteVm")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> DeleteVm(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -142,7 +149,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="change">key-value pairs</param>
         /// <returns></returns>
         [HttpPut("api/vm/{id}/change")]
-        public async Task<ActionResult<Vm>> Reconfigure(string id, [FromBody] VmKeyValue change)
+        [SwaggerOperation(OperationId = "ReconfigureVm")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> ReconfigureVm(string id, [FromBody] VmKeyValue change)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -174,7 +183,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="answer"></param>
         /// <returns></returns>
         [HttpPut("api/vm/{id}/answer")]
-        public async Task<ActionResult<Vm>> Answer(string id, [FromBody] VmAnswer answer)
+        [SwaggerOperation(OperationId = "AnswerVmQuestion")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> AnswerVmQuestion(string id, [FromBody] VmAnswer answer)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -194,7 +205,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Vm Id</param>
         /// <returns></returns>
         [HttpGet("api/vm/{id}/isos")]
-        public async Task<ActionResult<VmOptions>> IsoOptions(string id)
+        [SwaggerOperation(OperationId = "GetVmIsoOptions")]
+        [Authorize]
+        public async Task<ActionResult<VmOptions>> GetVmIsoOptions(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -214,7 +227,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Vm Id</param>
         /// <returns></returns>
         [HttpGet("api/vm/{id}/nets")]
-        public async Task<ActionResult<VmOptions>> NetOptions(string id)
+        [SwaggerOperation(OperationId = "GetVmNetOptions")]
+        [Authorize]
+        public async Task<ActionResult<VmOptions>> GetVmNetOptions(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -234,7 +249,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("api/vm-console/{id}")]
-        public async Task<ActionResult<VmConsole>> Ticket(string id)
+        [SwaggerOperation(OperationId = "GetVmTicket")]
+        [Authorize]
+        public async Task<ActionResult<VmConsole>> GetVmTicket(string id)
         {
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -295,7 +312,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Template Id</param>
         /// <returns></returns>
         [HttpGet("api/vm-template/{id}")]
-        public async Task<ActionResult<Vm>> Resolve(string id)
+        [SwaggerOperation(OperationId = "ResolveVmFromTemplate")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> ResolveVmFromTemplate(string id)
         {
             var template  = await _templateService.GetDeployableTemplate(id, null);
 
@@ -317,7 +336,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Template Id</param>
         /// <returns></returns>
         [HttpPost("api/vm-template/{id}")]
-        public async Task<ActionResult<Vm>> Deploy(string id)
+        [SwaggerOperation(OperationId = "DeployVm")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> DeployVm(string id)
         {
             VmTemplate template  = await _templateService
                 .GetDeployableTemplate(id, null)
@@ -366,7 +387,9 @@ namespace TopoMojo.Api.Controllers
         /// <param name="id">Template Id</param>
         /// <returns></returns>
         [HttpPut("api/vm-template/{id}")]
-        public async Task<ActionResult<Vm>> Initialize(string id)
+        [SwaggerOperation(OperationId = "InitializeVmTemplate")]
+        [Authorize]
+        public async Task<ActionResult<Vm>> InitializeVmTemplate(string id)
         {
             VmTemplate template  = await _templateService.GetDeployableTemplate(id, null);
 
