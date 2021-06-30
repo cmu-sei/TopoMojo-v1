@@ -88,7 +88,7 @@ namespace TopoMojo.Api.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.HasValidUserScope(id, Actor.Scope).Result
+                () => _svc.HasValidUserScope(id, Actor.Scope, Actor.Id).Result
             );
 
             return Ok(
@@ -134,7 +134,7 @@ namespace TopoMojo.Api.Controllers
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.HasValidUserScope(model.ResourceId, Actor.Scope).Result
+                () => _svc.HasValidUserScope(model.ResourceId, Actor.Scope, Actor.Id).Result
             );
 
             var result = await _svc.Register(model, Actor);

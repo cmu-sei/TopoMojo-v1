@@ -94,13 +94,13 @@ namespace TopoMojo.Api.Data
             ;
         }
 
-        public async Task<bool> CanInteract(string id, string actorId)
+        public async Task<bool> CanInteract(string id, string subjectId)
         {
             return await DbSet.AnyAsync(g =>
                 g.Id == id &&
                 (
-                    g.ManagerId == actorId ||
-                    g.Players.Any(p => p.SubjectId == actorId)
+                    g.ManagerId == subjectId ||
+                    g.Players.Any(p => p.SubjectId == subjectId)
                 )
             );
         }
@@ -112,11 +112,17 @@ namespace TopoMojo.Api.Data
             return gamespace.ManagerId.Equals(subjectId);
         }
 
-        public async Task<bool> HasValidUserScope(string workspaceId, string scope)
+        public async Task<bool> HasValidUserScope(string workspaceId, string scope, string subjectId)
         {
             var workspace = await DbContext.Workspaces.FindAsync(workspaceId);
 
-            return workspace.Audience.HasAnyToken(scope);
+            return
+                workspace.Audience.HasAnyToken(scope) ||
+                await DbContext.Workers.AnyAsync(
+                    w => w.WorkspaceId ==workspaceId &&
+                    w.SubjectId == subjectId
+                )
+            ;
         }
 
         public async Task<bool> IsBelowGamespaceLimit(string subjectId, int limit)

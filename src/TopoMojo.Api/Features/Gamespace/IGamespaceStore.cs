@@ -17,7 +17,7 @@ namespace TopoMojo.Api.Data.Abstractions
         Task DeletePlayer(string gamespaceId, string subjectId);
         Task<bool> CanInteract(string id, string subjectId);
         Task<bool> CanManage(string id, string subjectId);
-        Task<bool> HasValidUserScope(string id, string scope);
+        Task<bool> HasValidUserScope(string id, string scope, string subjectId);
         Task<bool> IsBelowGamespaceLimit(string id, int gamespaceLimit);
     }
 }

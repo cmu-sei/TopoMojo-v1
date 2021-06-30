@@ -698,9 +698,9 @@ namespace TopoMojo.Api.Services
             return await _store.CanInteract(id, actorId);
         }
 
-        public async Task<bool> HasValidUserScope(string id, string scope)
+        public async Task<bool> HasValidUserScope(string id, string scope, string subjectId)
         {
-            return await _store.HasValidUserScope(id, scope);
+            return await _store.HasValidUserScope(id, scope, subjectId);
         }
     }
 }
