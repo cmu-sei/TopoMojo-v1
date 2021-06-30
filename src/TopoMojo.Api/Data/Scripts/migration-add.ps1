@@ -11,9 +11,9 @@
 #>
 Param(
     [Parameter(Mandatory = $true)]
-    $name,
+    $context,
     [Parameter(Mandatory = $true)]
-    $context
+    $name
 )
 
 $providers = @('SqlServer', 'PostgreSQL')

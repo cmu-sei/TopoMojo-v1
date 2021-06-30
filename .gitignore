@@ -1,6 +1,6 @@
 appsettings.*.json
 appsettings.*.conf
-**/.dpk
+**/.dpk/
 **/zwork
 **/tmp*
 *.db

@@ -13,8 +13,8 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-name=$1
-context=${2%Context}
+context=${1%Context}
+name=$2
 declare -a providers=("SqlServer" "PostgreSQL")
 
 for provider in "${providers[@]}"; do

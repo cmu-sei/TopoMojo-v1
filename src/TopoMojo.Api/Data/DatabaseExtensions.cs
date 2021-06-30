@@ -51,7 +51,7 @@ namespace TopoMojo.Api.Extensions
                             {
                                 Name = u.Name,
                                 Id = u.GlobalId,
-                                WhenCreated = DateTime.UtcNow,
+                                WhenCreated = DateTimeOffset.UtcNow,
                                 Role = TopoMojo.Api.Models.UserRole.Administrator
                             });
                         }

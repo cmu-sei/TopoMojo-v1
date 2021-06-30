@@ -37,6 +37,11 @@ namespace  Microsoft.Extensions.DependencyInjection
                     .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
                     .Build()
                 );
+                _.AddPolicy(AppConstants.CookiePolicy, new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(AppConstants.CookieScheme)
+                    .Build()
+                );
 
                 // _.AddPolicy("Players", new AuthorizationPolicyBuilder()
                 //     .RequireAuthenticatedUser()

@@ -5,7 +5,6 @@ namespace TopoMojo.Api.Models
 {
    public class ChallengeView
     {
-        public bool IsActive { get; set; }
         public string Text { get; set; }
         public int MaxPoints { get; set; }
         public int MaxAttempts { get; set; }
@@ -39,7 +38,8 @@ namespace TopoMojo.Api.Models
 
     public class SectionSubmission
     {
-        public DateTime Timestamp { get; set; }
+        public string Id { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
         public int SectionIndex { get; set; }
         public ICollection<AnswerSubmission> Questions { get; set; } = new List<AnswerSubmission>();
 

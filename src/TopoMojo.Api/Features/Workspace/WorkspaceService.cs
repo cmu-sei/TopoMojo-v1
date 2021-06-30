@@ -160,7 +160,7 @@ namespace TopoMojo.Api.Services
 
             workspace.TemplateLimit = _options.DefaultTemplateLimit;
 
-            workspace.LastActivity = DateTime.UtcNow;
+            workspace.LastActivity = DateTimeOffset.UtcNow;
 
             if (workspace.Challenge.IsEmpty())
                 workspace.Challenge = JsonSerializer.Serialize<ChallengeSpec>(

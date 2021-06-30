@@ -50,7 +50,7 @@ namespace TopoMojo.Api.Data
             return await DbContext.Gamespaces
                 .Where(g =>
                     g.WorkspaceId == id &&
-                    g.EndTime == DateTime.MinValue
+                    g.EndTime == DateTimeOffset.MinValue
                 )
                 .ToArrayAsync()
             ;
@@ -123,7 +123,7 @@ namespace TopoMojo.Api.Data
         {
             return await DbContext.Gamespaces.CountAsync(g =>
                 g.WorkspaceId == id &&
-                g.EndTime == DateTime.MinValue
+                g.EndTime == DateTimeOffset.MinValue
             );
         }
 
@@ -132,7 +132,7 @@ namespace TopoMojo.Api.Data
             return (await CheckGamespaceCount(id)) > 0;
         }
 
-        public async Task<Workspace[]> DeleteStale(DateTime staleMarker, bool published, bool dryrun = true)
+        public async Task<Workspace[]> DeleteStale(DateTimeOffset staleMarker, bool published, bool dryrun = true)
         {
             var query = published
                 ? DbSet.Where(w => w.IsPublished || !string.IsNullOrWhiteSpace(w.Audience))

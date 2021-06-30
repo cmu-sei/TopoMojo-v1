@@ -49,7 +49,7 @@ namespace TopoMojo.Api.Data
             {
                 entity.Workspace.LaunchCount += 1;
 
-                entity.Workspace.LastActivity = DateTime.UtcNow;
+                entity.Workspace.LastActivity = DateTimeOffset.UtcNow;
             }
 
             var gamespace = await base.Create(entity);
@@ -71,7 +71,7 @@ namespace TopoMojo.Api.Data
         {
             string id = await DbSet.Where(g =>
                     g.WorkspaceId == workspaceId &&
-                    g.EndTime == DateTime.MinValue &&
+                    g.EndTime == DateTimeOffset.MinValue &&
                     (
                         g.ManagerId == subjectId ||
                         g.Players.Any(p => p.SubjectId == subjectId)

@@ -48,7 +48,7 @@ namespace TopoMojo.Hypervisor
         public string Id { get; set; }
         public string Name { get; set; }
         public int Progress { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
     }
 
     public class VmOptions {

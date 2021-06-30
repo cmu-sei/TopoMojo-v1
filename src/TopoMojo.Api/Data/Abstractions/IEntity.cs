@@ -6,7 +6,7 @@ namespace TopoMojo.Api.Data.Abstractions
     public interface IEntity
     {
         string Id { get; set; }
-        System.DateTime WhenCreated { get; set; }
+        System.DateTimeOffset WhenCreated { get; set; }
     }
 
 }

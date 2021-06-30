@@ -1,3 +1,4 @@
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,11 +36,10 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 .AddCookie(AppConstants.CookieScheme, opt =>
                 {
-                    // opt.ExpireTimeSpan = new TimeSpan(4, 0, 0);
-                    // opt.SlidingExpiration = true;
+                    opt.ExpireTimeSpan = new TimeSpan(0, oidc.MksCookieMinutes, 0);
                     opt.Cookie = new CookieBuilder
                     {
-                        Name = AppConstants.CookieScheme
+                        Name = AppConstants.CookieScheme,
                     };
                 })
             ;

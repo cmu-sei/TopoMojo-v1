@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
 {
-    public partial class RefactorKeysAndMisc : Migration
+    public partial class RefactorKeysAndDateTime : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -58,6 +58,10 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 name: "Id",
                 table: "Players");
 
+            migrationBuilder.DropColumn(
+                name: "StopTime",
+                table: "Gamespaces");
+
             migrationBuilder.RenameTable(
                 name: "ApiKey",
                 newName: "ApiKeys");
@@ -66,11 +70,6 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 name: "SessionLimit",
                 table: "Users",
                 newName: "GamespaceCleanupGraceMinutes");
-
-            migrationBuilder.RenameColumn(
-                name: "StopTime",
-                table: "Gamespaces",
-                newName: "EndTime");
 
             migrationBuilder.RenameColumn(
                 name: "ShareCode",
@@ -86,6 +85,22 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 name: "IX_ApiKey_UserId",
                 table: "ApiKeys",
                 newName: "IX_ApiKeys_UserId");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Workspaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "LastActivity",
+                table: "Workspaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
@@ -146,6 +161,14 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldType: "text",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Users",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Users",
@@ -168,6 +191,14 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldFixedLength: true,
                 oldMaxLength: 36,
                 oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Templates",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ParentId",
@@ -242,6 +273,30 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldType: "character(36)",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Gamespaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "StartTime",
+                table: "Gamespaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "ExpirationTime",
+                table: "Gamespaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Gamespaces",
@@ -259,6 +314,13 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 type: "integer",
                 nullable: false,
                 defaultValue: 0);
+
+            migrationBuilder.AddColumn<DateTimeOffset>(
+                name: "EndTime",
+                table: "Gamespaces",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
 
             migrationBuilder.AlterColumn<string>(
                 name: "UserId",
@@ -293,12 +355,12 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 type: "text",
                 nullable: true);
 
-            migrationBuilder.AddColumn<DateTime>(
+            migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "WhenCreated",
                 table: "ApiKeys",
-                type: "timestamp without time zone",
+                type: "timestamp with time zone",
                 nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_Workers",
@@ -404,6 +466,10 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 table: "Gamespaces");
 
             migrationBuilder.DropColumn(
+                name: "EndTime",
+                table: "Gamespaces");
+
+            migrationBuilder.DropColumn(
                 name: "Hash",
                 table: "ApiKeys");
 
@@ -434,15 +500,26 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 table: "Gamespaces",
                 newName: "ClientId");
 
-            migrationBuilder.RenameColumn(
-                name: "EndTime",
-                table: "Gamespaces",
-                newName: "StopTime");
-
             migrationBuilder.RenameIndex(
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKey",
                 newName: "IX_ApiKey_UserId");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Workspaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastActivity",
+                table: "Workspaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
@@ -500,6 +577,14 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 defaultValue: 0)
                 .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Users",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Users",
@@ -528,6 +613,14 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldType: "character varying(36)",
                 oldMaxLength: 36,
                 oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Templates",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ParentId",
@@ -599,6 +692,30 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldType: "character varying(36)",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Gamespaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartTime",
+                table: "Gamespaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ExpirationTime",
+                table: "Gamespaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "timestamp with time zone");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Gamespaces",
@@ -609,6 +726,13 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                 oldClrType: typeof(string),
                 oldType: "character varying(36)",
                 oldMaxLength: 36);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "StopTime",
+                table: "Gamespaces",
+                type: "timestamp without time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AlterColumn<string>(
                 name: "UserId",

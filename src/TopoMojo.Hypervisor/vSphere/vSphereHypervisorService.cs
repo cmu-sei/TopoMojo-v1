@@ -38,7 +38,7 @@ namespace TopoMojo.Hypervisor.vSphere
         private readonly ILogger<vSphereHypervisorService> _logger;
         private readonly ILoggerFactory _mill;
         private ConcurrentDictionary<string, VimClient> _hostCache;
-        private DateTime _lastCacheUpdate = DateTime.MinValue;
+        private DateTimeOffset _lastCacheUpdate = DateTimeOffset.MinValue;
         private Dictionary<string, VimClient> _affinityMap;
         private ConcurrentDictionary<string, Vm> _vmCache;
 

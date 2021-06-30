@@ -11,7 +11,7 @@ namespace TopoMojo.Api.Data
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public System.DateTime WhenCreated { get; set; }
+        public System.DateTimeOffset WhenCreated { get; set; }
         public string Description { get; set; }
         public string Audience { get; set; }
         public string Iso { get; set; }

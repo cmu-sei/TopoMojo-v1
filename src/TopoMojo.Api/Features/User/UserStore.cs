@@ -33,7 +33,7 @@ namespace TopoMojo.Api.Data
             if (user.Id.IsEmpty())
                 user.Id = Guid.NewGuid().ToString();
 
-            user.WhenCreated = DateTime.UtcNow;
+            user.WhenCreated = DateTimeOffset.UtcNow;
 
             if (!(await DbSet.AnyAsync()))
                 user.Role = UserRole.Administrator;
@@ -41,7 +41,7 @@ namespace TopoMojo.Api.Data
             return await base.Create(user);
         }
 
-        public async Task<bool> CanInteract(string isolationId, string userId)
+        public async Task<bool> CanInteract(string userId, string isolationId)
         {
             if (isolationId.IsEmpty() || userId.IsEmpty())
                 return false;
@@ -50,6 +50,12 @@ namespace TopoMojo.Api.Data
                 w.SubjectId == userId &&
                 w.GamespaceId == isolationId
             );
+
+            if (found.Equals(false))
+                found = await DbContext.Gamespaces.AnyAsync(g =>
+                    g.Id == isolationId &&
+                    g.ManagerId == userId
+                );
 
             if (found.Equals(false))
                 found = await DbContext.Workers.AnyAsync(w =>

@@ -32,7 +32,7 @@ namespace TopoMojo.Api.Services
             if (_monitor.ContainsKey(key))
             {
                 _monitor[key].Progress = progress;
-                _monitor[key].Stop = DateTime.UtcNow;
+                _monitor[key].Stop = DateTimeOffset.UtcNow;
             }
             else
             {
@@ -40,7 +40,7 @@ namespace TopoMojo.Api.Services
                 {
                     Key = key,
                     Progress = 0,
-                    Start = DateTime.UtcNow
+                    Start = DateTimeOffset.UtcNow
                 });
             }
         }
@@ -57,7 +57,7 @@ namespace TopoMojo.Api.Services
         {
             while (true)
             {
-                DateTime now = DateTime.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 foreach(FileProgress item in _monitor.Values.ToArray())
                 {
                     if (now.CompareTo(item.Stop.AddMinutes(2)) > 0)
@@ -76,7 +76,7 @@ namespace TopoMojo.Api.Services
         public string Key { get; set; }
         public string Name { get; set; }
         public int Progress { get; set; }
-        public DateTime Start { get; set; }
-        public DateTime Stop { get; set; }
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset Stop { get; set; }
     }
 }

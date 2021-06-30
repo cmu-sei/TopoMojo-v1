@@ -41,8 +41,8 @@ namespace TopoMojo.Api.Services
         {
             var expired = await _gamespaceStore.List()
                 .Where(g =>
-                    g.EndTime == DateTime.MinValue &&
-                    g.ExpirationTime > DateTime.UtcNow
+                    g.EndTime == DateTimeOffset.MinValue &&
+                    g.ExpirationTime > DateTimeOffset.UtcNow
                 )
                 .ToArrayAsync();
 
@@ -50,7 +50,7 @@ namespace TopoMojo.Api.Services
 
             foreach (var gs in expired)
             {
-                if (gs.ExpirationTime.AddMinutes(gs.CleanupGraceMinutes) < DateTime.UtcNow)
+                if (gs.ExpirationTime.AddMinutes(gs.CleanupGraceMinutes) < DateTimeOffset.UtcNow)
                 {
                     _logger.LogInformation($"Ending expired gamespace {gs.Id}");
 
@@ -121,8 +121,8 @@ namespace TopoMojo.Api.Services
 
         public async Task<JanitorReport[]> CleanupIdleWorkspaceVms(JanitorOptions options)
         {
-            DateTime staleDate = options.IdleWorkspaceVmsExpiration.ToDatePast();
-            DateTime activeDate = staleDate.AddSeconds(
+            DateTimeOffset staleDate = options.IdleWorkspaceVmsExpiration.ToDatePast();
+            DateTimeOffset activeDate = staleDate.AddSeconds(
                 -options.IdleWorkspaceVmsExpiration.ToSeconds()
             );
 

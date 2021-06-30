@@ -10,8 +10,8 @@ using TopoMojo.Api.Data;
 namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 {
     [DbContext(typeof(TopoMojoDbContextSqlServer))]
-    [Migration("20210623135627_RefactorKeysAndMisc")]
-    partial class RefactorKeysAndMisc
+    [Migration("20210630025437_RefactorKeysAndDateTime")]
+    partial class RefactorKeysAndDateTime
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -37,8 +37,8 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
@@ -64,11 +64,11 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<int>("CleanupGraceMinutes")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("EndTime")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime>("ExpirationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("ExpirationTime")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("ManagerId")
                         .HasColumnType("nvarchar(max)");
@@ -80,11 +80,11 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("WorkspaceId")
                         .HasColumnType("nvarchar(36)");
@@ -166,8 +166,8 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<int>("Replicas")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
@@ -207,8 +207,8 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<string>("Scope")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("WorkspaceLimit")
                         .HasColumnType("int");
@@ -269,8 +269,8 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("LastActivity")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("LastActivity")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("LaunchCount")
                         .HasColumnType("int");
@@ -292,8 +292,8 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                     b.Property<bool>("UseUplinkSwitch")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 

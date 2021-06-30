@@ -26,6 +26,6 @@ namespace TopoMojo.Hypervisor.vSphere
         public ManagedObjectReference Task { get; set; }
         public string Action { get; set; }
         public int Progress { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
     }
 }

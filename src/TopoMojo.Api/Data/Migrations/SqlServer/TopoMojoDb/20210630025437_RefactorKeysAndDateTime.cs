@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
 {
-    public partial class RefactorKeysAndMisc : Migration
+    public partial class RefactorKeysAndDateTime : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -57,6 +57,10 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 name: "Id",
                 table: "Players");
 
+            migrationBuilder.DropColumn(
+                name: "StopTime",
+                table: "Gamespaces");
+
             migrationBuilder.RenameTable(
                 name: "ApiKey",
                 newName: "ApiKeys");
@@ -65,11 +69,6 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 name: "SessionLimit",
                 table: "Users",
                 newName: "GamespaceCleanupGraceMinutes");
-
-            migrationBuilder.RenameColumn(
-                name: "StopTime",
-                table: "Gamespaces",
-                newName: "EndTime");
 
             migrationBuilder.RenameColumn(
                 name: "ShareCode",
@@ -85,6 +84,22 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 name: "IX_ApiKey_UserId",
                 table: "ApiKeys",
                 newName: "IX_ApiKeys_UserId");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Workspaces",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "LastActivity",
+                table: "Workspaces",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
@@ -145,6 +160,14 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldType: "nvarchar(max)",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Users",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Users",
@@ -167,6 +190,14 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldFixedLength: true,
                 oldMaxLength: 36,
                 oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Templates",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ParentId",
@@ -241,6 +272,30 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldType: "nchar(36)",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "WhenCreated",
+                table: "Gamespaces",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "StartTime",
+                table: "Gamespaces",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
+
+            migrationBuilder.AlterColumn<DateTimeOffset>(
+                name: "ExpirationTime",
+                table: "Gamespaces",
+                type: "datetimeoffset",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Gamespaces",
@@ -258,6 +313,13 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
+
+            migrationBuilder.AddColumn<DateTimeOffset>(
+                name: "EndTime",
+                table: "Gamespaces",
+                type: "datetimeoffset",
+                nullable: false,
+                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
 
             migrationBuilder.AlterColumn<string>(
                 name: "UserId",
@@ -292,12 +354,12 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 type: "nvarchar(max)",
                 nullable: true);
 
-            migrationBuilder.AddColumn<DateTime>(
+            migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "WhenCreated",
                 table: "ApiKeys",
-                type: "datetime2",
+                type: "datetimeoffset",
                 nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_Workers",
@@ -403,6 +465,10 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 table: "Gamespaces");
 
             migrationBuilder.DropColumn(
+                name: "EndTime",
+                table: "Gamespaces");
+
+            migrationBuilder.DropColumn(
                 name: "Hash",
                 table: "ApiKeys");
 
@@ -433,15 +499,26 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 table: "Gamespaces",
                 newName: "ClientId");
 
-            migrationBuilder.RenameColumn(
-                name: "EndTime",
-                table: "Gamespaces",
-                newName: "StopTime");
-
             migrationBuilder.RenameIndex(
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKey",
                 newName: "IX_ApiKey_UserId");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Workspaces",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastActivity",
+                table: "Workspaces",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
@@ -498,6 +575,14 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 nullable: false,
                 defaultValue: 0);
 
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Users",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Users",
@@ -526,6 +611,14 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldType: "nvarchar(36)",
                 oldMaxLength: 36,
                 oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Templates",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ParentId",
@@ -596,6 +689,30 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldType: "nvarchar(36)",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "WhenCreated",
+                table: "Gamespaces",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartTime",
+                table: "Gamespaces",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ExpirationTime",
+                table: "Gamespaces",
+                type: "datetime2",
+                nullable: false,
+                oldClrType: typeof(DateTimeOffset),
+                oldType: "datetimeoffset");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Id",
                 table: "Gamespaces",
@@ -606,6 +723,13 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 oldClrType: typeof(string),
                 oldType: "nvarchar(36)",
                 oldMaxLength: 36);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "StopTime",
+                table: "Gamespaces",
+                type: "datetime2",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AlterColumn<string>(
                 name: "UserId",

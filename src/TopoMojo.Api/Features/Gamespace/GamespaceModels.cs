@@ -18,10 +18,10 @@ namespace TopoMojo.Api.Models
         public string Slug => Name.ToSlug();
         public bool IsActive { get; set; }
         public Player[] Players { get; set; }
-        public DateTime WhenCreated { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public DateTime ExpirationTime { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
+        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset EndTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
 
     }
 
@@ -36,9 +36,9 @@ namespace TopoMojo.Api.Models
         public string LaunchpointUrl { get; set; }
         public Player[] Players { get; set; }
         public string WhenCreated { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public DateTime ExpirationTime { get; set; }
+        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset EndTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
         public bool IsActive { get; set; }
         public IEnumerable<VmState> Vms { get; set; } = new List<VmState>();
         public ChallengeView Challenge { get; set; }
@@ -50,9 +50,9 @@ namespace TopoMojo.Api.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public Player[] Players { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public DateTime ExpirationTime { get; set; }
+        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset EndTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
 
     }
 
@@ -84,7 +84,7 @@ namespace TopoMojo.Api.Models
         public bool AllowReset { get; set; }
         public bool AllowPreview { get; set; }
         public bool StartGamespace { get; set; }
-        public DateTime ExpirationTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
         public RegistrationPlayer[] Players { get; set; } = new RegistrationPlayer[] {};
     }
 

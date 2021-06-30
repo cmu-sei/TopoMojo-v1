@@ -29,14 +29,14 @@ namespace TopoMojo.Hypervisor.vSphere
 
         private readonly SddcConfiguration _config;
         private HttpClient _sddc;
-        private DateTime authExpiration = DateTime.MinValue;
+        private DateTimeOffset authExpiration = DateTimeOffset.MinValue;
         private string _apiUrl = "";
         private string _apiSegments = "policy/api/v1/infra/tier-1s/cgw/segments";
         // private string authToken = "";
 
         private async Task InitClient()
         {
-            if (DateTime.UtcNow.CompareTo(authExpiration) < 0)
+            if (DateTimeOffset.UtcNow.CompareTo(authExpiration) < 0)
                 return;
 
             _sddc = new HttpClient();
@@ -61,7 +61,7 @@ namespace TopoMojo.Hypervisor.vSphere
             string data = await response.Content.ReadAsStringAsync();
             var auth = JsonSerializer.Deserialize<AuthResponse>(data);
 
-            authExpiration = DateTime.UtcNow.AddSeconds(auth.expires_in);
+            authExpiration = DateTimeOffset.UtcNow.AddSeconds(auth.expires_in);
 
             _sddc.DefaultRequestHeaders.Add("csp-auth-token", auth.access_token);
 

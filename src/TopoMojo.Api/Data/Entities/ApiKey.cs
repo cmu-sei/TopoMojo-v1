@@ -12,7 +12,7 @@ namespace TopoMojo.Api.Data
         public string UserId { get; set; }
         public string Name { get; set; }
         public string Hash { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
         public User User { get; set; }
     }
 }

@@ -122,7 +122,7 @@ namespace TopoMojo.Api.Services
         {
             try
             {
-                status.StartedAt = DateTime.UtcNow;
+                status.StartedAt = DateTimeOffset.UtcNow;
                 if (statusUpdate != null)
                     statusUpdate.Invoke(status);
 
@@ -143,7 +143,7 @@ namespace TopoMojo.Api.Services
                 } while (bytes > 0);
 
                 status.Count = status.Size;
-                status.StoppedAt = DateTime.UtcNow;
+                status.StoppedAt = DateTimeOffset.UtcNow;
                 _logger.LogInformation("File upload complete: {0} {1}b {2}s {3}b/s", status.Key, status.Count, status.Duration, status.Rate);
             }
             catch (Exception ex)
@@ -166,8 +166,8 @@ namespace TopoMojo.Api.Services
         public string Key { get; set; }
         public long Size { get; set; }
         public long Count { get; set; }
-        public DateTime StartedAt { get; set; }
-        public DateTime StoppedAt { get; set; }
+        public DateTimeOffset StartedAt { get; set; }
+        public DateTimeOffset StoppedAt { get; set; }
         public Exception Error { get; set; }
         public int Progress {
             get
@@ -184,7 +184,7 @@ namespace TopoMojo.Api.Services
         public int Rate {
             get
             {
-                DateTime now = (StoppedAt > DateTime.MinValue) ? StoppedAt : DateTime.UtcNow;
+                DateTimeOffset now = (StoppedAt > DateTimeOffset.MinValue) ? StoppedAt : DateTimeOffset.UtcNow;
                 return Convert.ToInt32(Count / now.Subtract(StartedAt).TotalSeconds);
             }
         }

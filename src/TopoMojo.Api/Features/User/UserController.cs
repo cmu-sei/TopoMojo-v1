@@ -263,11 +263,20 @@ namespace TopoMojo.Api.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<User> RegisterUser()
         {
-            return await _svc.AddOrUpdate(new UserRegistration
+            var user = await _svc.AddOrUpdate(new UserRegistration
             {
                 Id = Actor.Id,
                 Name = Actor.Name
             });
+
+            await HttpContext.SignInAsync(
+                AppConstants.CookieScheme,
+                new ClaimsPrincipal(
+                    new ClaimsIdentity(User.Claims, AppConstants.CookieScheme)
+                )
+            );
+
+            return user;
         }
 
         /// <summary>
@@ -307,8 +316,8 @@ namespace TopoMojo.Api.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetAuthCookie()
         {
-            if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
-                return Ok();
+            // if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
+            //     return Ok();
 
             await HttpContext.SignInAsync(
                 AppConstants.CookieScheme,
@@ -326,10 +335,22 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("/api/user/logout")]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(AppConstants.CookiePolicy)]
         public async Task Logout()
         {
             if (User.Identity.AuthenticationType == AppConstants.CookieScheme)
                 await HttpContext.SignOutAsync(AppConstants.CookieScheme);
+        }
+
+        /// <summary>
+        /// Auth check fails if cookie expired
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/ping")]
+        [Authorize(AppConstants.CookiePolicy)]
+        public IActionResult Heartbeat()
+        {
+            return Ok();
         }
 
     }

@@ -237,23 +237,22 @@ namespace TopoMojo.Api.Controllers
         /// <summary>
         /// Grade a challenge.
         /// </summary>
-        /// <param name="id">Gamespace Id</param>
         /// <param name="model">SectionSubmission</param>
         /// <returns></returns>
-        [HttpPost("api/gamespace/{id}/grade")]
+        [HttpPost("api/gamespace/grade")]
         [SwaggerOperation(OperationId = "GradeChallenge")]
         [Authorize]
-        public async Task<ActionResult<ChallengeView>> GradeChallenge(string id, [FromBody] SectionSubmission model)
+        public async Task<ActionResult<GameState>> GradeChallenge([FromBody] SectionSubmission model)
         {
-            await Validate(new Entity{ Id = id });
+            await Validate(new Entity{ Id = model.Id });
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
-                () => _svc.CanInteract(id, Actor.Id).Result
+                () => _svc.CanInteract(model.Id, Actor.Id).Result
             );
 
             return Ok(
-                await _svc.Grade(id, model)
+                await _svc.Grade(model)
             );
         }
 
@@ -276,7 +275,7 @@ namespace TopoMojo.Api.Controllers
                 () => _svc.CanInteract(id, Actor.Id).Result
             );
 
-            await _svc.Delete(id);
+            await _svc.Delete(id, Actor.IsAdmin);
 
             SendBroadcast(new GameState{Id = id}, "OVER");
 

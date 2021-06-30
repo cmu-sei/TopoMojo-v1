@@ -35,8 +35,8 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<string>("UserId")
                         .HasColumnType("character varying(36)");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -62,11 +62,11 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<int>("CleanupGraceMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("EndTime")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("ExpirationTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ManagerId")
                         .HasColumnType("text");
@@ -78,11 +78,11 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("WorkspaceId")
                         .HasColumnType("character varying(36)");
@@ -164,8 +164,8 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<int>("Replicas")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("WorkspaceId")
                         .HasMaxLength(36)
@@ -205,8 +205,8 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<string>("Scope")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("WorkspaceLimit")
                         .HasColumnType("integer");
@@ -267,8 +267,8 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("LastActivity")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("LastActivity")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("LaunchCount")
                         .HasColumnType("integer");
@@ -290,8 +290,8 @@ namespace TopoMojo.Api.Data.Migrations.PostgreSQL.TopoMojoDb
                     b.Property<bool>("UseUplinkSwitch")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("WhenCreated")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("WhenCreated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

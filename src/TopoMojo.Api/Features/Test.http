@@ -5,22 +5,53 @@
 @auth = Authorization: Bearer {{login.response.body.access_token}}
 
 ###
-GET {{url}}/workspaces?term=
+GET {{url}}/workspaces?filter=play
 {{auth}}
 
 ###
 GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd
 {{auth}}
+###
+GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/templates
+{{auth}}
 
 ###
 POST {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/clone
 {{auth}}###
+###
+PUT {{url}}/workspace
+{{auth}}
+{{json}}
+
+{
+  "id": "059ce94f-63d3-47bc-bd4a-773ceb41fbfd",
+  "name": "PresCup R1 Teams - AI 1000 #6",
+  "description": "EO: Cyber Analysis",
+  "author": "Matthew.Kaar",
+  "audience": null,
+  "templateLimit": 6,
+  "templateScope": "jam"
+}
 
 ###
 DELETE {{url}}/workspace/cf4d217717b5454ca893b3ee8469c796
 {{auth}}
 
+###
+GET {{url}}/templates?filter=published
+{{auth}}
+###
+GET {{url}}/template/16aefb71-a91e-4286-8253-1be1c63bbd48
+{{auth}}
+###
+GET {{url}}/template-detail/16aefb71-a91e-4286-8253-1be1c63bbd48
+{{auth}}
+###
+PUT {{url}}/template-detail
+{{auth}}
+{{json}}
 
+{"id":"16aefb71-a91e-4286-8253-1be1c63bbd48","name":"SO","description":"SO","audience":"jam maj","networks":"lan","guestinfo":null,"detail":"{\n  \"Id\": null,\n  \"Name\": \"blank-10g-732\",\n  \"TopoId\": null,\n  \"Cpu\": \"4x1\",\n  \"Guest\": null,\n  \"Source\": null,\n  \"Iso\": null,\n  \"Floppy\": null,\n  \"GuestSettings\": null,\n  \"Version\": null,\n  \"IsolationTag\": null,\n  \"UseUplinkSwitch\": false,\n  \"Ram\": 32,\n  \"VideoRam\": 0,\n  \"Adapters\": 1,\n  \"Delay\": 0,\n  \"Eth\": [\n    {\n      \"Id\": 0,\n      \"Net\": \"lan\",\n      \"Type\": \"e1000\",\n      \"Mac\": null,\n      \"Ip\": null,\n      \"Vlan\": 0\n    }\n  ],\n  \"Disks\": [\n    {\n      \"Id\": 0,\n      \"Path\": \"[ds] 059ce94f-63d3-47bc-bd4a-773ceb41fbfd/SO1604-BankF.vmdk\",\n      \"Source\": \"[topomojo] 00000000-0000-0000-0000-000000000000/blank-10g.vmdk\",\n      \"Controller\": \"lsilogic\",\n      \"Size\": 10,\n      \"Status\": 0\n    }\n  ]\n}","isPublished":true}
 
 ###
 # Obtain access token from IdentityServer
@@ -63,6 +94,8 @@ Content-Type: application/json
             "Scopes": "dev-api openid profile email org",
             "RedirectUrl": [
                 "http://localhost:4200/oidc",
+                "http://localhost:4201/oidc",
+                "http://localhost:4202/oidc",
                 "http://localhost:5004/api/oauth2-redirect.html"
             ]
 

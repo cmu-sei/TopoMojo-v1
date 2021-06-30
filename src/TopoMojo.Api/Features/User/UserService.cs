@@ -183,7 +183,7 @@ namespace TopoMojo.Api.Services
                 Id = Guid.NewGuid().ToString("n"),
                 Hash = key.ToSha256(),
                 Name = subjectName,
-                WhenCreated = DateTime.UtcNow
+                WhenCreated = DateTimeOffset.UtcNow
             });
 
             await _store.Update(entity);

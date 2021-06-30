@@ -24,7 +24,7 @@ namespace TopoMojo.Api.Models
         public int GamespaceMaxMinutes { get; set; }
         public int GamespaceCleanupGraceMinutes { get; set; }
         public UserRole Role { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
         public bool IsAdmin =>
             Role == UserRole.Administrator
         ;
@@ -74,6 +74,6 @@ namespace TopoMojo.Api.Models
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
     }
 }

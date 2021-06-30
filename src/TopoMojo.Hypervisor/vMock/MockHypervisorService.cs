@@ -78,7 +78,7 @@ namespace TopoMojo.Hypervisor.vMock
             if (_tasks.ContainsKey(key))
             {
                 VmTask task = _tasks[key];
-                float elapsed = (int)DateTime.UtcNow.Subtract(task.WhenCreated).TotalSeconds;
+                float elapsed = (int)DateTimeOffset.UtcNow.Subtract(task.WhenCreated).TotalSeconds;
                 task.Progress = (int) Math.Min(100, (elapsed / 10) * 100);
                 if (task.Progress == 100)
                 {
@@ -205,7 +205,7 @@ namespace TopoMojo.Hypervisor.vMock
                 throw new InvalidOperationException();
 
             Vm vm = TryFind(id);
-            vm.Task = new VmTask { Id = id, Name = "saving", WhenCreated = DateTime.UtcNow};
+            vm.Task = new VmTask { Id = id, Name = "saving", WhenCreated = DateTimeOffset.UtcNow};
             _tasks.Add(vm.Name, vm.Task);
             await Delay();
             return vm;
@@ -261,13 +261,13 @@ namespace TopoMojo.Hypervisor.vMock
                 // if (!_tasks.ContainsKey(key))
                 //     _tasks.Add(key, new VmTask {
                 //         Name = "initializing",
-                //         WhenCreated = DateTime.UtcNow,
+                //         WhenCreated = DateTimeOffset.UtcNow,
                 //         Id = key
                 //     });
                 _logger.LogDebug("disk: creating " + disk.Path);
                 _disks.Add(new MockDisk
                 {
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTimeOffset.Now,
                     Path = disk.Path,
                     Disk = disk
                 });
@@ -284,7 +284,7 @@ namespace TopoMojo.Hypervisor.vMock
                 _logger.LogDebug("disk: creating " + disk.Path);
                 _disks.Add(new MockDisk
                 {
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTimeOffset.Now,
                     Path = disk.Path,
                     Disk = disk
                 });
@@ -309,7 +309,7 @@ namespace TopoMojo.Hypervisor.vMock
                 if (mock == null)
                 {    _disks.Add(new MockDisk
                     {
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTimeOffset.Now,
                         Path = disk.Path,
                         Disk = disk
                     });
@@ -317,7 +317,7 @@ namespace TopoMojo.Hypervisor.vMock
                 progress = 100;
                 // if (mock != null)
                 // {
-                //     float elapsed = (int)DateTime.Now.Subtract(mock.CreatedAt).TotalSeconds;
+                //     float elapsed = (int)DateTimeOffset.Now.Subtract(mock.CreatedAt).TotalSeconds;
                 //     progress = (int) Math.Min(100, (elapsed / 10) * 100);
                 // }
             }
@@ -543,7 +543,7 @@ namespace TopoMojo.Hypervisor.vMock
 
     public class MockDisk
     {
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public string Path { get; set; }
         public VmDisk Disk { get; set; }
     }

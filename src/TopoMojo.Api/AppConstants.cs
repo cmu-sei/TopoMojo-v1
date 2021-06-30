@@ -9,6 +9,7 @@ namespace TopoMojo.Api
         public const string PrivilegedAudience = "topomojo-api-privileged";
         public const string AdminOnlyPolicy = "AdminOnly";
         public const string TicketOnlyPolicy = "TicketOnly";
+        public const string CookiePolicy = "CookieRequired";
         public const string DataProtectionPurpose = "_dp:TopoMojo";
         public const string SubjectClaimName = "sub";
         public const string NameClaimName = "name";
@@ -23,7 +24,7 @@ namespace TopoMojo.Api
         public const string UserGamespaceMaxMinutesClaim = "u_gmm";
         public const string UserGamespaceCleanupGraceMinutesClaim = "u_gcg";
         public const string RegistrationCachePrefix = "lp:";
-        public const string CookieScheme = ".TopoMojo.Cookies";
+        public const string CookieScheme = "topomojo.mks";
         public const string MarkdownCutLine = "<!-- cut -->";
         public static char[] InlineListSeparators = new char[] { ' ', ',', ';' };
     }

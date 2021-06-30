@@ -202,9 +202,9 @@ namespace TopoMojo.Api.Extensions
             throw new ArgumentException("invalid simple-timespan");
         }
 
-        public static DateTime ToDatePast(this string ts)
+        public static DateTimeOffset ToDatePast(this string ts)
         {
-            return DateTime.UtcNow
+            return DateTimeOffset.UtcNow
                 .Subtract(
                     new TimeSpan(
                         0,

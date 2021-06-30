@@ -57,7 +57,7 @@ namespace TopoMojo.Api.Services
             ;
 
             if (search.WantsActive)
-                query = query.Where(g => g.EndTime == DateTime.MinValue);
+                query = query.Where(g => g.EndTime == DateTimeOffset.MinValue);
 
             query = query.OrderBy(g => g.WhenCreated);
 
@@ -161,7 +161,7 @@ namespace TopoMojo.Api.Services
 
             if (ctx.Gamespace.IsActive)
             {
-                ctx.Gamespace.EndTime = DateTime.UtcNow;
+                ctx.Gamespace.EndTime = DateTimeOffset.UtcNow;
 
                 await _store.Update(ctx.Gamespace);
             }
@@ -174,7 +174,7 @@ namespace TopoMojo.Api.Services
         private async Task Create(RegistrationContext ctx, User actor)
         {
 
-            var ts = DateTime.UtcNow;
+            var ts = DateTimeOffset.UtcNow;
 
             var gamespace = new Data.Gamespace
             {
@@ -414,9 +414,9 @@ namespace TopoMojo.Api.Services
                     vm.State = VmPowerState.Running;
             }
 
-            if (gamespace.StartTime == DateTime.MinValue)
+            if (gamespace.StartTime == DateTimeOffset.MinValue)
             {
-                gamespace.StartTime = DateTime.UtcNow;
+                gamespace.StartTime = DateTimeOffset.UtcNow;
                 await _store.Update(gamespace);
             }
         }
@@ -459,19 +459,19 @@ namespace TopoMojo.Api.Services
                 // TODO: get active question set
 
                 // map challenge to safe model
-                state.Challenge = MapChallenge(spec, gamespace.IsActive, 0);
+                state.Challenge = MapChallenge(spec, 0);
             }
 
             return state;
         }
 
-        public async Task Delete(string id)
+        public async Task Delete(string id, bool sudo)
         {
             var ctx = await LoadContext(id);
 
             await _pod.DeleteAll(id);
 
-            if (!ctx.Gamespace.AllowReset)
+            if (!sudo && !ctx.Gamespace.AllowReset)
                 throw new ActionForbidden();
 
             await _store.Delete(ctx.Gamespace.Id);
@@ -552,8 +552,10 @@ namespace TopoMojo.Api.Services
             await _store.DeletePlayer(id, subjectId);
         }
 
-        public async Task<ChallengeView> Grade(string id, SectionSubmission submission)
+        public async Task<GameState> Grade(SectionSubmission submission)
         {
+            string id = submission.Id;
+
             if (! await _locker.Lock(id))
                 throw new ResourceIsLocked();
 
@@ -569,10 +571,10 @@ namespace TopoMojo.Api.Services
             if (!ctx.Gamespace.IsActive)
                 _locker.Unlock(id, new GamespaceIsExpired()).Wait();
 
-            if (spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
+            if (spec.MaxAttempts > 0 && spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
                 _locker.Unlock(id, new AttemptLimitReached()).Wait();
 
-            submission.Timestamp = DateTime.UtcNow;
+            submission.Timestamp = DateTimeOffset.UtcNow;
             spec.Submissions.Add(submission);
 
             // grade and save
@@ -602,18 +604,18 @@ namespace TopoMojo.Api.Services
                 )
             )
             {
-                ctx.Gamespace.EndTime = DateTime.UtcNow;
+                ctx.Gamespace.EndTime = DateTimeOffset.UtcNow;
                 await Stop(ctx.Gamespace.Id);
             }
 
             await _store.Update(ctx.Gamespace);
 
             // map return model
-            var result = MapChallenge(spec, ctx.Gamespace.IsActive);
+            var result = await LoadState(ctx.Gamespace);
 
             // merge submission into return model
             i = 0;
-            foreach (var question in result.Questions)
+            foreach (var question in result.Challenge.Questions)
                 question.Answer = submission.Questions.ElementAtOrDefault(i++)?.Answer ?? "";
 
             await _locker.Unlock(id);
@@ -621,13 +623,12 @@ namespace TopoMojo.Api.Services
             return result;
         }
 
-        private ChallengeView MapChallenge(ChallengeSpec spec, bool isActive, int sectionIndex = 0)
+        private ChallengeView MapChallenge(ChallengeSpec spec, int sectionIndex = 0)
         {
             var section = spec.Challenge.Sections.ElementAtOrDefault(sectionIndex);
 
             var challenge = new ChallengeView
             {
-                IsActive = isActive,
                 Text = string.Join("\n\n", spec.Text, spec.Challenge.Text),
                 MaxPoints = spec.MaxPoints,
                 MaxAttempts = spec.MaxAttempts,
@@ -684,7 +685,7 @@ namespace TopoMojo.Api.Services
 
             return id.NotEmpty() && System.IO.File.Exists(path)
                 ? await System.IO.File.ReadAllTextAsync(path)
-                : null;
+                : String.Empty;
         }
 
         public async Task<bool> CanManage(string id, string actorId)

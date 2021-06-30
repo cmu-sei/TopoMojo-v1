@@ -218,7 +218,7 @@ namespace TopoMojo.Api.Controllers
                         "DOCUMENT." + action.ToUpper(),
                         new Document {
                             Text = text,
-                            Timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds // DateTime.UtcNow.ToString("ss.ffff")
+                            Timestamp = (long)DateTimeOffset.UtcNow.Subtract(DateTimeOffset.UnixEpoch).TotalMilliseconds // DateTimeOffset.UtcNow.ToString("ss.ffff")
                         }
                     )
                 );

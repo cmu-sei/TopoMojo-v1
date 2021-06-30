@@ -1,33 +1,38 @@
-# @api = http://localhost:5004/api
-@api = https://topomojo.cyberforce.site/api
+@api = http://localhost:5004/api
 @json = Content-Type: application/json
-@apikey = x-api-key: MJmWAjxMrTBNPwUtFzlJwW6smZthpRaY
-#123456
-
-###
-GET {{api}}/workspaces
+@apikey = x-api-key: jam
+@urlencoded = Content-Type: application/x-www-form-urlencoded
+@auth = Authorization: Bearer {{login.response.body.access_token}}
 
 
 ###
 POST http://localhost:5000/api/resource/devimport
-{{json}}
+Content-Type: application/json
 
 {
-    "Apis": [ "topomojo-api" ],
+    "Apis": [
+        {
+            "Name": "dev-api",
+            "Scopes": "dev-api",
+            "UserClaims": ""
+        }
+    ],
     "Clients": [
         {
-            "Id": "topomojo-ui",
-            "DisplayName": "",
-            "GrantType": "authorization_code",
-            "Scopes": "openid profile topomojo-api",
-            "Secret": "",
-            "RedirectUrl": "http://localhost:4200/oidc"
+            "Id": "dev-client",
+            "Secret": "dev-secret",
+            "GrantType": "client_credentials password",
+            "Scopes": " dev-api dev-api-admin openid profile"
         },
         {
-            "Id": "topomojo-swagger",
+            "Id": "dev-code",
             "GrantType": "authorization_code",
-            "Scopes": "openid topomojo-api",
-            "RedirectUrl": "http://localhost:5004/api/oauth2-redirect.html"
+            "Scopes": "dev-api openid profile email org",
+            "RedirectUrl": [
+                "http://localhost:4200/oidc",
+                "http://localhost:5004/api/oauth2-redirect.html"
+            ]
+
         }
     ]
 }
@@ -40,9 +45,37 @@ POST {{api}}/engine/register
 {
     "subjectId": "74d8b503-50be-40ec-a553-895a6afc1f37",
     "subjectName": "Jeff.Mattson",
-    "resourceId": "e4b2d5a9-e0db-4562-9366-cbc0f69c95aa"
+    "resourceId": "e4b2d5a9-e0db-4562-9366-cbc0f69c95aa",
+    "test": "{\"Id\":null,\"Name\":\"kali\",\"TopoId\":null,\"Cpu\":\"1x2\",\"Guest\":null,\"Source\":null,\"Iso\":null,\"Floppy\":null,\"Version\":null,\"IsolationTag\":null,\"UseUplinkSwitch\":false,\"Ram\":4,\"VideoRam\":0,\"Adapters\":1,\"Delay\":0,\"AutoStart\":true,\"Eth\":[{\"Id\":0,\"Net\":\"lan\",\"Type\":\"e1000\",\"Mac\":null,\"Ip\":null,\"Vlan\":0}],\"Disks\":[{\"Id\":0,\"Path\":\"/vmfs/volumes/datastore1/topomojo/648dff72-3cdd-44d0-b5fa-3bb14e5a7d31/d01-kali-disk1.vmdk\",\"Source\":null,\"Controller\":\"lsilogic\",\"Size\":10,\"Status\":0}],\"GuestSettings\":null}"
 }
 
 ###
 DELETE {{api}}/engine/gamespace/edc58568-d7bf-4563-988e-0725b5a17b7d
 {{apikey}}
+
+###
+# @name login
+POST http://localhost:5000/connect/token
+{{urlencoded}}
+
+grant_type=password
+&client_id=dev-client
+&client_secret=dev-secret
+&scope=dev-api openid
+&username=admin@this.ws
+&password=321ChangeMe!
+
+###
+POST {{api}}/template-detail
+{{auth}}
+{{json}}
+
+{
+  "id": 0,
+  "name": "jam-test",
+  "description": "",
+  "networks": "lan",
+  "guestinfo": "",
+  "detail": "{\"Disks\":[{\"Path\":\"/vmfs/volumes/datastore1/topomojo/648dff72-3cdd-44d0-b5fa-3bb14e5a7d31/d01-kali-disk1.vmdk\",\"Controller\":\"lsilogic\",\"Size\":10}]}",
+  "isPublished": true
+}

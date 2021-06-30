@@ -55,7 +55,7 @@ namespace TopoMojo.Hypervisor.vSphere
         int _syncInterval = 30000;
         int _taskMonitorInterval = 3000;
         string _hostPrefix = "";
-        DateTime _lastAction;
+        DateTimeOffset _lastAction;
 
         public string Name
         {
@@ -146,7 +146,7 @@ namespace TopoMojo.Hypervisor.vSphere
             ManagedObjectReference task = await _vim.CreateSnapshot_TaskAsync(
                 vm.AsVim(),
                 "Root Snap",
-                "Created by TopoMojo Save at " + DateTime.UtcNow.ToString("s") + "Z",
+                "Created by TopoMojo Save at " + DateTimeOffset.UtcNow.ToString("s") + "Z",
                 false, false);
             TaskInfo info = await WaitForVimTask(task);
 
@@ -164,7 +164,7 @@ namespace TopoMojo.Hypervisor.vSphere
 
                 if (info.progress < 100)
                 {
-                    var t = new VimHostTask { Task = task, Action = "saving", WhenCreated = DateTime.UtcNow };
+                    var t = new VimHostTask { Task = task, Action = "saving", WhenCreated = DateTimeOffset.UtcNow };
                     vm.Task = new VmTask { Name = t.Action, WhenCreated = t.WhenCreated, Progress = t.Progress };
                     _tasks.Add(vm.Id, t);
                 }
@@ -256,7 +256,7 @@ namespace TopoMojo.Hypervisor.vSphere
                 task = await _vim.CreateSnapshot_TaskAsync(
                     vm.AsVim(),
                     "Root Snap",
-                    "Created by TopoMojo Deploy at " + DateTime.UtcNow.ToString("s") + "Z",
+                    "Created by TopoMojo Deploy at " + DateTimeOffset.UtcNow.ToString("s") + "Z",
                     false, false);
                 info = await WaitForVimTask(task);
                 if (template.AutoStart && info.state == TaskInfoState.success)
@@ -783,7 +783,7 @@ namespace TopoMojo.Hypervisor.vSphere
 
         private async Task Connect()
         {
-            _lastAction = DateTime.UtcNow;
+            _lastAction = DateTimeOffset.UtcNow;
             await Task.Delay(0);
             if (_vim != null && _vim.State == CommunicationState.Opened)
                 return;
@@ -802,13 +802,13 @@ namespace TopoMojo.Hypervisor.vSphere
                 {
                     try
                     {
-                        DateTime sp = DateTime.Now;
+                        DateTimeOffset sp = DateTimeOffset.Now;
                         _logger.LogDebug($"Instantiating client {_config.Host}...");
                         VimPortTypeClient client = new VimPortTypeClient(VimPortTypeClient.EndpointConfiguration.VimPort, _config.Url);
                         _logger.LogDebug($"client: [{client}]");
-                        _logger.LogDebug($"Instantiated {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
+                        _logger.LogDebug($"Instantiated {_config.Host} in {DateTimeOffset.Now.Subtract(sp).TotalSeconds} seconds");
 
-                        sp = DateTime.Now;
+                        sp = DateTimeOffset.Now;
                         _logger.LogInformation($"Connecting to {_config.Url}...");
                         _sic = client.RetrieveServiceContentAsync(new ManagedObjectReference { type = "ServiceInstance", Value = "ServiceInstance" }).Result;
                         _config.IsVCenter = _sic.about.apiType == "VirtualCenter";
@@ -817,17 +817,17 @@ namespace TopoMojo.Hypervisor.vSphere
                         _file = _sic.fileManager;
                         _dsns = _sic.datastoreNamespaceManager;
 
-                        _logger.LogDebug($"Connected {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
+                        _logger.LogDebug($"Connected {_config.Host} in {DateTimeOffset.Now.Subtract(sp).TotalSeconds} seconds");
 
-                        sp = DateTime.Now;
+                        sp = DateTimeOffset.Now;
                         _logger.LogInformation($"logging into {_config.Host}...[{_config.User}]");
                         _session = client.LoginAsync(_sic.sessionManager, _config.User, _config.Password, null).Result;
-                        _logger.LogDebug($"Authenticated {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
+                        _logger.LogDebug($"Authenticated {_config.Host} in {DateTimeOffset.Now.Subtract(sp).TotalSeconds} seconds");
 
-                        sp = DateTime.Now;
+                        sp = DateTimeOffset.Now;
                         _logger.LogDebug($"Initializing {_config.Host}...");
                         InitReferences(client).Wait();
-                        _logger.LogDebug($"Initialized {_config.Host} in {DateTime.Now.Subtract(sp).TotalSeconds} seconds");
+                        _logger.LogDebug($"Initialized {_config.Host} in {DateTimeOffset.Now.Subtract(sp).TotalSeconds} seconds");
 
                         _vim = client;
                     }
@@ -1221,7 +1221,7 @@ namespace TopoMojo.Hypervisor.vSphere
             {
                 try
                 {
-                    if (_vim != null && DateTime.UtcNow.AddMinutes(-_config.KeepAliveMinutes).CompareTo(_lastAction) > 0)
+                    if (_vim != null && DateTimeOffset.UtcNow.AddMinutes(-_config.KeepAliveMinutes).CompareTo(_lastAction) > 0)
                     {
                         await Disconnect();
                     }

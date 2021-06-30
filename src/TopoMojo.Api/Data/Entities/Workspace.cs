@@ -11,7 +11,7 @@ namespace TopoMojo.Api.Data
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public DateTime WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
         public string Description { get; set; }
         public string Author { get; set; }
         public string Audience { get; set; }
@@ -22,7 +22,7 @@ namespace TopoMojo.Api.Data
         public bool HostAffinity { get; set; }
         public bool UseUplinkSwitch { get; set; }
         public int LaunchCount { get; set; }
-        public DateTime LastActivity { get; set; }
+        public DateTimeOffset LastActivity { get; set; }
         public string Challenge { get; set; }
         public virtual ICollection<Worker> Workers { get; set; } = new List<Worker>();
         public virtual ICollection<Gamespace> Gamespaces { get; set; } = new List<Gamespace>();
