@@ -39,32 +39,34 @@ namespace TopoMojo.Api.Services
 
         public async Task EndExpired()
         {
-            var expired = await _gamespaceStore.List()
-                .Where(g =>
-                    g.EndTime == DateTimeOffset.MinValue &&
-                    g.ExpirationTime > DateTimeOffset.UtcNow
-                )
-                .ToArrayAsync();
+            try {
+                var expired = (await _gamespaceStore.List().ToListAsync())
+                    .Where(g =>
+                        g.EndTime == DateTimeOffset.MinValue &&
+                        g.ExpirationTime > DateTimeOffset.UtcNow
+                    )
+                    .ToArray();
 
-            var processed = new List<Data.Gamespace>();
+                var processed = new List<Data.Gamespace>();
 
-            foreach (var gs in expired)
-            {
-                if (gs.ExpirationTime.AddMinutes(gs.CleanupGraceMinutes) < DateTimeOffset.UtcNow)
+                foreach (var gs in expired)
                 {
-                    _logger.LogInformation($"Ending expired gamespace {gs.Id}");
+                    if (gs.ExpirationTime.AddMinutes(gs.CleanupGraceMinutes) < DateTimeOffset.UtcNow)
+                    {
+                        _logger.LogInformation($"Ending expired gamespace {gs.Id}");
 
-                    gs.EndTime = gs.ExpirationTime;
+                        gs.EndTime = gs.ExpirationTime;
 
-                    processed.Add(gs);
+                        processed.Add(gs);
+                    }
                 }
-            }
 
-            await _gamespaceStore.Update(processed);
+                await _gamespaceStore.Update(processed);
 
-            await RemoveVms(
-                processed.Select(g => g.Id).ToArray()
-            );
+                await RemoveVms(
+                    processed.Select(g => g.Id).ToArray()
+                );
+            } catch {}
         }
 
         public async Task<JanitorReport[]> CleanupInactiveWorkspaces(JanitorOptions options)
