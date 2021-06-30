@@ -66,7 +66,11 @@ namespace TopoMojo.Api.Services
                 await RemoveVms(
                     processed.Select(g => g.Id).ToArray()
                 );
-            } catch {}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to expire gamespaces");
+            }
         }
 
         public async Task<JanitorReport[]> CleanupInactiveWorkspaces(JanitorOptions options)

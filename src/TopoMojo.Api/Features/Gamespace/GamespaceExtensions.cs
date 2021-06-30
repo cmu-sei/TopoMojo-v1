@@ -62,6 +62,9 @@ namespace TopoMojo.Api.Models
 
         public static void SetQuestionWeights(this VariantSpec spec)
         {
+            if (spec is null)
+                return;
+
             var questions = spec.Sections.SelectMany(s => s.Questions).ToArray();
             var unweighted = questions.Where(q => q.Weight == 0).ToArray();
             float max = questions.Sum(q => q.Weight);
