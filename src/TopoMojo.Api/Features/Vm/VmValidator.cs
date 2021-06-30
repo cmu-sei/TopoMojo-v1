@@ -36,7 +36,10 @@ namespace TopoMojo.Api.Validators
         private async Task _validate(VmOperation model)
         {
             if (model.Type != VmOperationType.Save)
+            {
                 await Task.CompletedTask;
+                return;
+            }
 
             string isolationId = model.Id.Contains("#")
                 ? model.Id.Tag()

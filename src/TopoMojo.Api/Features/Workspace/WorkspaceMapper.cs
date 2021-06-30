@@ -30,6 +30,10 @@ namespace TopoMojo.Api
                 ))
             ;
 
+            CreateMap<ChangedWorkspace, RestrictedChangedWorkspace>();
+
+            CreateMap<RestrictedChangedWorkspace, Data.Workspace>();
+
             CreateMap<ChangedWorkspace, Data.Workspace>();
 
             CreateMap<Data.Worker, Worker>();
