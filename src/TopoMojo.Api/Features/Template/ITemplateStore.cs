@@ -8,6 +8,7 @@ namespace TopoMojo.Api.Data.Abstractions
     public interface ITemplateStore : IStore<Template>
     {
         Task<Template> Load(string id);
+        Task<Template> LoadWithParent(string id);
         Task<bool> HasDescendents(string id);
         Task<bool> AtTemplateLimit(string workspaceId);
         Task<Template[]> ListChildren(string parentId);

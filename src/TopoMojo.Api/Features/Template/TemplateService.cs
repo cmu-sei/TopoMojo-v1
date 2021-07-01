@@ -156,7 +156,7 @@ namespace TopoMojo.Api.Services
 
         public async Task<Template> Unlink(TemplateLink link) //CLONE
         {
-            var entity = await _store.Retrieve(link.TemplateId);
+            var entity = await _store.LoadWithParent(link.TemplateId);
 
             if (entity.IsLinked)
             {

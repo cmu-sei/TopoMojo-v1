@@ -37,6 +37,13 @@ namespace TopoMojo.Api.Data
             );
         }
 
+        public async Task<Template> LoadWithParent(string id)
+        {
+            return await base.Retrieve(id, query => query
+                .Include(tt => tt.Parent)
+            );
+        }
+
         public async Task<bool> HasDescendents(string id)
         {
             // var entity = await Retrieve(id);
