@@ -59,6 +59,9 @@ namespace TopoMojo.HostedServices
             {
                 var janitor = scope.ServiceProvider.GetService<JanitorService>();
 
+                if (periodCount == 0)
+                    _logger.LogInformation("Janitor is checking for stale spaces");
+
                 // run every period
                 janitor.EndExpired().Wait();
 
