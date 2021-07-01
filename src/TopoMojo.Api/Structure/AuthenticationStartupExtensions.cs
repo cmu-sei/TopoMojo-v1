@@ -44,6 +44,14 @@ namespace Microsoft.Extensions.DependencyInjection
                     {
                         Name = AppConstants.CookieScheme,
                     };
+                    opt.Events.OnRedirectToAccessDenied = ctx => {
+                        ctx.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    };
+                    opt.Events.OnRedirectToLogin = ctx => {
+                        ctx.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    };
                 })
             ;
 
