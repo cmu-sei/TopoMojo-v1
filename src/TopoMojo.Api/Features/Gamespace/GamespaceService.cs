@@ -280,7 +280,7 @@ namespace TopoMojo.Api.Services
                 if (seg.Length < 2 || !int.TryParse(seg[1], out count))
                     count = 8;
 
-                count = Math.Min(count, 256);
+                count = Math.Min(count, 256) / 2;
 
                 buffer = new byte[count];
 
