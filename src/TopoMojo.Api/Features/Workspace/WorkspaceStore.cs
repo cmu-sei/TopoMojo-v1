@@ -40,8 +40,9 @@ namespace TopoMojo.Api.Data
         public async Task<Workspace> Load(string id)
         {
             return await base.Retrieve(id, query => query
-                .Include(t => t.Templates)
                 .Include(t => t.Workers)
+                .Include(t => t.Templates)
+                    .ThenInclude(p => p.Parent)
             );
         }
 

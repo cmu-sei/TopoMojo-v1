@@ -33,6 +33,8 @@ namespace TopoMojo.Api.Data
             });
 
             builder.Entity<Template>(b => {
+                b.HasOne(t => t.Workspace).WithMany(w => w.Templates).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(t => t.Parent).WithMany(p => p.Children).OnDelete(DeleteBehavior.Restrict);
                 b.Property(w => w.Id).HasMaxLength(KEYLENGTH);
                 b.Property(w => w.ParentId).HasMaxLength(KEYLENGTH);
                 b.Property(g => g.WorkspaceId).HasMaxLength(KEYLENGTH);
@@ -50,6 +52,7 @@ namespace TopoMojo.Api.Data
             });
 
             builder.Entity<Player>(b => {
+                b.HasOne(p => p.Gamespace).WithMany(g => g.Players).OnDelete(DeleteBehavior.Cascade);
                 b.HasKey(g => new { g.SubjectId, g.GamespaceId });
                 b.Property(g => g.GamespaceId).HasMaxLength(KEYLENGTH);
                 b.Property(g => g.SubjectId).HasMaxLength(KEYLENGTH);
@@ -57,6 +60,7 @@ namespace TopoMojo.Api.Data
             });
 
             builder.Entity<Worker>(b => {
+                b.HasOne(w => w.Workspace).WithMany(w => w.Workers).OnDelete(DeleteBehavior.Cascade);
                 b.HasKey(w => new { w.SubjectId, w.WorkspaceId });
                 b.Property(g => g.WorkspaceId).HasMaxLength(KEYLENGTH);
                 b.Property(g => g.SubjectId).HasMaxLength(KEYLENGTH);

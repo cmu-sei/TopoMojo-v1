@@ -40,11 +40,8 @@ namespace TopoMojo.Api.Services
             var q = _store.List(search.Term)
                 .Include(t => t.Workspace) as IQueryable<Data.Template>;
 
-            if (sudo)
-                if (search.pid.NotEmpty())
-                    q = q.Where(t => t.ParentId == search.pid);
-                else
-                    q = q.Where(t => t.ParentId == null);
+            if (sudo && search.pid.NotEmpty())
+                q = q.Where(t => t.ParentId == search.pid);
 
             if (!sudo || search.WantsPublished)
                 q = q.Where(t => t.IsPublished && t.Audience == null);

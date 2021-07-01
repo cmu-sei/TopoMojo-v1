@@ -64,7 +64,7 @@ namespace TopoMojo.Api.Hubs
         {
             await base.OnDisconnectedAsync(ex);
 
-            string channelId = Context.Items["channelId"].ToString();
+            string channelId = Context.Items["channelId"]?.ToString();
 
             if (!string.IsNullOrEmpty(channelId))
                 await Leave(channelId);

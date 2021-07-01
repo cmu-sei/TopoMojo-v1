@@ -60,10 +60,10 @@ namespace TopoMojo.Api.Data
         public async Task<Gamespace> Load(string id)
         {
             return await base.Retrieve(id, query => query
+                .Include(g => g.Players)
                 .Include(g => g.Workspace)
                     .ThenInclude(t => t.Templates)
                         .ThenInclude(tm => tm.Parent)
-                .Include(g => g.Players)
             );
         }
 

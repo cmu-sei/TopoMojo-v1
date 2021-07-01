@@ -113,7 +113,7 @@ namespace TopoMojo.Hypervisor.vMock
                     Status = "deployed"
                 };
                 _logger.LogDebug($"deployed vm {vm.Name}");
-                _vms.Add(vm.Id, vm);
+                _vms.Add(key, vm);
             }
             else
             {
