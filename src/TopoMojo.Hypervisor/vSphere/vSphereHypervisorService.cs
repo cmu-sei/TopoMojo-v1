@@ -526,7 +526,14 @@ namespace TopoMojo.Hypervisor.vSphere
 
         private VimClient FindHostByVm(string id)
         {
-            return _hostCache[_vmCache[id].Host];
+            var vm = _vmCache.Values.FirstOrDefault(v =>
+                v.Id == id || v.Name == id
+            );
+
+            if (vm is null)
+                throw new InvalidOperationException("ResourceNotFound");
+
+            return _hostCache[vm.Host];
         }
 
         private void RefreshAffinity()
