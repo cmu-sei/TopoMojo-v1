@@ -103,7 +103,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPut("api/vm")]
         [SwaggerOperation(OperationId = "ChangeVm")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<Vm>> ChangeVm([FromBody]VmOperation op)
         {
             await Validate(op);
@@ -150,7 +150,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPut("api/vm/{id}/change")]
         [SwaggerOperation(OperationId = "ReconfigureVm")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<Vm>> ReconfigureVm(string id, [FromBody] VmKeyValue change)
         {
             AuthorizeAny(
@@ -206,7 +206,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpGet("api/vm/{id}/isos")]
         [SwaggerOperation(OperationId = "GetVmIsoOptions")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<VmOptions>> GetVmIsoOptions(string id)
         {
             AuthorizeAny(
@@ -228,7 +228,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpGet("api/vm/{id}/nets")]
         [SwaggerOperation(OperationId = "GetVmNetOptions")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<VmOptions>> GetVmNetOptions(string id)
         {
             AuthorizeAny(
@@ -250,7 +250,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpGet("api/vm-console/{id}")]
         [SwaggerOperation(OperationId = "GetVmTicket")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<VmConsole>> GetVmTicket(string id)
         {
             AuthorizeAny(

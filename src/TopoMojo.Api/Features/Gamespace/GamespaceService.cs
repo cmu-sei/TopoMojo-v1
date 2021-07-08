@@ -57,7 +57,7 @@ namespace TopoMojo.Api.Services
             ;
 
             if (search.WantsActive)
-                query = query.Where(g => g.EndTime == DateTimeOffset.MinValue);
+                query = query.Where(g => g.EndTime < DateTimeOffset.MinValue.AddDays(1));
 
             query = query.OrderBy(g => g.WhenCreated);
 
@@ -414,7 +414,7 @@ namespace TopoMojo.Api.Services
                     vm.State = VmPowerState.Running;
             }
 
-            if (gamespace.StartTime == DateTimeOffset.MinValue)
+            if (gamespace.StartTime.Year <= 1)
             {
                 gamespace.StartTime = DateTimeOffset.UtcNow;
                 await _store.Update(gamespace);

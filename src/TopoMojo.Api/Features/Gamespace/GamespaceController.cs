@@ -104,7 +104,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpGet("api/gamespace/{id}")]
         [SwaggerOperation(OperationId = "LoadGamespace")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<GameState>> LoadGamespace(string id)
         {
             await Validate(new Entity { Id = id });
@@ -175,7 +175,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/start")]
         [SwaggerOperation(OperationId = "StartGamespace")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<GameState>> StartGamespace(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -197,7 +197,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/stop")]
         [SwaggerOperation(OperationId = "StopGamespace")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<GameState>> StopGamespace(string id)
         {
             await Validate(new Entity{ Id = id });
@@ -219,7 +219,7 @@ namespace TopoMojo.Api.Controllers
         /// <returns></returns>
         [HttpPost("api/gamespace/{id}/complete")]
         [SwaggerOperation(OperationId = "CompleteGamespace")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<GameState>> CompleteGamespace(string id)
         {
             await Validate(new Entity{ Id = id });

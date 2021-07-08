@@ -19,17 +19,26 @@ namespace  Microsoft.Extensions.DependencyInjection
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme,
-                        ApiKeyAuthentication.AuthenticationScheme,
-                        AppConstants.CookieScheme
+                        ApiKeyAuthentication.AuthenticationScheme
                     ).Build()
                 ;
+
+                _.AddPolicy(AppConstants.AnyUserPolicy, new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(
+                        JwtBearerDefaults.AuthenticationScheme,
+                        ApiKeyAuthentication.AuthenticationScheme,
+                        AppConstants.CookieScheme,
+                        TicketAuthentication.AuthenticationScheme
+                    )
+                    .Build()
+                );
 
                 _.AddPolicy(AppConstants.AdminOnlyPolicy, new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(
                         JwtBearerDefaults.AuthenticationScheme,
-                        ApiKeyAuthentication.AuthenticationScheme,
-                        AppConstants.CookieScheme
+                        ApiKeyAuthentication.AuthenticationScheme
                     )
                     .RequireClaim(AppConstants.RoleClaimName, TopoMojo.Api.Models.UserRole.Administrator.ToString())
                     .Build()
@@ -40,6 +49,7 @@ namespace  Microsoft.Extensions.DependencyInjection
                     .AddAuthenticationSchemes(TicketAuthentication.AuthenticationScheme)
                     .Build()
                 );
+
                 _.AddPolicy(AppConstants.CookiePolicy, new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .AddAuthenticationSchemes(AppConstants.CookieScheme)

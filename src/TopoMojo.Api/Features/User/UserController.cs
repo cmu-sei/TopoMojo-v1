@@ -312,7 +312,7 @@ namespace TopoMojo.Api.Controllers
         /// </remarks>
         /// <returns></returns>
         [HttpPost("/api/user/login")]
-        [Authorize]
+        [Authorize(AppConstants.AnyUserPolicy)]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetAuthCookie()
         {
@@ -323,7 +323,8 @@ namespace TopoMojo.Api.Controllers
                 AppConstants.CookieScheme,
                 new ClaimsPrincipal(
                     new ClaimsIdentity(User.Claims, AppConstants.CookieScheme)
-                )
+                ),
+                new AuthenticationProperties()
             );
 
             return Ok();

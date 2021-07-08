@@ -113,7 +113,7 @@ namespace TopoMojo.Hypervisor.vMock
                     Status = "deployed"
                 };
                 _logger.LogDebug($"deployed vm {vm.Name}");
-                _vms.Add(key, vm);
+                _vms.Add(vm.Id, vm);
             }
             else
             {
@@ -349,14 +349,17 @@ namespace TopoMojo.Hypervisor.vMock
         {
             await Task.Delay(0);
             var vm = TryFind(id);
-            return new VmConsole
-            {
-                Id = id,
-                Name = vm.Name.Untagged(),
-                IsolationId = vm.Name.Tag(),
-                Url = "https://mock.topomojo.local/ticket/12345678",
-                IsRunning = vm.State == VmPowerState.Running
-            };
+            return vm is null
+                ? new VmConsole()
+                : new VmConsole
+                    {
+                        Id = vm.Id,
+                        Name = vm.Name.Untagged(),
+                        IsolationId = vm.Name.Tag(),
+                        Url = "https://mock.topomojo.local/ticket/12345678",
+                        IsRunning = vm.State == VmPowerState.Running
+                    }
+            ;
         }
 
         private Vm TryFind(string id)

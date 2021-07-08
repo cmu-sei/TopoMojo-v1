@@ -10,6 +10,7 @@ namespace TopoMojo.Api
         public const string AdminOnlyPolicy = "AdminOnly";
         public const string TicketOnlyPolicy = "TicketOnly";
         public const string CookiePolicy = "CookieRequired";
+        public const string AnyUserPolicy = "AnyUserPolicy";
         public const string DataProtectionPurpose = "_dp:TopoMojo";
         public const string SubjectClaimName = "sub";
         public const string NameClaimName = "name";

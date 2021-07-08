@@ -83,7 +83,9 @@ namespace TopoMojo.Api.Models
         public static DateTimeOffset ResolveExpiration(this GamespaceRegistration request, DateTimeOffset ts, int max)
         {
             if (max > 0)
-                request.MaxMinutes = Math.Min(request.MaxMinutes, max);
+                request.MaxMinutes = request.MaxMinutes > 0
+                    ? Math.Min(request.MaxMinutes, max)
+                    : max;
 
             if (request.ExpirationTime == DateTimeOffset.MinValue)
                 request.ExpirationTime = ts.AddMinutes(request.MaxMinutes);
