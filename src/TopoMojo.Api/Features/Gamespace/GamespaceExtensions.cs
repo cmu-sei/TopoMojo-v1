@@ -51,6 +51,10 @@ namespace TopoMojo.Api.Models
                 question.IsCorrect = a.Contains(c);
                 break;
 
+                case AnswerGrader.MatchAlpha:
+                question.IsCorrect = a.First().WithoutSymbols().Equals(c.WithoutSymbols());
+                break;
+
                 case AnswerGrader.Match:
                 default:
                 question.IsCorrect = a.First().Equals(c);

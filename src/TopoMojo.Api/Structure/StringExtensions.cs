@@ -121,6 +121,15 @@ namespace TopoMojo.Api.Extensions
                 : s;
         }
 
+        public static string WithoutSymbols(this string s)
+        {
+            return new string(
+                s.ToCharArray()
+                .Where(c => c < 128 && char.IsLetterOrDigit(c))
+                .ToArray()
+            );
+        }
+
         //Note: this assumes a guid string (length > 16)
         public static string ToSwitchName(this string s)
         {
