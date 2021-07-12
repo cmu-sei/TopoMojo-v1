@@ -17,6 +17,7 @@ namespace TopoMojo.Api.Models
         public int SectionIndex { get; set; }
         public double SectionScore { get; set; }
         public string SectionText { get; set; }
+        public DateTimeOffset LastScoreTime { get; set; }
         public ICollection<QuestionView> Questions { get; set; } = new List<QuestionView>();
     }
 

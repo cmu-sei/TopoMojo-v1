@@ -35,7 +35,7 @@ namespace TopoMojo.Api.Models
         public string Audience { get; set; }
         public string LaunchpointUrl { get; set; }
         public Player[] Players { get; set; }
-        public string WhenCreated { get; set; }
+        public DateTimeOffset WhenCreated { get; set; }
         public DateTimeOffset StartTime { get; set; }
         public DateTimeOffset EndTime { get; set; }
         public DateTimeOffset ExpirationTime { get; set; }

@@ -98,7 +98,7 @@ namespace TopoMojo.Api.Controllers
                     if (_config.MaxFileBytes > 0 && size > _config.MaxFileBytes)
                         throw new Exception($"File {filename} exceeds the {_config.MaxFileBytes} byte maximum size.");
 
-                    if (key != publicTarget && !_svc.CanEdit(key, Actor.Id).Result)
+                    if (key != publicTarget && !_svc.CanEdit(key, Actor.Id).Result && !Actor.IsAdmin)
                         throw new InvalidOperationException();
 
                     // Log("uploading", null, filename);

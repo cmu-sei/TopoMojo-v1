@@ -10,6 +10,7 @@ namespace TopoMojo.Api.Models
     {
         public string Text { get; set; }
         public double Score { get; set; }
+        public DateTimeOffset LastScoreTime { get; set; }
         public int MaxPoints { get; set; }
         public int MaxAttempts { get; set; }
         public CustomSpec CustomizeScript { get; set; }
@@ -42,8 +43,8 @@ namespace TopoMojo.Api.Models
 
     public class SectionSpec
     {
-        public float Prerequisite { get; set; }
-        public float Score { get; set; }
+        public double Prerequisite { get; set; }
+        public double Score { get; set; }
         public string Text { get; set; }
         public ICollection<QuestionSpec> Questions { get; set; } = new List<QuestionSpec>();
     }

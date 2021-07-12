@@ -554,6 +554,8 @@ namespace TopoMojo.Api.Services
 
         public async Task<GameState> Grade(SectionSubmission submission)
         {
+            DateTimeOffset ts = DateTimeOffset.UtcNow;
+
             string id = submission.Id;
 
             if (! await _locker.Lock(id))
@@ -574,10 +576,12 @@ namespace TopoMojo.Api.Services
             if (spec.MaxAttempts > 0 && spec.Submissions.Where(s => s.SectionIndex == submission.SectionIndex).Count() >= spec.MaxAttempts)
                 _locker.Unlock(id, new AttemptLimitReached()).Wait();
 
-            submission.Timestamp = DateTimeOffset.UtcNow;
+            submission.Timestamp = ts;
             spec.Submissions.Add(submission);
 
             // grade and save
+            double lastScore = spec.Score;
+
             int i = 0;
             foreach (var question in section.Questions)
                 question.Grade(submission.Questions.ElementAtOrDefault(i++)?.Answer ?? "");
@@ -593,6 +597,9 @@ namespace TopoMojo.Api.Services
                 .Select(q => q.Weight - q.Penalty)
                 .Sum();
 
+            if (spec.Score > lastScore)
+                spec.LastScoreTime = ts;
+
             ctx.Gamespace.Challenge = JsonSerializer.Serialize(spec, jsonOptions);
 
             // handle completion if max attempts reached or full score
@@ -604,7 +611,7 @@ namespace TopoMojo.Api.Services
                 )
             )
             {
-                ctx.Gamespace.EndTime = DateTimeOffset.UtcNow;
+                ctx.Gamespace.EndTime = ts;
                 await Stop(ctx.Gamespace.Id);
             }
 
@@ -630,6 +637,7 @@ namespace TopoMojo.Api.Services
             var challenge = new ChallengeView
             {
                 Text = string.Join("\n\n", spec.Text, spec.Challenge.Text),
+                LastScoreTime = spec.LastScoreTime,
                 MaxPoints = spec.MaxPoints,
                 MaxAttempts = spec.MaxAttempts,
                 Attempts = spec.Submissions.Count,
