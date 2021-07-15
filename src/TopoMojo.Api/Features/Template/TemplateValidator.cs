@@ -34,6 +34,9 @@ namespace TopoMojo.Api.Validators
             if (model is TemplateLink)
                 return _validate(model as TemplateLink);
 
+            if (model is NewTemplateDetail)
+                return _validate(model as NewTemplateDetail);
+
             if (model is TemplateDetail)
                 return _validate(model as TemplateDetail);
 
