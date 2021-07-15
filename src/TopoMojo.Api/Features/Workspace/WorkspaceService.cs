@@ -164,7 +164,8 @@ namespace TopoMojo.Api.Services
 
             if (workspace.Challenge.IsEmpty())
                 workspace.Challenge = JsonSerializer.Serialize<ChallengeSpec>(
-                    new ChallengeSpec()
+                    new ChallengeSpec(),
+                    jsonOptions
                 );
 
             workspace.Workers.Add(new Data.Worker

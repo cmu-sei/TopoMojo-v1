@@ -354,7 +354,7 @@ namespace TopoMojo.Api.Services
 
             var spec = JsonSerializer.Deserialize<ChallengeSpec>(gamespace.Challenge ?? "{}", jsonOptions);
 
-            var isoTargets = (spec.Challenge.Iso.Targets ?? "")
+            var isoTargets = (spec.Challenge?.Iso?.Targets ?? "")
                 .ToLower()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
