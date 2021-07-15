@@ -206,7 +206,7 @@ namespace TopoMojo.Api.Controllers
         [HttpPost("api/template-detail")]
         [SwaggerOperation(OperationId = "CreateTemplateDetail")]
         [Authorize(AppConstants.AdminOnlyPolicy)]
-        public async Task<ActionResult<TemplateDetail>> CreateTemplateDetail([FromBody]TemplateDetail model)
+        public async Task<ActionResult<TemplateDetail>> CreateTemplateDetail([FromBody]NewTemplateDetail model)
         {
             await Validate(model);
 

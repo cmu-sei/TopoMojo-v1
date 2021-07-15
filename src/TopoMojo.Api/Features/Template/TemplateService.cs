@@ -89,7 +89,7 @@ namespace TopoMojo.Api.Services
             return Mapper.Map<TemplateDetail>(template);
         }
 
-        public async Task<TemplateDetail> Create(TemplateDetail model)
+        public async Task<TemplateDetail> Create(NewTemplateDetail model)
         {
             model.Detail = new TemplateUtility(model.Detail, model.Name).ToString();
 

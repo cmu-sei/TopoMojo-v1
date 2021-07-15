@@ -56,6 +56,14 @@ namespace TopoMojo.Api.Validators
             await Task.CompletedTask;
         }
 
+        private async Task _validate(NewTemplateDetail model)
+        {
+            if ((await Exists(model.Id)).Equals(true))
+                throw new ResourceAlreadyExists();
+
+            await Task.CompletedTask;
+        }
+
         private async Task _validate(TemplateLink model)
         {
             if ((await Exists(model.TemplateId)).Equals(false))

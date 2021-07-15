@@ -33,12 +33,8 @@ namespace TopoMojo.Api.Models
         public int Replicas { get; set; }
     }
 
-    public class NewTemplateDetail
+    public class NewTemplateDetail: TemplateDetail
     {
-        public string Name { get; set; }
-        public string Networks { get; set; }
-        public string Detail { get; set; }
-        public bool IsPublished { get; set; }
     }
 
     public class TemplateDetail

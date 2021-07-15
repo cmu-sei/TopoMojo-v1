@@ -17,6 +17,7 @@ namespace TopoMojo.Api.Exceptions
     public class InvalidClientAudience: Exception { }
     public class InvalidInvitation: Exception { }
     public class ResourceNotFound: Exception { }
+    public class ResourceAlreadyExists: Exception { }
     public class ResourceIsLocked: Exception { }
     public class SessionLimitReached: Exception { }
     public class AttemptLimitReached: Exception { }
