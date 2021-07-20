@@ -100,14 +100,14 @@ namespace TopoMojo.Api.Controllers
         /// Load a gamespace state.
         /// </summary>
         /// <remarks></remarks>
-        /// <param name="id">Gamespace Id</param>
+        /// <param name="id">Gamespace Id or Workspace Id</param>
         /// <returns></returns>
         [HttpGet("api/gamespace/{id}")]
         [SwaggerOperation(OperationId = "LoadGamespace")]
         [Authorize(AppConstants.AnyUserPolicy)]
         public async Task<ActionResult<GameState>> LoadGamespace(string id)
         {
-            await Validate(new Entity { Id = id });
+            await Validate(new SpaceEntity { Id = id });
 
             AuthorizeAny(
                 () => Actor.IsAdmin,
@@ -115,7 +115,24 @@ namespace TopoMojo.Api.Controllers
             );
 
             return Ok(
-                await _svc.Load(id)
+                await _svc.Load(id, Actor.Id)
+            );
+        }
+
+        [HttpGet("api/gamespace/{id}/challenge")]
+        [SwaggerOperation(OperationId = "LoadGamespaceChallenge")]
+        [Authorize(AppConstants.AdminOnlyPolicy)]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<ChallengeSpec>> LoadChallenge(string id)
+        {
+            await Validate(new Entity { Id = id });
+
+            AuthorizeAny(
+                () => Actor.IsAdmin
+            );
+
+            return Ok(
+                await _svc.LoadChallenge(id, Actor.IsAdmin)
             );
         }
 

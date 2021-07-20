@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Caching.Memory;
+using TopoMojo.Api.Exceptions;
 using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
 
@@ -43,6 +44,9 @@ namespace TopoMojo.Api
 
                 _cache.Set<User>(subject, user, new TimeSpan(0, 2, 0));
             }
+
+            if (user.Role == UserRole.Disabled)
+                throw new UserDisabled();
 
             var claims = new Claim[]
             {

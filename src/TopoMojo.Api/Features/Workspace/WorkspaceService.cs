@@ -43,10 +43,10 @@ namespace TopoMojo.Api.Services
         /// <returns>Array of WorkspaceSummary</returns>
         public async Task<WorkspaceSummary[]> List(WorkspaceSearch search, string subjectId, bool sudo, CancellationToken ct = default(CancellationToken))
         {
-            if (search.scope.IsEmpty())
-                search.scope = _options.DefaultUserScope;
+            search.scope += " " + _options.DefaultUserScope;
 
             // TODO: change this to use tags (efcore many-to-many)
+
             if (search.WantsPlayable)
                 return await ListPlayable(search, ct);
 

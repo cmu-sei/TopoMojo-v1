@@ -57,9 +57,15 @@ namespace TopoMojo.Api.Services
             ;
 
             if (search.WantsActive)
-                query = query.Where(g => g.EndTime < DateTimeOffset.MinValue.AddDays(1));
+            {
+                var ts = DateTimeOffset.UtcNow;
+                query = query.Where(g =>
+                    g.EndTime < DateTimeOffset.MinValue.AddDays(1) &&
+                    g.ExpirationTime > ts
+                );
+            }
 
-            query = query.OrderBy(g => g.WhenCreated);
+            query = query.OrderByDescending(g => g.WhenCreated);
 
             if (search.Skip > 0)
                 query = query.Skip(search.Skip);
@@ -74,7 +80,7 @@ namespace TopoMojo.Api.Services
 
         public async Task<GameState> Preview(string resourceId)
         {
-            var ctx = await LoadContext(null, resourceId);
+            var ctx = await LoadContext(resourceId);
 
             return new GameState
             {
@@ -129,11 +135,24 @@ namespace TopoMojo.Api.Services
             return ctx.Gamespace;
         }
 
-        public async Task<GameState> Load(string id)
+        public async Task<GameState> Load(string id, string subjectId)
         {
-            var ctx = await LoadContext(id);
+            var ctx = await LoadContext(id, subjectId);
 
-            return await LoadState(ctx.Gamespace);
+            return ctx.Gamespace is Data.Gamespace
+                ? await LoadState(ctx.Gamespace)
+                : await LoadState(ctx.Workspace)
+            ;
+
+        }
+
+        public async Task<ChallengeSpec> LoadChallenge(string id, bool sudo)
+        {
+            var entity = await _store.Retrieve(id);
+
+            var spec = JsonSerializer.Deserialize<ChallengeSpec>(entity.Challenge, jsonOptions);
+
+            return spec;
         }
 
         public async Task<GameState> Start(string id)
@@ -176,6 +195,13 @@ namespace TopoMojo.Api.Services
 
             var ts = DateTimeOffset.UtcNow;
 
+            int duration = actor.GamespaceMaxMinutes > 0
+                ? actor.GamespaceMaxMinutes
+                : ctx.Workspace.DurationMinutes > 0
+                    ? ctx.Workspace.DurationMinutes
+                    : _options.DefaultGamespaceMinutes
+            ;
+
             var gamespace = new Data.Gamespace
             {
                 Name = ctx.Workspace.Name,
@@ -185,7 +211,7 @@ namespace TopoMojo.Api.Services
                 AllowReset = ctx.Request.AllowReset,
                 CleanupGraceMinutes = actor.GamespaceCleanupGraceMinutes,
                 WhenCreated = ts,
-                ExpirationTime = ctx.Request.ResolveExpiration(ts, actor.GamespaceMaxMinutes)
+                ExpirationTime = ctx.Request.ResolveExpiration(ts, duration)
             };
 
             foreach (var player in ctx.Request.Players)
@@ -421,6 +447,15 @@ namespace TopoMojo.Api.Services
             }
         }
 
+        private async Task<GameState> LoadState(Data.Workspace workspace)
+        {
+            return new GameState
+            {
+                Name = workspace.Name,
+                Markdown = (await LoadMarkdown(workspace.Id)).Split("<!-- cut -->").First()
+                    ?? $"# {workspace.Name}"
+            };
+        }
         private async Task<GameState> LoadState(TopoMojo.Api.Data.Gamespace gamespace, bool preview = false)
         {
             var state = Mapper.Map<GameState>(gamespace);
@@ -667,19 +702,25 @@ namespace TopoMojo.Api.Services
             };
         }
 
-        private async Task<RegistrationContext> LoadContext(string id, string resourceId = null)
+        private async Task<RegistrationContext> LoadContext(string id, string subjectId = null)
         {
             var ctx = new RegistrationContext();
 
-            if (id.NotEmpty())
+            ctx.Gamespace = await _store.Load(id);
+
+            ctx.Workspace = ctx.Gamespace is Data.Gamespace
+                ? ctx.Gamespace?.Workspace
+                : await _workspaceStore.Load(id)
+            ;
+
+            //if just workspace, check for existing gamespace
+            if (ctx.Gamespace is null && subjectId.NotEmpty())
             {
-                ctx.Gamespace = await _store.Load(id);
-
-                ctx.Workspace = ctx.Gamespace?.Workspace;
+                ctx.Gamespace = await _store.LoadActiveByContext(
+                    ctx.Workspace.Id,
+                    subjectId
+                );
             }
-
-            if (resourceId.NotEmpty())
-                ctx.Workspace = await _workspaceStore.Load(resourceId);
 
             return ctx;
         }
@@ -708,6 +749,8 @@ namespace TopoMojo.Api.Services
 
         public async Task<bool> HasValidUserScope(string id, string scope, string subjectId)
         {
+            scope += " " + _options.DefaultUserScope;
+
             return await _store.HasValidUserScope(id, scope, subjectId);
         }
     }

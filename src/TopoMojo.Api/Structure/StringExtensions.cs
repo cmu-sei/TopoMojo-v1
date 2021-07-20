@@ -257,6 +257,9 @@ namespace TopoMojo.Api.Extensions
 
         public static bool HasAnyToken(this string a, string b)
         {
+            if (a.IsEmpty() || b.IsEmpty())
+                return false;
+
             var delims = new char[] { ' ', ',', ';' };
 
             var A = a.ToLower()

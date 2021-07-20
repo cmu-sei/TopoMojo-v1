@@ -23,4 +23,5 @@ namespace TopoMojo.Api.Exceptions
     public class AttemptLimitReached: Exception { }
     public class GamespaceIsExpired: Exception { }
     public class GamespaceNotRegistered: Exception {}
+    public class UserDisabled: Exception {}
 }

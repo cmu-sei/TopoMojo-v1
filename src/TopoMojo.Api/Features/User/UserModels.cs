@@ -11,7 +11,8 @@ namespace TopoMojo.Api.Models
         User,
         Builder,
         Creator,
-        Administrator
+        Administrator,
+        Disabled
     }
 
     public class User

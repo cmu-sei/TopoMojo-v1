@@ -261,6 +261,9 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
                     b.Property<bool>("HostAffinity")
                         .HasColumnType("bit");
 
@@ -333,11 +336,13 @@ namespace TopoMojo.Api.Data.Migrations.SqlServer.TopoMojoDb
                 {
                     b.HasOne("TopoMojo.Api.Data.Template", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId");
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TopoMojo.Api.Data.Workspace", "Workspace")
                         .WithMany("Templates")
-                        .HasForeignKey("WorkspaceId");
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Parent");
 

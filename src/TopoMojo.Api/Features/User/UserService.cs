@@ -127,7 +127,7 @@ namespace TopoMojo.Api.Services
 
                 entity.GamespaceLimit = _options.DefaultGamespaceLimit;
 
-                entity.Scope = _options.DefaultUserScope;
+                // entity.Scope = _options.DefaultUserScope;
 
                 await _store.Create(entity);
             }

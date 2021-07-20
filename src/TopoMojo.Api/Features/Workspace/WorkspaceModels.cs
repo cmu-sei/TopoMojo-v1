@@ -17,6 +17,7 @@ namespace TopoMojo.Api.Models
         public DateTimeOffset WhenCreated { get; set; }
         public string TemplateScope { get; set; }
         public int TemplateLimit { get; set; }
+        public int DurationMinutes { get; set; }
         public string Challenge { get; set; }
         public Worker[] Workers { get; set; }
         public Template[] Templates { get; set; }
@@ -61,6 +62,7 @@ namespace TopoMojo.Api.Models
         public string Audience { get; set; }
         public string TemplateScope { get; set; }
         public int TemplateLimit { get; set; }
+        public int DurationMinutes { get; set; }
     }
 
     public class JoinCode

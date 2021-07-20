@@ -68,6 +68,8 @@ namespace TopoMojo.Api
         public string Provider { get; set; } = "InMemory";
         public string ConnectionString { get; set; } = "topomojo_db";
         public string SeedFile { get; set; } = "seed-data.json";
+        public string AdminId { get; set; }
+        public string AdminName { get; set; }
     }
 
     public class FileUploadOptions
@@ -139,12 +141,13 @@ namespace TopoMojo.Api
 
     public class CoreOptions
     {
+        public int DefaultGamespaceMinutes { get; set; } = 120;
         public int DefaultGamespaceLimit { get; set; } = 0;
         public int DefaultWorkspaceLimit { get; set; } = 0;
         public int DefaultTemplateLimit { get; set; } = 3;
         public int ReplicaLimit { get; set; } = 5;
         public bool AllowUnprivilegedVmReconfigure { get; set; }
-        public string DefaultUserScope { get; set; } = "mojo";
+        public string DefaultUserScope { get; set; } = "everyone";
         public string GameEngineIsoFolder { get; set; } = "static";
         public string ConsoleHost { get; set; }
         public string LaunchUrl { get; set; } = "/lp";

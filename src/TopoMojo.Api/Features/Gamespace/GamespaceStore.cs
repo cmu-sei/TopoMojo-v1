@@ -27,6 +27,7 @@ namespace TopoMojo.Api.Data
             return base.List()
                 .Where(g =>
                     g.Name.ToLower().Contains(term) ||
+                    g.ManagerName.ToLower().Contains(term) ||
                     g.Id.ToLower().StartsWith(term)
                 )
             ;
@@ -69,9 +70,12 @@ namespace TopoMojo.Api.Data
 
         public async Task<Gamespace> LoadActiveByContext(string workspaceId, string subjectId)
         {
+            var ts = DateTimeOffset.UtcNow;
+
             string id = await DbSet.Where(g =>
                     g.WorkspaceId == workspaceId &&
                     g.EndTime == DateTimeOffset.MinValue &&
+                    g.ExpirationTime > ts &&
                     (
                         g.ManagerId == subjectId ||
                         g.Players.Any(p => p.SubjectId == subjectId)

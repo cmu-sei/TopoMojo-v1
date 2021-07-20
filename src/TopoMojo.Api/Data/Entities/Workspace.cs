@@ -21,6 +21,7 @@ namespace TopoMojo.Api.Data
         public int TemplateLimit { get; set; }
         public bool HostAffinity { get; set; }
         public bool UseUplinkSwitch { get; set; }
+        public int DurationMinutes { get; set; }
         public int LaunchCount { get; set; }
         public DateTimeOffset LastActivity { get; set; }
         public string Challenge { get; set; }

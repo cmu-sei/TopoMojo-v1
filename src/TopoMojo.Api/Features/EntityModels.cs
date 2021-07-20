@@ -13,5 +13,9 @@ namespace TopoMojo.Api.Models
     {
         public string Id { get; set; }
     }
+    public class SpaceEntity
+    {
+        public string Id { get; set; }
+    }
 
 }

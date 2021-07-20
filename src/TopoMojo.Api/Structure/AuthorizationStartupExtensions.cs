@@ -56,22 +56,6 @@ namespace  Microsoft.Extensions.DependencyInjection
                     .Build()
                 );
 
-                // _.AddPolicy("Players", new AuthorizationPolicyBuilder()
-                //     .RequireAuthenticatedUser()
-                //     .AddAuthenticationSchemes(
-                //         JwtBearerDefaults.AuthenticationScheme,
-                //         TicketAuthentication.AuthenticationScheme,
-                //         AppConstants.CookieScheme
-                //     )
-                //     .Build());
-
-                // _.AddPolicy("TicketOrCookie", new AuthorizationPolicyBuilder()
-                //     .RequireAuthenticatedUser()
-                //     .AddAuthenticationSchemes(
-                //         AppConstants.CookieScheme,
-                //         TicketAuthentication.AuthenticationScheme
-                //     )
-                //     .Build());
             });
 
             return services;

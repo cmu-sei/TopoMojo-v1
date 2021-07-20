@@ -35,6 +35,23 @@ namespace TopoMojo.Api.Extensions
                 if (!dbContext.Database.IsInMemory())
                     dbContext.Database.Migrate();
 
+                // add admin if specified and doesn't exist
+                if (!string.IsNullOrEmpty(options.AdminId))
+                {
+                    var admin = dbContext.Users.Find(options.AdminId);
+                    if (admin is null)
+                    {
+                        dbContext.Users.Add(new Data.User
+                        {
+                            Id = options.AdminId,
+                            Name = options.AdminName,
+                            Role = UserRole.Administrator,
+                            WhenCreated = DateTimeOffset.UtcNow
+                        });
+                        dbContext.SaveChanges();
+                    }
+                }
+
                 string seedFile = Path.Combine(env.ContentRootPath, options.SeedFile);
 
                 if (File.Exists(seedFile)) {

@@ -31,6 +31,9 @@ namespace TopoMojo.Api.Validators
             if (model is WorkspaceEntity)
                 return _validate(model as WorkspaceEntity);
 
+            if (model is SpaceEntity)
+                return _validate(model as SpaceEntity);
+
             if (model is GamespaceSearch)
                 return _validate(model as GamespaceSearch);
 
@@ -55,6 +58,19 @@ namespace TopoMojo.Api.Validators
         {
             if (await _store.DbContext.Workspaces.FindAsync(model.Id) == null)
                 throw new ResourceNotFound();
+
+            await Task.CompletedTask;
+        }
+
+        private async Task _validate(SpaceEntity model)
+        {
+            if (
+                ! await Exists(model.Id) &&
+                ! await WorkspaceExists(model.Id)
+            )
+            {
+                throw new ResourceNotFound();
+            }
 
             await Task.CompletedTask;
         }
