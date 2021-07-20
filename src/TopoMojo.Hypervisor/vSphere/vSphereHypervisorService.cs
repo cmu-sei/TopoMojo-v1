@@ -190,36 +190,36 @@ namespace TopoMojo.Hypervisor.vSphere
         public async Task<Vm> Start(string id)
         {
             _logger.LogDebug("starting " + id);
-            VimClient host = FindHostByVm(id);
-            return await host.Start(id);
+            var ctx = GetVmContext(id);
+            return await ctx.Host.Start(ctx.Vm.Id);
         }
 
         public async Task<Vm> Stop(string id)
         {
             _logger.LogDebug("stopping " + id);
-            VimClient host = FindHostByVm(id);
-            return await host.Stop(id);
+            var ctx = GetVmContext(id);
+            return await ctx.Host.Stop(ctx.Vm.Id);
         }
 
         public async Task<Vm> Save(string id)
         {
             _logger.LogDebug("saving " + id);
-            VimClient host = FindHostByVm(id);
-            return await host.Save(id);
+            var ctx = GetVmContext(id);
+            return await ctx.Host.Save(ctx.Vm.Id);
         }
 
         public async Task<Vm> Revert(string id)
         {
             _logger.LogDebug("reverting " + id);
-            VimClient host = FindHostByVm(id);
-            return await host.Revert(id);
+            var ctx = GetVmContext(id);
+            return await ctx.Host.Revert(ctx.Vm.Id);
         }
 
         public async Task<Vm> Delete(string id)
         {
             _logger.LogDebug("deleting " + id);
-            VimClient host = FindHostByVm(id);
-            Vm vm =  await host.Delete(id);
+            var ctx = GetVmContext(id);
+            Vm vm =  await ctx.Host.Delete(ctx.Vm.Id);
             RefreshAffinity(); //TODO: fix race condition here
             return vm;
         }
@@ -259,8 +259,8 @@ namespace TopoMojo.Hypervisor.vSphere
             var tasks = new List<Task>();
             foreach (var vm in await Find(target))
             {
-                VimClient host = FindHostByVm(vm.Id);
-                tasks.Add(host.Delete(vm.Id));
+                var ctx = GetVmContext(vm.Id);
+                tasks.Add(ctx.Host.Delete(vm.Id));
             }
 
             if (tasks.Count > 0)
@@ -273,12 +273,8 @@ namespace TopoMojo.Hypervisor.vSphere
         {
             _logger.LogDebug("changing " + id + " " + change.Key + "=" + change.Value);
 
-            Vm vm = await Load(id);
+            var ctx = GetVmContext(id);
 
-            if (vm == null)
-                throw new InvalidOperationException();
-
-            VimClient host = FindHostByVm(id);
             VmOptions vmo = null;
 
             var segments = change.Value.Split(':');
@@ -294,7 +290,7 @@ namespace TopoMojo.Hypervisor.vSphere
                 // if (!vmo.Iso.Contains(change.Value))
                 //     throw new InvalidOperationException();
                 var isopath = new DatastorePath(val);
-                isopath.Merge(host.Options.IsoStore);
+                isopath.Merge(ctx.Host.Options.IsoStore);
                 change = new VmKeyValue
                 {
                     Key = "iso",
@@ -304,12 +300,12 @@ namespace TopoMojo.Hypervisor.vSphere
 
             if (change.Key == "net" && !change.Value.StartsWith("_none_"))
             {
-                vmo = await GetVmNetOptions(vm.Name.Tag());
+                vmo = await GetVmNetOptions(ctx.Vm.Name.Tag());
                 if (!vmo.Net.Contains(val))
                     throw new InvalidOperationException();
             }
 
-            return await host.Change(id, change);
+            return await ctx.Host.Change(ctx.Vm.Id, change);
         }
 
         public async Task<Vm[]> Find(string term)
@@ -406,36 +402,30 @@ namespace TopoMojo.Hypervisor.vSphere
         {
             VmConsole info = null;
 
-            Vm vm = await Load(id);
-
-            if (vm != null)
+            try
             {
-                VimClient host = _hostCache[vm.Host];
-                string ticket = "";
+                var ctx = GetVmContext(id);
 
-                try
-                {
-                    ticket = await host.GetTicket(vm.Id);
-                }
-                catch  {}
+                string ticket = await ctx.Host.GetTicket(ctx.Vm.Id);
 
                 info = new VmConsole
                 {
-                    Id = vm.Id,
-                    Name = vm.Name.Untagged(),
-                    IsolationId = vm.Name.Tag(),
+                    Id = ctx.Vm.Id,
+                    Name = ctx.Vm.Name.Untagged(),
+                    IsolationId = ctx.Vm.Name.Tag(),
                     Url = ticket,
-                    IsRunning = vm.State == VmPowerState.Running
+                    IsRunning = ctx.Vm.State == VmPowerState.Running
                 };
             }
+            catch  {}
 
             return info ?? new VmConsole();
         }
 
         public async Task<Vm> Answer(string id, VmAnswer answer)
         {
-            VimClient host = FindHostByVm(id);
-            return await host.AnswerVmQuestion(id, answer.QuestionId, answer.ChoiceKey);
+            var ctx = GetVmContext(id);
+            return await ctx.Host.AnswerVmQuestion(ctx.Vm.Id, answer.QuestionId, answer.ChoiceKey);
         }
 
         public async Task<VmOptions> GetVmIsoOptions(string id)
@@ -524,7 +514,7 @@ namespace TopoMojo.Hypervisor.vSphere
             }
         }
 
-        private VimClient FindHostByVm(string id)
+        private VmContext GetVmContext(string id)
         {
             var vm = _vmCache.Values.FirstOrDefault(v =>
                 v.Id == id || v.Name == id
@@ -533,7 +523,11 @@ namespace TopoMojo.Hypervisor.vSphere
             if (vm is null)
                 throw new InvalidOperationException("ResourceNotFound");
 
-            return _hostCache[vm.Host];
+            return new VmContext
+            {
+                Vm = vm,
+                Host = _hostCache[vm.Host]
+            };
         }
 
         private void RefreshAffinity()
