@@ -24,4 +24,11 @@ namespace TopoMojo.Api.Exceptions
     public class GamespaceIsExpired: Exception { }
     public class GamespaceNotRegistered: Exception {}
     public class UserDisabled: Exception {}
+
+    public class TimestampedException
+    {
+        public DateTimeOffset Timestamp { get; set; }
+        public string Message { get; set; }
+        public string StackTrace { get; set; }
+    }
 }

@@ -2,13 +2,17 @@
 // Released under a 3 Clause BSD-style license. See LICENSE.md in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
+using TopoMojo.Api.Exceptions;
 using TopoMojo.Api.Hubs;
 using TopoMojo.Api.Models;
 using TopoMojo.Api.Services;
@@ -25,25 +29,27 @@ namespace TopoMojo.Api.Controllers
             TransferService transferSvc,
             FileUploadOptions fileUploadOptions,
             JanitorService janitor,
-            HubCache hubCache
+            HubCache hubCache,
+            IMemoryCache localCache
         ) : base(logger, hub)
         {
             _transferSvc = transferSvc;
             _uploadOptions = fileUploadOptions;
             _hubCache = hubCache;
             _janitor = janitor;
+            _localCache = localCache;
         }
 
         private readonly TransferService _transferSvc;
         private readonly FileUploadOptions _uploadOptions;
         private readonly HubCache _hubCache;
         private readonly JanitorService _janitor;
+        private readonly IMemoryCache _localCache;
 
         /// <summary>
         /// Show application version info.
         /// </summary>
         /// <returns></returns>
-        [AllowAnonymous]
         [HttpGet("api/version")]
         [SwaggerOperation(OperationId = "LoadDocument")]
         public ActionResult<AppVersionInfo> GetAppVersionInfo()
@@ -123,6 +129,21 @@ namespace TopoMojo.Api.Controllers
         public async Task<ActionResult<JanitorReport[]>> RunJanitorCleanup([FromBody]JanitorOptions options = null)
         {
             return Ok(await _janitor.Cleanup(options));
+        }
+
+        [HttpGet("api/admin/log")]
+        [SwaggerOperation(OperationId = "GetAdminLog")]
+        public ActionResult<TimestampedException[]> GetAdminLog([FromQuery]string since)
+        {
+            var errbf = _localCache.Get<List<TimestampedException>>(AppConstants.ErrorListCacheKey)
+                ?? new List<TimestampedException>();
+
+            if (!DateTimeOffset.TryParse(since, out DateTimeOffset ts))
+                ts = DateTimeOffset.MinValue;
+
+            return Ok(
+                errbf.Where(e => e.Timestamp > ts).ToArray()
+            );
         }
 
         private void SendBroadcast(string text = "")

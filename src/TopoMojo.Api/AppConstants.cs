@@ -28,6 +28,7 @@ namespace TopoMojo.Api
         public const string CookieScheme = "topomojo.mks";
         public const string MarkdownCutLine = "<!-- cut -->";
         public static char[] InlineListSeparators = new char[] { ' ', ',', ';' };
+        public const string ErrorListCacheKey = "errbf";
     }
 
     internal static class AuditId
