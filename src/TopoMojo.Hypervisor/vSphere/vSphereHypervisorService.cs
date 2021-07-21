@@ -400,26 +400,27 @@ namespace TopoMojo.Hypervisor.vSphere
 
         public async Task<VmConsole> Display(string id)
         {
-            VmConsole info = null;
+            var info = new VmConsole();
 
             try
             {
                 var ctx = GetVmContext(id);
-
-                string ticket = await ctx.Host.GetTicket(ctx.Vm.Id);
 
                 info = new VmConsole
                 {
                     Id = ctx.Vm.Id,
                     Name = ctx.Vm.Name.Untagged(),
                     IsolationId = ctx.Vm.Name.Tag(),
-                    Url = ticket,
                     IsRunning = ctx.Vm.State == VmPowerState.Running
                 };
+
+                // throws if powered off
+                info.Url = await ctx.Host.GetTicket(ctx.Vm.Id);
+
             }
             catch  {}
 
-            return info ?? new VmConsole();
+            return info;
         }
 
         public async Task<Vm> Answer(string id, VmAnswer answer)
