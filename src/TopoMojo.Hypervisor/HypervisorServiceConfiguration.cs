@@ -32,6 +32,8 @@ namespace TopoMojo.Hypervisor
         public string OrgId { get; set; }
         public string SddcId { get; set; }
         public string ApiKey { get; set; }
+        public string CertificatePath { get; set; }
+        public string CertificatePassword { get; set; }
     }
 
     public class VlanConfiguration

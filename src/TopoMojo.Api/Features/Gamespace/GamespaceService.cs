@@ -299,7 +299,7 @@ namespace TopoMojo.Api.Services
             switch (seg[0])
             {
                 case "uid":
-                result = Guid.NewGuid().ToString("N");
+                result = Guid.NewGuid().ToString("n");
                 break;
 
                 case "hex":
@@ -312,7 +312,7 @@ namespace TopoMojo.Api.Services
 
                 _random.NextBytes(buffer);
 
-                result = BitConverter.ToString(buffer).Replace("-", "");
+                result = BitConverter.ToString(buffer).Replace("-", "").ToLower();
 
                 break;
 

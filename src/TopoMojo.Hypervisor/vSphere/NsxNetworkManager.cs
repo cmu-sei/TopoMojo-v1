@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -35,6 +37,52 @@ namespace TopoMojo.Hypervisor.vSphere
         // private string authToken = "";
 
         private async Task InitClient()
+        {
+
+            if (DateTimeOffset.UtcNow.CompareTo(authExpiration) < 0)
+                return;
+
+            if (
+                string.IsNullOrEmpty(_config.ApiKey).Equals(false) &&
+                string.IsNullOrEmpty(_config.AuthUrl).Equals(false)
+            )
+            {
+                await InitClientViaRest();
+                return;
+            }
+
+            if (
+                string.IsNullOrEmpty(_config.CertificatePath).Equals(false) &&
+                File.Exists(_config.CertificatePath)
+            ) {
+                InitClientWithCertificate();
+                return;
+            }
+
+            throw new Exception("No NSX-T Auth mechanism configured.");
+        }
+
+        private void InitClientWithCertificate()
+        {
+            var clientcert = new X509Certificate2(
+                _config.CertificatePath,
+                _config.CertificatePassword,
+                X509KeyStorageFlags.MachineKeySet |
+                X509KeyStorageFlags.PersistKeySet |
+                X509KeyStorageFlags.Exportable
+            );
+
+            var handler = new HttpClientHandler();
+
+            handler.ClientCertificates.Add(clientcert);
+
+            _sddc = new HttpClient(handler);
+
+            authExpiration = clientcert.NotAfter;
+
+        }
+
+        private async Task InitClientViaRest()
         {
             if (DateTimeOffset.UtcNow.CompareTo(authExpiration) < 0)
                 return;
