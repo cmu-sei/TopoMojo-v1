@@ -136,11 +136,16 @@ namespace TopoMojo.Api.Services
                 .FirstOrDefaultAsync(w => w.Id == newlink.WorkspaceId)
             ;
 
+            string name = entity.Name.Length > 60
+                ? entity.Name.Substring(0, 60)
+                : entity.Name
+            ;
+
             var newTemplate = new Data.Template
             {
                 ParentId = entity.Id,
                 WorkspaceId = workspace.Id,
-                Name = $"{entity.Name}-{new Random().Next(100, 999).ToString()}",
+                Name = $"{name}-{new Random().Next(100, 999).ToString()}",
                 Description = entity.Description,
                 Iso = entity.Iso,
                 Networks = entity.Networks,
