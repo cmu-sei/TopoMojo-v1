@@ -1,3 +1,8 @@
+*** 
+*** This application has been transition to a fresh repo.  It will be archived after 
+*** a transition period to v2.0.0 (which is in the "TopoMojo" repo).
+*** 
+
 # TopoMojo
 
 A virtual lab builder and player
