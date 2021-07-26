@@ -3,6 +3,26 @@
 @url = http://localhost:5004/api
 @json = content-type: application/json
 @auth = Authorization: Bearer {{login.response.body.access_token}}
+@apikey = x-api-key: dev1234
+
+###
+POST {{url}}/gamespace
+{{apikey}}
+{{json}}
+
+{
+    "resourceId": "e4b2d5a9-e0db-4562-9366-cbc0f69c95aa",
+    "startGamespace": false,
+    "players": [
+        {
+            "subjectId": "8dc8ef5a-52a1-4608-8dae-794fb5a359f8",
+            "subjectName": "Admin"
+        }
+    ]
+}
+###
+POST {{url}}/gamespace/aea6b6488dea4bd2828cb40dca73b4a8/start
+{{apikey}}
 
 ###
 GET {{url}}/workspaces?filter=play
@@ -11,13 +31,12 @@ GET {{url}}/workspaces?filter=play
 ###
 GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd
 {{auth}}
+
 ###
 GET {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/templates
 {{auth}}
 
-###
-POST {{url}}/workspace/059ce94f-63d3-47bc-bd4a-773ceb41fbfd/clone
-{{auth}}###
+
 ###
 PUT {{url}}/workspace
 {{auth}}
@@ -25,11 +44,11 @@ PUT {{url}}/workspace
 
 {
   "id": "059ce94f-63d3-47bc-bd4a-773ceb41fbfd",
-  "name": "PresCup R1 Teams - AI 1000 #6",
-  "description": "EO: Cyber Analysis",
-  "author": "Matthew.Kaar",
+  "name": "Workspace Title",
+  "description": "Workspace Description",
+  "author": "Tester Jam",
   "audience": null,
-  "templateLimit": 6,
+  "templateLimit": 4,
   "templateScope": "jam"
 }
 
@@ -40,18 +59,6 @@ DELETE {{url}}/workspace/cf4d217717b5454ca893b3ee8469c796
 ###
 GET {{url}}/templates?filter=published
 {{auth}}
-###
-GET {{url}}/template/16aefb71-a91e-4286-8253-1be1c63bbd48
-{{auth}}
-###
-GET {{url}}/template-detail/16aefb71-a91e-4286-8253-1be1c63bbd48
-{{auth}}
-###
-PUT {{url}}/template-detail
-{{auth}}
-{{json}}
-
-{"id":"16aefb71-a91e-4286-8253-1be1c63bbd48","name":"SO","description":"SO","audience":"jam maj","networks":"lan","guestinfo":null,"detail":"{\n  \"Id\": null,\n  \"Name\": \"blank-10g-732\",\n  \"TopoId\": null,\n  \"Cpu\": \"4x1\",\n  \"Guest\": null,\n  \"Source\": null,\n  \"Iso\": null,\n  \"Floppy\": null,\n  \"GuestSettings\": null,\n  \"Version\": null,\n  \"IsolationTag\": null,\n  \"UseUplinkSwitch\": false,\n  \"Ram\": 32,\n  \"VideoRam\": 0,\n  \"Adapters\": 1,\n  \"Delay\": 0,\n  \"Eth\": [\n    {\n      \"Id\": 0,\n      \"Net\": \"lan\",\n      \"Type\": \"e1000\",\n      \"Mac\": null,\n      \"Ip\": null,\n      \"Vlan\": 0\n    }\n  ],\n  \"Disks\": [\n    {\n      \"Id\": 0,\n      \"Path\": \"[ds] 059ce94f-63d3-47bc-bd4a-773ceb41fbfd/SO1604-BankF.vmdk\",\n      \"Source\": \"[topomojo] 00000000-0000-0000-0000-000000000000/blank-10g.vmdk\",\n      \"Controller\": \"lsilogic\",\n      \"Size\": 10,\n      \"Status\": 0\n    }\n  ]\n}","isPublished":true}
 
 ###
 # Obtain access token from IdentityServer
@@ -96,6 +103,9 @@ Content-Type: application/json
                 "http://localhost:4200/oidc",
                 "http://localhost:4201/oidc",
                 "http://localhost:4202/oidc",
+                "http://localhost:4200/assets/oidc-silent.html",
+                "http://localhost:4201/assets/oidc-silent.html",
+                "http://localhost:4202/assets/oidc-silent.html",
                 "http://localhost:5004/api/oauth2-redirect.html"
             ]
 
